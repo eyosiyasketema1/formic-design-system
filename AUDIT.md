@@ -45,5 +45,5 @@ Strong foundation: consistent visual language, full light/dark/5-theme coverage,
 ## Priority Actions
 
 1. **Add motion + typography tokens** (`--ease-out-quint`, `--duration-fast/base/slow`, `--text-body/caption/micro`) and sweep components to use them — biggest consistency win, ~15+ repetitions removed.
-2. **Lift demo content into props** with current data as defaults — turns the gallery pieces into a real component library.
-3. **Add a shared `:focus-visible` rule + `aria-live="polite"`** on StreamingText — accessibility floor for keyboard and screen-reader users.
+2. ~~**Lift demo content into props** with current data as defaults~~ — ✅ Fixed 2026-08-21: `rows`/`active`/`done`/`query`/`more` on ThinkingState, `questions` + structured `onSubmitted(answers)` on ApprovalCard, `tokens`/`sources`/`followUps`/`onFollowUp` on StreamingText; variant props typed as unions.
+3. ~~**Add a shared `:focus-visible` rule + `aria-live="polite"`** on StreamingText~~ — ✅ Fixed 2026-08-21: accent outline on keyboard focus (tokens.css base), `aria-live="polite"` + `aria-busy` on the stream.

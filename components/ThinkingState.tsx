@@ -20,7 +20,7 @@ function useSequence(steps: number[]) {
   }, [stage, steps]);
   return stage;
 }
-type Row = {
+export type Row = {
   primary: string;
   secondary?: string;
   mono?: boolean;
@@ -30,7 +30,7 @@ type Row = {
 };
 const VARIANTS: Record<
   string,
-  { active: string; done: string; rows: Row[]; query?: string }
+  { active: string; done: string; rows: Row[]; query?: string; more?: string }
 > = {
   Steps: {
     active: "Thinking",
@@ -59,6 +59,7 @@ const VARIANTS: Record<
       { primary: "WebstaurantStore", secondary: "webstaurantstore.com", href: "https://www.webstaurantstore.com/ice-cream-shop-supplies.html" },
       { primary: "The Konery", secondary: "thekonery.com", href: "https://www.thekonery.com/" },
     ],
+    more: "+7 more",
   },
   Coding: {
     active: "Running tools",
@@ -81,11 +82,40 @@ function Dot({ tone }: { tone: string }) {
   );
 }
 const TONES = ["bg-accent", "bg-orange", "bg-green"];
-export default function ThinkingState({ variant = "Steps", onSettled }: { variant?: string; onSettled?: () => void }) {
+export type ThinkingVariant = "Steps" | "Reasoning" | "Search" | "Coding";
+export default function ThinkingState({
+  variant = "Steps",
+  rows,
+  active,
+  done,
+  query,
+  more,
+  onSettled,
+}: {
+  variant?: ThinkingVariant;
+  /** trace rows to display; defaults to demo content */
+  rows?: Row[];
+  /** label while working (e.g. "Searching the web") */
+  active?: string;
+  /** label after settling (e.g. "Searched the web") */
+  done?: string;
+  /** query line shown above rows (Search variant) */
+  query?: string;
+  /** trailing note under the rows (e.g. "+7 more") */
+  more?: string;
+  onSettled?: () => void;
+}) {
   const stage = useSequence(STAGES);
   const [manualExpanded, setManualExpanded] = useState<boolean | null>(null);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
-  const v = VARIANTS[variant] ?? VARIANTS.Steps;
+  const base = VARIANTS[variant] ?? VARIANTS.Steps;
+  const v = {
+    active: active ?? base.active,
+    done: done ?? base.done,
+    rows: rows ?? base.rows,
+    query: query ?? base.query,
+    more: more ?? (rows ? undefined : base.more),
+  };
   const autoExpanded = stage >= 1 && stage < 4;
   const expanded = manualExpanded ?? autoExpanded;
   const working = stage < 3;
@@ -244,9 +274,9 @@ export default function ThinkingState({ variant = "Steps", onSettled }: { varian
                 </div>
               );
             })}
-            {variant === "Search" && stage >= 3 && (
+            {v.more && stage >= 3 && (
               <span className="text-[12px] text-ink-3" style={{ animation: "fade-in 300ms ease-out both" }}>
-                +7 more
+                {v.more}
               </span>
             )}
             </div>

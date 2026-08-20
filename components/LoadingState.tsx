@@ -70,7 +70,7 @@ export default function LoadingState({
   videoSrc = "/subway-surfers.mp4",
 }: {
   label?: string;
-  variant?: string;
+  variant?: "Drive" | "Dots" | "Orbit" | "Surfer";
   videoSrc?: string;
 }) {
   const elapsed = useElapsed();

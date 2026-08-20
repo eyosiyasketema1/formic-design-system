@@ -6,28 +6,42 @@ import { useState } from "react";
  * the circular arrow up top advances (↑ sends on the last).
  * Choices, paging, and submission are directly controlled.
  * ───────────────────────────────────────────────────────── */
-const QUESTIONS = [
+export type Question = {
+  q: string;
+  type: "radio" | "check";
+  options: string[];
+};
+export type Answer = {
+  question: string;
+  selected: string[];
+  custom?: string;
+};
+const DEFAULT_QUESTIONS: Question[] = [
   {
     q: "How many flavors should we launch?",
-    type: "radio" as const,
+    type: "radio",
     options: ["Three (core line)", "Five (full case)", "Just one hero"],
   },
   {
     q: "Which mix-ins should we stock?",
-    type: "check" as const,
+    type: "check",
     options: ["Chocolate chips", "Waffle bits", "Sprinkles"],
   },
   {
     q: "Which market do we enter first?",
-    type: "radio" as const,
+    type: "radio",
     options: ["Food trucks", "Grocery freezers", "Scoop shops"],
   },
 ];
 export default function ApprovalCard({
+  questions = DEFAULT_QUESTIONS,
   onSubmitted,
   resettable = true,
 }: {
-  onSubmitted?: () => void;
+  /** questions to ask; defaults to demo content */
+  questions?: Question[];
+  /** receives the structured answers when the user sends */
+  onSubmitted?: (answers: Answer[]) => void;
   resettable?: boolean;
   variant?: string;
 } = {}) {
@@ -36,10 +50,20 @@ export default function ApprovalCard({
   const [custom, setCustom] = useState<Record<number, string>>({});
   const [sent, setSent] = useState(false);
   const [open, setOpen] = useState(true);
-  const question = QUESTIONS[qi];
-  const last = qi === QUESTIONS.length - 1;
+  const question = questions[qi];
+  const last = qi === questions.length - 1;
   const selected = answers[qi] ?? [];
   const hasAnswer = selected.length > 0 || Boolean(custom[qi]?.trim());
+  const submit = (finalAnswers: Record<number, number[]> = answers) => {
+    setSent(true);
+    onSubmitted?.(
+      questions.map((entry, i) => ({
+        question: entry.q,
+        selected: (finalAnswers[i] ?? []).map((idx) => entry.options[idx]),
+        custom: custom[i]?.trim() || undefined,
+      })),
+    );
+  };
   const toggle = (index: number) => {
     setAnswers((current) => {
       const picked = current[qi] ?? [];
@@ -54,10 +78,9 @@ export default function ApprovalCard({
       setCustom((current) => ({ ...current, [qi]: "" }));
       // single-choice auto-advances
       window.setTimeout(() => {
-        if (qi === QUESTIONS.length - 1) {
-          setSent(true);
-          onSubmitted?.();
-        } else setQi((current) => Math.min(QUESTIONS.length - 1, current + 1));
+        if (qi === questions.length - 1) {
+          submit({ ...answers, [qi]: [index] });
+        } else setQi((current) => Math.min(questions.length - 1, current + 1));
       }, 480);
     }
   };
@@ -169,7 +192,7 @@ export default function ApprovalCard({
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
             </button>
             <span className="flex items-center gap-1">
-              {QUESTIONS.map((_, i) => (
+              {questions.map((_, i) => (
                 <button
                   key={i}
                   type="button"
@@ -192,7 +215,7 @@ export default function ApprovalCard({
               type="button"
               aria-label="Next"
               disabled={last || sent}
-              onClick={() => setQi((current) => Math.min(QUESTIONS.length - 1, current + 1))}
+              onClick={() => setQi((current) => Math.min(questions.length - 1, current + 1))}
               className="flex size-6 items-center justify-center rounded-[5px] text-ink-3 transition-colors duration-100 enabled:hover:bg-hover enabled:hover:text-ink-2 disabled:opacity-35"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
@@ -204,12 +227,8 @@ export default function ApprovalCard({
               aria-label={last ? "Send answers" : "Next question"}
               disabled={!hasAnswer}
               onClick={() => {
-                if (last) {
-                  setSent(true);
-                  onSubmitted?.();
-                } else {
-                  setQi((current) => current + 1);
-                }
+                if (last) submit();
+                else setQi((current) => current + 1);
               }}
               className="-mr-0.5 flex size-7 items-center justify-center rounded-[8px] transition-[background-color,color,transform] duration-200 enabled:active:scale-[0.96]"
               style={{
