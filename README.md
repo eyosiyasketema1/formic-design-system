@@ -40,6 +40,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 
 | Component | Purpose | Variants |
 |---|---|---|
+| `Button` | The workhorse control: sizes sm/md, disabled + loading states, optional icon | `primary`, `secondary`, `ghost`, `destructive` |
 | `LoadingState` | Loader for long-running work: pixel grid + shimmer label + elapsed timer | `Drive`, `Dots`, `Orbit`, `Surfer` |
 | `ThinkingState` | Expandable agent trace with animated timeline | `Steps`, `Reasoning`, `Search`, `Coding` |
 | `ApprovalCard` | Human-in-the-loop question card: radio/checkbox answers, pager dots, send arrow | — |

@@ -233,7 +233,7 @@ export default function ApprovalCard({
               style={{
                 background: hasAnswer ? "var(--ink)" : "var(--field)",
                 color: hasAnswer ? "var(--surface)" : "var(--ink-3)",
-                boxShadow: hasAnswer ? "inset 0 1px 0 rgba(255,255,255,0.14)" : "var(--shadow-btn)",
+                boxShadow: hasAnswer ? "var(--highlight-raised)" : "var(--shadow-btn)",
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
