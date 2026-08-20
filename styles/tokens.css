@@ -21,6 +21,8 @@
   --text-small: 12px;     /* timers, meta labels */
   --text-tiny: 11.5px;    /* row secondaries, diff counts */
   --text-micro: 10.5px;   /* mono chips, fine print */
+  --text-title: 15px;     /* section headings */
+  --text-display: 22px;   /* page headings */
 
   /* Ink scale (text/foreground) */
   --ink: #1a1a1a;        /* primary text */
