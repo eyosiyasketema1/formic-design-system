@@ -10,11 +10,28 @@
 :root {
   /* Ink scale (text/foreground) */
   --ink: #1a1a1a;        /* primary text */
+  --ink-2: #5c5c5c;      /* secondary text */
   --ink-3: #8a8a8a;      /* tertiary / muted text */
+
+  /* Lines & surfaces */
+  --line: #e5e5e5;         /* hairline borders/dividers */
+  --line-strong: #cfcfcf;  /* stronger borders */
+  --hover: #f2f2f2;        /* row hover */
+  --hover-2: #ececec;      /* control hover */
+  --inset: #e9e9e9;        /* selected/inset surface */
+
+  /* Accents */
+  --accent: #4a72ff;
+  --orange: #f59e0b;
+  --green: #16a34a;
+  --red: #dc2626;
 
   /* Tooltip / overlay surfaces */
   --tooltip-bg: #1f1f1f;
   --tooltip-muted: #9a9a9a;
+
+  /* Radii */
+  --radius-control: 8px;
 }
 
 /* ── Keyframes used by components ──────────────────────── */
@@ -35,6 +52,23 @@
 @keyframes pop-in {
   0%   { opacity: 0; transform: scale(0.95); }
   100% { opacity: 1; transform: scale(1); }
+}
+
+/* Shared: simple fade */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Shared: fade + rise entrance for list rows */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Shared: spinner rotation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ── Reduced motion ────────────────────────────────────── */
