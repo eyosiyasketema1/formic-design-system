@@ -55,6 +55,17 @@
   display: flex; align-items: center; justify-content: center;
   width: 24px; height: 24px; border-radius: 6px;
 }
+.shadow-hairline { box-shadow: 0 0 0 1px var(--line); }
+.source-avatar { object-fit: cover; }
+.animated-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 200ms ease;
+}
+a:hover .animated-underline,
+.animated-underline:hover { background-size: 100% 1px; }
 
 /* ── Keyframes used by components ──────────────────────── */
 
@@ -91,6 +102,12 @@
 /* Shared: spinner rotation */
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* StreamingText: words resolve out of blur */
+@keyframes stream-in {
+  from { opacity: 0; filter: blur(4px); }
+  to   { opacity: 1; filter: blur(0); }
 }
 
 /* ── Reduced motion ────────────────────────────────────── */

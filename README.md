@@ -35,6 +35,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `LoadingState` | Loader for long-running work: pixel grid + shimmer label + elapsed timer | `Drive`, `Dots`, `Orbit`, `Surfer` |
 | `ThinkingState` | Expandable agent trace with animated timeline | `Steps`, `Reasoning`, `Search`, `Coding` |
 | `ApprovalCard` | Human-in-the-loop question card: radio/checkbox answers, pager dots, send arrow | — |
+| `StreamingText` | AI response stream: blur-in words, inline citations, sources list, follow-ups | — |
 
 ## Conventions
 
