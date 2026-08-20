@@ -1,0 +1,46 @@
+/* ─────────────────────────────────────────────────────────
+ * DESIGN TOKENS — single source of truth for the system
+ *
+ * ⚠ PLACEHOLDER VALUES: the components reference these
+ * variables but the real values live in your project's
+ * globals.css. Paste that file and this will be updated
+ * with your actual palette.
+ * ───────────────────────────────────────────────────────── */
+
+:root {
+  /* Ink scale (text/foreground) */
+  --ink: #1a1a1a;        /* primary text */
+  --ink-3: #8a8a8a;      /* tertiary / muted text */
+
+  /* Tooltip / overlay surfaces */
+  --tooltip-bg: #1f1f1f;
+  --tooltip-muted: #9a9a9a;
+}
+
+/* ── Keyframes used by components ──────────────────────── */
+
+/* LoadingState: pixel-grid cell pulse */
+@keyframes pixel-on {
+  0%, 100% { opacity: 0.15; }
+  40%      { opacity: 1; }
+}
+
+/* LoadingState: shimmering label sweep */
+@keyframes shimmer-text {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Shared: card/overlay entrance */
+@keyframes pop-in {
+  0%   { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ── Reduced motion ────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
