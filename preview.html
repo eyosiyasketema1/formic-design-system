@@ -8,6 +8,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.4/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Questrial&display=swap" rel="stylesheet" />
 <style type="text/tailwindcss">
 /* ── Design tokens (placeholder palette) ── */
 :root {
@@ -71,7 +74,7 @@
   transition: background-size 200ms ease;
 }
 a:hover .animated-underline, .animated-underline:hover { background-size: 100% 1px; }
-body { background: var(--canvas); color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+body { background: var(--canvas); color: var(--ink); font-family: "Questrial", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
