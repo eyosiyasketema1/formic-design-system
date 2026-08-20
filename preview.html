@@ -103,6 +103,63 @@
   transition: background-size 200ms ease;
 }
 a:hover .animated-underline, .animated-underline:hover { background-size: 100% 1px; }
+/* ── Palettes (paper is the base :root) ── */
+:root[data-palette="sage"] {
+  --ink:#1c211c; --ink-2:#5a635a; --ink-3:#879087;
+  --line:#e2e7e0; --line-strong:#c9d1c7;
+  --hover:#eef2ec; --hover-2:#e7ece5; --inset:#e7ece5;
+  --canvas:#f6f8f4; --surface:#fcfdfb; --field:#f0f3ee;
+  --accent:#4a7c59; --green-tint:#e4f0e6;
+}
+:root[data-palette="twilight"] {
+  --ink:#1b1d28; --ink-2:#5a5d70; --ink-3:#888b9e;
+  --line:#e3e5ee; --line-strong:#c9ccde;
+  --hover:#edeff6; --hover-2:#e6e8f2; --inset:#e6e8f2;
+  --canvas:#f5f6fa; --surface:#fcfcfe; --field:#eff1f7;
+  --accent:#5b6cff;
+}
+:root[data-palette="clay"] {
+  --ink:#241d18; --ink-2:#675c53; --ink-3:#948a80;
+  --line:#ece4dc; --line-strong:#d6cabf;
+  --hover:#f3ece5; --hover-2:#ede5dd; --inset:#ede5dd;
+  --canvas:#faf6f2; --surface:#fefcfa; --field:#f4eee8;
+  --accent:#c05f33;
+}
+:root[data-palette="ocean"] {
+  --ink:#172223; --ink-2:#556468; --ink-3:#839196;
+  --line:#e0e8ea; --line-strong:#c5d2d6;
+  --hover:#eaf1f2; --hover-2:#e3ebed; --inset:#e3ebed;
+  --canvas:#f3f7f8; --surface:#fbfdfd; --field:#edf3f4;
+  --accent:#0e7490;
+}
+:root[data-palette="sage"][data-theme="dark"] {
+  --ink:#eef1ec; --ink-2:#adb5ac; --ink-3:#7d857c;
+  --line:#272c28; --line-strong:#3a413b;
+  --hover:#212622; --hover-2:#272c28; --inset:#212622;
+  --canvas:#121513; --surface:#1b1f1c; --field:#212622;
+  --accent:#7fb08d; --green-tint:#16281c;
+}
+:root[data-palette="twilight"][data-theme="dark"] {
+  --ink:#eeeef4; --ink-2:#aeafc0; --ink-3:#7e8093;
+  --line:#27272f; --line-strong:#3b3b46;
+  --hover:#222229; --hover-2:#27272f; --inset:#222229;
+  --canvas:#131318; --surface:#1c1c23; --field:#222229;
+  --accent:#8b97ff;
+}
+:root[data-palette="clay"][data-theme="dark"] {
+  --ink:#f2ede8; --ink-2:#b5aca2; --ink-3:#857c73;
+  --line:#2d2721; --line-strong:#423a32;
+  --hover:#262019; --hover-2:#2d2721; --inset:#262019;
+  --canvas:#16120f; --surface:#201b17; --field:#262019;
+  --accent:#d98253;
+}
+:root[data-palette="ocean"][data-theme="dark"] {
+  --ink:#ebf1f2; --ink-2:#a9b6b9; --ink-3:#78878b;
+  --line:#252c2e; --line-strong:#3a4548;
+  --hover:#1f2628; --hover-2:#252c2e; --inset:#1f2628;
+  --canvas:#101516; --surface:#191f21; --field:#1f2628;
+  --accent:#45a5c4;
+}
 :root { color-scheme: light dark; }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] { color-scheme: dark; }
@@ -634,15 +691,52 @@ function useTheme() {
   }, [theme]);
   return [theme, setTheme];
 }
+const PALETTES = [
+  { id: "paper", label: "Paper", swatch: "#8a8a8a" },
+  { id: "sage", label: "Sage", swatch: "#4a7c59" },
+  { id: "twilight", label: "Twilight", swatch: "#5b6cff" },
+  { id: "clay", label: "Clay", swatch: "#c05f33" },
+  { id: "ocean", label: "Ocean", swatch: "#0e7490" },
+];
+function usePalette() {
+  const [palette, setPalette] = useState(() => localStorage.getItem("ds-palette") || "paper");
+  useEffect(() => {
+    if (palette === "paper") delete document.documentElement.dataset.palette;
+    else document.documentElement.dataset.palette = palette;
+    localStorage.setItem("ds-palette", palette);
+  }, [palette]);
+  return [palette, setPalette];
+}
 function App() {
   const [thinkKey, setThinkKey] = useState(0);
   const [theme, setTheme] = useTheme();
+  const [palette, setPalette] = usePalette();
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
       <header className="mb-10 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-[22px] font-semibold tracking-tight text-ink">AI Design System</h1>
           <p className="mt-1 text-[13px] text-ink-2">Live preview of every component built so far. Placeholder palette — swaps out when the real tokens land.</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex items-center gap-1 rounded-control bg-surface p-1.5 shadow-btn">
+          {PALETTES.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              title={p.label}
+              aria-label={`${p.label} theme`}
+              aria-pressed={palette === p.id}
+              onClick={() => setPalette(p.id)}
+              className="flex size-5 items-center justify-center rounded-full transition-transform duration-150 hover:scale-110"
+              style={{
+                background: p.swatch,
+                boxShadow: palette === p.id
+                  ? "0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink)"
+                  : "inset 0 0 0 1px rgba(0,0,0,0.15)",
+              }}
+            />
+          ))}
         </div>
         <button
           type="button"
@@ -661,6 +755,7 @@ function App() {
             </svg>
           )}
         </button>
+        </div>
       </header>
       <Section title="LoadingState" note="Pixel-grid loader with shimmer label and elapsed timer.">
         <Card label="Drive"><LoadingState variant="Drive" /></Card>
