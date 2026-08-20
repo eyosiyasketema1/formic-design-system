@@ -38,6 +38,10 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `ApprovalCard` | Human-in-the-loop question card: radio/checkbox answers, pager dots, send arrow | — |
 | `StreamingText` | AI response stream: blur-in words, inline citations, sources list, follow-ups | — |
 
+## Theming
+
+Light and dark palettes ship in `styles/tokens.css`. Dark mode activates automatically from the OS (`prefers-color-scheme`) or explicitly via `<html data-theme="dark">`; `data-theme="light"` forces light. Components never branch on theme — they only read the CSS variables, so both modes come for free.
+
 ## Conventions
 
 - Tokens are CSS variables defined in `styles/tokens.css`; components never hardcode colors.
