@@ -10,7 +10,7 @@ Strong foundation: consistent visual language, full light/dark/5-theme coverage,
 
 | Issue | Components | Recommendation |
 |-------|------------|----------------|
-| `variant` typed as `string` instead of a union | All 4 | Type as `"Drive" \| "Dots" \| "Orbit" \| "Surfer"` etc. — typos currently fail silently to the default |
+| ~~`variant` typed as `string` instead of a union~~ | All 4 | ✅ Fixed: unions on LoadingState/ThinkingState; vestigial `variant` props removed from ApprovalCard/StreamingText |
 | Variant names are Capitalized strings used as object keys | LoadingState, ThinkingState | Fine, but document as a convention so future components match |
 | Internal constant `VARIANTS` vs `PATTERNS` vs `QUESTIONS` for the same role (variant config) | All | Pick one name, e.g. `VARIANTS`, everywhere |
 
@@ -44,6 +44,6 @@ Strong foundation: consistent visual language, full light/dark/5-theme coverage,
 
 ## Priority Actions
 
-1. **Add motion + typography tokens** (`--ease-out-quint`, `--duration-fast/base/slow`, `--text-body/caption/micro`) and sweep components to use them — biggest consistency win, ~15+ repetitions removed.
+1. ~~**Add motion + typography tokens** and sweep components~~ — ✅ Fixed 2026-08-21: `--ease-out-quint` (3 curves collapsed to 1), `--duration-*`, 5-step type scale (`text-body/caption/small/tiny/micro`), `--radius-sm/md`; all components swept.
 2. ~~**Lift demo content into props** with current data as defaults~~ — ✅ Fixed 2026-08-21: `rows`/`active`/`done`/`query`/`more` on ThinkingState, `questions` + structured `onSubmitted(answers)` on ApprovalCard, `tokens`/`sources`/`followUps`/`onFollowUp` on StreamingText; variant props typed as unions.
 3. ~~**Add a shared `:focus-visible` rule + `aria-live="polite"`** on StreamingText~~ — ✅ Fixed 2026-08-21: accent outline on keyboard focus (tokens.css base), `aria-live="polite"` + `aria-busy` on the stream.

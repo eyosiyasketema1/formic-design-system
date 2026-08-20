@@ -43,7 +43,6 @@ export default function ApprovalCard({
   /** receives the structured answers when the user sends */
   onSubmitted?: (answers: Answer[]) => void;
   resettable?: boolean;
-  variant?: string;
 } = {}) {
   const [qi, setQi] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number[]>>({});
@@ -93,7 +92,7 @@ export default function ApprovalCard({
   };
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="rounded-control bg-surface px-3 py-2 text-[12.5px] font-medium text-ink shadow-btn transition-colors duration-150 hover:bg-hover">
+      <button type="button" onClick={() => setOpen(true)} className="rounded-control bg-surface px-3 py-2 text-caption font-medium text-ink shadow-btn transition-colors duration-150 hover:bg-hover">
         Open approval
       </button>
     );
@@ -101,15 +100,15 @@ export default function ApprovalCard({
   // Once answered, the whole card fires off into a small confirmation badge.
   if (sent) {
     return (
-      <div className="flex w-full max-w-80 items-center gap-3" style={{ animation: "pop-in 260ms cubic-bezier(0.23,1,0.32,1) both" }}>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-green-tint py-1 pr-2.5 pl-1 text-[12.5px] font-medium text-green">
+      <div className="flex w-full max-w-80 items-center gap-3" style={{ animation: "pop-in 260ms var(--ease-out-quint) both" }}>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-green-tint py-1 pr-2.5 pl-1 text-caption font-medium text-green">
           <span className="flex size-4.5 items-center justify-center rounded-full bg-green text-white">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
           </span>
           Answers sent
         </span>
         {resettable && (
-          <button type="button" onClick={reset} className="text-[12px] font-medium text-ink-3 transition-colors duration-150 hover:text-ink">
+          <button type="button" onClick={reset} className="text-small font-medium text-ink-3 transition-colors duration-150 hover:text-ink">
             Start over
           </button>
         )}
@@ -120,15 +119,15 @@ export default function ApprovalCard({
     <div className="flex min-h-[196px] w-full max-w-80 flex-col items-stretch">
       <div className="w-full self-start overflow-hidden rounded-card bg-surface shadow-card">
         {(
-          <div key={qi} className="primitive-card-pad" style={{ animation: "fade-up 350ms cubic-bezier(0.23,1,0.32,1) both" }}>
+          <div key={qi} className="primitive-card-pad" style={{ animation: "fade-up 350ms var(--ease-out-quint) both" }}>
             <div className="flex items-start justify-between gap-3">
-              <span className="text-[13px] font-medium text-ink">{question.q}</span>
+              <span className="text-body font-medium text-ink">{question.q}</span>
               <button
                 type="button"
                 aria-label="Dismiss"
                 onClick={() => setOpen(false)}
                 className="primitive-icon-button shrink-0
-                  text-ink-3 transition-colors duration-100 hover:bg-hover hover:text-ink"
+                  text-ink-3 transition-colors duration-150 hover:bg-hover hover:text-ink"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                   <path d="M18 6L6 18M6 6l12 12" />
@@ -144,7 +143,7 @@ export default function ApprovalCard({
                     type="button"
                     aria-pressed={on}
                     onClick={() => toggle(i)}
-                    className="-mx-1.5 flex items-center gap-2 rounded-control px-1.5 py-1 text-left transition-colors duration-100 hover:bg-hover"
+                    className="-mx-1.5 flex items-center gap-2 rounded-control px-1.5 py-1 text-left transition-colors duration-150 hover:bg-hover"
                   >
                     <span
                       className={`flex size-4 shrink-0 items-center justify-center transition-colors duration-200
@@ -157,13 +156,13 @@ export default function ApprovalCard({
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
                       )}
                     </span>
-                    <span className={`text-[13px] transition-colors duration-200 ${on ? "text-ink" : "text-ink-2"}`}>
+                    <span className={`text-body transition-colors duration-200 ${on ? "text-ink" : "text-ink-2"}`}>
                       {option}
                     </span>
                   </button>
                 );
               })}
-              <label className="-mx-1.5 flex items-center gap-2 rounded-control px-1.5 py-1 transition-colors duration-100 focus-within:bg-hover hover:bg-hover">
+              <label className="-mx-1.5 flex items-center gap-2 rounded-control px-1.5 py-1 transition-colors duration-150 focus-within:bg-hover hover:bg-hover">
                 <span aria-hidden="true" className="size-4 shrink-0" />
                 <input
                   value={custom[qi] ?? ""}
@@ -173,7 +172,7 @@ export default function ApprovalCard({
                   }}
                   placeholder="Type something…"
                   aria-label="Custom answer"
-                  className="min-w-0 flex-1 bg-transparent text-[13px] text-ink outline-none placeholder:text-ink-3"
+                  className="min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-3"
                 />
               </label>
             </div>
@@ -187,7 +186,7 @@ export default function ApprovalCard({
               aria-label="Previous"
               disabled={qi === 0 || sent}
               onClick={() => setQi((current) => Math.max(0, current - 1))}
-              className="flex size-6 items-center justify-center rounded-[5px] text-ink-3 transition-colors duration-100 enabled:hover:bg-hover enabled:hover:text-ink-2 disabled:opacity-35"
+              className="flex size-6 items-center justify-center rounded-[5px] text-ink-3 transition-colors duration-150 enabled:hover:bg-hover enabled:hover:text-ink-2 disabled:opacity-35"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
             </button>
@@ -216,7 +215,7 @@ export default function ApprovalCard({
               aria-label="Next"
               disabled={last || sent}
               onClick={() => setQi((current) => Math.min(questions.length - 1, current + 1))}
-              className="flex size-6 items-center justify-center rounded-[5px] text-ink-3 transition-colors duration-100 enabled:hover:bg-hover enabled:hover:text-ink-2 disabled:opacity-35"
+              className="flex size-6 items-center justify-center rounded-[5px] text-ink-3 transition-colors duration-150 enabled:hover:bg-hover enabled:hover:text-ink-2 disabled:opacity-35"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
             </button>
@@ -230,7 +229,7 @@ export default function ApprovalCard({
                 if (last) submit();
                 else setQi((current) => current + 1);
               }}
-              className="-mr-0.5 flex size-7 items-center justify-center rounded-[8px] transition-[background-color,color,transform] duration-200 enabled:active:scale-[0.96]"
+              className="-mr-0.5 flex size-7 items-center justify-center rounded-control transition-[background-color,color,transform] duration-200 enabled:active:scale-[0.96]"
               style={{
                 background: hasAnswer ? "var(--ink)" : "var(--field)",
                 color: hasAnswer ? "var(--surface)" : "var(--ink-3)",

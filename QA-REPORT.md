@@ -36,8 +36,10 @@ Verified clean: all 7 keyframes and all primitive classes referenced by componen
 
 Directionally trustworthy, numerically loose, materially incomplete. Every flagged category is real and no claim is fabricated, but the two most consequential issues — systemic light-mode contrast failures and the stranded `@theme` utility bridge — were missed. Treat AUDIT.md as a style-hygiene checklist, not a complete standards audit.
 
-## Top 3 corrections to the system
+## Top 3 corrections to the system — ✅ all resolved 2026-08-21
 
-1. **Fix light-mode contrast tokens**: darken `--ink-3` to ≥4.5:1 (≈`#767676`) in tokens.css and all 4 palettes; fix `--green`/`--green-tint` pairing; rework light `--orange` usage.
-2. **Ship the `@theme inline` mapping in `styles/`** (not just preview.html); unify `--sh-*` → `--shadow-*`; reference radius tokens by var.
-3. **Add motion + type-scale tokens** and sweep: 3 easing curves → 1 token, 7 font sizes → ~4 steps, arbitrary radii → tokens.
+1. ~~Fix light-mode contrast tokens~~ — ink-3/green/orange/accent re-tuned in tokens.css + all 4 palettes (light and dark); **25/25 WCAG pairs verified passing** programmatically.
+2. ~~Ship the `@theme inline` mapping in `styles/`~~ — new `styles/tailwind-theme.css`; `--sh-*` unified to `--shadow-*`; radii referenced by var.
+3. ~~Add motion + type-scale tokens and sweep~~ — `--ease-out-quint` (3 curves → 1), `--duration-*`, 5-step type scale, `--radius-sm/md`; components + preview swept.
+
+Also resolved: hover durations unified to 150ms, reduced-motion now covers transitions, stale `variant` claim fixed in AUDIT.md, vestigial `variant` props removed.

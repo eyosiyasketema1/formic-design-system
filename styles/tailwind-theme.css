@@ -1,0 +1,58 @@
+/* ─────────────────────────────────────────────────────────
+ * TAILWIND v4 THEME BRIDGE
+ *
+ * Generates the utility classes the components use
+ * (text-ink, bg-hover, rounded-control, shadow-card,
+ * text-body, ease-out-quint, …) from the runtime tokens.
+ *
+ * In a Tailwind v4 project, import both files:
+ *   @import "tailwindcss";
+ *   @import "./tokens.css";
+ *   @import "./themes.css";      (optional, for the 5 palettes)
+ *   @import "./tailwind-theme.css";
+ *
+ * `inline` makes utilities reference var(--token) directly,
+ * so light/dark and all palettes keep working at runtime.
+ * ───────────────────────────────────────────────────────── */
+@theme inline {
+  /* Colors */
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-hover: var(--hover);
+  --color-hover-2: var(--hover-2);
+  --color-inset: var(--inset);
+  --color-accent: var(--accent);
+  --color-orange: var(--orange);
+  --color-green: var(--green);
+  --color-red: var(--red);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-field: var(--field);
+  --color-green-tint: var(--green-tint);
+
+  /* Typography */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --text-body: var(--text-body);
+  --text-caption: var(--text-caption);
+  --text-small: var(--text-small);
+  --text-tiny: var(--text-tiny);
+  --text-micro: var(--text-micro);
+
+  /* Radii */
+  --radius-sm: var(--radius-sm);
+  --radius-control: var(--radius-control);
+  --radius-md: var(--radius-md);
+  --radius-card: var(--radius-card);
+
+  /* Shadows */
+  --shadow-btn: var(--shadow-btn);
+  --shadow-card: var(--shadow-card);
+  --shadow-overlay: var(--shadow-overlay);
+
+  /* Motion */
+  --ease-out-quint: var(--ease-out-quint);
+}

@@ -21,9 +21,16 @@ A reusable design system for web projects: CSS design tokens + React (Tailwind) 
 
 ## Using in a new project
 
-1. Copy `styles/tokens.css` into the project and import it globally (e.g. in `globals.css` or `layout.tsx`).
+1. Copy the `styles/` folder and import in order (Tailwind v4 project):
+
+   ```css
+   @import "tailwindcss";
+   @import "./styles/tokens.css";
+   @import "./styles/themes.css";        /* optional: the 5 palettes */
+   @import "./styles/tailwind-theme.css"; /* generates text-ink, bg-hover, text-body, … */
+   ```
+
 2. Copy the components you need from `components/`.
-3. Ensure the Tailwind theme maps the token variables to utilities (e.g. `ink` color → `var(--ink)`).
 
 ## Using with AI tools (Claude, etc.)
 

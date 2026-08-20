@@ -45,9 +45,9 @@ function SourceChip({ source }: { source: Source }) {
       target="_blank"
       rel="noreferrer"
       className="ml-0 mr-1 inline-flex h-4.5 translate-y-[-1px] items-center gap-1 rounded-[5px]
-        bg-inset pr-[3px] pl-[3px] align-middle font-mono text-[10.5px] text-ink-2 shadow-hairline
+        bg-inset pr-[3px] pl-[3px] align-middle font-mono text-micro text-ink-2 shadow-hairline
         transition-colors duration-150 hover:bg-hover hover:text-ink"
-      style={{ animation: "pop-in 250ms cubic-bezier(0.23,1,0.32,1) both" }}
+      style={{ animation: "pop-in 250ms var(--ease-out-quint) both" }}
     >
       <img src={sourceImage(source)} alt="" className="source-avatar size-3 rounded-[3px]" />
       <span>{source.domain}</span>
@@ -70,7 +70,6 @@ export default function StreamingText({
   onDone,
   onFollowUp,
 }: {
-  variant?: string;
   /** words to stream, with optional inline citations; defaults to demo content */
   tokens?: StreamToken[];
   /** cited sources; chips and the sources list read from here */
@@ -104,7 +103,7 @@ export default function StreamingText({
   }, [count, done, loop]);
   return (
     <div className={fill ? "w-full" : "min-h-[15.5rem] w-full max-w-95"}>
-      <p className="text-[13px] leading-relaxed text-ink" aria-live="polite" aria-busy={!done}>
+      <p className="text-body leading-relaxed text-ink" aria-live="polite" aria-busy={!done}>
         {tokens.slice(0, count).map((token, i) =>
           token.cite !== undefined && sources[token.cite] ? (
             <SourceChip key={i} source={sources[token.cite]} />
@@ -112,7 +111,7 @@ export default function StreamingText({
             <span
               key={i}
               className="inline [will-change:filter,opacity]"
-              style={{ animation: "stream-in 420ms cubic-bezier(0.22,0.61,0.25,1) both" }}
+              style={{ animation: "stream-in 420ms var(--ease-out-quint) both" }}
             >
               {token.text}{" "}
             </span>
@@ -135,8 +134,8 @@ export default function StreamingText({
             key={i}
             type="button"
             aria-label="Action"
-            className="flex size-6 items-center justify-center rounded-[6px] text-ink-3
-              transition-colors duration-100 hover:bg-hover-2 hover:text-ink-2"
+            className="flex size-6 items-center justify-center rounded-sm text-ink-3
+              transition-colors duration-150 hover:bg-hover-2 hover:text-ink-2"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               {icon}
@@ -147,7 +146,7 @@ export default function StreamingText({
           type="button"
           aria-expanded={sourcesOpen}
           onClick={() => setSourcesOpen((current) => !current)}
-          className="ml-1.5 flex items-center gap-1.5 rounded-[6px] px-1 py-0.5 text-left transition-colors duration-150 hover:bg-hover"
+          className="ml-1.5 flex items-center gap-1.5 rounded-sm px-1 py-0.5 text-left transition-colors duration-150 hover:bg-hover"
         >
           <span className="flex -space-x-1">
             {sources.map((source) => (
@@ -159,7 +158,7 @@ export default function StreamingText({
               />
             ))}
           </span>
-          <span className="text-[12px] text-ink-2">{sourceCount ?? sources.length} sources</span>
+          <span className="text-small text-ink-2">{sourceCount ?? sources.length} sources</span>
         </button>
       </div>
       <div
@@ -167,22 +166,22 @@ export default function StreamingText({
         style={{
           gridTemplateRows: done && sourcesOpen ? "1fr" : "0fr",
           opacity: done && sourcesOpen ? 1 : 0,
-          transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)",
+          transitionTimingFunction: "var(--ease-out-quint)",
         }}
       >
         <div className="overflow-hidden">
-          <div className="mt-1.5 flex flex-col rounded-[10px] bg-inset p-1 shadow-hairline">
+          <div className="mt-1.5 flex flex-col rounded-md bg-inset p-1 shadow-hairline">
             {sources.map((source) => (
               <a
                 key={source.domain}
                 href={source.href}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 rounded-[6px] px-1.5 py-1 text-[12px] text-ink-2 transition-colors duration-150 hover:bg-hover hover:text-ink"
+                className="flex items-center gap-2 rounded-sm px-1.5 py-1 text-small text-ink-2 transition-colors duration-150 hover:bg-hover hover:text-ink"
               >
                 <img src={sourceImage(source)} alt="" className="source-avatar size-4 rounded-[4px]" />
                 <span className="animated-underline">{source.name}</span>
-                <span className="ml-auto font-mono text-[10.5px] text-ink-3">{source.domain}</span>
+                <span className="ml-auto font-mono text-micro text-ink-3">{source.domain}</span>
               </a>
             ))}
           </div>
@@ -193,19 +192,19 @@ export default function StreamingText({
         className="mt-2.5 transition-opacity duration-400"
         style={{ opacity: done ? 1 : 0, pointerEvents: done ? "auto" : "none" }}
       >
-        <p className="text-[12px] font-medium text-ink-2">Follow-ups</p>
+        <p className="text-small font-medium text-ink-2">Follow-ups</p>
         <div className="mt-0.5 flex flex-col">
           {followUps.map((text, i) => (
             <button
               key={text}
               type="button"
               onClick={() => onFollowUp?.(text)}
-              className="-mx-1.5 flex items-center gap-2 rounded-[7px] border-b border-line
-                px-1.5 py-1.5 text-left text-[12.5px] text-ink transition-colors
-                duration-100 hover:bg-hover-2"
+              className="-mx-1.5 flex items-center gap-2 rounded-sm border-b border-line
+                px-1.5 py-1.5 text-left text-caption text-ink transition-colors
+                duration-150 hover:bg-hover-2"
               style={
                 done
-                  ? { animation: `fade-up 350ms cubic-bezier(0.23,1,0.32,1) ${i * 90}ms both` }
+                  ? { animation: `fade-up 350ms var(--ease-out-quint) ${i * 90}ms both` }
                   : { opacity: 0 }
               }
             >
