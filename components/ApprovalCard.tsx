@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Icon, IconButton } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * APPROVAL CARD (human-in-the-loop)
  * One question at a time; elongated pills show progress;
@@ -103,7 +104,7 @@ export default function ApprovalCard({
       <div className="flex w-full max-w-80 items-center gap-3" style={{ animation: "pop-in 260ms var(--ease-out-quint) both" }}>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-green-tint py-1 pr-2.5 pl-1 text-caption font-medium text-green">
           <span className="flex size-4.5 items-center justify-center rounded-full bg-green text-canvas">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+            <Icon name="check" size={11} strokeWidth={3} />
           </span>
           Answers sent
         </span>
@@ -122,17 +123,13 @@ export default function ApprovalCard({
           <div key={qi} className="primitive-card-pad" style={{ animation: "fade-up 350ms var(--ease-out-quint) both" }}>
             <div className="flex items-start justify-between gap-3">
               <span className="text-body font-medium text-ink">{question.q}</span>
-              <button
-                type="button"
-                aria-label="Dismiss"
+              <IconButton
+                label="Dismiss"
                 onClick={() => setOpen(false)}
-                className="primitive-icon-button shrink-0
-                  text-ink-3 transition-colors duration-150 hover:bg-hover hover:text-ink"
+                className="text-ink-3 hover:bg-hover hover:text-ink"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
+                <Icon name="close" />
+              </IconButton>
             </div>
             <div className="mt-2 flex flex-col gap-0.5">
               {question.options.map((option, i) => {
@@ -153,7 +150,7 @@ export default function ApprovalCard({
                       {question.type === "radio" ? (
                         <span className="size-1.5 rounded-full bg-canvas transition-transform duration-200" style={{ transform: on ? "scale(1)" : "scale(0)" }} />
                       ) : (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                        <Icon name="check" size={12} strokeWidth={3} />
                       )}
                     </span>
                     <span className={`text-body transition-colors duration-200 ${on ? "text-ink" : "text-ink-2"}`}>

@@ -18,7 +18,7 @@ FORBIDDEN = [
     (r"variant\?: string", "untyped variant prop — use a union type"),
     (r"text-white", "hardcoded white — use text-canvas so dark mode keeps contrast"),
 ]
-for f in sorted((ROOT / "components").glob("*.tsx")) + [ROOT / "preview.html"]:
+for f in sorted((ROOT / "components").rglob("*.tsx")) + [ROOT / "preview.html"]:
     text = f.read_text()
     lines = text.splitlines()
     for pat, msg in FORBIDDEN:
@@ -112,7 +112,7 @@ for var, val in base_light.items():
 try:
     r = subprocess.run(
         ["npx", "-y", "esbuild", "--loader:.tsx=tsx", "--jsx=automatic",
-         "--outdir=/tmp/ds-qa", *[str(p) for p in sorted((ROOT / "components").glob("*.tsx"))]],
+         "--outdir=/tmp/ds-qa", *[str(p) for p in sorted((ROOT / "components").rglob("*.tsx"))]],
         capture_output=True, text=True, timeout=120)
     if r.returncode != 0:
         fails.append("compile: " + r.stderr.strip().splitlines()[-1])

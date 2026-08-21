@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Chip, DiffStat, Disclosure, Icon } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * TOOL CHIPS
  * An agent run as compact rows: tool calls with inline
@@ -182,16 +183,12 @@ export default function ToolChips({
         onClick={() => setOpen((current) => !current)}
         className="-mx-1.5 flex w-fit items-center gap-1.5 rounded-control px-1.5 py-1 text-caption text-ink-2 transition-colors duration-150 hover:bg-hover-2"
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200" style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)" }}>
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        <Icon name="chevron" size={12} className="transition-transform duration-200" style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)" }} />
         <span className="tabular-nums">{resolvedSummary}</span>
       </button>
-      {/* tool call rows */}
-      <div className="grid transition-[grid-template-rows,opacity] duration-300" style={{ gridTemplateRows: open ? "1fr" : "0fr", opacity: open ? 1 : 0 }}>
-        {/* -mx-1 + px-1.5 keeps content at the same x while giving the
-            row hover pills room inside this overflow-hidden clip box */}
-        <div className="-mx-1 overflow-hidden px-1.5 pb-1" aria-live="polite">
+      {/* tool call rows — the -mx-1 + px-1.5 inner keeps content at the same x
+          while giving the row hover pills room inside the clip box */}
+      <Disclosure open={open} live innerClassName="-mx-1 overflow-hidden px-1.5 pb-1">
         <div className="mt-1.5 flex flex-col gap-1">
           {rows.slice(0, step).map((row, rowIndex) => {
             const rowOpen = openRows.has(rowIndex);
@@ -210,29 +207,20 @@ export default function ToolChips({
                   >
                     {Icons[row.icon]}
                   </svg>
-                  <svg
-                    width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+                  <Icon
+                    name="chevron"
+                    size={12}
                     className={`absolute transition-[opacity,transform] duration-150 group-hover/row:opacity-100 ${rowOpen ? "opacity-100" : "opacity-0"}`}
                     style={{ transform: rowOpen ? "rotate(0deg)" : "rotate(-90deg)" }}
-                  >
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
+                  />
                 </span>
                 <span className="shrink-0 text-caption font-medium text-ink">{row.label}</span>
-                <span
-                  className={`inline-flex h-5.5 min-w-0 flex-1 cursor-pointer items-center truncate rounded-chip bg-field px-1.5
-                    text-tiny text-ink-2 shadow-hairline transition-colors duration-150 hover:bg-hover-2
-                    ${row.mono ? "font-mono" : ""}`}
-                >
+                <Chip mono={row.mono} className="min-w-0 flex-1 cursor-pointer truncate hover:bg-hover-2">
                   {row.chip}
-                </span>
+                </Chip>
               </button>
               {/* expanded detail */}
-              <div
-                className="grid transition-[grid-template-rows,opacity] duration-300"
-                style={{ gridTemplateRows: rowOpen ? "1fr" : "0fr", opacity: rowOpen ? 1 : 0, transitionTimingFunction: "var(--ease-out-quint)" }}
-              >
-                <div className="min-h-0 overflow-hidden">
+              <Disclosure open={rowOpen}>
                   <div className="mt-0.5 mb-1 ml-2 flex flex-col gap-0.5 border-l border-line py-0.5 pl-3.5">
                     {row.detail.map((line, lineIndex) => (
                       <span
@@ -243,8 +231,7 @@ export default function ToolChips({
                       </span>
                     ))}
                   </div>
-                </div>
-              </div>
+              </Disclosure>
             </div>
             );
           })}
@@ -260,22 +247,23 @@ export default function ToolChips({
               onMouseEnter={openPreview(d.file)}
               onMouseLeave={closePreview(d.file)}
             >
-              <button
+              <Chip
+                as="button"
                 type="button"
+                tone="surface"
+                size="md"
+                mono
                 aria-expanded={preview?.file === d.file}
                 aria-label={`Show diff for ${d.file}`}
                 aria-describedby={preview?.file === d.file ? "ds-diff-preview" : undefined}
                 onFocus={openPreview(d.file)}
                 onBlur={closePreview(d.file)}
-                className="inline-flex h-7 max-w-full items-center gap-1.5 rounded-chip
-                  bg-surface px-2 font-mono text-tiny text-ink shadow-btn
-                  transition-colors duration-150 hover:bg-hover"
+                className="max-w-full hover:bg-hover"
                 style={{ animation: `pop-in 250ms var(--ease-out-quint) ${i * 80}ms both` }}
               >
                 <span className="min-w-0 truncate">{d.file}</span>
-                <span className="shrink-0 text-green tabular-nums">+{d.add}</span>
-                {d.del > 0 && <span className="shrink-0 text-red tabular-nums">−{d.del}</span>}
-              </button>
+                <DiffStat add={d.add} del={d.del} />
+              </Chip>
             </span>
           ))}
           {resolvedMore && (
@@ -291,8 +279,7 @@ export default function ToolChips({
           )}
         </div>
       )}
-        </div>
-      </div>
+      </Disclosure>
       {preview && typeof document !== "undefined" && createPortal(
         <div
           id="ds-diff-preview"
@@ -310,12 +297,10 @@ export default function ToolChips({
         >
           <div className="flex items-center justify-between border-b border-line px-2.5 py-1.5 font-mono text-tiny">
             <span className="min-w-0 truncate text-ink-2">{preview.file}</span>
-            <span className="shrink-0 tabular-nums">
-              <span className="text-green">+{diffs.find((diff) => diff.file === preview.file)?.add}</span>
-              {(diffs.find((diff) => diff.file === preview.file)?.del ?? 0) > 0 && (
-                <span className="text-red"> −{diffs.find((diff) => diff.file === preview.file)?.del}</span>
-              )}
-            </span>
+            <DiffStat
+              add={diffs.find((diff) => diff.file === preview.file)?.add ?? 0}
+              del={diffs.find((diff) => diff.file === preview.file)?.del ?? 0}
+            />
           </div>
           <div className="py-1 font-mono text-tiny leading-[1.8]">
             {(diffLines[preview.file] ?? []).map((line, index) => (

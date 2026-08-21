@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { ShimmerLabel } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * LOADING STATE — pixel-grid loader for long-running work
  *
@@ -78,19 +79,7 @@ export default function LoadingState({
   const resolvedLabel = label ?? (surfer ? "Subway surfing" : "Churning");
   const [videoOk, setVideoOk] = useState(true);
   const { delays, dur, round } = PATTERNS[variant] ?? PATTERNS.Drive;
-  const labelEl = (
-    <span
-      className="bg-clip-text text-body font-medium text-transparent"
-      style={{
-        backgroundImage:
-          "linear-gradient(90deg, var(--ink-3) 35%, var(--ink) 50%, var(--ink-3) 65%)",
-        backgroundSize: "200% 100%",
-        animation: "shimmer-text 1.4s linear infinite",
-      }}
-    >
-      {resolvedLabel}
-    </span>
-  );
+  const labelEl = <ShimmerLabel>{resolvedLabel}</ShimmerLabel>;
   const elapsedEl = <span className="font-mono text-small text-ink-3 tabular-nums">{elapsed}</span>;
   if (surfer) {
     return (

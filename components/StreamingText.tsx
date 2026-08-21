@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Chip, Disclosure, IconButton } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * STREAMING TEXT
  * Words resolve out of blur, inline citations appear in
@@ -40,18 +41,20 @@ function sourceImage(source: Source) {
 }
 function SourceChip({ source }: { source: Source }) {
   return (
-    <a
+    <Chip
+      as="a"
+      tone="inset"
+      size="xs"
+      mono
       href={source.href}
       target="_blank"
       rel="noreferrer"
-      className="ml-0 mr-1 inline-flex h-4.5 translate-y-[-1px] items-center gap-1 rounded-[5px]
-        bg-inset pr-[3px] pl-[3px] align-middle font-mono text-micro text-ink-2 shadow-hairline
-        transition-colors duration-150 hover:bg-hover hover:text-ink"
+      className="ml-0 mr-1 translate-y-[-1px] align-middle hover:bg-hover hover:text-ink"
       style={{ animation: "pop-in 250ms var(--ease-out-quint) both" }}
     >
       <img src={sourceImage(source)} alt="" className="source-avatar size-3 rounded-[3px]" />
       <span>{source.domain}</span>
-    </a>
+    </Chip>
   );
 }
 const ACTION_ICONS: React.ReactNode[] = [
@@ -130,17 +133,11 @@ export default function StreamingText({
         style={{ opacity: done ? 1 : 0, pointerEvents: done ? "auto" : "none" }}
       >
         {ACTION_ICONS.map((icon, i) => (
-          <button
-            key={i}
-            type="button"
-            aria-label="Action"
-            className="flex size-6 items-center justify-center rounded-sm text-ink-3
-              transition-colors duration-150 hover:bg-hover-2 hover:text-ink-2"
-          >
+          <IconButton key={i} label="Action" className="text-ink-3 hover:bg-hover-2 hover:text-ink-2">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               {icon}
             </svg>
-          </button>
+          </IconButton>
         ))}
         <button
           type="button"
@@ -161,15 +158,7 @@ export default function StreamingText({
           <span className="text-small text-ink-2">{sourceCount ?? sources.length} sources</span>
         </button>
       </div>
-      <div
-        className="grid transition-[grid-template-rows,opacity] duration-300"
-        style={{
-          gridTemplateRows: done && sourcesOpen ? "1fr" : "0fr",
-          opacity: done && sourcesOpen ? 1 : 0,
-          transitionTimingFunction: "var(--ease-out-quint)",
-        }}
-      >
-        <div className="overflow-hidden">
+      <Disclosure open={done && sourcesOpen} innerClassName="overflow-hidden">
           <div className="mt-1.5 flex flex-col rounded-md bg-inset p-1 shadow-hairline">
             {sources.map((source) => (
               <a
@@ -185,8 +174,7 @@ export default function StreamingText({
               </a>
             ))}
           </div>
-        </div>
-      </div>
+      </Disclosure>
       {/* follow-ups */}
       <div
         className="mt-2.5 transition-opacity duration-400"

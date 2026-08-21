@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { DiffStat, Disclosure, Icon, ShimmerLabel, Spinner } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * THINKING — expandable agent trace, four variants
  *
@@ -154,17 +155,7 @@ export default function ThinkingState({
         </svg>
         <span role="status" className="contents">
           {working ? (
-            <span
-              className="bg-clip-text text-body font-medium whitespace-nowrap text-transparent"
-              style={{
-                backgroundImage:
-                  "linear-gradient(90deg, var(--ink-3) 35%, var(--ink) 50%, var(--ink-3) 65%)",
-                backgroundSize: "200% 100%",
-                animation: "shimmer-text 1.4s linear infinite",
-              }}
-            >
-              {v.active}
-            </span>
+            <ShimmerLabel className="whitespace-nowrap">{v.active}</ShimmerLabel>
           ) : (
             <span
               className="text-body font-medium whitespace-nowrap text-ink-2"
@@ -174,24 +165,14 @@ export default function ThinkingState({
             </span>
           )}
         </span>
-        <svg
-          width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-          className="transition-transform duration-300"
+        <Icon
+          name="chevron"
+          className="text-ink-3 transition-transform duration-300"
           style={{ transform: expanded ? "rotate(180deg)" : "rotate(0)" }}
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        />
       </button>
       {/* expandable trace */}
-      <div
-        className="grid transition-[grid-template-rows,opacity] duration-400"
-        style={{
-          gridTemplateRows: expanded ? "1fr" : "0fr",
-          opacity: expanded ? 1 : 0,
-          transitionTimingFunction: "var(--ease-out-quint)",
-        }}
-      >
-        <div className="overflow-hidden">
+      <Disclosure open={expanded} duration={400} innerClassName="overflow-hidden">
           <div className="relative mt-1 ml-[5px] pl-4">
             <span
               aria-hidden
@@ -201,10 +182,7 @@ export default function ThinkingState({
             <div ref={traceRef} className="flex flex-col gap-1 py-1">
             {v.query && (
               <div className="flex h-6 items-center gap-2 px-1.5" style={{ animation: expanded ? "fade-up 300ms var(--ease-out-quint) both" : undefined }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" className="shrink-0">
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="M21 21l-4.3-4.3" />
-                </svg>
+                <Icon name="search" strokeWidth={2} className="shrink-0 text-ink-3" />
                 <span className="text-caption text-ink-2">{v.query}</span>
               </div>
             )}
@@ -214,11 +192,9 @@ export default function ThinkingState({
                 {variant === "Search" && <Dot tone={TONES[i % 3]} />}
                 {variant === "Steps" && (
                   i < visible - 1 || !working ? (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                      <path d="M20 6L9 17l-5-5" />
-                    </svg>
+                    <Icon name="check" strokeWidth={2.5} className="shrink-0 text-ink-3" />
                   ) : (
-                    <span className="size-3 shrink-0 rounded-full border-[1.5px] border-line-strong border-t-ink-2" style={{ animation: "spin 700ms linear infinite" }} />
+                    <Spinner className="text-ink-2" />
                   )
                 )}
                 <span className={`min-w-0 truncate text-caption ${variant === "Reasoning" ? "whitespace-normal leading-relaxed text-ink-2" : "font-medium text-ink"} ${variant === "Search" ? "animated-underline" : ""}`}>
@@ -229,12 +205,7 @@ export default function ThinkingState({
                     {row.secondary}
                   </span>
                 )}
-                {row.add !== undefined && (
-                  <span className="shrink-0 font-mono text-tiny tabular-nums">
-                    <span className="text-green">+{row.add}</span>{" "}
-                    <span className="text-red">−{row.del}</span>
-                  </span>
-                )}
+                {row.add !== undefined && <DiffStat add={row.add} del={row.del} />}
                 </>
               );
               const rowClass = "flex min-h-7 w-full items-center gap-2 rounded-sm px-1.5 py-0.5 text-left";
@@ -281,8 +252,7 @@ export default function ThinkingState({
             )}
             </div>
           </div>
-        </div>
-      </div>
+      </Disclosure>
     </div>
   );
 }

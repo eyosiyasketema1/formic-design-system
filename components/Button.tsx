@@ -1,5 +1,6 @@
 "use client";
 import { type MouseEvent, type ReactNode } from "react";
+import { Spinner } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * BUTTON — the workhorse control
  *
@@ -79,15 +80,7 @@ export default function Button({
       }
     >
       {loading ? (
-        <span
-          aria-hidden
-          className="size-3 shrink-0 rounded-full border-[1.5px]"
-          style={{
-            animation: "spin 700ms linear infinite",
-            borderColor: "color-mix(in srgb, currentColor 30%, transparent)",
-            borderTopColor: "currentColor",
-          }}
-        />
+        <Spinner />
       ) : (
         icon && <span aria-hidden className="shrink-0">{icon}</span>
       )}
