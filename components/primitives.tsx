@@ -15,11 +15,12 @@ import { type CSSProperties, type ElementType, type ReactNode } from "react";
  * ───────────────────────────────────────────────────────── */
 
 /* ── Icon ──────────────────────────────────────────────── */
-export type IconName = "chevron" | "check" | "close" | "search";
+export type IconName = "chevron" | "check" | "close" | "search" | "retry";
 const PATHS: Record<IconName, ReactNode> = {
   chevron: <path d="M6 9l6 6 6-6" />,
   check: <path d="M20 6L9 17l-5-5" />,
   close: <path d="M18 6L6 18M6 6l12 12" />,
+  retry: <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" />,
   search: (
     <>
       <circle cx="11" cy="11" r="7" />

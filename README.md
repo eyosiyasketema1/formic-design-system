@@ -47,6 +47,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `ApprovalCard` | Human-in-the-loop question card: radio/checkbox answers, pager dots, send arrow | — |
 | `StreamingText` | AI response stream: blur-in words, inline citations, sources list, follow-ups | — |
 | `ToolChips` | Agent run as compact rows: expandable tool calls + file-diff chips with hover previews | — |
+| `TaskRows` | Agent tasks as expandable rows with status badges (ring/failed/completed) | `Capsules`, `List` |
 
 ## Theming
 
