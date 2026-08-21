@@ -20,9 +20,13 @@ FORBIDDEN = [
 ]
 for f in sorted((ROOT / "components").glob("*.tsx")) + [ROOT / "preview.html"]:
     text = f.read_text()
+    lines = text.splitlines()
     for pat, msg in FORBIDDEN:
         for m in re.finditer(pat, text):
             line = text[: m.start()].count("\n") + 1
+            # the one allowed cubic-bezier: the --ease-out-quint token definition itself
+            if "--ease-out-quint:" in lines[line - 1]:
+                continue
             fails.append(f"{f.name}:{line}: {msg}")
 
 # ── 2. WCAG contrast for every mode × palette ───────────────
@@ -37,12 +41,16 @@ def cr(a, b):
     return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
 
 def parse_blocks(css):
-    """selector -> {var: hex} for every rule block (media wrappers ignored)."""
+    """selector -> {var: hex} for every rule block (media wrappers ignored).
+    Comments are stripped and the selector is normalized to its last line so
+    preceding @import lines / comments can't corrupt the key."""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
     out = {}
-    for sel, body in re.findall(r"([^{}@]+)\{([^{}]*)\}", css):
+    for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+        sel = sel.strip().splitlines()[-1].strip() if sel.strip() else ""
         vars_ = dict(re.findall(r"(--[\w-]+)\s*:\s*(#[0-9a-fA-F]{6})\b", body))
-        if vars_:
-            out.setdefault(sel.strip(), {}).update(vars_)
+        if sel and vars_:
+            out.setdefault(sel, {}).update(vars_)
     return out
 
 tokens = parse_blocks((ROOT / "styles" / "tokens.css").read_text())
@@ -73,7 +81,16 @@ PAIRS = [  # (fg var | literal, bg var, minimum, label)
     ("--canvas", "--orange", 3.0, "canvas-on-orange dot"),
     ("--canvas", "--accent", 3.0, "canvas-on-accent dot"),
     ("--accent", "--canvas", 4.5, "accent as text"),
+    ("--red", "--canvas", 4.5, "deletion counts"),
+    ("--red", "--red-tint", 4.5, "diff deleted lines"),
+    ("--canvas", "--red", 3.0, "canvas-on-red (destructive button)"),
+    ("--green", "--surface", 4.5, "added lines on cards"),
+    ("--red", "--surface", 4.5, "deletions on cards"),
 ]
+# sanity: the parser must actually find the base palette, or every light-mode
+# check silently becomes a no-op (this happened once — never again)
+if len(base_light) < 10:
+    fails.append(f"qa_check self-test: base light palette parsed only {len(base_light)} vars — parser broken")
 for label, vars_ in palette_sets():
     for fg, bg, mn, what in PAIRS:
         fgv = fg if fg.startswith("#") else vars_.get(fg)

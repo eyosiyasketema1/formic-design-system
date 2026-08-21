@@ -45,6 +45,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `ThinkingState` | Expandable agent trace with animated timeline | `Steps`, `Reasoning`, `Search`, `Coding` |
 | `ApprovalCard` | Human-in-the-loop question card: radio/checkbox answers, pager dots, send arrow | — |
 | `StreamingText` | AI response stream: blur-in words, inline citations, sources list, follow-ups | — |
+| `ToolChips` | Agent run as compact rows: expandable tool calls + file-diff chips with hover previews | — |
 
 ## Theming
 

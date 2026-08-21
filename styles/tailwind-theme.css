@@ -32,6 +32,7 @@
   --color-surface: var(--surface);
   --color-field: var(--field);
   --color-green-tint: var(--green-tint);
+  --color-red-tint: var(--red-tint);
 
   /* Typography */
   --font-sans: var(--font-sans);
@@ -46,6 +47,7 @@
 
   /* Radii */
   --radius-sm: var(--radius-sm);
+  --radius-chip: var(--radius-chip);
   --radius-control: var(--radius-control);
   --radius-md: var(--radius-md);
   --radius-card: var(--radius-card);

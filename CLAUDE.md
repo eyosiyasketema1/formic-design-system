@@ -7,7 +7,7 @@ Rules for any AI agent (or human) working in this repo. These exist because past
 1. **Tokens only.** Components never hardcode colors, font sizes, radii, shadows, or easings. Everything reads CSS variables from `styles/tokens.css`. If a needed value has no token, add the token first.
 2. **Type scale**: `text-body` (13px), `text-caption` (12.5px), `text-small` (12px), `text-tiny` (11.5px), `text-micro` (10.5px), `text-title` (15px), `text-display` (22px). Never `text-[Npx]`. On colored dots/badges use `text-canvas` (never `text-white`) so dark mode keeps contrast.
 3. **Radii**: `rounded-sm` (6px), `rounded-control` (8px), `rounded-md` (10px), `rounded-card` (14px). Tiny optical radii (1–5px) may stay arbitrary.
-4. **Motion**: one easing — `var(--ease-out-quint)`. Never write a `cubic-bezier(...)` literal. Hover color transitions are `duration-150`.
+4. **Motion**: one easing — `var(--ease-out-quint)`. Never write a `cubic-bezier(...)` literal (the token's own definition is the sole exception). CSS keyword easings (`ease-out`, `linear`) are allowed for simple fades and spins. Hover color transitions are `duration-150`.
 5. **Contrast (WCAG AA)**: text ≥4.5:1, non-text UI ≥3:1 — in light, dark, and all 5 palettes. Any new color token must pass before commit.
 6. **Accessibility**: interactive elements get correct ARIA (`role`, `aria-expanded`, `aria-pressed`); keyboard focus relies on the shared `:focus-visible` rule (don't suppress it); animated/streamed content uses `aria-live`; everything respects `prefers-reduced-motion`.
 7. **Props, not hardcoded content.** Demo data lives in `DEFAULT_*` constants used only as prop defaults. Variant props are typed unions, never `string`.
