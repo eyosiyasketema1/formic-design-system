@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState, type ReactNode } from "react";
-import { Disclosure, Icon } from "./primitives";
+import { useState, type ReactNode } from "react";
+import { useSequence } from "./hooks";
+import { Badge, Disclosure, fadeUp, Icon } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * TASK ROWS
  *
@@ -15,15 +16,6 @@ import { Disclosure, Icon } from "./primitives";
  * choreography is skipped; task details stay clickable.
  * ───────────────────────────────────────────────────────── */
 const TICKS = [600, 900, 2400, 1400, 2400, 600];
-function useTick(intervals: number[]) {
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    if (tick >= intervals.length - 1) return;
-    const t = setTimeout(() => setTick((x) => x + 1), intervals[tick]);
-    return () => clearTimeout(t);
-  }, [tick, intervals]);
-  return tick;
-}
 function SpinnerRing({ active, children }: { active?: boolean; children?: ReactNode }) {
   const size = 24, stroke = 2;
   const r = (size - stroke) / 2;
@@ -58,17 +50,7 @@ function StatusDot({ tone, children }: { tone: "red" | "green"; children: ReactN
     </span>
   );
 }
-function StatusPill({ tone, children }: { tone: "red" | "green"; children: ReactNode }) {
-  return (
-    <span
-      className={`inline-flex h-5.5 items-center gap-1.5 rounded-full px-2 text-tiny font-medium
-        ${tone === "red" ? "bg-red-tint text-red" : "bg-green-tint text-green"}`}
-      style={{ animation: "fade-in 200ms ease-out both" }}
-    >
-      {children}
-    </span>
-  );
-}
+const pillEnter = { animation: "fade-in 200ms ease-out both" };
 export type TaskStatus = "completed" | "active" | "pending" | "failed";
 export type TaskDetail = { label: string; meta: string };
 export type TaskRowData = {
@@ -89,7 +71,7 @@ export default function TaskRows({
   /** task rows; defaults to demo content with a scripted status run */
   rows?: TaskRowData[];
 }) {
-  const tick = useTick(TICKS);
+  const tick = useSequence(TICKS);
   const [manualOpen, setManualOpen] = useState<Record<string, boolean>>({});
   const demo = rowsProp === undefined;
   const draftStatus: TaskStatus = tick < 3 ? "pending" : tick === 3 ? "failed" : "completed";
@@ -137,14 +119,14 @@ export default function TaskRows({
     );
   const pillFor = (row: TaskRowData) =>
     row.status === "completed" ? (
-      <StatusPill tone="green">Completed</StatusPill>
+      <Badge tone="green" style={pillEnter}>Completed</Badge>
     ) : row.status === "failed" ? (
-      <StatusPill tone="red">
+      <Badge tone="red" style={pillEnter}>
         Failed
         <span className="flex" style={{ animation: "spin 1.2s linear infinite" }}>
           <Icon name="retry" size={12} strokeWidth={3} />
         </span>
-      </StatusPill>
+      </Badge>
     ) : null;
   const list = variant === "List";
   return (
@@ -163,7 +145,7 @@ export default function TaskRows({
             }`}
             style={{
               borderRadius: list ? 0 : open ? "var(--radius-card)" : "var(--radius-capsule)",
-              animation: `fade-up 450ms var(--ease-out-quint) ${i * 80}ms both`,
+              ...fadeUp(i, { duration: 450 }),
             }}
           >
             <button
@@ -201,11 +183,7 @@ export default function TaskRows({
                         <div
                           key={j}
                           className="flex items-center justify-between"
-                          style={
-                            open
-                              ? { animation: `fade-up 300ms var(--ease-out-quint) ${120 + j * 100}ms both` }
-                              : undefined
-                          }
+                          style={open ? fadeUp(j, { stagger: 100, delay: 120 }) : undefined}
                         >
                           <span className="text-small text-ink-2">{d.label}</span>
                           <span className="font-mono text-tiny text-ink-3 tabular-nums">

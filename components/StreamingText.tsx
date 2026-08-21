@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Chip, Disclosure, IconButton } from "./primitives";
+import { AvatarStack, Chip, Disclosure, fadeUp, IconButton } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * STREAMING TEXT
  * Words resolve out of blur, inline citations appear in
@@ -145,16 +145,7 @@ export default function StreamingText({
           onClick={() => setSourcesOpen((current) => !current)}
           className="ml-1.5 flex items-center gap-1.5 rounded-sm px-1 py-0.5 text-left transition-colors duration-150 hover:bg-hover"
         >
-          <span className="flex -space-x-1">
-            {sources.map((source) => (
-              <img
-                key={source.domain}
-                src={sourceImage(source)}
-                alt=""
-                className="source-avatar size-3.5 rounded-full bg-surface shadow-[0_0_0_1.5px_var(--canvas)]"
-              />
-            ))}
-          </span>
+          <AvatarStack srcs={sources.map(sourceImage)} />
           <span className="text-small text-ink-2">{sourceCount ?? sources.length} sources</span>
         </button>
       </div>
@@ -190,11 +181,7 @@ export default function StreamingText({
               className="-mx-1.5 flex items-center gap-2 rounded-sm border-b border-line
                 px-1.5 py-1.5 text-left text-caption text-ink transition-colors
                 duration-150 hover:bg-hover-2"
-              style={
-                done
-                  ? { animation: `fade-up 350ms var(--ease-out-quint) ${i * 90}ms both` }
-                  : { opacity: 0 }
-              }
+              style={done ? fadeUp(i, { duration: 350, stagger: 90 }) : { opacity: 0 }}
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                 <path d="M9 10l-5 5 5 5" />

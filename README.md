@@ -40,7 +40,8 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 
 | Component | Purpose | Variants |
 |---|---|---|
-| `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `Chip`, `DiffStat`, `IconButton`, `Disclosure` | — |
+| `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `Chip`, `DiffStat`, `IconButton`, `Disclosure`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`, `fadeUp`/`popIn` | — |
+| `hooks` | Timing utilities: `useSequence` (staged reveals), `useElapsed` (live clock) | — |
 | `Button` | The workhorse control: sizes sm/md, disabled + loading states, optional icon | `primary`, `secondary`, `ghost`, `destructive` |
 | `LoadingState` | Loader for long-running work: pixel grid + shimmer label + elapsed timer | `Drive`, `Dots`, `Orbit`, `Surfer` |
 | `ThinkingState` | Expandable agent trace with animated timeline | `Steps`, `Reasoning`, `Search`, `Coding` |

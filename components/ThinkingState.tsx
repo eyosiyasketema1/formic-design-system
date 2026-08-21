@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { DiffStat, Disclosure, Icon, ShimmerLabel, Spinner } from "./primitives";
+import { useSequence } from "./hooks";
+import { DiffStat, Disclosure, fadeUp, Icon, ShimmerLabel, Spinner } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * THINKING — expandable agent trace, four variants
  *
@@ -12,15 +13,6 @@ import { DiffStat, Disclosure, Icon, ShimmerLabel, Spinner } from "./primitives"
  * The trace runs once, settles, and remains expandable.
  * ───────────────────────────────────────────────────────── */
 const STAGES = [800, 600, 1800, 2600, 1600];
-function useSequence(steps: number[]) {
-  const [stage, setStage] = useState(0);
-  useEffect(() => {
-    if (stage >= steps.length - 1) return;
-    const t = setTimeout(() => setStage((s) => s + 1), steps[stage]);
-    return () => clearTimeout(t);
-  }, [stage, steps]);
-  return stage;
-}
 export type Row = {
   primary: string;
   secondary?: string;
@@ -209,7 +201,7 @@ export default function ThinkingState({
                 </>
               );
               const rowClass = "flex min-h-7 w-full items-center gap-2 rounded-sm px-1.5 py-0.5 text-left";
-              const animation = { animation: `fade-up 320ms var(--ease-out-quint) ${i * 120}ms both` };
+              const animation = fadeUp(i, { duration: 320, stagger: 120 });
               if (variant === "Search") {
                 return (
                   <a

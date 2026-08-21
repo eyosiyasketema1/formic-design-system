@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { Chip, DiffStat, Disclosure, Icon } from "./primitives";
+import { Chip, DiffStat, Disclosure, fadeUp, Icon, popIn, Popover } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * TOOL CHIPS
  * An agent run as compact rows: tool calls with inline
@@ -146,15 +145,6 @@ export default function ToolChips({
       setPreview((current) => (current?.file === file ? null : current));
     }, 120);
   };
-  /* WCAG 1.4.13: dismissible without moving pointer or focus */
-  useEffect(() => {
-    if (!preview) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setPreview(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [preview]);
   /* a new run resets the reveal and any expanded rows */
   useEffect(() => {
     setStep(0);
@@ -193,7 +183,7 @@ export default function ToolChips({
           {rows.slice(0, step).map((row, rowIndex) => {
             const rowOpen = openRows.has(rowIndex);
             return (
-            <div key={rowIndex} style={{ animation: "fade-up 300ms var(--ease-out-quint) both" }}>
+            <div key={rowIndex} style={fadeUp()}>
               <button
                 type="button"
                 aria-expanded={rowOpen}
@@ -259,7 +249,7 @@ export default function ToolChips({
                 onFocus={openPreview(d.file)}
                 onBlur={closePreview(d.file)}
                 className="max-w-full hover:bg-hover"
-                style={{ animation: `pop-in 250ms var(--ease-out-quint) ${i * 80}ms both` }}
+                style={popIn(i, { duration: 250 })}
               >
                 <span className="min-w-0 truncate">{d.file}</span>
                 <DiffStat add={d.add} del={d.del} />
@@ -280,20 +270,15 @@ export default function ToolChips({
         </div>
       )}
       </Disclosure>
-      {preview && typeof document !== "undefined" && createPortal(
-        <div
+      {preview && (
+        <Popover
           id="ds-diff-preview"
-          role="tooltip"
+          x={preview.x}
+          top={preview.top}
+          bottom={preview.bottom}
+          onClose={() => setPreview(null)}
           onMouseEnter={cancelClose}
           onMouseLeave={closePreview(preview.file)}
-          className="fixed z-50 w-72 overflow-hidden rounded-md bg-surface shadow-overlay"
-          style={{
-            left: preview.x,
-            top: preview.top,
-            bottom: preview.bottom,
-            animation: "pop-in 160ms var(--ease-out-quint) both",
-            transformOrigin: preview.top === undefined ? "bottom left" : "top left",
-          }}
         >
           <div className="flex items-center justify-between border-b border-line px-2.5 py-1.5 font-mono text-tiny">
             <span className="min-w-0 truncate text-ink-2">{preview.file}</span>
@@ -319,8 +304,7 @@ export default function ToolChips({
               </div>
             ))}
           </div>
-        </div>,
-        document.body,
+        </Popover>
       )}
     </div>
   );

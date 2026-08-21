@@ -270,6 +270,77 @@ function Disclosure({ open, duration = 300, live = false, className = "", innerC
     </div>
   );
 }
+const entrance = (name, index, { duration = 300, stagger = 80, delay = 0 } = {}) => ({
+  animation: `${name} ${duration}ms var(--ease-out-quint) ${delay + index * stagger}ms both`,
+});
+const fadeUp = (index = 0, opts) => entrance("fade-up", index, opts);
+const popIn = (index = 0, opts) => entrance("pop-in", index, opts);
+function Card({ className = "", children, ...rest }) {
+  return <div className={`overflow-hidden rounded-card bg-surface shadow-card ${className}`} {...rest}>{children}</div>;
+}
+const BADGE_TONES = { green: "bg-green-tint text-green", red: "bg-red-tint text-red", neutral: "bg-inset text-ink-2" };
+function Badge({ tone = "neutral", free = false, className = "", style, children }) {
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full font-medium ${free ? "" : "h-5.5 px-2 text-tiny"} ${BADGE_TONES[tone]} ${className}`} style={style}>
+      {children}
+    </span>
+  );
+}
+function RadioCheck({ type, on }) {
+  return (
+    <span className={`flex size-4 shrink-0 items-center justify-center transition-colors duration-200 ${type === "radio" ? "rounded-full" : "rounded-[5px]"} ${on ? "bg-ink text-canvas" : "shadow-[inset_0_0_0_1.5px_var(--line-strong)] text-transparent"}`}>
+      {type === "radio" ? (
+        <span className="size-1.5 rounded-full bg-canvas transition-transform duration-200" style={{ transform: on ? "scale(1)" : "scale(0)" }} />
+      ) : (
+        <Icon name="check" size={12} strokeWidth={3} />
+      )}
+    </span>
+  );
+}
+function AvatarStack({ srcs, className = "" }) {
+  return (
+    <span className={`flex -space-x-1 ${className}`}>
+      {srcs.map((src, i) => (
+        <img key={i} src={src} alt="" className="source-avatar size-3.5 rounded-full bg-surface shadow-[0_0_0_1.5px_var(--canvas)]" />
+      ))}
+    </span>
+  );
+}
+function Popover({ x, top, bottom, id, role = "tooltip", className = "w-72", onClose, onMouseEnter, onMouseLeave, children }) {
+  useEffect(() => {
+    if (!onClose) return;
+    const onKey = (event) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return ReactDOM.createPortal(
+    <div id={id} role={role} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}
+      className={`fixed z-50 overflow-hidden rounded-md bg-surface shadow-overlay ${className}`}
+      style={{ left: x, top, bottom, animation: "pop-in 160ms var(--ease-out-quint) both", transformOrigin: top === undefined ? "bottom left" : "top left" }}>
+      {children}
+    </div>,
+    document.body,
+  );
+}
+function useSequence(steps) {
+  const [stage, setStage] = useState(0);
+  useEffect(() => {
+    if (stage >= steps.length - 1) return;
+    const t = setTimeout(() => setStage((s) => s + 1), steps[stage]);
+    return () => clearTimeout(t);
+  }, [stage, steps]);
+  return stage;
+}
+function useElapsed() {
+  const [ds, setDs] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setDs((d) => d + 1), 100);
+    return () => clearInterval(t);
+  }, []);
+  const total = ds / 10;
+  if (total < 60) return `${total.toFixed(1)}s`;
+  return `${Math.floor(total / 60)}m ${(total % 60).toFixed(1)}s`;
+}
 
 /* ═══════════ LoadingState ═══════════ */
 const chevron = Array.from({ length: 9 }, (_, i) => {
@@ -300,16 +371,6 @@ function LoaderGrid({ delays, dur, round }) {
     </span>
   );
 }
-function useElapsed() {
-  const [ds, setDs] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setDs((d) => d + 1), 100);
-    return () => clearInterval(t);
-  }, []);
-  const total = ds / 10;
-  if (total < 60) return `${total.toFixed(1)}s`;
-  return `${Math.floor(total / 60)}m ${(total % 60).toFixed(1)}s`;
-}
 function LoadingState({ label, variant = "Drive" }) {
   const elapsed = useElapsed();
   const resolvedLabel = label ?? "Churning";
@@ -325,15 +386,6 @@ function LoadingState({ label, variant = "Drive" }) {
 
 /* ═══════════ ThinkingState ═══════════ */
 const STAGES = [800, 600, 1800, 2600, 1600];
-function useSequence(steps) {
-  const [stage, setStage] = useState(0);
-  useEffect(() => {
-    if (stage >= steps.length - 1) return;
-    const t = setTimeout(() => setStage((s) => s + 1), steps[stage]);
-    return () => clearTimeout(t);
-  }, [stage, steps]);
-  return stage;
-}
 const THINK_VARIANTS = {
   Steps: {
     active: "Thinking", done: "Thought for 4 seconds",
@@ -446,7 +498,7 @@ function ThinkingState({ variant = "Steps" }) {
                   </React.Fragment>
                 );
                 const rowClass = "flex min-h-7 w-full items-center gap-2 rounded-sm px-1.5 py-0.5 text-left";
-                const animation = { animation: `fade-up 320ms var(--ease-out-quint) ${i * 120}ms both` };
+                const animation = fadeUp(i, { duration: 320, stagger: 120 });
                 if (variant === "Search") {
                   return (
                     <a key={row.primary} href={row.href} target="_blank" rel="noreferrer"
@@ -521,12 +573,12 @@ function ApprovalCard({ resettable = true }) {
   if (sent) {
     return (
       <div className="flex w-full max-w-80 items-center gap-3" style={{ animation: "pop-in 260ms var(--ease-out-quint) both" }}>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-green-tint py-1 pr-2.5 pl-1 text-caption font-medium text-green">
+        <Badge tone="green" free className="py-1 pr-2.5 pl-1 text-caption">
           <span className="flex size-4.5 items-center justify-center rounded-full bg-green text-canvas">
             <Icon name="check" size={11} strokeWidth={3} />
           </span>
           Answers sent
-        </span>
+        </Badge>
         {resettable && (
           <button type="button" onClick={reset} className="text-small font-medium text-ink-3 transition-colors duration-150 hover:text-ink">Start over</button>
         )}
@@ -535,7 +587,7 @@ function ApprovalCard({ resettable = true }) {
   }
   return (
     <div className="flex min-h-[196px] w-full max-w-80 flex-col items-stretch">
-      <div className="w-full self-start overflow-hidden rounded-card bg-surface shadow-card">
+      <Card className="w-full self-start">
         <div key={qi} className="primitive-card-pad" style={{ animation: "fade-up 350ms var(--ease-out-quint) both" }}>
           <div className="flex items-start justify-between gap-3">
             <span className="text-body font-medium text-ink">{question.q}</span>
@@ -549,13 +601,7 @@ function ApprovalCard({ resettable = true }) {
               return (
                 <button key={option} type="button" aria-pressed={on} onClick={() => toggle(i)}
                   className="-mx-1.5 flex items-center gap-2 rounded-control px-1.5 py-1 text-left transition-colors duration-150 hover:bg-hover">
-                  <span className={`flex size-4 shrink-0 items-center justify-center transition-colors duration-200 ${question.type === "radio" ? "rounded-full" : "rounded-[5px]"} ${on ? "bg-ink text-canvas" : "shadow-[inset_0_0_0_1.5px_var(--line-strong)] text-transparent"}`}>
-                    {question.type === "radio" ? (
-                      <span className="size-1.5 rounded-full bg-canvas transition-transform duration-200" style={{ transform: on ? "scale(1)" : "scale(0)" }} />
-                    ) : (
-                      <Icon name="check" size={12} strokeWidth={3} />
-                    )}
-                  </span>
+                  <RadioCheck type={question.type} on={on} />
                   <span className={`text-body transition-colors duration-200 ${on ? "text-ink" : "text-ink-2"}`}>{option}</span>
                 </button>
               );
@@ -610,7 +656,7 @@ function ApprovalCard({ resettable = true }) {
             </button>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -689,11 +735,7 @@ function StreamingText({ loop = true, fill = false }) {
         ))}
         <button type="button" aria-expanded={sourcesOpen} onClick={() => setSourcesOpen((current) => !current)}
           className="ml-1.5 flex items-center gap-1.5 rounded-sm px-1 py-0.5 text-left transition-colors duration-150 hover:bg-hover">
-          <span className="flex -space-x-1">
-            {SOURCES.map((source) => (
-              <img key={source.domain} src={source.image} alt="" className="source-avatar size-3.5 rounded-full bg-surface shadow-[0_0_0_1.5px_var(--canvas)]" />
-            ))}
-          </span>
+          <AvatarStack srcs={SOURCES.map((source) => source.image)} />
           <span className="text-small text-ink-2">10 sources</span>
         </button>
       </div>
@@ -715,7 +757,7 @@ function StreamingText({ loop = true, fill = false }) {
           {FOLLOW_UPS.map((text, i) => (
             <button key={text}
               className="-mx-1.5 flex items-center gap-2 rounded-sm border-b border-line px-1.5 py-1.5 text-left text-caption text-ink transition-colors duration-150 hover:bg-hover-2"
-              style={done ? { animation: `fade-up 350ms var(--ease-out-quint) ${i * 90}ms both` } : { opacity: 0 }}>
+              style={done ? fadeUp(i, { duration: 350, stagger: 90 }) : { opacity: 0 }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                 <path d="M9 10l-5 5 5 5" /><path d="M20 4v7a4 4 0 0 1-4 4H4" />
               </svg>
@@ -862,12 +904,6 @@ function ToolChips({ rows = TC_ROWS, diffs = TC_DIFFS, diffLines = TC_DIFF_LINES
     }, 120);
   };
   useEffect(() => {
-    if (!preview) return;
-    const onKey = (event) => { if (event.key === "Escape") setPreview(null); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [preview]);
-  useEffect(() => {
     setStep(0); setOpenRows(new Set()); setPreview(null);
   }, [rows]);
   const total = rows.length + 1;
@@ -894,7 +930,7 @@ function ToolChips({ rows = TC_ROWS, diffs = TC_DIFFS, diffLines = TC_DIFF_LINES
           {rows.slice(0, step).map((row, rowIndex) => {
             const rowOpen = openRows.has(rowIndex);
             return (
-            <div key={rowIndex} style={{ animation: "fade-up 300ms var(--ease-out-quint) both" }}>
+            <div key={rowIndex} style={fadeUp()}>
               <button type="button" aria-expanded={rowOpen} onClick={() => toggleRow(rowIndex)}
                 className="group/row -mx-[3px] flex h-7 w-[calc(100%+6px)] min-w-0 items-center gap-2 rounded-control px-[3px] text-left transition-colors duration-150 hover:bg-hover-2">
                 <span className="relative flex size-4 shrink-0 items-center justify-center text-ink-3">
@@ -933,7 +969,7 @@ function ToolChips({ rows = TC_ROWS, diffs = TC_DIFFS, diffLines = TC_DIFF_LINES
                 aria-describedby={preview?.file === d.file ? "ds-diff-preview" : undefined}
                 onFocus={openPreview(d.file)} onBlur={closePreview(d.file)}
                 className="max-w-full hover:bg-hover"
-                style={{ animation: `pop-in 250ms var(--ease-out-quint) ${i * 80}ms both` }}>
+                style={popIn(i, { duration: 250 })}>
                 <span className="min-w-0 truncate">{d.file}</span>
                 <DiffStat add={d.add} del={d.del} />
               </Chip>
@@ -949,10 +985,9 @@ function ToolChips({ rows = TC_ROWS, diffs = TC_DIFFS, diffLines = TC_DIFF_LINES
         </div>
       )}
       </Disclosure>
-      {preview && ReactDOM.createPortal(
-        <div id="ds-diff-preview" role="tooltip" onMouseEnter={cancelClose} onMouseLeave={closePreview(preview.file)}
-          className="fixed z-50 w-72 overflow-hidden rounded-md bg-surface shadow-overlay"
-          style={{ left: preview.x, top: preview.top, bottom: preview.bottom, animation: "pop-in 160ms var(--ease-out-quint) both", transformOrigin: preview.top === undefined ? "bottom left" : "top left" }}>
+      {preview && (
+        <Popover id="ds-diff-preview" x={preview.x} top={preview.top} bottom={preview.bottom}
+          onClose={() => setPreview(null)} onMouseEnter={cancelClose} onMouseLeave={closePreview(preview.file)}>
           <div className="flex items-center justify-between border-b border-line px-2.5 py-1.5 font-mono text-tiny">
             <span className="min-w-0 truncate text-ink-2">{preview.file}</span>
             <DiffStat add={diffs.find((diff) => diff.file === preview.file)?.add ?? 0} del={diffs.find((diff) => diff.file === preview.file)?.del ?? 0} />
@@ -965,8 +1000,7 @@ function ToolChips({ rows = TC_ROWS, diffs = TC_DIFFS, diffLines = TC_DIFF_LINES
               </div>
             ))}
           </div>
-        </div>,
-        document.body,
+        </Popover>
       )}
     </div>
   );
@@ -974,15 +1008,6 @@ function ToolChips({ rows = TC_ROWS, diffs = TC_DIFFS, diffLines = TC_DIFF_LINES
 
 /* ═══════════ TaskRows ═══════════ */
 const TR_TICKS = [600, 900, 2400, 1400, 2400, 600];
-function useTick(intervals) {
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    if (tick >= intervals.length - 1) return;
-    const t = setTimeout(() => setTick((x) => x + 1), intervals[tick]);
-    return () => clearTimeout(t);
-  }, [tick, intervals]);
-  return tick;
-}
 function SpinnerRing({ active, children }) {
   const size = 24, stroke = 2;
   const r = (size - stroke) / 2;
@@ -1008,16 +1033,9 @@ function StatusDot({ tone, children }) {
     </span>
   );
 }
-function StatusPill({ tone, children }) {
-  return (
-    <span className={`inline-flex h-5.5 items-center gap-1.5 rounded-full px-2 text-tiny font-medium ${tone === "red" ? "bg-red-tint text-red" : "bg-green-tint text-green"}`}
-      style={{ animation: "fade-in 200ms ease-out both" }}>
-      {children}
-    </span>
-  );
-}
+const pillEnter = { animation: "fade-in 200ms ease-out both" };
 function TaskRows({ variant = "Capsules", rows: rowsProp }) {
-  const tick = useTick(TR_TICKS);
+  const tick = useSequence(TR_TICKS);
   const [manualOpen, setManualOpen] = useState({});
   const demo = rowsProp === undefined;
   const draftStatus = tick < 3 ? "pending" : tick === 3 ? "failed" : "completed";
@@ -1039,12 +1057,12 @@ function TaskRows({ variant = "Capsules", rows: rowsProp }) {
     );
   const pillFor = (row) =>
     row.status === "completed" ? (
-      <StatusPill tone="green">Completed</StatusPill>
+      <Badge tone="green" style={pillEnter}>Completed</Badge>
     ) : row.status === "failed" ? (
-      <StatusPill tone="red">
+      <Badge tone="red" style={pillEnter}>
         Failed
         <span className="flex" style={{ animation: "spin 1.2s linear infinite" }}><Icon name="retry" size={12} strokeWidth={3} /></span>
-      </StatusPill>
+      </Badge>
     ) : null;
   const list = variant === "List";
   return (
@@ -1054,7 +1072,7 @@ function TaskRows({ variant = "Capsules", rows: rowsProp }) {
         return (
           <div key={row.key}
             className={`self-stretch overflow-hidden transition-[border-radius,background-color] duration-300 hover:bg-inset ${list ? "border-b border-line last:border-0" : "bg-surface shadow-card"}`}
-            style={{ borderRadius: list ? 0 : open ? "var(--radius-card)" : "var(--radius-capsule)", animation: `fade-up 450ms var(--ease-out-quint) ${i * 80}ms both` }}>
+            style={{ borderRadius: list ? 0 : open ? "var(--radius-card)" : "var(--radius-capsule)", ...fadeUp(i, { duration: 450 }) }}>
             <button type="button" aria-expanded={open}
               onClick={() => setManualOpen((current) => ({ ...current, [row.key]: !open }))}
               className="flex h-11 w-full items-center gap-2.5 px-2.5 text-left">
@@ -1072,7 +1090,7 @@ function TaskRows({ variant = "Capsules", rows: rowsProp }) {
                 <div className="flex flex-col gap-1.5">
                   {row.details.map((d, j) => (
                     <div key={j} className="flex items-center justify-between"
-                      style={open ? { animation: `fade-up 300ms var(--ease-out-quint) ${120 + j * 100}ms both` } : undefined}>
+                      style={open ? fadeUp(j, { stagger: 100, delay: 120 }) : undefined}>
                       <span className="text-small text-ink-2">{d.label}</span>
                       <span className="font-mono text-tiny text-ink-3 tabular-nums">{d.meta}</span>
                     </div>
@@ -1097,12 +1115,12 @@ function Section({ title, note, children }) {
     </section>
   );
 }
-function Card({ label, wide, children }) {
+function GalleryCard({ label, wide, children }) {
   return (
-    <div className={`rounded-card bg-surface p-5 shadow-card ${wide ? "w-full max-w-105" : ""}`}>
+    <Card className={`p-5 ${wide ? "w-full max-w-105" : ""}`}>
       <p className="mb-3 font-mono text-micro tracking-wide text-ink-3 uppercase">{label}</p>
       {children}
-    </div>
+    </Card>
   );
 }
 function useTheme() {
@@ -1183,8 +1201,20 @@ function App() {
         </button>
         </div>
       </header>
-      <Section title="Primitives" note="The atoms everything above composes: Icon, Spinner, ShimmerLabel, Chip, DiffStat, IconButton, Disclosure.">
-        <Card label="Primitives" wide>
+      <Section title="Primitives" note="The atoms everything above composes: Icon, Spinner, ShimmerLabel, Chip, DiffStat, IconButton, Disclosure, Card, Badge, RadioCheck, AvatarStack, Popover + timing hooks.">
+        <GalleryCard label="Badges · controls" wide>
+          <div className="flex flex-wrap items-center gap-3">
+            <Badge tone="green">Completed</Badge>
+            <Badge tone="red">Failed</Badge>
+            <Badge tone="neutral">Queued</Badge>
+            <RadioCheck type="radio" on={true} />
+            <RadioCheck type="radio" on={false} />
+            <RadioCheck type="check" on={true} />
+            <RadioCheck type="check" on={false} />
+            <AvatarStack srcs={[SOURCE_IMAGES.scoop, SOURCE_IMAGES.trends, SOURCE_IMAGES.market]} />
+          </div>
+        </GalleryCard>
+        <GalleryCard label="Primitives" wide>
           <div className="flex flex-wrap items-center gap-3">
             <ShimmerLabel>Shimmering</ShimmerLabel>
             <Spinner className="text-ink-2" />
@@ -1196,15 +1226,15 @@ function App() {
             <IconButton label="Search" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="search" /></IconButton>
             <span className="flex items-center gap-1 text-ink-3"><Icon name="chevron" /><Icon name="check" /></span>
           </div>
-        </Card>
+        </GalleryCard>
       </Section>
       <Section title="Button" note="Four variants × two sizes; disabled and loading states. Click the loader to try it.">
-        <Card label="Variants · sizes · states" wide><ButtonDemo /></Card>
+        <GalleryCard label="Variants · sizes · states" wide><ButtonDemo /></GalleryCard>
       </Section>
       <Section title="LoadingState" note="Pixel-grid loader with shimmer label and elapsed timer.">
-        <Card label="Drive"><LoadingState variant="Drive" /></Card>
-        <Card label="Dots"><LoadingState variant="Dots" /></Card>
-        <Card label="Orbit"><LoadingState variant="Orbit" /></Card>
+        <GalleryCard label="Drive"><LoadingState variant="Drive" /></GalleryCard>
+        <GalleryCard label="Dots"><LoadingState variant="Dots" /></GalleryCard>
+        <GalleryCard label="Orbit"><LoadingState variant="Orbit" /></GalleryCard>
       </Section>
       <Section title="ThinkingState" note="Expandable agent trace. Runs once on load — replay to see the sequence again.">
         <div className="w-full">
@@ -1213,25 +1243,25 @@ function App() {
             ↻ Replay all
           </button>
           <div className="grid gap-6 md:grid-cols-2">
-            <Card label="Steps"><ThinkingState key={`s${thinkKey}`} variant="Steps" /></Card>
-            <Card label="Reasoning"><ThinkingState key={`r${thinkKey}`} variant="Reasoning" /></Card>
-            <Card label="Search"><ThinkingState key={`w${thinkKey}`} variant="Search" /></Card>
-            <Card label="Coding"><ThinkingState key={`c${thinkKey}`} variant="Coding" /></Card>
+            <GalleryCard label="Steps"><ThinkingState key={`s${thinkKey}`} variant="Steps" /></GalleryCard>
+            <GalleryCard label="Reasoning"><ThinkingState key={`r${thinkKey}`} variant="Reasoning" /></GalleryCard>
+            <GalleryCard label="Search"><ThinkingState key={`w${thinkKey}`} variant="Search" /></GalleryCard>
+            <GalleryCard label="Coding"><ThinkingState key={`c${thinkKey}`} variant="Coding" /></GalleryCard>
           </div>
         </div>
       </Section>
       <Section title="ApprovalCard" note="Human-in-the-loop questions — fully interactive, try answering.">
-        <Card label="Default"><ApprovalCard /></Card>
+        <GalleryCard label="Default"><ApprovalCard /></GalleryCard>
       </Section>
       <Section title="TaskRows" note="Agent tasks as expandable rows — a scripted status run plays once (spin → failed → completed).">
-        <Card label="Capsules" wide><TaskRows variant="Capsules" /></Card>
-        <Card label="List" wide><TaskRows variant="List" /></Card>
+        <GalleryCard label="Capsules" wide><TaskRows variant="Capsules" /></GalleryCard>
+        <GalleryCard label="List" wide><TaskRows variant="List" /></GalleryCard>
       </Section>
       <Section title="ToolChips" note="Agent run as compact rows. Click rows to expand; hover the file chips for diff previews.">
-        <Card label="Default"><ToolChips /></Card>
+        <GalleryCard label="Default"><ToolChips /></GalleryCard>
       </Section>
       <Section title="StreamingText" note="Words resolve out of blur; citations, sources, and follow-ups appear when done. Loops.">
-        <Card label="Default" wide><StreamingText /></Card>
+        <GalleryCard label="Default" wide><StreamingText /></GalleryCard>
       </Section>
     </main>
   );

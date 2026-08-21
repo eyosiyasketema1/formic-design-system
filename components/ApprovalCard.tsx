@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Icon, IconButton } from "./primitives";
+import { Badge, Card, Icon, IconButton, RadioCheck } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * APPROVAL CARD (human-in-the-loop)
  * One question at a time; elongated pills show progress;
@@ -102,12 +102,12 @@ export default function ApprovalCard({
   if (sent) {
     return (
       <div className="flex w-full max-w-80 items-center gap-3" style={{ animation: "pop-in 260ms var(--ease-out-quint) both" }}>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-green-tint py-1 pr-2.5 pl-1 text-caption font-medium text-green">
+        <Badge tone="green" free className="py-1 pr-2.5 pl-1 text-caption">
           <span className="flex size-4.5 items-center justify-center rounded-full bg-green text-canvas">
             <Icon name="check" size={11} strokeWidth={3} />
           </span>
           Answers sent
-        </span>
+        </Badge>
         {resettable && (
           <button type="button" onClick={reset} className="text-small font-medium text-ink-3 transition-colors duration-150 hover:text-ink">
             Start over
@@ -118,7 +118,7 @@ export default function ApprovalCard({
   }
   return (
     <div className="flex min-h-[196px] w-full max-w-80 flex-col items-stretch">
-      <div className="w-full self-start overflow-hidden rounded-card bg-surface shadow-card">
+      <Card className="w-full self-start">
         {(
           <div key={qi} className="primitive-card-pad" style={{ animation: "fade-up 350ms var(--ease-out-quint) both" }}>
             <div className="flex items-start justify-between gap-3">
@@ -142,17 +142,7 @@ export default function ApprovalCard({
                     onClick={() => toggle(i)}
                     className="-mx-1.5 flex items-center gap-2 rounded-control px-1.5 py-1 text-left transition-colors duration-150 hover:bg-hover"
                   >
-                    <span
-                      className={`flex size-4 shrink-0 items-center justify-center transition-colors duration-200
-                        ${question.type === "radio" ? "rounded-full" : "rounded-[5px]"}
-                        ${on ? "bg-ink text-canvas" : "shadow-[inset_0_0_0_1.5px_var(--line-strong)] text-transparent"}`}
-                    >
-                      {question.type === "radio" ? (
-                        <span className="size-1.5 rounded-full bg-canvas transition-transform duration-200" style={{ transform: on ? "scale(1)" : "scale(0)" }} />
-                      ) : (
-                        <Icon name="check" size={12} strokeWidth={3} />
-                      )}
-                    </span>
+                    <RadioCheck type={question.type} on={on} />
                     <span className={`text-body transition-colors duration-200 ${on ? "text-ink" : "text-ink-2"}`}>
                       {option}
                     </span>
@@ -239,7 +229,7 @@ export default function ApprovalCard({
             </button>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

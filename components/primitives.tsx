@@ -1,5 +1,6 @@
 "use client";
-import { type CSSProperties, type ElementType, type ReactNode } from "react";
+import { useEffect, type CSSProperties, type ElementType, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 /* ─────────────────────────────────────────────────────────
  * PRIMITIVES — the atoms every component composes
  *
@@ -10,9 +11,23 @@ import { type CSSProperties, type ElementType, type ReactNode } from "react";
  *   DiffStat      "+74 −41" green/red tabular counts
  *   IconButton    24px square hover button
  *   Disclosure    expand/collapse (grid-rows 0fr→1fr)
+ *   Card          surface container (rounded-card + shadow)
+ *   Badge         status pill: green/red/neutral tints
+ *   RadioCheck    custom radio/checkbox visual
+ *   AvatarStack   overlapping mini avatars
+ *   Popover       fixed-position portal (Escape closes)
+ *   fadeUp/popIn  staggered entrance style helpers
  *
  * Everything reads tokens only; no theme branching.
  * ───────────────────────────────────────────────────────── */
+
+/* ── Motion helpers — staggered entrances ──────────────── */
+type EntranceOpts = { duration?: number; stagger?: number; delay?: number };
+const entrance = (name: string, index: number, { duration = 300, stagger = 80, delay = 0 }: EntranceOpts): CSSProperties => ({
+  animation: `${name} ${duration}ms var(--ease-out-quint) ${delay + index * stagger}ms both`,
+});
+export const fadeUp = (index = 0, opts: EntranceOpts = {}) => entrance("fade-up", index, opts);
+export const popIn = (index = 0, opts: EntranceOpts = {}) => entrance("pop-in", index, opts);
 
 /* ── Icon ──────────────────────────────────────────────── */
 export type IconName = "chevron" | "check" | "close" | "search" | "retry";
@@ -170,6 +185,142 @@ export function IconButton({
     >
       {children}
     </button>
+  );
+}
+
+/* ── Card ──────────────────────────────────────────────── */
+export function Card({
+  className = "",
+  children,
+  ...rest
+}: { className?: string; children: ReactNode } & Record<string, unknown>) {
+  return (
+    <div className={`overflow-hidden rounded-card bg-surface shadow-card ${className}`} {...rest}>
+      {children}
+    </div>
+  );
+}
+
+/* ── Badge ─────────────────────────────────────────────── */
+export type BadgeTone = "green" | "red" | "neutral";
+const BADGE_TONES: Record<BadgeTone, string> = {
+  green: "bg-green-tint text-green",
+  red: "bg-red-tint text-red",
+  neutral: "bg-inset text-ink-2",
+};
+export function Badge({
+  tone = "neutral",
+  /** skip the default sizing so the caller controls padding/type */
+  free = false,
+  className = "",
+  style,
+  children,
+}: {
+  tone?: BadgeTone;
+  free?: boolean;
+  className?: string;
+  style?: CSSProperties;
+  children: ReactNode;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full font-medium
+        ${free ? "" : "h-5.5 px-2 text-tiny"} ${BADGE_TONES[tone]} ${className}`}
+      style={style}
+    >
+      {children}
+    </span>
+  );
+}
+
+/* ── RadioCheck ────────────────────────────────────────── */
+export function RadioCheck({ type, on }: { type: "radio" | "check"; on: boolean }) {
+  return (
+    <span
+      className={`flex size-4 shrink-0 items-center justify-center transition-colors duration-200
+        ${type === "radio" ? "rounded-full" : "rounded-[5px]"}
+        ${on ? "bg-ink text-canvas" : "shadow-[inset_0_0_0_1.5px_var(--line-strong)] text-transparent"}`}
+    >
+      {type === "radio" ? (
+        <span
+          className="size-1.5 rounded-full bg-canvas transition-transform duration-200"
+          style={{ transform: on ? "scale(1)" : "scale(0)" }}
+        />
+      ) : (
+        <Icon name="check" size={12} strokeWidth={3} />
+      )}
+    </span>
+  );
+}
+
+/* ── AvatarStack ───────────────────────────────────────── */
+export function AvatarStack({ srcs, className = "" }: { srcs: string[]; className?: string }) {
+  return (
+    <span className={`flex -space-x-1 ${className}`}>
+      {srcs.map((src, i) => (
+        <img
+          key={i}
+          src={src}
+          alt=""
+          className="source-avatar size-3.5 rounded-full bg-surface shadow-[0_0_0_1.5px_var(--canvas)]"
+        />
+      ))}
+    </span>
+  );
+}
+
+/* ── Popover ───────────────────────────────────────────── */
+export function Popover({
+  x,
+  top,
+  bottom,
+  id,
+  role = "tooltip",
+  className = "w-72",
+  onClose,
+  onMouseEnter,
+  onMouseLeave,
+  children,
+}: {
+  x: number;
+  top?: number;
+  bottom?: number;
+  id?: string;
+  role?: string;
+  className?: string;
+  /** called on Escape — WCAG 1.4.13 dismissibility */
+  onClose?: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+  children: ReactNode;
+}) {
+  useEffect(() => {
+    if (!onClose) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  if (typeof document === "undefined") return null;
+  return createPortal(
+    <div
+      id={id}
+      role={role}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      className={`fixed z-50 overflow-hidden rounded-md bg-surface shadow-overlay ${className}`}
+      style={{
+        left: x,
+        top,
+        bottom,
+        animation: "pop-in 160ms var(--ease-out-quint) both",
+        transformOrigin: top === undefined ? "bottom left" : "top left",
+      }}
+    >
+      {children}
+    </div>,
+    document.body,
   );
 }
 
