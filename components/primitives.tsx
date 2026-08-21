@@ -30,12 +30,29 @@ export const fadeUp = (index = 0, opts: EntranceOpts = {}) => entrance("fade-up"
 export const popIn = (index = 0, opts: EntranceOpts = {}) => entrance("pop-in", index, opts);
 
 /* ── Icon ──────────────────────────────────────────────── */
-export type IconName = "chevron" | "check" | "close" | "search" | "retry";
+export type IconName =
+  | "chevron" | "check" | "close" | "search" | "retry"
+  | "arrow-up" | "plus" | "clock" | "ellipsis";
 const PATHS: Record<IconName, ReactNode> = {
   chevron: <path d="M6 9l6 6 6-6" />,
   check: <path d="M20 6L9 17l-5-5" />,
   close: <path d="M18 6L6 18M6 6l12 12" />,
   retry: <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" />,
+  "arrow-up": <path d="M12 19V5M5 12l7-7 7 7" />,
+  plus: <path d="M12 5v14M5 12h14" />,
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </>
+  ),
+  ellipsis: (
+    <g fill="currentColor" stroke="none">
+      <circle cx="5" cy="12" r="1.8" />
+      <circle cx="12" cy="12" r="1.8" />
+      <circle cx="19" cy="12" r="1.8" />
+    </g>
+  ),
   search: (
     <>
       <circle cx="11" cy="11" r="7" />
@@ -321,6 +338,38 @@ export function Popover({
       {children}
     </div>,
     document.body,
+  );
+}
+
+/* ── SendButton ────────────────────────────────────────── */
+export function SendButton({
+  enabled = true,
+  label = "Send",
+  className = "",
+  onClick,
+}: {
+  enabled?: boolean;
+  /** accessible name — describes what sending does right now */
+  label?: string;
+  className?: string;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      disabled={!enabled}
+      onClick={onClick}
+      className={`flex size-7 shrink-0 items-center justify-center rounded-control
+        transition-[background-color,color,transform] duration-200 enabled:active:scale-[0.96] ${className}`}
+      style={{
+        background: enabled ? "var(--ink)" : "var(--field)",
+        color: enabled ? "var(--surface)" : "var(--ink-3)",
+        boxShadow: enabled ? "var(--highlight-raised)" : "var(--shadow-btn)",
+      }}
+    >
+      <Icon name="arrow-up" strokeWidth={2.5} />
+    </button>
   );
 }
 

@@ -56,6 +56,7 @@
   --shadow-btn: var(--shadow-btn);
   --shadow-card: var(--shadow-card);
   --shadow-overlay: var(--shadow-overlay);
+  --shadow-field: var(--shadow-field);
 
   /* Motion */
   --ease-out-quint: var(--ease-out-quint);

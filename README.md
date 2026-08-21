@@ -40,7 +40,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 
 | Component | Purpose | Variants |
 |---|---|---|
-| `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `Chip`, `DiffStat`, `IconButton`, `Disclosure`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`, `fadeUp`/`popIn` | — |
+| `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Disclosure`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`, `fadeUp`/`popIn` | — |
 | `hooks` | Timing utilities: `useSequence` (staged reveals), `useElapsed` (live clock) | — |
 | `Button` | The workhorse control: sizes sm/md, disabled + loading states, optional icon | `primary`, `secondary`, `ghost`, `destructive` |
 | `LoadingState` | Loader for long-running work: pixel grid + shimmer label + elapsed timer | `Drive`, `Dots`, `Orbit`, `Surfer` |
@@ -49,6 +49,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `StreamingText` | AI response stream: blur-in words, inline citations, sources list, follow-ups | — |
 | `ToolChips` | Agent run as compact rows: expandable tool calls + file-diff chips with hover previews | — |
 | `TaskRows` | Agent tasks as expandable rows with status badges (ring/failed/completed) | `Capsules`, `List` |
+| `ChatComposer` | Chat panel: tabs, reply thread, composer with send — analytics via `onSend` callback | — |
 
 ## Theming
 
