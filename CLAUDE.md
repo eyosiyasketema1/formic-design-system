@@ -15,6 +15,15 @@ Rules for any AI agent (or human) working in this repo. These exist because past
 9. **Keep preview.html in sync.** Any token or component change must be mirrored in `preview.html` (it duplicates styles inline for standalone use). The QA script detects color drift.
 10. **Questrial** is the default face (single weight — heavier weights are synthesized; that's accepted).
 
+## Extraction rule
+
+After every piece of work, look for extractable pieces and extract them:
+
+1. **Compose first.** New components must use existing primitives (`components/primitives.tsx`, `components/hooks.ts`) instead of re-implementing patterns — check there before writing an expander, chip, badge, spinner, icon, popover, stagger animation, or timer.
+2. **Extract on second use.** If a piece of UI or logic appears in a second component (or clearly will), promote it to `primitives.tsx` / `hooks.ts` in the same unit of work, and rewire the existing consumer. Never leave two copies alive.
+3. **New icons go into the shared `Icon` set**, not inline `<svg>` (component-specific illustrative SVGs may stay local).
+4. **Mirror every primitive in `preview.html`** (same names, same markup) and showcase it in the gallery's Primitives section.
+
 ## Mandatory QA workflow
 
 **After every piece of work — no exceptions:**
