@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, type CSSProperties, type ElementType, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ElementType, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 /* ─────────────────────────────────────────────────────────
  * PRIMITIVES — the atoms every component composes
@@ -403,6 +403,51 @@ export function SendButton({
     >
       <Icon name="arrow-up" strokeWidth={2.5} />
     </button>
+  );
+}
+
+/* ── GlideMenu ─────────────────────────────────────────── */
+/* A single highlight glides to the hovered row instead of each
+ * row toggling its own background. Mark rows with data-menu-row. */
+export function GlideMenu({
+  className = "",
+  highlightClassName = "inset-x-0 rounded-control bg-hover",
+  children,
+}: {
+  className?: string;
+  /** position/shape of the gliding highlight */
+  highlightClassName?: string;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState<{ top: number; height: number } | null>(null);
+  const [engaged, setEngaged] = useState(false);
+  return (
+    <div
+      ref={ref}
+      className={`relative ${className}`}
+      onMouseLeave={() => setEngaged(false)}
+      onMouseOver={(event) => {
+        const row = (event.target as Element).closest("[data-menu-row]") as HTMLElement | null;
+        if (row && ref.current?.contains(row)) {
+          setBox({ top: row.offsetTop, height: row.offsetHeight });
+          setEngaged(true);
+        }
+      }}
+    >
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute ${highlightClassName}`}
+        style={{
+          top: box?.top ?? 0,
+          height: box?.height ?? 0,
+          opacity: box && engaged ? 1 : 0,
+          transition:
+            "top 220ms var(--ease-out-quint), height 220ms var(--ease-out-quint), opacity 150ms ease",
+        }}
+      />
+      {children}
+    </div>
   );
 }
 

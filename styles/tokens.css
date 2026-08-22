@@ -57,6 +57,7 @@
 
   /* Tooltip / overlay surfaces */
   --tooltip-bg: #1f1f1f;
+  --tooltip-fg: #f2f1ef;
   --tooltip-muted: #9a9a9a;
 
   /* Radii */

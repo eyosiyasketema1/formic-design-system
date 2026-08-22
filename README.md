@@ -40,7 +40,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 
 | Component | Purpose | Variants |
 |---|---|---|
-| `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Disclosure`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`, `fadeUp`/`popIn` | — |
+| `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`, `fadeUp`/`popIn` | — |
 | `hooks` | Timing utilities: `useSequence` (staged reveals), `useElapsed` (live clock) | — |
 | `Button` | The workhorse control: sizes sm/md, disabled + loading states, optional icon | `primary`, `secondary`, `ghost`, `destructive`, `accent`, `success` |
 | `LoadingState` | Loader for long-running work: pixel grid + shimmer label + elapsed timer | `Drive`, `Dots`, `Orbit`, `Surfer` |
@@ -54,6 +54,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `RecommendationCard` | Ranked recommendation with confidence meter, alternatives drawer, accept flow | — |
 | `ContextCards` | Retrieved context chunks with file-type badges and source chips | — |
 | `DiffTable` | Proposed edit as a reviewable diff — toggle each removal/addition, then apply | — |
+| `RecordsTable` | AI spreadsheet grid: property config popovers, AI columns, staggered calculation, sort/resize/select (needs `styles/records.css`) | — |
 
 ## Theming
 
