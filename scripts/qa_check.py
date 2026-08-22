@@ -109,6 +109,18 @@ for var, val in base_light.items():
     if m and m.group(1).lower() != val.lower():
         fails.append(f"drift: {var} is {val} in tokens.css but {m.group(1)} in preview.html")
 
+# ── 3b. Preview script: every React hook used must be destructured ──
+m = re.search(r'<script type="text/babel"[^>]*>(.*?)</script>', preview, re.S)
+if m:
+    src = m.group(1)
+    dest_m = re.search(r"const \{ ([^}]+) \} = React;", src)
+    destructured = set(dest_m.group(1).replace(" ", "").split(",")) if dest_m else set()
+    local_hooks = set(re.findall(r"function (use[A-Z]\w+)", src))
+    used = set(re.findall(r"\b(use[A-Z]\w+)\(", src))
+    missing = used - destructured - local_hooks
+    for name in sorted(missing):
+        fails.append(f"preview.html: React hook {name} used but not destructured from React")
+
 # ── 4. Components compile ───────────────────────────────────
 try:
     r = subprocess.run(
