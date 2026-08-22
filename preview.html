@@ -23,7 +23,7 @@
   --hover-2: #ececec;
   --inset: #e9e9e9;
   --accent: #3b5bdb;
-  --orange: #b45309;
+  --orange: #a34a08;
   --green: #15803d;
   --red: #b91c1c;
   --canvas: #faf9f7;
@@ -31,7 +31,8 @@
   --field: #f5f5f5;
   --green-tint: #eef9f2;
   --red-tint: #fdecec;
-  --accent-tint: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  --accent-tint: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  --orange-tint: color-mix(in srgb, var(--orange) 12%, var(--surface));
   --tooltip-bg: #1f1f1f;
   --tooltip-muted: #9a9a9a;
   --shadow-btn: 0 1px 2px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05);
@@ -50,7 +51,7 @@
     --ink: #f0efec; --ink-2: #b0aeaa; --ink-3: #8d8b86;
     --line: #2a2a29; --line-strong: #3f3e3c;
     --hover: #232322; --hover-2: #292928; --inset: #232322;
-    --accent: #7c96ff; --orange: #d97706; --green: #22c55e; --red: #f87171;
+    --accent: #7c96ff; --orange: #e08514; --green: #22c55e; --red: #f87171;
     --canvas: #131312; --surface: #1c1c1b; --field: #232322;
     --green-tint: #16281c;
     --red-tint: #2e1a19;
@@ -65,7 +66,7 @@
   --ink: #f0efec; --ink-2: #b0aeaa; --ink-3: #8d8b86;
   --line: #2a2a29; --line-strong: #3f3e3c;
   --hover: #232322; --hover-2: #292928; --inset: #232322;
-  --accent: #7c96ff; --orange: #d97706; --green: #22c55e; --red: #f87171;
+  --accent: #7c96ff; --orange: #e08514; --green: #22c55e; --red: #f87171;
   --canvas: #131312; --surface: #1c1c1b; --field: #232322;
   --green-tint: #16281c;
   --red-tint: #2e1a19;
@@ -94,6 +95,7 @@
   --color-green-tint: var(--green-tint);
   --color-red-tint: var(--red-tint);
   --color-accent-tint: var(--accent-tint);
+  --color-orange-tint: var(--orange-tint);
   --radius-sm: var(--radius-sm);
   --radius-chip: var(--radius-chip);
   --radius-control: var(--radius-control);
@@ -303,7 +305,7 @@ function Disclosure({ open, duration = 300, live = false, className = "", innerC
     <div className={`grid transition-[grid-template-rows,opacity] ${className}`}
       style={{ gridTemplateRows: open ? "1fr" : "0fr", opacity: open ? 1 : 0,
         transitionDuration: `${duration}ms`, transitionTimingFunction: "var(--ease-out-quint)" }}>
-      <div className={innerClassName} aria-live={live ? "polite" : undefined}>{children}</div>
+      <div className={innerClassName} aria-live={live ? "polite" : undefined} {...(open ? {} : { inert: "" })}>{children}</div>
     </div>
   );
 }
@@ -818,15 +820,18 @@ const BTN_VARIANTS = {
   secondary: "bg-surface text-ink shadow-btn enabled:hover:bg-hover disabled:bg-field disabled:text-ink-3 disabled:shadow-none",
   ghost: "text-ink-2 enabled:hover:bg-hover-2 enabled:hover:text-ink disabled:text-ink-3",
   destructive: "bg-red text-canvas enabled:hover:opacity-90 disabled:bg-field disabled:text-ink-3",
+  accent: "bg-accent text-canvas enabled:hover:opacity-90 disabled:bg-field disabled:text-ink-3",
+  success: "bg-green text-canvas enabled:hover:opacity-90 disabled:bg-field disabled:text-ink-3",
 };
 const BTN_SIZES = {
   sm: "h-7 gap-1.5 px-2.5 text-caption",
   md: "h-8 gap-2 px-3 text-body",
 };
-const BTN_RAISED = ["primary", "destructive"];
-function Button({ children = "Button", variant = "primary", size = "md", loading = false, disabled = false, icon, type = "button", onClick }) {
+const BTN_RAISED = ["primary", "destructive", "accent", "success"];
+function Button({ children = "Button", variant = "primary", size = "md", loading = false, disabled = false, icon, type = "button", className = "", style, onClick, ...rest }) {
   return (
     <button
+      {...rest}
       type={type}
       disabled={disabled}
       aria-busy={loading || undefined}
@@ -838,8 +843,8 @@ function Button({ children = "Button", variant = "primary", size = "md", loading
       className={`inline-flex items-center justify-center rounded-control font-medium
         transition-[background-color,color,box-shadow,opacity,transform] duration-150
         enabled:active:scale-[0.97] disabled:cursor-default
-        ${BTN_SIZES[size]} ${BTN_VARIANTS[variant]}`}
-      style={BTN_RAISED.includes(variant) && !disabled ? { boxShadow: "var(--highlight-raised)" } : undefined}
+        ${BTN_SIZES[size]} ${BTN_VARIANTS[variant]} ${className}`}
+      style={BTN_RAISED.includes(variant) && !disabled ? { ...style, boxShadow: "var(--highlight-raised)" } : style}
     >
       {loading ? (
         <Spinner />
@@ -860,6 +865,8 @@ function ButtonDemo() {
         <Button variant="secondary">Preview</Button>
         <Button variant="ghost">Dismiss</Button>
         <Button variant="destructive">Delete flavor</Button>
+        <Button variant="accent">Accept</Button>
+        <Button variant="success">Accepted</Button>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Button size="sm">Small primary</Button>
@@ -1746,6 +1753,135 @@ function PromptBar({
     </div>;
 }
 
+/* ═══════════ RecommendationCard ═══════════ */
+const rcCodeChip = (text, tone) => <code
+  className={`rounded-md px-1.5 py-0.5 font-mono text-small ${tone === "accent" ? "bg-accent-tint text-accent" : "bg-orange-tint text-orange"}`}
+>
+    {text}
+  </code>;
+const RC_OPTIONS = [
+  {
+    key: "high",
+    body: <>
+        Reorder waffle cones from {rcCodeChip("cone_king", "accent")} with lead time{" "}
+        {rcCodeChip("7_days", "accent")}.
+      </>,
+    short: "Reorder from cone_king \xB7 7-day lead",
+    signal: 3,
+    tone: "var(--green)",
+    label: "High confidence",
+    cta: "Accept",
+    ctaVariant: "accent"
+  },
+  {
+    key: "review",
+    body: <>
+        Switch vanilla to {rcCodeChip("vanilla_madagascar", "orange")} for peak season.
+      </>,
+    short: "Switch to vanilla_madagascar",
+    signal: 2,
+    tone: "var(--orange)",
+    label: "Needs review",
+    cta: "Configure",
+    ctaVariant: "primary"
+  },
+  {
+    key: "none",
+    body: <>
+        Fall back to a <span className="font-medium text-ink">full restock</span> across every SKU.
+      </>,
+    short: "Full restock across every SKU",
+    signal: 0,
+    tone: "var(--ink-3)",
+    label: "No signal",
+    cta: "Accept full restock",
+    ctaVariant: "primary"
+  }
+];
+function RcMeter({ signal, tone }) {
+  return <span aria-hidden className="flex items-end gap-0.5">
+      {[0, 1, 2].map((bar) => <span
+    key={bar}
+    className="w-1 rounded-full transition-colors duration-300"
+    style={{ height: 10, background: bar < signal ? tone : "var(--line-strong)" }}
+  />)}
+    </span>;
+}
+function RecommendationCard({
+  title = "Want me to place this restock order?",
+  options = RC_OPTIONS,
+  onAccept
+} = {}) {
+  const [selected, setSelected] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const active = options[selected];
+  const others = options.map((o, i) => ({ o, i })).filter(({ i }) => i !== selected);
+  return <Card className="w-full max-w-95">
+      <div className="primitive-card-pad">
+        <span className="text-body font-semibold text-ink">{title}</span>
+        <p
+    key={active.key}
+    className="mt-1.5 min-h-12 text-body leading-relaxed text-ink-2"
+    style={{ animation: "fade-in 180ms ease-out both" }}
+  >
+          {active.body}
+        </p>
+      </div>
+      {
+    /* alternatives drawer — a distinctly new section of the card */
+  }
+      <Disclosure open={open}>
+          <div className="border-t border-line bg-inset px-2 py-2">
+            <p className="px-1.5 pb-1 text-tiny font-medium text-ink-3">
+              Other options
+            </p>
+            {others.map(({ o, i }) => <button
+    key={o.key}
+    type="button"
+    onClick={() => {
+      setSelected(i);
+      setAccepted(false);
+    }}
+    className="flex w-full items-center gap-2.5 rounded-control px-1.5 py-1.5
+                  text-left transition-colors duration-150 hover:bg-hover"
+  >
+                <RcMeter signal={o.signal} tone={o.tone} />
+                <span className="min-w-0 flex-1 truncate text-caption text-ink">{o.short}</span>
+                <span className="shrink-0 text-tiny text-ink-3">{o.label}</span>
+              </button>)}
+          </div>
+      </Disclosure>
+      <div className="primitive-card-footer flex items-center justify-between gap-3 bg-inset">
+        <span className="flex items-center gap-2">
+          <RcMeter signal={active.signal} tone={active.tone} />
+          <span className="text-caption font-medium text-ink-2">{active.label}</span>
+        </span>
+        <span className="-mr-0.5 flex items-center gap-2">
+          <Button
+    variant="secondary"
+    size="sm"
+    aria-expanded={open}
+    onClick={() => setOpen((current) => !current)}
+  >
+            Alternatives
+          </Button>
+          <Button
+    variant={accepted ? "success" : active.ctaVariant}
+    size="sm"
+    onClick={() => {
+      if (accepted) return;
+      setAccepted(true);
+      onAccept?.(active);
+    }}
+  >
+            {accepted ? "Accepted" : active.cta}
+          </Button>
+        </span>
+      </div>
+    </Card>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ title, note, children }) {
   return (
@@ -1873,7 +2009,7 @@ function App() {
           </div>
         </GalleryCard>
       </Section>
-      <Section title="Button" note="Four variants × two sizes; disabled and loading states. Click the loader to try it.">
+      <Section title="Button" note="Six variants × two sizes; disabled and loading states. Click the loader to try it.">
         <GalleryCard label="Variants · sizes · states" wide><ButtonDemo /></GalleryCard>
       </Section>
       <Section title="LoadingState" note="Pixel-grid loader with shimmer label and elapsed timer.">
@@ -1897,6 +2033,9 @@ function App() {
       </Section>
       <Section title="ApprovalCard" note="Human-in-the-loop questions — fully interactive, try answering.">
         <GalleryCard label="Default"><ApprovalCard /></GalleryCard>
+      </Section>
+      <Section title="RecommendationCard" note="Ranked recommendation with an alternatives drawer — pick an option to promote it, then accept.">
+        <GalleryCard label="Default" wide><RecommendationCard /></GalleryCard>
       </Section>
       <Section title="PromptBar" note="Full composer: @ sources, / commands, model picker (pick Sprinkles 5 for the rainbow), dictation. Self-running demo hands over on interaction.">
         <GalleryCard label="Rounded" wide><PromptBar variant="Rounded" /></GalleryCard>

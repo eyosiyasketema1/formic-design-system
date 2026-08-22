@@ -42,7 +42,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 |---|---|---|
 | `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Disclosure`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`, `fadeUp`/`popIn` | — |
 | `hooks` | Timing utilities: `useSequence` (staged reveals), `useElapsed` (live clock) | — |
-| `Button` | The workhorse control: sizes sm/md, disabled + loading states, optional icon | `primary`, `secondary`, `ghost`, `destructive` |
+| `Button` | The workhorse control: sizes sm/md, disabled + loading states, optional icon | `primary`, `secondary`, `ghost`, `destructive`, `accent`, `success` |
 | `LoadingState` | Loader for long-running work: pixel grid + shimmer label + elapsed timer | `Drive`, `Dots`, `Orbit`, `Surfer` |
 | `ThinkingState` | Expandable agent trace with animated timeline | `Steps`, `Reasoning`, `Search`, `Coding` |
 | `ApprovalCard` | Human-in-the-loop question card: radio/checkbox answers, pager dots, send arrow | — |
@@ -51,6 +51,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `TaskRows` | Agent tasks as expandable rows with status badges (ring/failed/completed) | `Capsules`, `List` |
 | `ChatComposer` | Chat panel: tabs, reply thread, composer with send — analytics via `onSend` callback | — |
 | `PromptBar` | Full composer: @ sources, / commands, model picker with rainbow sweep, dictation, attachments | `Rounded`, `Pill` |
+| `RecommendationCard` | Ranked recommendation with confidence meter, alternatives drawer, accept flow | — |
 
 ## Theming
 

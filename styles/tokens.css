@@ -39,7 +39,7 @@
 
   /* Accents (light values pass WCAG AA for their usage) */
   --accent: #3b5bdb;
-  --orange: #b45309;
+  --orange: #a34a08;
   --green: #15803d;
   --red: #b91c1c;
 
@@ -51,7 +51,8 @@
   /* Accent tints */
   --green-tint: #eef9f2;
   --red-tint: #fdecec;
-  --accent-tint: color-mix(in srgb, var(--accent) 12%, var(--surface)); /* palette-aware */
+  --accent-tint: color-mix(in srgb, var(--accent) 10%, var(--surface)); /* palette-aware */
+  --orange-tint: color-mix(in srgb, var(--orange) 12%, var(--surface));
 
   /* Tooltip / overlay surfaces */
   --tooltip-bg: #1f1f1f;
@@ -93,7 +94,7 @@
     --hover-2: #292928;
     --inset: #232322;
     --accent: #7c96ff;
-    --orange: #d97706;
+    --orange: #e08514;
     --green: #22c55e;
     --red: #f87171;
     --canvas: #131312;
@@ -119,7 +120,7 @@
   --hover-2: #292928;
   --inset: #232322;
   --accent: #7c96ff;
-  --orange: #d97706;
+  --orange: #e08514;
   --green: #22c55e;
   --red: #f87171;
   --canvas: #131312;

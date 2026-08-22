@@ -432,7 +432,8 @@ export function Disclosure({
         transitionTimingFunction: "var(--ease-out-quint)",
       }}
     >
-      <div className={innerClassName} aria-live={live ? "polite" : undefined}>
+      {/* inert while closed so hidden interactive content is unreachable */}
+      <div className={innerClassName} aria-live={live ? "polite" : undefined} {...(open ? {} : { inert: "" })}>
         {children}
       </div>
     </div>

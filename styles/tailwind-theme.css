@@ -34,6 +34,7 @@
   --color-green-tint: var(--green-tint);
   --color-red-tint: var(--red-tint);
   --color-accent-tint: var(--accent-tint);
+  --color-orange-tint: var(--orange-tint);
 
   /* Typography */
   --font-sans: var(--font-sans);
