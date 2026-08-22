@@ -53,6 +53,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `PromptBar` | Full composer: @ sources, / commands, model picker with rainbow sweep, dictation, attachments | `Rounded`, `Pill` |
 | `RecommendationCard` | Ranked recommendation with confidence meter, alternatives drawer, accept flow | — |
 | `ContextCards` | Retrieved context chunks with file-type badges and source chips | — |
+| `DiffTable` | Proposed edit as a reviewable diff — toggle each removal/addition, then apply | — |
 
 ## Theming
 
