@@ -69,6 +69,7 @@
   --shadow-overlay: 0 4px 16px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.10);
   --highlight-raised: inset 0 1px 0 rgba(255, 255, 255, 0.14); /* top sheen on raised fills */
   --shadow-field: 0 1px 2px rgba(0, 0, 0, 0.035); /* soft inset-adjacent field shadow */
+  --shadow-field-focus: 0 1px 2px rgba(0, 0, 0, 0.035), 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); /* wrapper focus ring */
 
   /* Motion */
   --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1); /* the house easing */
@@ -105,6 +106,7 @@
     --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 1px 3px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.35);
     --shadow-overlay: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 4px 16px rgba(0, 0, 0, 0.55), 0 12px 32px rgba(0, 0, 0, 0.45);
     --shadow-field: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-field-focus: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
   }
 }
 :root[data-theme="dark"] {
@@ -141,6 +143,14 @@ body { font-family: var(--font-sans); background: var(--canvas); color: var(--in
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* Text inputs render inside a styled field wrapper that shows focus
+   itself (focus-within border + soft ring) — the inner input must not
+   double-ring with the hard outline above. */
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
 }
 
 /* ── Primitive utility classes used by components ──────── */

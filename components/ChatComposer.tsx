@@ -148,7 +148,7 @@ export default function ChatComposer({
         <div
           role="presentation"
           onClick={() => inputRef.current?.focus()}
-          className="flex cursor-text flex-col gap-2 rounded-control border border-line bg-field p-2.5 shadow-field transition-[border-color] duration-150 focus-within:border-line-strong"
+          className="flex cursor-text flex-col gap-2 rounded-control border border-line bg-field p-2.5 shadow-field transition-[border-color,box-shadow] duration-150 focus-within:border-line-strong focus-within:[box-shadow:var(--shadow-field-focus)]"
         >
           <input
             ref={inputRef}
