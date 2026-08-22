@@ -78,7 +78,7 @@ PAIRS = [  # (fg var | literal, bg var, minimum, label)
     ("--green", "--green-tint", 4.5, "badge text"),
     ("--green", "--canvas", 4.5, "diff counts"),
     ("--canvas", "--green", 4.5, "button text on green (success)"),
-    ("--canvas", "--orange", 3.0, "canvas-on-orange dot"),
+    ("--canvas", "--orange", 4.5, "badge letters on orange"),
     ("--canvas", "--accent", 4.5, "button text on accent"),
     ("--accent", "--canvas", 4.5, "accent as text"),
     ("--red", "--canvas", 4.5, "deletion counts"),

@@ -40,7 +40,7 @@
   --shadow-overlay: 0 4px 16px rgba(0,0,0,0.12), 0 12px 32px rgba(0,0,0,0.10);
   --highlight-raised: inset 0 1px 0 rgba(255,255,255,0.14);
   --shadow-field: 0 1px 2px rgba(0,0,0,0.035);
-  --text-lead: 14px; --text-body: 13px; --text-caption: 12.5px; --text-small: 12px; --text-tiny: 11.5px; --text-micro: 10.5px;
+  --text-lead: 14px; --text-body: 13px; --text-caption: 12.5px; --text-small: 12px; --text-tiny: 11.5px; --text-micro: 10.5px; --text-nano: 7px;
   --text-title: 15px; --text-display: 22px;
   --radius-sm: 6px; --radius-chip: 7px; --radius-control: 8px; --radius-md: 10px; --radius-card: 14px; --radius-capsule: 22px;
   --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
@@ -112,6 +112,7 @@
   --text-small: var(--text-small);
   --text-tiny: var(--text-tiny);
   --text-micro: var(--text-micro);
+  --text-nano: var(--text-nano);
   --text-title: var(--text-title);
   --text-display: var(--text-display);
   --ease-out-quint: var(--ease-out-quint);
@@ -137,6 +138,7 @@
 }
 .primitive-card-pad { padding: 14px; }
 .primitive-card-footer { padding: 10px 14px; border-top: 1px solid var(--line); }
+.primitive-card-bar { padding: 8px 12px; }
 .primitive-icon-button { display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; }
 .primitive-field { box-shadow: var(--shadow-field); transition: border-color 150ms; }
 .primitive-field:focus-within { border-color: var(--line-strong); }
@@ -241,6 +243,8 @@ const ICON_PATHS = {
   chart: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
   layers: (<><path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5M2 12l10 5 10-5" /></>),
   globe: (<><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></>),
+  lines: <path d="M4 6h16M4 12h16M4 18h10" />,
+  external: <path d="M7 17L17 7M7 7h10v10" />,
   search: (<><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></>),
 };
 function Icon({ name, size = 14, strokeWidth = 2.2, className, style }) {
@@ -1882,6 +1886,92 @@ function RecommendationCard({
     </Card>;
 }
 
+/* ═══════════ ContextCards ═══════════ */
+const CTX_TONES = {
+  red: "bg-red",
+  green: "bg-green",
+  accent: "bg-accent",
+  orange: "bg-orange"
+};
+const CTX_CHUNKS = [
+  {
+    title: "Vendor onboarding rule",
+    chars: "290 characters",
+    body: "Cold-chain certification must be verified before a new dairy can be added to the reorder workflow.",
+    source: "Dairy Onboarding SOP.pdf",
+    badge: "PDF",
+    tone: "red",
+    href: "#"
+  },
+  {
+    title: "Seasonal demand row",
+    chars: "1,250 characters",
+    body: "Q4 velocity table: pistachio +18%, vanilla +6%, rocky road -11%; retire flavors below 40 scoops weekly.",
+    source: "Sales Velocity Export.csv",
+    badge: "CSV",
+    tone: "green",
+    href: "#"
+  }
+];
+function ContextCards({
+  title = "All chunks",
+  count = 32,
+  chunks = CTX_CHUNKS
+} = {}) {
+  const [chipsShown, setChipsShown] = useState(false);
+  useEffect(() => {
+    const chips = setTimeout(() => setChipsShown(true), 700);
+    return () => clearTimeout(chips);
+  }, []);
+  return <div className="flex w-full max-w-95 flex-col gap-2">
+      <div
+    className="flex items-center gap-2 px-0.5"
+    style={{ animation: "fade-in 400ms ease-out both" }}
+  >
+        <span className="text-body font-semibold text-ink">{title}</span>
+        <Chip tone="inset" className="font-medium tabular-nums">
+          {count}
+        </Chip>
+      </div>
+      {chunks.map((chunk, i) => <Card key={chunk.title} style={fadeUp(i, { duration: 400, stagger: 100 })}>
+          <div className="primitive-card-bar flex items-center gap-2.5 border-b border-line">
+            <span className="flex min-w-0 items-center gap-1.5 text-body font-medium text-ink">
+              <Icon name="lines" size={11} strokeWidth={2.5} className="shrink-0" />
+              <span className="truncate">{chunk.title}</span>
+            </span>
+            <span className="ml-auto shrink-0 text-small text-ink-3 tabular-nums">{chunk.chars}</span>
+          </div>
+          <p className="px-3 pt-2 pb-1 text-caption leading-relaxed text-ink-2">
+            {chunk.body}
+          </p>
+          <div className="px-3 pb-3">
+            {(() => {
+    const SourceEl = chunk.href ? "a" : "span";
+    const delay = chipsShown ? "0ms" : `${i * 80}ms`;
+    return <SourceEl
+      {...chunk.href ? { href: chunk.href, target: "_blank", rel: "noreferrer" } : {}}
+      className={`inline-flex h-6 items-center gap-1.5 rounded-full bg-inset px-2
+                    text-small font-medium text-ink-2 shadow-btn ${chunk.href ? "hover:bg-hover" : ""}`}
+      style={{
+        opacity: chipsShown ? 1 : 0,
+        transform: chipsShown ? "scale(1)" : "scale(0.95)",
+        transition: `opacity 300ms var(--ease-out-quint) ${delay}, transform 300ms var(--ease-out-quint) ${delay}, background-color 150ms ease`
+      }}
+    >
+                  <span
+      className={`flex size-3.5 items-center justify-center rounded-[4px] ${CTX_TONES[chunk.tone]} text-nano font-bold text-canvas`}
+    >
+                    {chunk.badge}
+                  </span>
+                  {chunk.source}
+                  {chunk.href && <Icon name="external" size={9} strokeWidth={2.5} />}
+                </SourceEl>;
+  })()}
+          </div>
+        </Card>)}
+    </div>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ title, note, children }) {
   return (
@@ -2004,7 +2094,7 @@ function App() {
             <SendButton enabled />
             <SendButton enabled={false} />
             <span className="flex items-center gap-1 text-ink-3">
-              <Icon name="chevron" /><Icon name="check" /><Icon name="retry" /><Icon name="arrow-up" /><Icon name="plus" /><Icon name="clock" /><Icon name="ellipsis" /><Icon name="mic" /><Icon name="file" /><Icon name="clip" /><Icon name="chart" /><Icon name="layers" /><Icon name="globe" />
+              <Icon name="chevron" /><Icon name="check" /><Icon name="retry" /><Icon name="arrow-up" /><Icon name="plus" /><Icon name="clock" /><Icon name="ellipsis" /><Icon name="mic" /><Icon name="file" /><Icon name="clip" /><Icon name="chart" /><Icon name="layers" /><Icon name="globe" /><Icon name="lines" /><Icon name="external" />
             </span>
           </div>
         </GalleryCard>
@@ -2033,6 +2123,9 @@ function App() {
       </Section>
       <Section title="ApprovalCard" note="Human-in-the-loop questions — fully interactive, try answering.">
         <GalleryCard label="Default"><ApprovalCard /></GalleryCard>
+      </Section>
+      <Section title="ContextCards" note="Retrieved chunks with source chips — file-type badges link back to the original document.">
+        <GalleryCard label="Default" wide><ContextCards /></GalleryCard>
       </Section>
       <Section title="RecommendationCard" note="Ranked recommendation with an alternatives drawer — pick an option to promote it, then accept.">
         <GalleryCard label="Default" wide><RecommendationCard /></GalleryCard>

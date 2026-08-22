@@ -33,7 +33,8 @@ export const popIn = (index = 0, opts: EntranceOpts = {}) => entrance("pop-in", 
 export type IconName =
   | "chevron" | "check" | "close" | "search" | "retry"
   | "arrow-up" | "plus" | "clock" | "ellipsis"
-  | "mic" | "file" | "clip" | "chart" | "layers" | "globe";
+  | "mic" | "file" | "clip" | "chart" | "layers" | "globe"
+  | "lines" | "external";
 const PATHS: Record<IconName, ReactNode> = {
   chevron: <path d="M6 9l6 6 6-6" />,
   check: <path d="M20 6L9 17l-5-5" />,
@@ -80,6 +81,8 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
     </>
   ),
+  lines: <path d="M4 6h16M4 12h16M4 18h10" />,
+  external: <path d="M7 17L17 7M7 7h10v10" />,
   search: (
     <>
       <circle cx="11" cy="11" r="7" />
