@@ -32,7 +32,8 @@ export const popIn = (index = 0, opts: EntranceOpts = {}) => entrance("pop-in", 
 /* ── Icon ──────────────────────────────────────────────── */
 export type IconName =
   | "chevron" | "check" | "close" | "search" | "retry"
-  | "arrow-up" | "plus" | "clock" | "ellipsis";
+  | "arrow-up" | "plus" | "clock" | "ellipsis"
+  | "mic" | "file" | "clip" | "chart" | "layers" | "globe";
 const PATHS: Record<IconName, ReactNode> = {
   chevron: <path d="M6 9l6 6 6-6" />,
   check: <path d="M20 6L9 17l-5-5" />,
@@ -52,6 +53,32 @@ const PATHS: Record<IconName, ReactNode> = {
       <circle cx="12" cy="12" r="1.8" />
       <circle cx="19" cy="12" r="1.8" />
     </g>
+  ),
+  mic: (
+    <>
+      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3" />
+    </>
+  ),
+  file: (
+    <>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6" />
+    </>
+  ),
+  clip: <path d="m21.4 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />,
+  chart: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
+  layers: (
+    <>
+      <path d="M12 2 2 7l10 5 10-5-10-5z" />
+      <path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </>
   ),
   search: (
     <>
@@ -345,12 +372,15 @@ export function Popover({
 export function SendButton({
   enabled = true,
   label = "Send",
+  round = false,
   className = "",
   onClick,
 }: {
   enabled?: boolean;
   /** accessible name — describes what sending does right now */
   label?: string;
+  /** fully round (for pill-shaped surfaces) instead of rounded-control */
+  round?: boolean;
   className?: string;
   onClick?: () => void;
 }) {
@@ -360,7 +390,7 @@ export function SendButton({
       aria-label={label}
       disabled={!enabled}
       onClick={onClick}
-      className={`flex size-7 shrink-0 items-center justify-center rounded-control
+      className={`flex size-7 shrink-0 items-center justify-center ${round ? "rounded-full" : "rounded-control"}
         transition-[background-color,color,transform] duration-200 enabled:active:scale-[0.96] ${className}`}
       style={{
         background: enabled ? "var(--ink)" : "var(--field)",

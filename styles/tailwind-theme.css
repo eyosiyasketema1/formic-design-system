@@ -33,10 +33,12 @@
   --color-field: var(--field);
   --color-green-tint: var(--green-tint);
   --color-red-tint: var(--red-tint);
+  --color-accent-tint: var(--accent-tint);
 
   /* Typography */
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
+  --text-lead: var(--text-lead);
   --text-body: var(--text-body);
   --text-caption: var(--text-caption);
   --text-small: var(--text-small);
@@ -51,6 +53,7 @@
   --radius-control: var(--radius-control);
   --radius-md: var(--radius-md);
   --radius-card: var(--radius-card);
+  --radius-capsule: var(--radius-capsule);
 
   /* Shadows */
   --shadow-btn: var(--shadow-btn);

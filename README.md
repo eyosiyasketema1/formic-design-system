@@ -50,6 +50,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `ToolChips` | Agent run as compact rows: expandable tool calls + file-diff chips with hover previews | — |
 | `TaskRows` | Agent tasks as expandable rows with status badges (ring/failed/completed) | `Capsules`, `List` |
 | `ChatComposer` | Chat panel: tabs, reply thread, composer with send — analytics via `onSend` callback | — |
+| `PromptBar` | Full composer: @ sources, / commands, model picker with rainbow sweep, dictation, attachments | `Rounded`, `Pill` |
 
 ## Theming
 

@@ -16,6 +16,7 @@
   --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
 
   /* Type scale */
+  --text-lead: 14px;      /* hero inputs, lead copy */
   --text-body: 13px;      /* primary UI text */
   --text-caption: 12.5px; /* secondary labels, options */
   --text-small: 12px;     /* timers, meta labels */
@@ -50,6 +51,7 @@
   /* Accent tints */
   --green-tint: #eef9f2;
   --red-tint: #fdecec;
+  --accent-tint: color-mix(in srgb, var(--accent) 12%, var(--surface)); /* palette-aware */
 
   /* Tooltip / overlay surfaces */
   --tooltip-bg: #1f1f1f;
@@ -220,6 +222,28 @@ a:hover .animated-underline,
 @keyframes stream-in {
   from { opacity: 0; filter: blur(4px); }
   to   { opacity: 1; filter: blur(0); }
+}
+
+/* Dictation bars */
+@keyframes eq-bounce {
+  0%, 100% { transform: scaleY(0.4); }
+  50%      { transform: scaleY(1); }
+}
+
+/* One-shot celebratory rainbow sweep (decorative — colors are
+   deliberately outside the theme palette, like demo brand marks) */
+@keyframes rainbow-sweep {
+  0%   { transform: translateX(-70%); opacity: 0; }
+  12%  { opacity: 0.9; }
+  100% { transform: translateX(70%); opacity: 0; }
+}
+.rainbow-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 12%, #ff5f5f 28%, #ffb45f 37%, #ffe45f 46%, #5fd78a 55%, #5fc9e8 64%, #7a7aff 73%, #c07aff 82%, transparent 92%);
+  filter: blur(10px) saturate(1.2);
+  animation: rainbow-sweep 650ms var(--ease-out-quint) both;
 }
 
 /* ── Reduced motion ────────────────────────────────────── */
