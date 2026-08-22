@@ -69,7 +69,7 @@
   --shadow-overlay: 0 4px 16px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.10);
   --highlight-raised: inset 0 1px 0 rgba(255, 255, 255, 0.14); /* top sheen on raised fills */
   --shadow-field: 0 1px 2px rgba(0, 0, 0, 0.035); /* soft inset-adjacent field shadow */
-  --shadow-field-focus: 0 1px 2px rgba(0, 0, 0, 0.035), 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); /* wrapper focus ring */
+  --shadow-field-focus: 0 1px 2px rgba(0, 0, 0, 0.035), 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); /* wrapper focus ring */
 
   /* Motion */
   --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1); /* the house easing */
@@ -159,6 +159,16 @@ textarea:focus-visible {
 .primitive-icon-button {
   display: flex; align-items: center; justify-content: center;
   width: 24px; height: 24px; border-radius: 6px;
+}
+/* Field wrapper focus: the wrapper (not the inner input) carries the
+   ring. Plain CSS so no utility-ordering can swallow it. */
+.primitive-field {
+  box-shadow: var(--shadow-field);
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.primitive-field:focus-within {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-field-focus);
 }
 .shadow-hairline { box-shadow: 0 0 0 1px var(--line); }
 .source-avatar { object-fit: cover; }

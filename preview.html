@@ -38,7 +38,7 @@
   --shadow-overlay: 0 4px 16px rgba(0,0,0,0.12), 0 12px 32px rgba(0,0,0,0.10);
   --highlight-raised: inset 0 1px 0 rgba(255,255,255,0.14);
   --shadow-field: 0 1px 2px rgba(0,0,0,0.035);
-  --shadow-field-focus: 0 1px 2px rgba(0,0,0,0.035), 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  --shadow-field-focus: 0 1px 2px rgba(0,0,0,0.035), 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
   --text-body: 13px; --text-caption: 12.5px; --text-small: 12px; --text-tiny: 11.5px; --text-micro: 10.5px;
   --text-title: 15px; --text-display: 22px;
   --radius-sm: 6px; --radius-chip: 7px; --radius-control: 8px; --radius-md: 10px; --radius-card: 14px; --radius-capsule: 22px;
@@ -123,6 +123,8 @@
 .primitive-card-pad { padding: 14px; }
 .primitive-card-footer { padding: 10px 14px; border-top: 1px solid var(--line); }
 .primitive-icon-button { display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; }
+.primitive-field { box-shadow: var(--shadow-field); transition: border-color 150ms, box-shadow 150ms; }
+.primitive-field:focus-within { border-color: var(--line-strong); box-shadow: var(--shadow-field-focus); }
 .shadow-hairline { box-shadow: 0 0 0 1px var(--line); }
 .source-avatar { object-fit: cover; }
 .animated-underline {
@@ -1220,7 +1222,7 @@ function ChatComposer({ tabs = CC_TABS, placeholder = "Prompt or tag a flavor wi
       </div>
       <div className="mt-auto shrink-0 p-1.5">
         <div role="presentation" onClick={() => inputRef.current?.focus()}
-          className="flex cursor-text flex-col gap-2 rounded-control border border-line bg-field p-2.5 shadow-field transition-[border-color,box-shadow] duration-150 focus-within:border-line-strong focus-within:[box-shadow:var(--shadow-field-focus)]">
+          className="primitive-field flex cursor-text flex-col gap-2 rounded-control border border-line bg-field p-2.5">
           <input ref={inputRef} value={draft} onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing) send(); }}
             placeholder={placeholder} aria-label="Chat prompt"
