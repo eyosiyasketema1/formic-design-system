@@ -57,6 +57,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `RecordsTable` | AI spreadsheet grid: property config popovers, AI columns, staggered calculation, sort/resize/select (needs `styles/records.css`) | — |
 | `FilterTable` | Task table with status-chip filters — rows collapse/expand; counts derive from data | — |
 | `SidebarNav` | Workspace navigation: switcher menu, searchable chat history, icon-aligned collapse (needs `styles/sidebar.css`) | — |
+| `SearchList` | Command search with live filtering, gliding results, empty state | — |
 
 ## Theming
 
