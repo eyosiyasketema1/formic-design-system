@@ -1,13 +1,15 @@
 "use client";
-import { useEffect, useRef, useState, type CSSProperties, type ElementType, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ElementType, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
   IconAlignLeft, IconArrowUp, IconArrowUpRight, IconChartBar, IconCheck,
-  IconChevronDown, IconClock, IconDots, IconFileText, IconHome,
-  IconLayoutSidebarLeftCollapse, IconLogout, IconMicrophone, IconPaperclip,
-  IconPencil, IconPlus, IconRefresh, IconSearch, IconSettings, IconStack2,
+  IconChevronDown, IconChevronRight, IconClock, IconDots, IconFileText, IconHome,
+  IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion, IconMicrophone,
+  IconMoodSmile, IconPaperclip, IconPencil, IconPlus, IconRefresh, IconScissors,
+  IconSearch, IconSettings, IconSparkles, IconStack2, IconTypography,
   IconUserPlus, IconWorld, IconX, type Icon as TablerIcon,
 } from "@tabler/icons-react";
+import { useStream } from "./hooks";
 /* ─────────────────────────────────────────────────────────
  * PRIMITIVES — the atoms every component composes
  *
@@ -36,6 +38,16 @@ const entrance = (name: string, index: number, { duration = 300, stagger = 80, d
 export const fadeUp = (index = 0, opts: EntranceOpts = {}) => entrance("fade-up", index, opts);
 export const popIn = (index = 0, opts: EntranceOpts = {}) => entrance("pop-in", index, opts);
 
+/* ── inertWhen — version-safe `inert` ──────────────────── */
+/* React 18 drops unknown boolean attributes and React 19 treats
+ * `inert` as a real boolean prop — setting it through a ref works
+ * identically in both. Spread onto the element that hides. */
+export const inertWhen = (hidden: boolean) => ({
+  ref: (el: HTMLElement | null) => {
+    if (el) el.inert = hidden;
+  },
+});
+
 /* ── Icon — thin wrapper over @tabler/icons-react ──────── */
 /* One icon library for the whole system. Add new names to the
  * ICONS map — never inline <svg>, never a second icon package.
@@ -45,7 +57,8 @@ export type IconName =
   | "arrow-up" | "plus" | "clock" | "ellipsis"
   | "mic" | "file" | "clip" | "chart" | "layers" | "globe"
   | "lines" | "external"
-  | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar";
+  | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar"
+  | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right";
 const ICONS: Record<IconName, TablerIcon> = {
   chevron: IconChevronDown,
   check: IconCheck,
@@ -70,6 +83,12 @@ const ICONS: Record<IconName, TablerIcon> = {
   "user-add": IconUserPlus,
   "sign-out": IconLogout,
   sidebar: IconLayoutSidebarLeftCollapse,
+  "message-question": IconMessageQuestion,
+  sparkles: IconSparkles,
+  scissors: IconScissors,
+  "mood-smile": IconMoodSmile,
+  typography: IconTypography,
+  "chevron-right": IconChevronRight,
 };
 export function Icon({
   name,
@@ -120,6 +139,46 @@ export function ShimmerLabel({ children, className = "" }: { children: ReactNode
     >
       {children}
     </span>
+  );
+}
+
+/* ── StreamText ────────────────────────────────────────── */
+/* Plain text streaming in word by word, each resolving out of
+ * blur. Timing comes from useStream; the parent owns aria-live.
+ * onProgress fires after each word lays out — hook repositioning
+ * (anchored toolbars, autoscroll) to it. */
+export function StreamText({
+  text,
+  intervalMs = 45,
+  className = "",
+  onProgress,
+  onDone,
+}: {
+  text: string;
+  intervalMs?: number;
+  className?: string;
+  /** called after each new word is laid out */
+  onProgress?: () => void;
+  onDone?: () => void;
+}) {
+  const words = text.split(" ");
+  const { count } = useStream(words.length, { intervalMs, onDone });
+  useLayoutEffect(() => {
+    onProgress?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire per revealed word, not per handler identity
+  }, [count]);
+  return (
+    <>
+      {words.slice(0, count).map((word, i) => (
+        <span
+          key={i}
+          className={`inline [will-change:filter,opacity] ${className}`}
+          style={{ animation: "stream-in 420ms var(--ease-out-quint) both" }}
+        >
+          {word}{" "}
+        </span>
+      ))}
+    </>
   );
 }
 
@@ -451,7 +510,7 @@ export function Disclosure({
       }}
     >
       {/* inert while closed so hidden interactive content is unreachable */}
-      <div className={innerClassName} aria-live={live ? "polite" : undefined} {...(open ? {} : { inert: "" })}>
+      <div className={innerClassName} aria-live={live ? "polite" : undefined} {...inertWhen(!open)}>
         {children}
       </div>
     </div>

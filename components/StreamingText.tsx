@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useStream } from "./hooks";
 import { AvatarStack, Chip, Disclosure, fadeUp, IconButton } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * STREAMING TEXT
@@ -89,21 +90,13 @@ export default function StreamingText({
   /** called with the prompt text when a follow-up is clicked */
   onFollowUp?: (text: string) => void;
 }) {
-  const [count, setCount] = useState(0);
   const [sourcesOpen, setSourcesOpen] = useState(false);
-  const done = count >= tokens.length;
-  useEffect(() => {
-    if (done && !loop) {
-      onDone?.();
-      return;
-    }
-    const t = setTimeout(
-      () => setCount((c) => (c >= tokens.length ? 0 : c + 1)),
-      done ? HOLD_MS : WORD_MS,
-    );
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count, done, loop]);
+  const { count, done } = useStream(tokens.length, {
+    intervalMs: WORD_MS,
+    holdMs: HOLD_MS,
+    loop,
+    onDone,
+  });
   return (
     <div className={fill ? "w-full" : "min-h-[15.5rem] w-full max-w-95"}>
       <p className="text-body leading-relaxed text-ink" aria-live="polite" aria-busy={!done}>

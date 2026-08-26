@@ -598,12 +598,14 @@ tfoot .records-sticky-cell { z-index: 5; }
 <body>
 <div id="root"></div>
 <script type="text/babel" data-presets="react">
-const { useState, useEffect, useRef, useLayoutEffect, useMemo } = React;
+const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } = React;
 
 /* ═══════════ Primitives ═══════════ */
 /* Icons: real projects use @tabler/icons-react through the Icon wrapper in
    components/primitives.tsx. This standalone preview keeps equivalent
    inline paths so it needs no npm install — same names, same look. */
+/* version-safe inert: React 18 drops boolean unknown attrs, React 19 owns the prop */
+const inertWhen = (hidden) => ({ ref: (el) => { if (el) el.inert = hidden; } });
 const ICON_PATHS = {  /* authentic Tabler outline path data (@tabler/icons, MIT) */
   chevron: <path d="M6 9l6 6l6 -6" />,
   check: <path d="M5 12l5 5l10 -10" />,
@@ -628,6 +630,12 @@ const ICON_PATHS = {  /* authentic Tabler outline path data (@tabler/icons, MIT)
   "user-add": (<><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M16 19h6" /><path d="M19 16v6" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4" /></>),
   "sign-out": (<><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" /><path d="M9 12h12l-3 -3" /><path d="M18 15l3 -3" /></>),
   sidebar: (<><path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12" /><path d="M9 4v16" /><path d="M15 10l-2 2l2 2" /></>),
+  "message-question": (<><path d="M8 9h8" /><path d="M8 13h6" /><path d="M14 18h-1l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" /><path d="M19 22v.01" /><path d="M19 19a2.003 2.003 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483" /></>),
+  sparkles: <path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6" />,
+  scissors: (<><path d="M3 7a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M3 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M8.6 8.6l10.4 10.4" /><path d="M8.6 15.4l10.4 -10.4" /></>),
+  "mood-smile": (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9.5 15a3.5 3.5 0 0 0 5 0" /></>),
+  typography: (<><path d="M4 20l3 0" /><path d="M14 20l7 0" /><path d="M6.9 15l6.9 0" /><path d="M10.2 6.3l5.8 13.7" /><path d="M5 20l6 -16l2 0l7 16" /></>),
+  "chevron-right": <path d="M9 6l6 6l-6 6" />,
 };
 function Icon({ name, size = 14, strokeWidth = 2.2, className, style }) {
   return (
@@ -678,6 +686,20 @@ function DiffStat({ add, del = 0, className = "" }) {
     </span>
   );
 }
+function StreamText({ text, intervalMs = 45, className = "", onProgress, onDone }) {
+  const words = text.split(" ");
+  const { count } = useStream(words.length, { intervalMs, onDone });
+  useLayoutEffect(() => { if (onProgress) onProgress(); }, [count]);
+  return (
+    <>
+      {words.slice(0, count).map((word, i) => (
+        <span key={i} className={`inline [will-change:filter,opacity] ${className}`} style={{ animation: "stream-in 420ms var(--ease-out-quint) both" }}>
+          {word}{" "}
+        </span>
+      ))}
+    </>
+  );
+}
 function IconButton({ label, onClick, className = "", children, ...rest }) {
   return (
     <button type="button" aria-label={label} onClick={onClick}
@@ -691,7 +713,7 @@ function Disclosure({ open, duration = 300, live = false, className = "", innerC
     <div className={`grid transition-[grid-template-rows,opacity] ${className}`}
       style={{ gridTemplateRows: open ? "1fr" : "0fr", opacity: open ? 1 : 0,
         transitionDuration: `${duration}ms`, transitionTimingFunction: "var(--ease-out-quint)" }}>
-      <div className={innerClassName} aria-live={live ? "polite" : undefined} {...(open ? {} : { inert: "" })}>{children}</div>
+      <div className={innerClassName} aria-live={live ? "polite" : undefined} {...inertWhen(!open)}>{children}</div>
     </div>
   );
 }
@@ -789,6 +811,17 @@ function useSequence(steps) {
     return () => clearTimeout(t);
   }, [stage, steps]);
   return stage;
+}
+/* reveal N items one every intervalMs — the engine behind streamed text */
+function useStream(length, { intervalMs = 55, holdMs = 3400, loop = false, onDone } = {}) {
+  const [count, setCount] = useState(0);
+  const done = count >= length;
+  useEffect(() => {
+    if (done && !loop) { if (onDone) onDone(); return; }
+    const t = setTimeout(() => setCount((c) => (c >= length ? 0 : c + 1)), done ? holdMs : intervalMs);
+    return () => clearTimeout(t);
+  }, [count, done, loop, length]);
+  return { count, done };
 }
 function useElapsed() {
   const [ds, setDs] = useState(0);
@@ -1149,17 +1182,8 @@ const ACTION_ICONS = [
   <path key="down" d="M17 14V2M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88z" />,
 ];
 function StreamingText({ loop = true, fill = false }) {
-  const [count, setCount] = useState(0);
   const [sourcesOpen, setSourcesOpen] = useState(false);
-  const done = count >= STREAM_TOKENS.length;
-  useEffect(() => {
-    if (done && !loop) return;
-    const t = setTimeout(
-      () => setCount((c) => (c >= STREAM_TOKENS.length ? 0 : c + 1)),
-      done ? HOLD_MS : WORD_MS,
-    );
-    return () => clearTimeout(t);
-  }, [count, done, loop]);
+  const { count, done } = useStream(STREAM_TOKENS.length, { intervalMs: WORD_MS, holdMs: HOLD_MS, loop });
   return (
     <div className={fill ? "w-full" : "min-h-[15.5rem] w-full max-w-95"}>
       <p className="text-body leading-relaxed text-ink" aria-live="polite" aria-busy={!done}>
@@ -3996,6 +4020,366 @@ function SearchList({
     </div>;
 }
 
+/* ═══════════ SelectionActions ═══════════ */
+const SA_DEFAULT_LEAD = "Pistachio holds the top slot all weekend. ";
+const SA_DEFAULT_SELECTED = "Churn it first thing Saturday so the batch has time to firm up before the afternoon rush.";
+const SA_DEFAULT_REWRITE = "Churn pistachio first thing Saturday so the batch has time to fully firm before the afternoon rush.";
+const SA_QUICK_ACTIONS = [
+  { label: "Shorten", icon: "scissors", busy: "Shortening" },
+  { label: "Change tone", short: "Tone", icon: "mood-smile", busy: "Changing tone" },
+  { label: "Fix grammar", short: "Grammar", icon: "typography", busy: "Fixing grammar" }
+];
+const SA_BUSY_LABELS = {
+  Explain: "Explaining",
+  Improve: "Improving",
+  ...Object.fromEntries(SA_QUICK_ACTIONS.map((a) => [a.label, a.busy]))
+};
+const SA_resolveEasing = () => (typeof window !== "undefined" ? getComputedStyle(document.documentElement).getPropertyValue("--ease-out-quint").trim() : "") || "ease-out";
+const SA_control = "inline-flex h-7 shrink-0 items-center gap-1 rounded-full px-2.5 text-small text-ink transition-[background-color,color,transform] duration-150 hover:bg-hover active:scale-[0.96]";
+const SA_primary = "inline-flex h-7 shrink-0 items-center gap-1 rounded-full bg-ink px-2.5 text-caption text-canvas shadow-hairline transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.96]";
+function SelectionActions({
+  lead = SA_DEFAULT_LEAD,
+  selected = SA_DEFAULT_SELECTED,
+  rewrite = SA_DEFAULT_REWRITE,
+  onKeep,
+  onDiscard
+} = {}) {
+  const [shown, setShown] = useState(false);
+  const [mode, setMode] = useState("idle");
+  const [action, setAction] = useState("Improve");
+  const [prompt, setPrompt] = useState("");
+  const [typingWidth, setTypingWidth] = useState(null);
+  const [expanded, setExpanded] = useState(false);
+  const [anchor, setAnchor] = useState({ x: 0, y: 0 });
+  const [positioned, setPositioned] = useState(false);
+  const hostRef = useRef(null);
+  const selectionRef = useRef(null);
+  const barRef = useRef(null);
+  const contentRef = useRef(null);
+  const frameRef = useRef(null);
+  const previousModeRef = useRef("idle");
+  const lastWidthRef = useRef(0);
+  const widthAnimationRef = useRef(null);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShown(true), 280);
+    return () => window.clearTimeout(timer);
+  }, []);
+  useEffect(() => {
+    if (mode !== "thinking") return;
+    const timer = window.setTimeout(() => setMode("streaming"), 700);
+    return () => window.clearTimeout(timer);
+  }, [mode]);
+  const place = useCallback(() => {
+    if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+    frameRef.current = requestAnimationFrame(() => {
+      const host = hostRef.current;
+      const selection = selectionRef.current;
+      if (!host || !selection) return;
+      const bounds = selection.getBoundingClientRect();
+      const lines = Array.from(selection.getClientRects());
+      const lastLine = lines.at(-1);
+      if (!lastLine) return;
+      const hostBounds = host.getBoundingClientRect();
+      const next = {
+        x: Math.round(bounds.left - hostBounds.left + bounds.width / 2),
+        y: Math.round(lastLine.bottom - hostBounds.top + 8)
+      };
+      const barHalf = (barRef.current?.getBoundingClientRect().width ?? 0) / 2;
+      const minX = 24 + barHalf - hostBounds.left;
+      const maxX = window.innerWidth - 24 - barHalf - hostBounds.left;
+      next.x = Math.round(minX > maxX ? (minX + maxX) / 2 : Math.min(Math.max(next.x, minX), maxX));
+      setAnchor(
+        (current) => current.x === next.x && current.y === next.y ? current : next
+      );
+      setPositioned(true);
+    });
+  }, []);
+  useLayoutEffect(() => {
+    place();
+  }, [mode, place]);
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    const observer = new ResizeObserver(place);
+    observer.observe(host);
+    if (barRef.current) observer.observe(barRef.current);
+    window.addEventListener("resize", place);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", place);
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+    };
+  }, [place]);
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    const content = contentRef.current;
+    if (!bar || !content) return;
+    const nextWidth = Math.ceil(content.getBoundingClientRect().width) + 8;
+    const running = widthAnimationRef.current?.playState === "running";
+    const previousWidth = !running && lastWidthRef.current ? lastWidthRef.current : Math.ceil(bar.getBoundingClientRect().width);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduced && previousModeRef.current !== mode && Math.abs(nextWidth - previousWidth) > 1) {
+      widthAnimationRef.current?.cancel();
+      const animation = bar.animate(
+        [{ width: `${previousWidth}px` }, { width: `${nextWidth}px` }],
+        { duration: 320, easing: SA_resolveEasing() }
+      );
+      widthAnimationRef.current = animation;
+      animation.onfinish = () => {
+        lastWidthRef.current = nextWidth;
+        widthAnimationRef.current = null;
+      };
+      animation.oncancel = () => {
+        widthAnimationRef.current = null;
+      };
+    } else {
+      lastWidthRef.current = nextWidth;
+    }
+    previousModeRef.current = mode;
+  }, [mode]);
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+    const observer = new ResizeObserver(() => {
+      if (widthAnimationRef.current?.playState === "running") return;
+      lastWidthRef.current = Math.ceil(content.getBoundingClientRect().width) + 8;
+    });
+    observer.observe(content);
+    return () => {
+      observer.disconnect();
+      widthAnimationRef.current?.cancel();
+    };
+  }, []);
+  const run = (nextAction) => {
+    setAction(nextAction);
+    setExpanded(false);
+    setMode("thinking");
+  };
+  const reset = () => {
+    setExpanded(false);
+    setPrompt("");
+    setTypingWidth(null);
+    setAction("Improve");
+    setMode("idle");
+  };
+  const busy = mode === "thinking" || mode === "streaming";
+  const visible = shown && positioned;
+  const hasPrompt = prompt.trim().length > 0;
+  const busyLabel = SA_BUSY_LABELS[action] ?? "Editing";
+  return <div className="w-full max-w-105">
+      <div ref={hostRef} className="relative select-none pb-12">
+        <p className="text-body leading-relaxed text-ink" aria-live="polite" aria-busy={busy}>
+          {lead}
+          <span
+    ref={selectionRef}
+    className="box-decoration-clone rounded-[3px] bg-accent-tint text-ink"
+  >
+            {mode === "idle" || mode === "thinking" ? selected : mode === "streaming" ? <StreamText
+    text={rewrite}
+    onProgress={place}
+    onDone={() => setMode("result")}
+  /> : rewrite}
+          </span>
+        </p>
+        <div
+    className="absolute top-0 left-0 z-10"
+    style={{
+      transform: `translate3d(${anchor.x}px, ${anchor.y}px, 0) translateX(-50%)`,
+      transition: "transform 320ms var(--ease-out-quint), opacity 180ms ease-out",
+      opacity: visible ? 1 : 0,
+      pointerEvents: visible ? "auto" : "none",
+      willChange: "transform"
+    }}
+  >
+          {
+    /* A 36px pill wraps 28px controls at a 4px inset. The controls
+       resolve to a 14px radius, preserving the concentric curve. */
+  }
+          <div
+    ref={barRef}
+    className="flex h-9 w-fit max-w-[calc(100vw-48px)] items-center gap-0.5 overflow-x-auto overflow-y-hidden rounded-full bg-surface p-1 text-ink shadow-overlay [scrollbar-width:none]"
+    style={{
+      width: mode === "idle" && hasPrompt && typingWidth ? typingWidth : void 0,
+      ...visible ? { animation: "pop-in 220ms var(--ease-out-quint) both" } : {}
+    }}
+  >
+            <div
+    ref={contentRef}
+    className="mx-auto flex w-fit shrink-0 items-center justify-center gap-0.5"
+    style={{
+      width: mode === "idle" && hasPrompt && typingWidth ? typingWidth - 8 : void 0
+    }}
+  >
+            {busy && <span role="status" className="inline-flex h-7 items-center gap-1.5 whitespace-nowrap px-2.5 text-body text-ink-2">
+                <Spinner size={12} className="text-ink-2" />
+                {mode === "thinking" ? <ShimmerLabel>{busyLabel}…</ShimmerLabel> : <span>{busyLabel}…</span>}
+              </span>}
+            {mode === "result" && <>
+                <button
+    type="button"
+    onClick={() => {
+      onKeep?.(rewrite);
+      reset();
+    }}
+    className={SA_primary}
+  >
+                  <Icon name="check" strokeWidth={1.8} />
+                  Keep
+                </button>
+                <button
+    type="button"
+    onClick={() => {
+      onDiscard?.();
+      reset();
+    }}
+    className={SA_control}
+  >
+                  <Icon name="close" strokeWidth={1.8} />
+                  Discard
+                </button>
+                <span className="mx-0.5 h-4 w-px shrink-0 bg-line" />
+                <button
+    type="button"
+    aria-label="Try again"
+    onClick={() => run(action)}
+    className="flex size-7 shrink-0 items-center justify-center rounded-full text-ink-3 transition-[background-color,color,transform] duration-150 hover:bg-hover-2 hover:text-ink-2 active:scale-[0.96]"
+  >
+                  <Icon name="retry" strokeWidth={1.8} />
+                </button>
+              </>}
+            {mode === "idle" && <>
+                <div
+    className="flex min-w-0 items-center overflow-hidden transition-[max-width,opacity,transform] duration-400"
+    style={{
+      maxWidth: expanded ? 0 : hasPrompt && typingWidth ? typingWidth - 40 : 145,
+      opacity: expanded ? 0 : 1,
+      transform: expanded ? "translateX(-8px)" : "translateX(0)",
+      transitionTimingFunction: "var(--ease-out-quint)"
+    }}
+    {...inertWhen(expanded)}
+  >
+                  <form
+    className="flex h-7 shrink-0 items-center transition-[width] duration-400"
+    style={{
+      width: hasPrompt && typingWidth ? typingWidth - 40 : 145,
+      transitionTimingFunction: "var(--ease-out-quint)"
+    }}
+    onSubmit={(event) => {
+      event.preventDefault();
+      run(prompt.trim() || "Improve");
+    }}
+  >
+                    <input
+    value={prompt}
+    onChange={(event) => {
+      const next = event.target.value;
+      if (!prompt.trim() && next.trim()) {
+        setTypingWidth(
+          Math.ceil(
+            barRef.current?.getBoundingClientRect().width ?? 0
+          )
+        );
+      } else if (!next.trim()) {
+        setTypingWidth(null);
+      }
+      setPrompt(next);
+    }}
+    aria-label="Describe edits"
+    placeholder="Describe edits"
+    className="h-7 w-full bg-transparent pr-2.5 pl-3 text-caption text-ink outline-none placeholder:text-ink-3"
+  />
+                  </form>
+                </div>
+                <div
+    className="flex min-w-0 items-center gap-0.5 overflow-hidden transition-[max-width,opacity,transform] duration-400"
+    style={{
+      maxWidth: hasPrompt ? 0 : expanded ? 462 : 224,
+      opacity: hasPrompt ? 0 : 1,
+      transform: hasPrompt ? "translateX(-8px)" : "translateX(0)",
+      transitionTimingFunction: "var(--ease-out-quint)"
+    }}
+    {...inertWhen(hasPrompt)}
+  >
+                  {!expanded && <span className="mx-1 h-4 w-px shrink-0 bg-line-strong" />}
+                  <button
+    type="button"
+    onClick={() => run("Explain")}
+    className={SA_control}
+  >
+                    <Icon name="message-question" strokeWidth={1.8} />
+                    Explain
+                  </button>
+                  <button
+    type="button"
+    onClick={() => run("Improve")}
+    className={SA_control}
+  >
+                    <Icon name="sparkles" strokeWidth={1.8} />
+                    Improve
+                  </button>
+                  <div
+    className="flex min-w-0 items-center gap-0.5 overflow-hidden transition-[max-width,opacity,margin] duration-400"
+    style={{
+      maxWidth: expanded ? 262 : 0,
+      opacity: expanded ? 1 : 0,
+      marginLeft: expanded ? 2 : 0,
+      transitionTimingFunction: "var(--ease-out-quint)"
+    }}
+    {...inertWhen(!expanded)}
+  >
+                    {SA_QUICK_ACTIONS.map((quick) => <button
+    key={quick.label}
+    type="button"
+    onClick={() => run(quick.label)}
+    className={SA_control}
+  >
+                        <Icon name={quick.icon} strokeWidth={1.8} />
+                        {"short" in quick ? quick.short : quick.label}
+                      </button>)}
+                  </div>
+                  <span className="mx-0.5 h-4 w-px shrink-0 bg-line" />
+                  <button
+    type="button"
+    aria-label={expanded ? "Show fewer actions" : "Show more actions"}
+    aria-expanded={expanded}
+    onClick={() => setExpanded((value) => !value)}
+    className="flex size-7 shrink-0 items-center justify-center rounded-full text-ink transition-[background-color,transform] duration-150 hover:bg-hover active:scale-[0.96]"
+  >
+                    <span
+    className="flex transition-transform duration-400"
+    style={{
+      transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+      transitionTimingFunction: "var(--ease-out-quint)"
+    }}
+  >
+                      <Icon name="chevron-right" strokeWidth={1.8} />
+                    </span>
+                  </button>
+                </div>
+                <div
+    className="flex min-w-0 items-center overflow-hidden transition-[max-width,opacity,transform] duration-400"
+    style={{
+      maxWidth: hasPrompt ? 30 : 0,
+      opacity: hasPrompt ? 1 : 0,
+      transform: hasPrompt ? "scale(1)" : "scale(0.88)",
+      transitionTimingFunction: "var(--ease-out-quint)"
+    }}
+    {...inertWhen(!hasPrompt)}
+  >
+                  <SendButton
+    round
+    label="Send edit instruction"
+    onClick={() => run(prompt.trim() || "Improve")}
+  />
+                </div>
+              </>}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ title, note, children }) {
   return (
@@ -4092,7 +4476,15 @@ function App() {
         </button>
         </div>
       </header>
-      <Section title="Primitives" note="The atoms everything above composes: Icon, Spinner, ShimmerLabel, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Popover + timing hooks.">
+      <Section title="SelectionActions" note="Contextual AI bar beneath selected text — quick actions, free-text edit instructions, streamed rewrite with keep / discard.">
+        <GalleryCard label="Default" wide><SelectionActions /></GalleryCard>
+      </Section>
+      <Section title="Primitives" note="The atoms everything above composes: Icon, Spinner, ShimmerLabel, StreamText, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Popover + timing hooks (useSequence, useElapsed, useStream).">
+        <GalleryCard label="StreamText" wide>
+          <p className="text-body leading-relaxed text-ink" aria-live="polite">
+            <StreamText text="Words resolve out of blur one at a time — the shared useStream hook also drives StreamingText and SelectionActions." intervalMs={70} />
+          </p>
+        </GalleryCard>
         <GalleryCard label="GlideMenu">
           <GlideMenu className="flex w-44 flex-col gap-px">
             {["Sprinkles 5", "Vanilla 1", "Freezer Burn 0.4"].map((item) => (

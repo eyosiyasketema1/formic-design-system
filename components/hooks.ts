@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
  *
  *   useSequence  advance a stage counter through timed steps
  *   useElapsed   live elapsed clock, "4.2s" / "1m 12.5s"
+ *   useStream    reveal N items one-by-one (streamed text)
  * ───────────────────────────────────────────────────────── */
 
 /** Steps through 0..steps.length-1, waiting steps[i] ms at each stage.
@@ -18,6 +19,35 @@ export function useSequence(steps: number[]) {
     return () => clearTimeout(t);
   }, [stage, steps]);
   return stage;
+}
+
+/** Reveals `length` items one every `intervalMs` — the timing engine behind
+ *  streamed text (StreamText primitive, StreamingText). With `loop` the count
+ *  resets after `holdMs`; without it `onDone` fires once when the stream ends. */
+export function useStream(
+  length: number,
+  {
+    intervalMs = 55,
+    holdMs = 3400,
+    loop = false,
+    onDone,
+  }: { intervalMs?: number; holdMs?: number; loop?: boolean; onDone?: () => void } = {},
+) {
+  const [count, setCount] = useState(0);
+  const done = count >= length;
+  useEffect(() => {
+    if (done && !loop) {
+      onDone?.();
+      return;
+    }
+    const t = setTimeout(
+      () => setCount((c) => (c >= length ? 0 : c + 1)),
+      done ? holdMs : intervalMs,
+    );
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- callbacks stay out so re-created handlers don't restart the stream
+  }, [count, done, loop, length]);
+  return { count, done };
 }
 
 /** Ticks every 100ms from mount; returns a formatted elapsed string. */
