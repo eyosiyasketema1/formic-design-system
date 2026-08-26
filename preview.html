@@ -583,9 +583,12 @@ tfoot .records-sticky-cell { z-index: 5; }
   pointer-events: auto;
 }
 
-/* rows keep full width; the aside's clip does the narrowing */
+/* rows shrink to icon squares when collapsed — the highlight follows,
+   so the active state reads as a compact square around the icon */
 .sidebar-row { width: 208px; }
+[data-sidebar-collapsed="true"] .sidebar-row { width: 36px; }
 .sidebar-glide-highlight { left: 8px; width: 208px; }
+[data-sidebar-collapsed="true"] .sidebar-glide-highlight { width: 36px; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
@@ -3603,7 +3606,7 @@ function SnRailButton({
     type="button"
     onClick={onClick}
     className={`sidebar-row relative z-10 mx-2 flex h-8 items-center rounded-control px-2 text-left
-        transition-[background-color,color,transform] duration-150 active:scale-[0.98]
+        transition-[width,background-color,color,transform] duration-150 active:scale-[0.98]
         ${active ? "bg-hover-2 group-hover/glide:bg-transparent" : ""}`}
   >
       <span className={`flex size-5 shrink-0 items-center justify-center ${active ? "text-ink" : "text-ink-2"}`}>
@@ -3895,7 +3898,7 @@ function SidebarNav({
         if (activeTitle === void 0) setDemoActiveTitle(item.label);
         onPick?.(item.id, item.label, item.prompt);
       }}
-      className={`sidebar-row relative z-10 mx-2 flex h-8 items-center rounded-control px-2 text-left transition-[background-color,color,transform] duration-150 active:scale-[0.98] ${active ? "bg-hover-2 group-hover/glide:bg-transparent" : ""}`}
+      className={`sidebar-row relative z-10 mx-2 flex h-8 items-center rounded-control px-2 text-left transition-[width,background-color,color,transform] duration-150 active:scale-[0.98] ${active ? "bg-hover-2 group-hover/glide:bg-transparent" : ""}`}
     >
                   <span className={`sidebar-copy min-w-0 flex-1 truncate text-lead font-medium ${active ? "text-ink" : "text-ink-2"}`}>
                     {item.label}
@@ -4083,7 +4086,7 @@ function App() {
         <GalleryCard label="Default"><ApprovalCard /></GalleryCard>
       </Section>
       <Section title="SidebarNav" note="Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.">
-        <GalleryCard label="Default"><SidebarNav /></GalleryCard>
+        <div className="flex"><SidebarNav /></div>
       </Section>
       <Section title="FilterTable" note="Status chips directly filter the table — rows collapse and expand as you switch.">
         <GalleryCard label="Default" wide><FilterTable /></GalleryCard>

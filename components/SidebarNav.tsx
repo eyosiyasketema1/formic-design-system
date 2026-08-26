@@ -106,7 +106,7 @@ function RailButton({
       type="button"
       onClick={onClick}
       className={`sidebar-row relative z-10 mx-2 flex h-8 items-center rounded-control px-2 text-left
-        transition-[background-color,color,transform] duration-150 active:scale-[0.98]
+        transition-[width,background-color,color,transform] duration-150 active:scale-[0.98]
         ${active ? "bg-hover-2 group-hover/glide:bg-transparent" : ""}`}
     >
       <span className={`flex size-5 shrink-0 items-center justify-center ${active ? "text-ink" : "text-ink-2"}`}>
@@ -411,7 +411,7 @@ export default function SidebarNav({
                     if (activeTitle === undefined) setDemoActiveTitle(item.label);
                     onPick?.(item.id, item.label, item.prompt);
                   }}
-                  className={`sidebar-row relative z-10 mx-2 flex h-8 items-center rounded-control px-2 text-left transition-[background-color,color,transform] duration-150 active:scale-[0.98] ${
+                  className={`sidebar-row relative z-10 mx-2 flex h-8 items-center rounded-control px-2 text-left transition-[width,background-color,color,transform] duration-150 active:scale-[0.98] ${
                     active ? "bg-hover-2 group-hover/glide:bg-transparent" : ""
                   }`}
                 >

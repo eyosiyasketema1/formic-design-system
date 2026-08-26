@@ -42,6 +42,9 @@
   pointer-events: auto;
 }
 
-/* rows keep full width; the aside's clip does the narrowing */
+/* rows shrink to icon squares when collapsed — the highlight follows,
+   so the active state reads as a compact square around the icon */
 .sidebar-row { width: 208px; }
+[data-sidebar-collapsed="true"] .sidebar-row { width: 36px; }
 .sidebar-glide-highlight { left: 8px; width: 208px; }
+[data-sidebar-collapsed="true"] .sidebar-glide-highlight { width: 36px; }
