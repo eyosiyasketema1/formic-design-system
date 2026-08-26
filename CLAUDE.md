@@ -21,7 +21,7 @@ After every piece of work, look for extractable pieces and extract them:
 
 1. **Compose first.** New components must use existing primitives (`components/primitives.tsx`, `components/hooks.ts`) instead of re-implementing patterns — check there before writing an expander, chip, badge, spinner, icon, popover, stagger animation, or timer.
 2. **Extract on second use.** If a piece of UI or logic appears in a second component (or clearly will), promote it to `primitives.tsx` / `hooks.ts` in the same unit of work, and rewire the existing consumer. Never leave two copies alive.
-3. **New icons go into the shared `Icon` set**, not inline `<svg>` (component-specific illustrative SVGs may stay local).
+3. **Icons come from Lucide** (`lucide-react`) through the shared `Icon` wrapper in `primitives.tsx` — to add an icon, map a new name to a Lucide component in `ICONS`. Never hand-draw icon paths, never inline `<svg>` icons, never add a second icon package. (Component-specific illustrative/brand SVGs may stay local. `preview.html` keeps a small inline-path renderer so it stays dependency-free — mirror new names there.)
 4. **Mirror every primitive in `preview.html`** (same names, same markup) and showcase it in the gallery's Primitives section.
 
 ## Mandatory QA workflow

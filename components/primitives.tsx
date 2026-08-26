@@ -1,6 +1,11 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties, type ElementType, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import {
+  AlignLeft, ArrowUp, ArrowUpRight, BarChart3, Check, ChevronDown, Clock, FileText,
+  Globe, Home, Layers, LogOut, Mic, MoreHorizontal, Paperclip, PanelLeftClose,
+  PencilLine, Plus, RotateCw, Search, Settings, UserPlus, X, type LucideIcon,
+} from "lucide-react";
 /* ─────────────────────────────────────────────────────────
  * PRIMITIVES — the atoms every component composes
  *
@@ -29,95 +34,40 @@ const entrance = (name: string, index: number, { duration = 300, stagger = 80, d
 export const fadeUp = (index = 0, opts: EntranceOpts = {}) => entrance("fade-up", index, opts);
 export const popIn = (index = 0, opts: EntranceOpts = {}) => entrance("pop-in", index, opts);
 
-/* ── Icon ──────────────────────────────────────────────── */
+/* ── Icon — thin wrapper over lucide-react ─────────────── */
+/* One icon library for the whole system. Add new names to the
+ * ICONS map — never inline <svg>, never a second icon package.
+ * The name-based API keeps components decoupled from Lucide. */
 export type IconName =
   | "chevron" | "check" | "close" | "search" | "retry"
   | "arrow-up" | "plus" | "clock" | "ellipsis"
   | "mic" | "file" | "clip" | "chart" | "layers" | "globe"
   | "lines" | "external"
   | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar";
-const PATHS: Record<IconName, ReactNode> = {
-  chevron: <path d="M6 9l6 6 6-6" />,
-  check: <path d="M20 6L9 17l-5-5" />,
-  close: <path d="M18 6L6 18M6 6l12 12" />,
-  retry: <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" />,
-  "arrow-up": <path d="M12 19V5M5 12l7-7 7 7" />,
-  plus: <path d="M12 5v14M5 12h14" />,
-  clock: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
-    </>
-  ),
-  ellipsis: (
-    <g fill="currentColor" stroke="none">
-      <circle cx="5" cy="12" r="1.8" />
-      <circle cx="12" cy="12" r="1.8" />
-      <circle cx="19" cy="12" r="1.8" />
-    </g>
-  ),
-  mic: (
-    <>
-      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
-      <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3" />
-    </>
-  ),
-  file: (
-    <>
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <path d="M14 2v6h6" />
-    </>
-  ),
-  clip: <path d="m21.4 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />,
-  chart: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
-  layers: (
-    <>
-      <path d="M12 2 2 7l10 5 10-5-10-5z" />
-      <path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
-    </>
-  ),
-  globe: (
-    <>
-      <circle cx="12" cy="12" r="10" />
-      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-    </>
-  ),
-  lines: <path d="M4 6h16M4 12h16M4 18h10" />,
-  external: <path d="M7 17L17 7M7 7h10v10" />,
-  edit: <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" />,
-  home: <path d="M3 11l9-8 9 8M5 9.5V21h5v-6h4v6h5V9.5" />,
-  gear: (
-    <>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1" />
-    </>
-  ),
-  "user-add": (
-    <>
-      <circle cx="10" cy="8" r="4" />
-      <path d="M2 21v-1a6 6 0 0 1 6-6h4" />
-      <path d="M19 8v6M16 11h6" />
-    </>
-  ),
-  "sign-out": (
-    <>
-      <path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3" />
-      <path d="M15 8l4 4-4 4M9 12h10" />
-    </>
-  ),
-  sidebar: (
-    <>
-      <rect x="3" y="4" width="18" height="16" rx="2.5" />
-      <path d="M9.5 4v16" />
-      <path d="M17 9.5 14.5 12l2.5 2.5" />
-    </>
-  ),
-  search: (
-    <>
-      <circle cx="11" cy="11" r="7" />
-      <path d="M21 21l-4.3-4.3" />
-    </>
-  ),
+const ICONS: Record<IconName, LucideIcon> = {
+  chevron: ChevronDown,
+  check: Check,
+  close: X,
+  search: Search,
+  retry: RotateCw,
+  "arrow-up": ArrowUp,
+  plus: Plus,
+  clock: Clock,
+  ellipsis: MoreHorizontal,
+  mic: Mic,
+  file: FileText,
+  clip: Paperclip,
+  chart: BarChart3,
+  layers: Layers,
+  globe: Globe,
+  lines: AlignLeft,
+  external: ArrowUpRight,
+  edit: PencilLine,
+  home: Home,
+  gear: Settings,
+  "user-add": UserPlus,
+  "sign-out": LogOut,
+  sidebar: PanelLeftClose,
 };
 export function Icon({
   name,
@@ -132,23 +82,8 @@ export function Icon({
   className?: string;
   style?: CSSProperties;
 }) {
-  return (
-    <svg
-      aria-hidden
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      style={style}
-    >
-      {PATHS[name]}
-    </svg>
-  );
+  const LucideGlyph = ICONS[name];
+  return <LucideGlyph aria-hidden size={size} strokeWidth={strokeWidth} className={className} style={style} />;
 }
 
 /* ── Spinner ───────────────────────────────────────────── */

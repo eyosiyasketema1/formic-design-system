@@ -601,6 +601,9 @@ tfoot .records-sticky-cell { z-index: 5; }
 const { useState, useEffect, useRef, useLayoutEffect, useMemo } = React;
 
 /* ═══════════ Primitives ═══════════ */
+/* Icons: real projects use lucide-react through the Icon wrapper in
+   components/primitives.tsx. This standalone preview keeps equivalent
+   inline paths so it needs no npm install — same names, same look. */
 const ICON_PATHS = {
   chevron: <path d="M6 9l6 6 6-6" />,
   check: <path d="M20 6L9 17l-5-5" />,

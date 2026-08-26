@@ -1,0 +1,11 @@
+{
+  "name": "ai-design-system",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Token-driven React design system for AI product interfaces",
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18",
+    "lucide-react": ">=0.400.0"
+  }
+}
