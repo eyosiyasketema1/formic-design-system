@@ -2,10 +2,12 @@
 import { useEffect, useRef, useState, type CSSProperties, type ElementType, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
-  AlignLeft, ArrowUp, ArrowUpRight, BarChart3, Check, ChevronDown, Clock, FileText,
-  Globe, Home, Layers, LogOut, Mic, MoreHorizontal, Paperclip, PanelLeftClose,
-  PencilLine, Plus, RotateCw, Search, Settings, UserPlus, X, type LucideIcon,
-} from "lucide-react";
+  IconAlignLeft, IconArrowUp, IconArrowUpRight, IconChartBar, IconCheck,
+  IconChevronDown, IconClock, IconDots, IconFileText, IconHome,
+  IconLayoutSidebarLeftCollapse, IconLogout, IconMicrophone, IconPaperclip,
+  IconPencil, IconPlus, IconRefresh, IconSearch, IconSettings, IconStack2,
+  IconUserPlus, IconWorld, IconX, type Icon as TablerIcon,
+} from "@tabler/icons-react";
 /* ─────────────────────────────────────────────────────────
  * PRIMITIVES — the atoms every component composes
  *
@@ -34,40 +36,40 @@ const entrance = (name: string, index: number, { duration = 300, stagger = 80, d
 export const fadeUp = (index = 0, opts: EntranceOpts = {}) => entrance("fade-up", index, opts);
 export const popIn = (index = 0, opts: EntranceOpts = {}) => entrance("pop-in", index, opts);
 
-/* ── Icon — thin wrapper over lucide-react ─────────────── */
+/* ── Icon — thin wrapper over @tabler/icons-react ──────── */
 /* One icon library for the whole system. Add new names to the
  * ICONS map — never inline <svg>, never a second icon package.
- * The name-based API keeps components decoupled from Lucide. */
+ * The name-based API keeps components decoupled from Tabler. */
 export type IconName =
   | "chevron" | "check" | "close" | "search" | "retry"
   | "arrow-up" | "plus" | "clock" | "ellipsis"
   | "mic" | "file" | "clip" | "chart" | "layers" | "globe"
   | "lines" | "external"
   | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar";
-const ICONS: Record<IconName, LucideIcon> = {
-  chevron: ChevronDown,
-  check: Check,
-  close: X,
-  search: Search,
-  retry: RotateCw,
-  "arrow-up": ArrowUp,
-  plus: Plus,
-  clock: Clock,
-  ellipsis: MoreHorizontal,
-  mic: Mic,
-  file: FileText,
-  clip: Paperclip,
-  chart: BarChart3,
-  layers: Layers,
-  globe: Globe,
-  lines: AlignLeft,
-  external: ArrowUpRight,
-  edit: PencilLine,
-  home: Home,
-  gear: Settings,
-  "user-add": UserPlus,
-  "sign-out": LogOut,
-  sidebar: PanelLeftClose,
+const ICONS: Record<IconName, TablerIcon> = {
+  chevron: IconChevronDown,
+  check: IconCheck,
+  close: IconX,
+  search: IconSearch,
+  retry: IconRefresh,
+  "arrow-up": IconArrowUp,
+  plus: IconPlus,
+  clock: IconClock,
+  ellipsis: IconDots,
+  mic: IconMicrophone,
+  file: IconFileText,
+  clip: IconPaperclip,
+  chart: IconChartBar,
+  layers: IconStack2,
+  globe: IconWorld,
+  lines: IconAlignLeft,
+  external: IconArrowUpRight,
+  edit: IconPencil,
+  home: IconHome,
+  gear: IconSettings,
+  "user-add": IconUserPlus,
+  "sign-out": IconLogout,
+  sidebar: IconLayoutSidebarLeftCollapse,
 };
 export function Icon({
   name,
@@ -82,8 +84,9 @@ export function Icon({
   className?: string;
   style?: CSSProperties;
 }) {
-  const LucideGlyph = ICONS[name];
-  return <LucideGlyph aria-hidden size={size} strokeWidth={strokeWidth} className={className} style={style} />;
+  const TablerGlyph = ICONS[name];
+  /* Tabler names its width prop `stroke` — the wrapper keeps our API */
+  return <TablerGlyph aria-hidden size={size} stroke={strokeWidth} className={className} style={style} />;
 }
 
 /* ── Spinner ───────────────────────────────────────────── */

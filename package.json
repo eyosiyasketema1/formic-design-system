@@ -6,6 +6,6 @@
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18",
-    "lucide-react": ">=0.400.0"
+    "@tabler/icons-react": ">=3.0.0"
   }
 }

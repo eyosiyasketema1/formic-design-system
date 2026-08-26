@@ -18,7 +18,7 @@ A reusable design system for web projects: CSS design tokens + React (Tailwind) 
 - **Tailwind CSS** with custom theme utilities (`bg-ink`, `text-ink-3`, `shadow-overlay`)
 - **CSS variables** for theming (`--ink`, `--ink-3`, `--tooltip-bg`, …)
 - **Typography**: [Questrial](https://fonts.google.com/specimen/Questrial) (Google Fonts) as the default sans, via `--font-sans`
-- **Icons**: [Lucide](https://lucide.dev) (`lucide-react`, peer dependency) via the shared `Icon` wrapper — components use `<Icon name="…" />`, never direct Lucide imports
+- **Icons**: [Tabler Icons](https://tabler.io/icons) (`@tabler/icons-react`, peer dependency) via the shared `Icon` wrapper — components use `<Icon name="…" />`, never direct Tabler imports
 
 ## Using in a new project
 
