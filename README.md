@@ -55,6 +55,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `ContextCards` | Retrieved context chunks with file-type badges and source chips | — |
 | `DiffTable` | Proposed edit as a reviewable diff — toggle each removal/addition, then apply | — |
 | `RecordsTable` | AI spreadsheet grid: property config popovers, AI columns, staggered calculation, sort/resize/select (needs `styles/records.css`) | — |
+| `FilterTable` | Task table with status-chip filters — rows collapse/expand; counts derive from data | — |
 
 ## Theming
 

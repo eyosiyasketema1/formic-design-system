@@ -55,6 +55,12 @@
   --accent-tint: color-mix(in srgb, var(--accent) 10%, var(--surface)); /* palette-aware */
   --orange-tint: color-mix(in srgb, var(--orange) 12%, var(--surface));
 
+  /* Status base hues — pills/dots derive bg+text via color-mix,
+     same verified formula as .records-tag (50% into ink ≥ 4.5:1) */
+  --status-todo: oklch(0.75 0.14 60);
+  --status-progress: oklch(0.68 0.11 215);
+  --status-done: oklch(0.66 0.14 160);
+
   /* Tooltip / overlay surfaces */
   --tooltip-bg: #1f1f1f;
   --tooltip-fg: #f2f1ef;
@@ -161,6 +167,14 @@ textarea:focus-visible {
 .primitive-card-footer { padding: 10px 14px; border-top: 1px solid var(--line); }
 .primitive-card-bar { padding: 8px 12px; }
 .primitive-table-cell { padding: 8px 12px; }
+/* Status pills — theme-adaptive like .records-tag */
+.status-pill-todo { --status-base: var(--status-todo); }
+.status-pill-progress { --status-base: var(--status-progress); }
+.status-pill-done { --status-base: var(--status-done); }
+.status-pill-todo, .status-pill-progress, .status-pill-done {
+  background: color-mix(in srgb, var(--status-base) 16%, var(--surface));
+  color: color-mix(in srgb, var(--status-base) 50%, var(--ink));
+}
 .primitive-icon-button {
   display: flex; align-items: center; justify-content: center;
   width: 24px; height: 24px; border-radius: 6px;
