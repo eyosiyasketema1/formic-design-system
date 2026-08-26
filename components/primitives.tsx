@@ -34,7 +34,8 @@ export type IconName =
   | "chevron" | "check" | "close" | "search" | "retry"
   | "arrow-up" | "plus" | "clock" | "ellipsis"
   | "mic" | "file" | "clip" | "chart" | "layers" | "globe"
-  | "lines" | "external";
+  | "lines" | "external"
+  | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar";
 const PATHS: Record<IconName, ReactNode> = {
   chevron: <path d="M6 9l6 6 6-6" />,
   check: <path d="M20 6L9 17l-5-5" />,
@@ -83,6 +84,34 @@ const PATHS: Record<IconName, ReactNode> = {
   ),
   lines: <path d="M4 6h16M4 12h16M4 18h10" />,
   external: <path d="M7 17L17 7M7 7h10v10" />,
+  edit: <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" />,
+  home: <path d="M3 11l9-8 9 8M5 9.5V21h5v-6h4v6h5V9.5" />,
+  gear: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1" />
+    </>
+  ),
+  "user-add": (
+    <>
+      <circle cx="10" cy="8" r="4" />
+      <path d="M2 21v-1a6 6 0 0 1 6-6h4" />
+      <path d="M19 8v6M16 11h6" />
+    </>
+  ),
+  "sign-out": (
+    <>
+      <path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3" />
+      <path d="M15 8l4 4-4 4M9 12h10" />
+    </>
+  ),
+  sidebar: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2.5" />
+      <path d="M9.5 4v16" />
+      <path d="M17 9.5 14.5 12l2.5 2.5" />
+    </>
+  ),
   search: (
     <>
       <circle cx="11" cy="11" r="7" />
@@ -412,11 +441,14 @@ export function SendButton({
 export function GlideMenu({
   className = "",
   highlightClassName = "inset-x-0 rounded-control bg-hover",
+  rowSelector = "[data-menu-row]",
   children,
 }: {
   className?: string;
   /** position/shape of the gliding highlight */
   highlightClassName?: string;
+  /** CSS selector marking glidable rows */
+  rowSelector?: string;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -428,7 +460,7 @@ export function GlideMenu({
       className={`relative ${className}`}
       onMouseLeave={() => setEngaged(false)}
       onMouseOver={(event) => {
-        const row = (event.target as Element).closest("[data-menu-row]") as HTMLElement | null;
+        const row = (event.target as Element).closest(rowSelector) as HTMLElement | null;
         if (row && ref.current?.contains(row)) {
           setBox({ top: row.offsetTop, height: row.offsetHeight });
           setEngaged(true);

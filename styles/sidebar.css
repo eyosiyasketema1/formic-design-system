@@ -1,0 +1,47 @@
+/* ─────────────────────────────────────────────────────────
+ * SIDEBAR NAV — component stylesheet
+ * Import after tokens.css when using components/SidebarNav.
+ *
+ * Collapse model: the inner column keeps its full width; the
+ * <aside> narrows and clips it. Copy fades + slides out, so
+ * only the left-aligned icons remain in the collapsed rail.
+ * ───────────────────────────────────────────────────────── */
+
+.sidebar-copy {
+  transition:
+    opacity var(--sidebar-copy-duration) var(--sidebar-easing),
+    transform var(--sidebar-copy-duration) var(--sidebar-easing);
+}
+[data-sidebar-collapsed="true"] .sidebar-copy {
+  opacity: 0;
+  transform: translateX(calc(var(--sidebar-copy-offset) * -1));
+  pointer-events: none;
+}
+
+.sidebar-workspace-control,
+.sidebar-collapse-control {
+  transition:
+    opacity var(--sidebar-copy-duration) var(--sidebar-easing),
+    background-color 150ms, color 150ms, transform 150ms;
+}
+[data-sidebar-collapsed="true"] .sidebar-workspace-control,
+[data-sidebar-collapsed="true"] .sidebar-collapse-control {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-expand-control {
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--sidebar-copy-duration) var(--sidebar-easing),
+    background-color 150ms, color 150ms;
+}
+[data-sidebar-collapsed="true"] .sidebar-expand-control {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* rows keep full width; the aside's clip does the narrowing */
+.sidebar-row { width: 208px; }
+.sidebar-glide-highlight { left: 8px; width: 208px; }

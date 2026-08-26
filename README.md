@@ -56,6 +56,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `DiffTable` | Proposed edit as a reviewable diff — toggle each removal/addition, then apply | — |
 | `RecordsTable` | AI spreadsheet grid: property config popovers, AI columns, staggered calculation, sort/resize/select (needs `styles/records.css`) | — |
 | `FilterTable` | Task table with status-chip filters — rows collapse/expand; counts derive from data | — |
+| `SidebarNav` | Workspace navigation: switcher menu, searchable chat history, icon-aligned collapse (needs `styles/sidebar.css`) | — |
 
 ## Theming
 
