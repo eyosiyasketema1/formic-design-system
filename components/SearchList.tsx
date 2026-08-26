@@ -31,7 +31,7 @@ export default function SearchList({
     : items.slice(0, 5);
   const empty = query.length > 2 && results.length === 0;
   return (
-    <div className="flex min-h-[248px] w-full max-w-72 flex-col items-stretch">
+    <div className="flex min-h-[248px] w-full max-w-95 flex-col items-stretch">
       <div className="w-full self-start overflow-hidden rounded-card bg-surface shadow-overlay">
         {/* input row */}
         <div className="flex h-10 items-center gap-2 border-b border-line px-3 transition-colors duration-150 focus-within:bg-hover hover:bg-hover">

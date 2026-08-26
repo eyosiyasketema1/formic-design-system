@@ -3941,7 +3941,7 @@ function SearchList({
   const [query, setQuery] = useState("");
   const results = query ? items.filter((i) => i.toLowerCase().includes(query.toLowerCase())) : items.slice(0, 5);
   const empty = query.length > 2 && results.length === 0;
-  return <div className="flex min-h-[248px] w-full max-w-72 flex-col items-stretch">
+  return <div className="flex min-h-[248px] w-full max-w-95 flex-col items-stretch">
       <div className="w-full self-start overflow-hidden rounded-card bg-surface shadow-overlay">
         {
     /* input row */
