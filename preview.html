@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Questrial&display=swap" rel="stylesheet" />
 <style type="text/tailwindcss">
-/* ── Design tokens (placeholder palette) ── */
+/* ── Design tokens (mirrors styles/tokens.css) ── */
 :root {
   --ink: #1a1a1a;
   --ink-2: #5c5c5c;
@@ -4381,11 +4381,11 @@ function SelectionActions({
 }
 
 /* ═══════════ Gallery ═══════════ */
-function Section({ title, note, children }) {
+function Section({ id, title, note, children }) {
   return (
-    <section className="mb-10">
+    <section id={id} className="mb-12 scroll-mt-8">
       <h2 className="text-title font-semibold text-ink">{title}</h2>
-      {note && <p className="mt-0.5 text-caption text-ink-3">{note}</p>}
+      {note && <p className="mt-0.5 max-w-xl text-caption text-ink-3">{note}</p>}
       <div className="mt-4 flex flex-wrap gap-6">{children}</div>
     </section>
   );
@@ -4426,168 +4426,350 @@ function usePalette() {
   }, [palette]);
   return [palette, setPalette];
 }
+function ThemeControls({ theme, setTheme, palette, setPalette }) {
+  return (
+    <div className="flex shrink-0 items-center gap-2">
+      <div className="flex items-center gap-1 rounded-control bg-surface p-1.5 shadow-btn">
+        {PALETTES.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            title={p.label}
+            aria-label={`${p.label} theme`}
+            aria-pressed={palette === p.id}
+            onClick={() => setPalette(p.id)}
+            className="flex size-5 items-center justify-center rounded-full transition-transform duration-150 hover:scale-110"
+            style={{
+              background: p.swatch,
+              boxShadow: palette === p.id
+                ? "0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink)"
+                : "inset 0 0 0 1px rgba(0,0,0,0.15)",
+            }}
+          />
+        ))}
+      </div>
+      <button
+        type="button"
+        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        className="flex size-8 shrink-0 items-center justify-center rounded-control bg-surface text-ink-2 shadow-btn transition-colors duration-150 hover:bg-hover hover:text-ink"
+      >
+        {theme === "dark" ? (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+        ) : (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        )}
+      </button>
+    </div>
+  );
+}
+/* ── docs navigation — grouped like a design-system site ── */
+const DOC_NAV = [
+  { label: "Foundations", items: [
+    { id: "colors", title: "Colors" },
+    { id: "typography", title: "Typography" },
+    { id: "shape-motion", title: "Shape & motion" },
+  ]},
+  { label: "Primitives", items: [
+    { id: "primitives", title: "Primitives" },
+  ]},
+  { label: "Controls", items: [
+    { id: "button", title: "Button" },
+  ]},
+  { label: "Feedback", items: [
+    { id: "loadingstate", title: "LoadingState" },
+    { id: "thinkingstate", title: "ThinkingState" },
+    { id: "taskrows", title: "TaskRows" },
+    { id: "toolchips", title: "ToolChips" },
+  ]},
+  { label: "Conversation", items: [
+    { id: "streamingtext", title: "StreamingText" },
+    { id: "selectionactions", title: "SelectionActions" },
+    { id: "approvalcard", title: "ApprovalCard" },
+    { id: "promptbar", title: "PromptBar" },
+    { id: "chatcomposer", title: "ChatComposer" },
+  ]},
+  { label: "Data", items: [
+    { id: "recordstable", title: "RecordsTable" },
+    { id: "filtertable", title: "FilterTable" },
+    { id: "difftable", title: "DiffTable" },
+    { id: "contextcards", title: "ContextCards" },
+    { id: "recommendationcard", title: "RecommendationCard" },
+  ]},
+  { label: "Navigation", items: [
+    { id: "sidebarnav", title: "SidebarNav" },
+    { id: "searchlist", title: "SearchList" },
+  ]},
+];
+function useScrollSpy(ids) {
+  const [active, setActive] = useState(ids[0]);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) setActive(visible[0].target.id);
+      },
+      { rootMargin: "-8% 0px -72% 0px" },
+    );
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return active;
+}
+function jumpTo(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+}
+/* ── Foundations ─────────────────────────────────────────── */
+const DOC_COLORS = [
+  "canvas", "surface", "field", "inset", "hover", "hover-2",
+  "line", "line-strong", "ink", "ink-2", "ink-3",
+  "accent", "accent-tint", "green", "green-tint", "red", "red-tint", "orange", "orange-tint",
+];
+const DOC_TYPE = [
+  ["display", "22px"], ["title", "15px"], ["lead", "14px"], ["body", "13px"],
+  ["caption", "12.5px"], ["small", "12px"], ["tiny", "11.5px"], ["micro", "10.5px"],
+];
+const DOC_RADII = [
+  ["rounded-sm", "6px"], ["rounded-chip", "7px"], ["rounded-control", "8px"],
+  ["rounded-md", "10px"], ["rounded-card", "14px"], ["rounded-capsule", "22px"],
+];
+function FoundationsSections() {
+  const [motionKey, setMotionKey] = useState(0);
+  return (
+    <>
+      <Section id="colors" title="Colors" note="The token palette. Every value lives in styles/tokens.css and re-resolves live — switch theme or palette to watch the whole page follow.">
+        <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {DOC_COLORS.map((name) => (
+            <div key={name} className="overflow-hidden rounded-md bg-surface shadow-hairline">
+              <div className="h-10 w-full border-b border-line" style={{ background: `var(--${name})` }} />
+              <p className="px-2 py-1.5 font-mono text-micro text-ink-2">--{name}</p>
+            </div>
+          ))}
+        </div>
+      </Section>
+      <Section id="typography" title="Typography" note="Questrial, single weight — heavier weights are synthesized. Eight working steps plus text-nano (7px) reserved for mini-badge letters.">
+        <Card className="w-full max-w-105 p-5">
+          <div className="flex flex-col gap-2.5">
+            {DOC_TYPE.map(([step, px]) => (
+              <div key={step} className="flex items-baseline justify-between gap-4">
+                <span className={`text-${step} min-w-0 truncate text-ink`}>The quick brown fox</span>
+                <span className="shrink-0 font-mono text-micro text-ink-3">text-{step} · {px}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </Section>
+      <Section id="shape-motion" title="Shape & motion" note="Six radii; one easing — var(--ease-out-quint) — drives every entrance and transition. Replay to see the house motion.">
+        <Card className="w-full max-w-105 p-5">
+          <div className="flex flex-wrap items-end gap-4">
+            {DOC_RADII.map(([cls, px]) => (
+              <div key={cls} className="flex flex-col items-center gap-1.5">
+                <div className={`size-12 bg-inset shadow-hairline ${cls}`} />
+                <span className="font-mono text-micro text-ink-3">{px}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 flex items-center gap-3 border-t border-line pt-4">
+            <button
+              type="button"
+              onClick={() => setMotionKey((k) => k + 1)}
+              className="rounded-control bg-surface px-3 py-1.5 text-caption font-medium text-ink shadow-btn transition-colors duration-150 hover:bg-hover"
+            >
+              ↻ Replay
+            </button>
+            <div key={motionKey} className="flex items-center gap-2">
+              {[0, 1, 2, 3].map((i) => (
+                <span key={i} className="size-3 rounded-full bg-accent" style={popIn(i, { duration: 350, stagger: 110 })} />
+              ))}
+              <span className="text-tiny text-ink-3" style={fadeUp(4, { duration: 350, stagger: 110 })}>ease-out-quint</span>
+            </div>
+          </div>
+        </Card>
+      </Section>
+    </>
+  );
+}
 function App() {
   const [thinkKey, setThinkKey] = useState(0);
   const [theme, setTheme] = useTheme();
   const [palette, setPalette] = usePalette();
+  const active = useScrollSpy(DOC_NAV.flatMap((group) => group.items.map((item) => item.id)));
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
-      <header className="mb-10 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-display font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-1 text-body text-ink-2">Live preview of every component built so far. Placeholder palette — swaps out when the real tokens land.</p>
+    <div className="flex min-h-screen">
+      {/* docs rail — hidden on narrow viewports (mobile keeps the header nav-free) */}
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
+        <div className="mb-6 px-2">
+          <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 18 components</p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-        <div className="flex items-center gap-1 rounded-control bg-surface p-1.5 shadow-btn">
-          {PALETTES.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              title={p.label}
-              aria-label={`${p.label} theme`}
-              aria-pressed={palette === p.id}
-              onClick={() => setPalette(p.id)}
-              className="flex size-5 items-center justify-center rounded-full transition-transform duration-150 hover:scale-110"
-              style={{
-                background: p.swatch,
-                boxShadow: palette === p.id
-                  ? "0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink)"
-                  : "inset 0 0 0 1px rgba(0,0,0,0.15)",
-              }}
-            />
+        <nav className="flex flex-col">
+          {DOC_NAV.map((group) => (
+            <div key={group.label} className="mb-4">
+              <p className="mb-1 px-2 font-mono text-micro tracking-wide text-ink-3 uppercase">{group.label}</p>
+              <div className="flex flex-col gap-px">
+                {group.items.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    aria-current={active === item.id ? "location" : undefined}
+                    onClick={() => jumpTo(item.id)}
+                    className={`rounded-control px-2 py-1 text-left text-caption transition-colors duration-150 hover:bg-hover ${
+                      active === item.id ? "bg-hover-2 font-medium text-ink" : "text-ink-2"
+                    }`}
+                  >
+                    {item.title}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
+        </nav>
+        <div className="mt-auto px-2 pt-4">
+          <ThemeControls theme={theme} setTheme={setTheme} palette={palette} setPalette={setPalette} />
         </div>
-        <button
-          type="button"
-          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="flex size-8 shrink-0 items-center justify-center rounded-control bg-surface text-ink-2 shadow-btn transition-colors duration-150 hover:bg-hover hover:text-ink"
-        >
-          {theme === "dark" ? (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="4" />
-              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-            </svg>
-          ) : (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-            </svg>
-          )}
-        </button>
-        </div>
-      </header>
-      <Section title="SelectionActions" note="Contextual AI bar beneath selected text — quick actions, free-text edit instructions, streamed rewrite with keep / discard.">
-        <GalleryCard label="Default" wide><SelectionActions /></GalleryCard>
-      </Section>
-      <Section title="Primitives" note="The atoms everything above composes: Icon, Spinner, ShimmerLabel, StreamText, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Popover + timing hooks (useSequence, useElapsed, useStream).">
-        <GalleryCard label="StreamText" wide>
-          <p className="text-body leading-relaxed text-ink" aria-live="polite">
-            <StreamText text="Words resolve out of blur one at a time — the shared useStream hook also drives StreamingText and SelectionActions." intervalMs={70} />
-          </p>
-        </GalleryCard>
-        <GalleryCard label="GlideMenu">
-          <GlideMenu className="flex w-44 flex-col gap-px">
-            {["Sprinkles 5", "Vanilla 1", "Freezer Burn 0.4"].map((item) => (
-              <button key={item} data-menu-row type="button" className="relative z-10 flex h-8 w-full items-center rounded-control px-2 text-left text-body text-ink">
-                {item}
+      </aside>
+      <main className="min-w-0 flex-1 px-6 py-8 lg:px-10">
+        <div className="mx-auto max-w-5xl">
+          <header className="mb-10 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="text-display font-semibold tracking-tight text-ink lg:hidden">AI Design System</h1>
+              <p className="mt-1 max-w-2xl text-body text-ink-2">
+                Token-driven React components for AI product interfaces. Everything reads styles/tokens.css — one easing, one icon set, both themes and all five palettes for free.
+              </p>
+            </div>
+            <div className="lg:hidden">
+              <ThemeControls theme={theme} setTheme={setTheme} palette={palette} setPalette={setPalette} />
+            </div>
+          </header>
+          <FoundationsSections />
+          <Section id="primitives" title="Primitives" note="The atoms everything below composes: Icon, Spinner, ShimmerLabel, StreamText, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Popover + timing hooks (useSequence, useElapsed, useStream).">
+            <GalleryCard label="Primitives" wide>
+              <div className="flex flex-wrap items-center gap-3">
+                <ShimmerLabel>Shimmering</ShimmerLabel>
+                <Spinner className="text-ink-2" />
+                <Chip tone="field" mono>field chip</Chip>
+                <Chip tone="surface" mono>surface chip</Chip>
+                <Chip tone="inset" mono>inset chip</Chip>
+                <DiffStat add={74} del={41} />
+                <IconButton label="Close" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="close" /></IconButton>
+                <IconButton label="Search" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="search" /></IconButton>
+                <SendButton enabled />
+                <SendButton enabled={false} />
+                <span className="flex flex-wrap items-center gap-1 text-ink-3">
+                  <Icon name="chevron" /><Icon name="check" /><Icon name="retry" /><Icon name="arrow-up" /><Icon name="plus" /><Icon name="clock" /><Icon name="ellipsis" /><Icon name="mic" /><Icon name="file" /><Icon name="clip" /><Icon name="chart" /><Icon name="layers" /><Icon name="globe" /><Icon name="lines" /><Icon name="external" /><Icon name="edit" /><Icon name="home" /><Icon name="gear" /><Icon name="user-add" /><Icon name="sign-out" /><Icon name="sidebar" /><Icon name="message-question" /><Icon name="sparkles" /><Icon name="scissors" /><Icon name="mood-smile" /><Icon name="typography" /><Icon name="chevron-right" />
+                </span>
+              </div>
+            </GalleryCard>
+            <GalleryCard label="Badges · controls" wide>
+              <div className="flex flex-wrap items-center gap-3">
+                <Badge tone="green">Completed</Badge>
+                <Badge tone="red">Failed</Badge>
+                <Badge tone="neutral">Queued</Badge>
+                <RadioCheck type="radio" on={true} />
+                <RadioCheck type="radio" on={false} />
+                <RadioCheck type="check" on={true} />
+                <RadioCheck type="check" on={false} />
+                <AvatarStack srcs={[SOURCE_IMAGES.scoop, SOURCE_IMAGES.trends, SOURCE_IMAGES.market]} />
+              </div>
+            </GalleryCard>
+            <GalleryCard label="StreamText" wide>
+              <p className="text-body leading-relaxed text-ink" aria-live="polite">
+                <StreamText text="Words resolve out of blur one at a time — the shared useStream hook also drives StreamingText and SelectionActions." intervalMs={70} />
+              </p>
+            </GalleryCard>
+            <GalleryCard label="GlideMenu">
+              <GlideMenu className="flex w-44 flex-col gap-px">
+                {["Sprinkles 5", "Vanilla 1", "Freezer Burn 0.4"].map((item) => (
+                  <button key={item} data-menu-row type="button" className="relative z-10 flex h-8 w-full items-center rounded-control px-2 text-left text-body text-ink">
+                    {item}
+                  </button>
+                ))}
+              </GlideMenu>
+            </GalleryCard>
+          </Section>
+          <Section id="button" title="Button" note="Six variants × two sizes; disabled and loading states. Click the loader to try it.">
+            <GalleryCard label="Variants · sizes · states" wide><ButtonDemo /></GalleryCard>
+          </Section>
+          <Section id="loadingstate" title="LoadingState" note="Pixel-grid loader with shimmer label and elapsed timer.">
+            <GalleryCard label="Drive"><LoadingState variant="Drive" /></GalleryCard>
+            <GalleryCard label="Dots"><LoadingState variant="Dots" /></GalleryCard>
+            <GalleryCard label="Orbit"><LoadingState variant="Orbit" /></GalleryCard>
+          </Section>
+          <Section id="thinkingstate" title="ThinkingState" note="Expandable agent trace. Runs once on load — replay to see the sequence again.">
+            <div className="w-full">
+              <button type="button" onClick={() => setThinkKey((k) => k + 1)}
+                className="mb-4 rounded-control bg-surface px-3 py-1.5 text-caption font-medium text-ink shadow-btn transition-colors duration-150 hover:bg-hover">
+                ↻ Replay all
               </button>
-            ))}
-          </GlideMenu>
-        </GalleryCard>
-        <GalleryCard label="Badges · controls" wide>
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge tone="green">Completed</Badge>
-            <Badge tone="red">Failed</Badge>
-            <Badge tone="neutral">Queued</Badge>
-            <RadioCheck type="radio" on={true} />
-            <RadioCheck type="radio" on={false} />
-            <RadioCheck type="check" on={true} />
-            <RadioCheck type="check" on={false} />
-            <AvatarStack srcs={[SOURCE_IMAGES.scoop, SOURCE_IMAGES.trends, SOURCE_IMAGES.market]} />
-          </div>
-        </GalleryCard>
-        <GalleryCard label="Primitives" wide>
-          <div className="flex flex-wrap items-center gap-3">
-            <ShimmerLabel>Shimmering</ShimmerLabel>
-            <Spinner className="text-ink-2" />
-            <Chip tone="field" mono>field chip</Chip>
-            <Chip tone="surface" mono>surface chip</Chip>
-            <Chip tone="inset" mono>inset chip</Chip>
-            <DiffStat add={74} del={41} />
-            <IconButton label="Close" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="close" /></IconButton>
-            <IconButton label="Search" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="search" /></IconButton>
-            <SendButton enabled />
-            <SendButton enabled={false} />
-            <span className="flex items-center gap-1 text-ink-3">
-              <Icon name="chevron" /><Icon name="check" /><Icon name="retry" /><Icon name="arrow-up" /><Icon name="plus" /><Icon name="clock" /><Icon name="ellipsis" /><Icon name="mic" /><Icon name="file" /><Icon name="clip" /><Icon name="chart" /><Icon name="layers" /><Icon name="globe" /><Icon name="lines" /><Icon name="external" /><Icon name="edit" /><Icon name="home" /><Icon name="gear" /><Icon name="user-add" /><Icon name="sign-out" /><Icon name="sidebar" />
-            </span>
-          </div>
-        </GalleryCard>
-      </Section>
-      <Section title="Button" note="Six variants × two sizes; disabled and loading states. Click the loader to try it.">
-        <GalleryCard label="Variants · sizes · states" wide><ButtonDemo /></GalleryCard>
-      </Section>
-      <Section title="LoadingState" note="Pixel-grid loader with shimmer label and elapsed timer.">
-        <GalleryCard label="Drive"><LoadingState variant="Drive" /></GalleryCard>
-        <GalleryCard label="Dots"><LoadingState variant="Dots" /></GalleryCard>
-        <GalleryCard label="Orbit"><LoadingState variant="Orbit" /></GalleryCard>
-      </Section>
-      <Section title="ThinkingState" note="Expandable agent trace. Runs once on load — replay to see the sequence again.">
-        <div className="w-full">
-          <button type="button" onClick={() => setThinkKey((k) => k + 1)}
-            className="mb-4 rounded-control bg-surface px-3 py-1.5 text-caption font-medium text-ink shadow-btn transition-colors duration-150 hover:bg-hover">
-            ↻ Replay all
-          </button>
-          <div className="grid gap-6 md:grid-cols-2">
-            <GalleryCard label="Steps"><ThinkingState key={`s${thinkKey}`} variant="Steps" /></GalleryCard>
-            <GalleryCard label="Reasoning"><ThinkingState key={`r${thinkKey}`} variant="Reasoning" /></GalleryCard>
-            <GalleryCard label="Search"><ThinkingState key={`w${thinkKey}`} variant="Search" /></GalleryCard>
-            <GalleryCard label="Coding"><ThinkingState key={`c${thinkKey}`} variant="Coding" /></GalleryCard>
-          </div>
+              <div className="grid gap-6 md:grid-cols-2">
+                <GalleryCard label="Steps"><ThinkingState key={`s${thinkKey}`} variant="Steps" /></GalleryCard>
+                <GalleryCard label="Reasoning"><ThinkingState key={`r${thinkKey}`} variant="Reasoning" /></GalleryCard>
+                <GalleryCard label="Search"><ThinkingState key={`w${thinkKey}`} variant="Search" /></GalleryCard>
+                <GalleryCard label="Coding"><ThinkingState key={`c${thinkKey}`} variant="Coding" /></GalleryCard>
+              </div>
+            </div>
+          </Section>
+          <Section id="taskrows" title="TaskRows" note="Agent tasks as expandable rows — a scripted status run plays once (spin → failed → completed).">
+            <GalleryCard label="Capsules" wide><TaskRows variant="Capsules" /></GalleryCard>
+            <GalleryCard label="List" wide><TaskRows variant="List" /></GalleryCard>
+          </Section>
+          <Section id="toolchips" title="ToolChips" note="Agent run as compact rows. Click rows to expand; hover the file chips for diff previews.">
+            <GalleryCard label="Default"><ToolChips /></GalleryCard>
+          </Section>
+          <Section id="streamingtext" title="StreamingText" note="Words resolve out of blur; citations, sources, and follow-ups appear when done. Loops.">
+            <GalleryCard label="Default" wide><StreamingText /></GalleryCard>
+          </Section>
+          <Section id="selectionactions" title="SelectionActions" note="Contextual AI bar beneath selected text — quick actions, free-text edit instructions, streamed rewrite with keep / discard.">
+            <GalleryCard label="Default" wide><SelectionActions /></GalleryCard>
+          </Section>
+          <Section id="approvalcard" title="ApprovalCard" note="Human-in-the-loop questions — fully interactive, try answering.">
+            <GalleryCard label="Default"><ApprovalCard /></GalleryCard>
+          </Section>
+          <Section id="promptbar" title="PromptBar" note="Full composer: @ sources, / commands, model picker (pick Sprinkles 5 for the rainbow), dictation. Self-running demo hands over on interaction.">
+            <GalleryCard label="Rounded" wide><PromptBar variant="Rounded" /></GalleryCard>
+            <GalleryCard label="Pill" wide><PromptBar variant="Pill" /></GalleryCard>
+          </Section>
+          <Section id="chatcomposer" title="ChatComposer" note="Interactive chat panel — type a prompt and send to trigger the reply sequence.">
+            <GalleryCard label="Default" wide><ChatComposer /></GalleryCard>
+          </Section>
+          <Section id="recordstable" title="RecordsTable" note="AI spreadsheet grid — click headers for property config, + to add an AI column, then Go calculate. Drag column edges to resize.">
+            <div className="w-full"><RecordsTable /></div>
+          </Section>
+          <Section id="filtertable" title="FilterTable" note="Status chips directly filter the table — rows collapse and expand as you switch.">
+            <GalleryCard label="Default" wide><FilterTable /></GalleryCard>
+          </Section>
+          <Section id="difftable" title="DiffTable" note="Proposed edit as a diff — click changed rows to include/exclude each edit, then apply.">
+            <GalleryCard label="Default" wide><DiffTable /></GalleryCard>
+          </Section>
+          <Section id="contextcards" title="ContextCards" note="Retrieved chunks with source chips — file-type badges link back to the original document.">
+            <GalleryCard label="Default" wide><ContextCards /></GalleryCard>
+          </Section>
+          <Section id="recommendationcard" title="RecommendationCard" note="Ranked recommendation with an alternatives drawer — pick an option to promote it, then accept.">
+            <GalleryCard label="Default" wide><RecommendationCard /></GalleryCard>
+          </Section>
+          <Section id="sidebarnav" title="SidebarNav" note="Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.">
+            <div className="flex"><SidebarNav /></div>
+          </Section>
+          <Section id="searchlist" title="SearchList" note="Command search with live filtering — type to filter, gibberish for the empty state.">
+            <GalleryCard label="Default" wide><SearchList /></GalleryCard>
+          </Section>
         </div>
-      </Section>
-      <Section title="ApprovalCard" note="Human-in-the-loop questions — fully interactive, try answering.">
-        <GalleryCard label="Default"><ApprovalCard /></GalleryCard>
-      </Section>
-      <Section title="SearchList" note="Command search with live filtering — type to filter, gibberish for the empty state.">
-        <GalleryCard label="Default" wide><SearchList /></GalleryCard>
-      </Section>
-      <Section title="SidebarNav" note="Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.">
-        <div className="flex"><SidebarNav /></div>
-      </Section>
-      <Section title="FilterTable" note="Status chips directly filter the table — rows collapse and expand as you switch.">
-        <GalleryCard label="Default" wide><FilterTable /></GalleryCard>
-      </Section>
-      <Section title="RecordsTable" note="AI spreadsheet grid — click headers for property config, + to add an AI column, then Go calculate. Drag column edges to resize.">
-        <div className="w-full"><RecordsTable /></div>
-      </Section>
-      <Section title="DiffTable" note="Proposed edit as a diff — click changed rows to include/exclude each edit, then apply.">
-        <GalleryCard label="Default" wide><DiffTable /></GalleryCard>
-      </Section>
-      <Section title="ContextCards" note="Retrieved chunks with source chips — file-type badges link back to the original document.">
-        <GalleryCard label="Default" wide><ContextCards /></GalleryCard>
-      </Section>
-      <Section title="RecommendationCard" note="Ranked recommendation with an alternatives drawer — pick an option to promote it, then accept.">
-        <GalleryCard label="Default" wide><RecommendationCard /></GalleryCard>
-      </Section>
-      <Section title="PromptBar" note="Full composer: @ sources, / commands, model picker (pick Sprinkles 5 for the rainbow), dictation. Self-running demo hands over on interaction.">
-        <GalleryCard label="Rounded" wide><PromptBar variant="Rounded" /></GalleryCard>
-        <GalleryCard label="Pill" wide><PromptBar variant="Pill" /></GalleryCard>
-      </Section>
-      <Section title="ChatComposer" note="Interactive chat panel — type a prompt and send to trigger the reply sequence.">
-        <GalleryCard label="Default" wide><ChatComposer /></GalleryCard>
-      </Section>
-      <Section title="TaskRows" note="Agent tasks as expandable rows — a scripted status run plays once (spin → failed → completed).">
-        <GalleryCard label="Capsules" wide><TaskRows variant="Capsules" /></GalleryCard>
-        <GalleryCard label="List" wide><TaskRows variant="List" /></GalleryCard>
-      </Section>
-      <Section title="ToolChips" note="Agent run as compact rows. Click rows to expand; hover the file chips for diff previews.">
-        <GalleryCard label="Default"><ToolChips /></GalleryCard>
-      </Section>
-      <Section title="StreamingText" note="Words resolve out of blur; citations, sources, and follow-ups appear when done. Loops.">
-        <GalleryCard label="Default" wide><StreamingText /></GalleryCard>
-      </Section>
-    </main>
+      </main>
+    </div>
   );
 }
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
