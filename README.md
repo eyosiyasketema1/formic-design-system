@@ -71,4 +71,5 @@ Five color themes ship in `styles/themes.css` (load it after `tokens.css`), each
 - Tokens are CSS variables defined in `styles/tokens.css`; components never hardcode colors.
 - Components accept real data via props (`rows`, `questions`, `tokens`, `sources`, …); the built-in demo content is only the default.
 - Every animated component respects `prefers-reduced-motion`.
+- Components are responsive by default: fluid roots (`w-full` + `max-w-*` cap), internal `overflow-x-auto` for wide content, truncating text — they adapt to whatever container you give them.
 - Loaders use `role="status"` for accessibility.

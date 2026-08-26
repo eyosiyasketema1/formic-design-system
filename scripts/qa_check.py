@@ -109,6 +109,10 @@ for var, val in base_light.items():
     if m and m.group(1).lower() != val.lower():
         fails.append(f"drift: {var} is {val} in tokens.css but {m.group(1)} in preview.html")
 
+# ── 3a2. Responsiveness basics ──────────────────────────────
+if 'name="viewport"' not in preview:
+    fails.append("preview.html: missing viewport meta (responsive rule 11)")
+
 # ── 3b. Preview script: every React hook used must be destructured ──
 m = re.search(r'<script type="text/babel"[^>]*>(.*?)</script>', preview, re.S)
 if m:

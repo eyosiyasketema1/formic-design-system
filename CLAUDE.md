@@ -14,6 +14,7 @@ Rules for any AI agent (or human) working in this repo. These exist because past
 8. **Both themes for free.** Components never branch on theme/palette — they only read tokens. Dark mode and palettes are token overrides (`data-theme`, `data-palette`).
 9. **Keep preview.html in sync.** Any token or component change must be mirrored in `preview.html` (it duplicates styles inline for standalone use). The QA script detects color drift.
 10. **Questrial** is the default face (single weight — heavier weights are synthesized; that's accepted).
+11. **Responsive by default.** Component roots are fluid: `w-full` plus a `max-w-*` cap — never a fixed pixel width (sanctioned exceptions: app rails like SidebarNav, and popover panels, which must clamp their position/size against the viewport). Wide content (tables, grids) scrolls inside its own `overflow-x-auto` container — never overflows the page. Text uses `min-w-0` + `truncate` instead of breaking layout. Gallery wrappers must give components room to reach their cap (`wide` on cards ≥ max-w-95). Before calling a component done, reason through it at ~360px width: nothing clipped, nothing overflowing, touch targets ≥ 24px.
 
 ## Extraction rule
 
@@ -33,7 +34,7 @@ After every piece of work, look for extractable pieces and extract them:
    python3 scripts/qa_check.py
    ```
    It checks forbidden patterns, WCAG contrast for every mode × palette, tokens↔preview drift, and that components compile. Work is not done while it fails.
-2. **For any non-trivial change** (new component, token changes, refactor): launch a QA subagent to independently review the work against this file and `QA-REPORT.md` standards before presenting it as finished. The QA agent should verify claims with actual greps/counts, not trust the work summary.
+2. **For any non-trivial change** (new component, token changes, refactor): launch a QA subagent to independently review the work against this file and `QA-REPORT.md` standards before presenting it as finished. The QA agent should verify claims with actual greps/counts, not trust the work summary — including rule 11: check the component's width behavior (fluid root, scroll containers, truncation) and its gallery wrapper.
 3. Commit with a descriptive message after QA passes. Never commit failing QA.
 
 ## Repo map
