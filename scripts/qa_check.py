@@ -116,6 +116,18 @@ for var, val in base_light.items():
 if 'name="viewport"' not in preview:
     fails.append("preview.html: missing viewport meta (responsive rule 11)")
 
+# ── 3a3. Preview script: no dangling SCREAMING_SNAKE references ──
+# (a mirror regeneration once swallowed neighboring consts — never again)
+m0 = re.search(r'<script type="text/babel"[^>]*>(.*?)</script>', preview, re.S)
+if m0:
+    body = m0.group(1)
+    defined = set(re.findall(r"^(?:function|const|let)\s+([A-Z][A-Z0-9_]{2,})\b", body, re.M))
+    referenced = set(re.findall(r"\b([A-Z][A-Z0-9_]{2,})\b", body))
+    allowed = {"NAN", "URL", "JSON", "CSS", "DOM", "SVG", "UTC", "API", "HTML", "AA", "OTP", "QA", "PDF", "CSV"}
+    for name in sorted(referenced - defined - allowed):
+        if "_" in name:  # only const-style names, not acronyms in strings/comments
+            fails.append(f"preview.html: {name} referenced but never defined (lost in a mirror regen?)")
+
 # ── 3b. Preview script: every React hook used must be destructured ──
 m = re.search(r'<script type="text/babel"[^>]*>(.*?)</script>', preview, re.S)
 if m:
