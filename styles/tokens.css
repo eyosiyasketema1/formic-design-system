@@ -194,6 +194,15 @@ textarea:focus-visible {
   border-color: var(--red);
 }
 .shadow-hairline { box-shadow: 0 0 0 1px var(--line); }
+@keyframes progress-slide {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(440%); }
+}
+/* with reduced motion the sweep freezes — a full quiet bar reads
+   better than one parked at 30% (which looks stalled) */
+@media (prefers-reduced-motion: reduce) {
+  .progress-indeterminate-bar { width: 100% !important; }
+}
 .source-avatar { object-fit: cover; }
 .animated-underline {
   background-image: linear-gradient(currentColor, currentColor);

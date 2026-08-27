@@ -8,7 +8,7 @@ import {
   type ReactElement,
 } from "react";
 import { useAnchoredLayer } from "./hooks";
-import { Icon, Popover, type IconName } from "./primitives";
+import { Icon, Popover, Separator, type IconName } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * DROPDOWN MENU
  * The standard action menu. Wrap any trigger element — it
@@ -181,7 +181,7 @@ export default function DropdownMenu({
                 <span className="min-w-0 flex-1 truncate">{entry.label}</span>
               </div>
             ) : (
-              <div key={`divider-${index}`} role="separator" className="my-1 h-px bg-line" />
+              <Separator key={`divider-${index}`} className="my-1" />
             ),
           )}
         </Popover>

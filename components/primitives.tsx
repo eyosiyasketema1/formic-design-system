@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ElementType, type ReactNode } from "react";
+import { cloneElement, isValidElement, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ElementType, type ReactElement, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
   IconAlertCircle, IconAlignLeft, IconArrowUp, IconArrowUpRight, IconChartBar, IconCheck, IconCircleCheck,
@@ -421,6 +421,221 @@ export function Switch({
         }}
       />
     </button>
+  );
+}
+
+/* ── Separator ─────────────────────────────────────────── */
+/* The one divider. Vertical needs a height from the caller
+ * (e.g. className="h-4"). */
+export function Separator({
+  vertical = false,
+  className = "",
+}: {
+  vertical?: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      role="separator"
+      aria-orientation={vertical ? "vertical" : undefined}
+      className={`shrink-0 bg-line ${vertical ? "w-px" : "h-px w-full"} ${className}`}
+    />
+  );
+}
+
+/* ── Progress ──────────────────────────────────────────── */
+export function Progress({
+  value = 0,
+  max = 100,
+  label,
+  tone = "accent",
+  indeterminate = false,
+  className = "",
+}: {
+  value?: number;
+  max?: number;
+  /** accessible name — what is progressing */
+  label?: string;
+  tone?: "accent" | "green";
+  /** unknown duration — animated sweep instead of a fill */
+  indeterminate?: boolean;
+  className?: string;
+}) {
+  const percent = Math.min(100, Math.max(0, (value / max) * 100));
+  return (
+    <div
+      role="progressbar"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={max}
+      aria-valuenow={indeterminate ? undefined : Math.round(Math.min(max, Math.max(0, value)))}
+      className={`h-1.5 w-full overflow-hidden rounded-full bg-inset shadow-hairline ${className}`}
+    >
+      <div
+        className={`h-full rounded-full ${tone === "green" ? "bg-green" : "bg-accent"} ${
+          indeterminate ? "progress-indeterminate-bar" : ""
+        }`}
+        style={
+          indeterminate
+            ? { width: "30%", animation: "progress-slide 1.2s var(--ease-out-quint) infinite" }
+            : {
+                width: `${percent}%`,
+                transition: "width 300ms var(--ease-out-quint)",
+              }
+        }
+      />
+    </div>
+  );
+}
+
+/* ── Avatar ────────────────────────────────────────────── */
+/* Image when src is given; otherwise initials on a hue hashed
+ * from the name via the verified tag formula (16% bg / 50%
+ * into ink — ≥4.5:1 in every mode × palette). */
+export type AvatarSize = "sm" | "md" | "lg";
+const AVATAR_SIZES: Record<AvatarSize, string> = {
+  sm: "size-6 text-micro",
+  md: "size-7 text-tiny",
+  lg: "size-9 text-caption",
+};
+const initialsOf = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]!.toUpperCase())
+    .join("");
+const hueOf = (name: string) => {
+  let hash = 0;
+  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) % 360;
+  return hash;
+};
+export function Avatar({
+  name,
+  src,
+  size = "md",
+  className = "",
+}: {
+  /** person's name — drives initials and the fallback hue */
+  name: string;
+  src?: string;
+  size?: AvatarSize;
+  className?: string;
+}) {
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        className={`source-avatar shrink-0 rounded-full bg-surface shadow-hairline ${AVATAR_SIZES[size]} ${className}`}
+      />
+    );
+  }
+  const hue = hueOf(name);
+  return (
+    <span
+      role="img"
+      aria-label={name}
+      className={`flex shrink-0 items-center justify-center rounded-full font-medium shadow-hairline ${AVATAR_SIZES[size]} ${className}`}
+      style={{
+        background: `color-mix(in srgb, oklch(0.72 0.12 ${hue}) 16%, var(--surface))`,
+        color: `color-mix(in srgb, oklch(0.72 0.12 ${hue}) 50%, var(--ink))`,
+      }}
+    >
+      {initialsOf(name)}
+    </span>
+  );
+}
+
+/* ── Tooltip ───────────────────────────────────────────── */
+/* Hover / focus label on the tooltip tokens. Wraps its child;
+ * the child gains aria-describedby while the tip is visible. */
+export function Tooltip({
+  label,
+  delay = 250,
+  children,
+}: {
+  label: string;
+  /** hover delay in ms (focus shows immediately) */
+  delay?: number;
+  children: ReactElement;
+}) {
+  const id = useId();
+  const anchorRef = useRef<HTMLSpanElement>(null);
+  const timerRef = useRef<number | null>(null);
+  const [position, setPosition] = useState<{ x: number; top?: number; bottom?: number } | null>(null);
+  const show = () => {
+    const rect = anchorRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = Math.max(40, Math.min(rect.left + rect.width / 2, window.innerWidth - 40));
+    setPosition(
+      rect.top > 44
+        ? { x, bottom: window.innerHeight - rect.top + 6 }
+        : { x, top: rect.bottom + 6 },
+    );
+  };
+  const schedule = () => {
+    timerRef.current = window.setTimeout(show, delay);
+  };
+  const hide = () => {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = null;
+    setPosition(null);
+  };
+  useEffect(() => {
+    if (!position) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") hide();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [position]);
+  useEffect(() => hide, []); /* clear the pending timer on unmount */
+  const existingDescribedBy = isValidElement(children)
+    ? ((children.props as Record<string, unknown>)["aria-describedby"] as string | undefined)
+    : undefined;
+  const child = isValidElement(children)
+    ? cloneElement(children as ReactElement<Record<string, unknown>>, {
+        /* extend, don't clobber, an existing description (e.g. from Field) */
+        "aria-describedby": position
+          ? [existingDescribedBy, id].filter(Boolean).join(" ")
+          : existingDescribedBy,
+      })
+    : children;
+  return (
+    <>
+      <span
+        ref={anchorRef}
+        className="inline-flex"
+        onMouseEnter={schedule}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+      >
+        {child}
+      </span>
+      {position &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <span
+            id={id}
+            role="tooltip"
+            className="pointer-events-none fixed z-50 rounded-chip px-2 py-1 text-tiny font-medium whitespace-nowrap"
+            style={{
+              left: position.x,
+              top: position.top,
+              bottom: position.bottom,
+              transform: "translateX(-50%)",
+              background: "var(--tooltip-bg)",
+              color: "var(--tooltip-fg)",
+              animation: "pop-in 150ms var(--ease-out-quint) both",
+            }}
+          >
+            {label}
+          </span>,
+          document.body,
+        )}
+    </>
   );
 }
 

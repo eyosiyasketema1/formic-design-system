@@ -41,7 +41,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 
 | Component | Purpose | Variants |
 |---|---|---|
-| `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Skeleton`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`, `fadeUp`/`popIn` | — |
+| `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Skeleton`, `Avatar`, `Tooltip`, `Progress`, `Separator`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`, `fadeUp`/`popIn` | — |
 | `hooks` | Shared hooks: `useSequence` (staged reveals), `useElapsed` (live clock), `useStream` (word-by-word reveal), `useAnchoredLayer` (anchored popover engine) | — |
 | `Button` | The workhorse control: sizes sm/md, disabled + loading states, optional icon | `primary`, `secondary`, `ghost`, `destructive`, `accent`, `success` |
 | `LoadingState` | Loader for long-running work: pixel grid + shimmer label + elapsed timer | `Drive`, `Dots`, `Orbit`, `Surfer` |
@@ -74,6 +74,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `Markdown` | Dependency-free renderer for AI output: headings, emphasis, safe links, nested lists, quotes, scrollable tables, fenced code via CodeBlock | — |
 | `FileDropzone` | Drag-and-drop upload with browse fallback: accept/size validation with announced rejections, file chips with remove | — |
 | `theme` | Runtime theming utilities: `setAccent(color)` re-accents the system live (AA-fitted light+dark variants), `deriveAccentVariants` for build-time use | — |
+| `Accordion` | Stacked disclosure rows on the Disclosure primitive — single-open or multiple, inert closed content | — |
 
 ## Theming
 

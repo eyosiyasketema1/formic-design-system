@@ -159,6 +159,8 @@
 .primitive-field:focus-within { border-color: var(--line-strong); }
 .primitive-field[data-invalid="true"], .primitive-field[data-invalid="true"]:focus-within { border-color: var(--red); }
 .shadow-hairline { box-shadow: 0 0 0 1px var(--line); }
+@keyframes progress-slide { from { transform: translateX(-110%); } to { transform: translateX(440%); } }
+@media (prefers-reduced-motion: reduce) { .progress-indeterminate-bar { width: 100% !important; } }
 .source-avatar { object-fit: cover; }
 .animated-underline {
   background-image: linear-gradient(currentColor, currentColor);
@@ -776,6 +778,68 @@ function Switch({ on, onToggle, label, size = "md", disabled = false, className 
       <span className={`absolute top-0.5 left-0.5 rounded-full bg-canvas shadow-btn transition-transform duration-150 ${spec.thumb}`}
         style={{ transform: on ? `translateX(${spec.travel}px)` : "translateX(0)", transitionTimingFunction: "var(--ease-out-quint)" }} />
     </button>
+  );
+}
+function Separator({ vertical = false, className = "" }) {
+  return <div role="separator" aria-orientation={vertical ? "vertical" : undefined} className={`shrink-0 bg-line ${vertical ? "w-px" : "h-px w-full"} ${className}`} />;
+}
+function Progress({ value = 0, max = 100, label, tone = "accent", indeterminate = false, className = "" }) {
+  const percent = Math.min(100, Math.max(0, (value / max) * 100));
+  return (
+    <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={max} aria-valuenow={indeterminate ? undefined : Math.round(Math.min(max, Math.max(0, value)))}
+      className={`h-1.5 w-full overflow-hidden rounded-full bg-inset shadow-hairline ${className}`}>
+      <div className={`h-full rounded-full ${tone === "green" ? "bg-green" : "bg-accent"} ${indeterminate ? "progress-indeterminate-bar" : ""}`}
+        style={indeterminate
+          ? { width: "30%", animation: "progress-slide 1.2s var(--ease-out-quint) infinite" }
+          : { width: `${percent}%`, transition: "width 300ms var(--ease-out-quint)" }} />
+    </div>
+  );
+}
+const AVATAR_SIZES = { sm: "size-6 text-micro", md: "size-7 text-tiny", lg: "size-9 text-caption" };
+const avatarInitials = (name) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0].toUpperCase()).join("");
+const avatarHue = (name) => { let hash = 0; for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) % 360; return hash; };
+function Avatar({ name, src, size = "md", className = "" }) {
+  if (src) return <img src={src} alt={name} className={`source-avatar shrink-0 rounded-full bg-surface shadow-hairline ${AVATAR_SIZES[size]} ${className}`} />;
+  const hue = avatarHue(name);
+  return (
+    <span role="img" aria-label={name}
+      className={`flex shrink-0 items-center justify-center rounded-full font-medium shadow-hairline ${AVATAR_SIZES[size]} ${className}`}
+      style={{ background: `color-mix(in srgb, oklch(0.72 0.12 ${hue}) 16%, var(--surface))`, color: `color-mix(in srgb, oklch(0.72 0.12 ${hue}) 50%, var(--ink))` }}>
+      {avatarInitials(name)}
+    </span>
+  );
+}
+function Tooltip({ label, delay = 250, children }) {
+  const id = useId();
+  const anchorRef = useRef(null);
+  const timerRef = useRef(null);
+  const [position, setPosition] = useState(null);
+  const show = () => {
+    const rect = anchorRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = Math.max(40, Math.min(rect.left + rect.width / 2, window.innerWidth - 40));
+    setPosition(rect.top > 44 ? { x, bottom: window.innerHeight - rect.top + 6 } : { x, top: rect.bottom + 6 });
+  };
+  const schedule = () => { timerRef.current = window.setTimeout(show, delay); };
+  const hide = () => { if (timerRef.current) window.clearTimeout(timerRef.current); timerRef.current = null; setPosition(null); };
+  useEffect(() => {
+    if (!position) return;
+    const onKey = (event) => { if (event.key === "Escape") hide(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [position]);
+  useEffect(() => hide, []);
+  const existingDescribedBy = isValidElement(children) ? children.props["aria-describedby"] : undefined;
+  const child = isValidElement(children) ? cloneElement(children, { "aria-describedby": position ? [existingDescribedBy, id].filter(Boolean).join(" ") : existingDescribedBy }) : children;
+  return (
+    <>
+      <span ref={anchorRef} className="inline-flex" onMouseEnter={schedule} onMouseLeave={hide} onFocus={show} onBlur={hide}>{child}</span>
+      {position && ReactDOM.createPortal(
+        <span id={id} role="tooltip" className="pointer-events-none fixed z-50 rounded-chip px-2 py-1 text-tiny font-medium whitespace-nowrap"
+          style={{ left: position.x, top: position.top, bottom: position.bottom, transform: "translateX(-50%)", background: "var(--tooltip-bg)", color: "var(--tooltip-fg)", animation: "pop-in 150ms var(--ease-out-quint) both" }}>
+          {label}
+        </span>, document.body)}
+    </>
   );
 }
 function AvatarStack({ srcs, className = "" }) {
@@ -5218,7 +5282,7 @@ function DropdownMenu({
       className={`shrink-0 ${entry.danger ? "text-red" : "text-ink-2"}`}
     />}
                 <span className="min-w-0 flex-1 truncate">{entry.label}</span>
-              </div> : <div key={`divider-${index}`} role="separator" className="my-1 h-px bg-line" />
+              </div> : <Separator key={`divider-${index}`} className="my-1" />
   )}
         </Popover>}
     </>;
@@ -5913,6 +5977,78 @@ function FileDropzone({
     </div>;
 }
 
+/* ═══════════ Accordion ═══════════ */
+const AC_DEFAULT_ITEMS = [
+  {
+    key: "restock",
+    title: "How does auto-restock work?",
+    content: "When a base ingredient dips below two days of cover, the system drafts a supplier order and holds it for approval. Nothing ships without a yes."
+  },
+  {
+    key: "seasonal",
+    title: "When do seasonal flavors rotate?",
+    content: "Seasonal slots review every six weeks. Flavors trending under 4% of sales rotate out; the recommendation card proposes the replacement."
+  },
+  {
+    key: "suppliers",
+    title: "Can one flavor use two suppliers?",
+    content: "Yes \u2014 set a primary and a standby. The standby activates automatically when the primary misses a delivery window."
+  }
+];
+function Accordion({
+  items = AC_DEFAULT_ITEMS,
+  multiple = false,
+  defaultOpen = [],
+  className = ""
+} = {}) {
+  const id = useId();
+  const [openKeys, setOpenKeys] = useState(defaultOpen);
+  const toggle = (key) => {
+    setOpenKeys((current) => {
+      if (current.includes(key)) return current.filter((entry) => entry !== key);
+      return multiple ? [...current, key] : [key];
+    });
+  };
+  return <div className={`w-full overflow-hidden rounded-card bg-surface shadow-card ${className}`}>
+      {items.map((item) => {
+    const open = openKeys.includes(item.key);
+    const headerId = `${id}-header-${item.key}`;
+    const panelId = `${id}-panel-${item.key}`;
+    return <div key={item.key} className="border-b border-line last:border-0">
+            <h3>
+              <button
+      type="button"
+      id={headerId}
+      aria-expanded={open}
+      aria-controls={panelId}
+      onClick={() => toggle(item.key)}
+      className="flex h-11 w-full items-center justify-between gap-3 px-4 text-left text-body font-medium text-ink transition-colors duration-150 hover:bg-hover"
+    >
+                <span className="min-w-0 truncate">{item.title}</span>
+                <Icon
+      name="chevron"
+      size={14}
+      strokeWidth={2}
+      className={`shrink-0 text-ink-3 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+      style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
+    />
+              </button>
+            </h3>
+            <Disclosure open={open} duration={260}>
+              <div
+      id={panelId}
+      role="region"
+      aria-labelledby={headerId}
+      className="px-4 pb-3.5 text-body leading-relaxed text-ink-2"
+    >
+                {item.content}
+              </div>
+            </Disclosure>
+          </div>;
+  })}
+    </div>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -6271,6 +6407,9 @@ const DOC_NAV = [
     { id: "switch", title: "Switch" },
     { id: "filedropzone", title: "FileDropzone" },
   ]},
+  { label: "Structure", items: [
+    { id: "accordion", title: "Accordion" },
+  ]},
   { label: "Overlays", items: [
     { id: "modal", title: "Modal" },
     { id: "toast", title: "Toast" },
@@ -6418,7 +6557,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 32 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 33 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -6460,7 +6599,7 @@ function App() {
             </div>
           </header>
           <FoundationsSections />
-          <Section id="primitives" title="Primitives" note="The atoms everything below composes: Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Skeleton, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Switch, Popover + timing hooks (useSequence, useElapsed, useStream).">
+          <Section id="primitives" title="Primitives" note="The atoms everything below composes: Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Switch, Popover + timing hooks (useSequence, useElapsed, useStream).">
             <GalleryCard label="Primitives" wide>
               <div className="flex flex-wrap items-center gap-3">
                 <ShimmerLabel>Shimmering</ShimmerLabel>
@@ -6491,7 +6630,27 @@ function App() {
                 <AvatarStack srcs={[SOURCE_IMAGES.scoop, SOURCE_IMAGES.trends, SOURCE_IMAGES.market]} />
               </div>
             </GalleryCard>
-            <GalleryCard label="StreamText" wide>
+            <GalleryCard label="Avatar · Tooltip" wide>
+          <div className="flex flex-wrap items-center gap-3">
+            <Avatar name="Samson Usmael" size="lg" />
+            <Avatar name="Maple Orbit" />
+            <Avatar name="Aurora Scoops" size="sm" />
+            <Avatar name="Kumo Creamery" src={SOURCE_IMAGES.scoop} />
+            <Separator vertical className="h-5" />
+            <Tooltip label="Copy code"><IconButton label="Copy code" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="copy" /></IconButton></Tooltip>
+            <Tooltip label="Runs the batch restock flow"><Button variant="secondary" size="sm">Hover me</Button></Tooltip>
+          </div>
+        </GalleryCard>
+        <GalleryCard label="Progress · Separator" wide>
+          <div className="flex w-full flex-col gap-3">
+            <Progress value={64} label="Batch progress" />
+            <Progress value={100} tone="green" label="Complete" />
+            <Progress indeterminate label="Syncing suppliers" />
+            <Separator />
+            <span className="text-small text-ink-3">Separator above — the one divider, horizontal or vertical.</span>
+          </div>
+        </GalleryCard>
+        <GalleryCard label="StreamText" wide>
               <p className="text-body leading-relaxed text-ink" aria-live="polite">
                 <StreamText text="Words resolve out of blur one at a time — the shared useStream hook also drives StreamingText and SelectionActions." intervalMs={70} />
               </p>
@@ -6568,6 +6727,9 @@ function App() {
             <GalleryCard label="Single file" wide>
               <FileDropzone multiple={false} label="Drop the batch sheet" hint="One file replaces the last" />
             </GalleryCard>
+          </Section>
+          <Section id="accordion" title="Accordion" note="Stacked disclosure rows on Disclosure — single-open by default, closed content inert, house easing throughout.">
+            <GalleryCard label="Single open" wide><Accordion defaultOpen={["restock"]} /></GalleryCard>
           </Section>
           <Section id="modal" title="Modal" note="Portal dialog on the system scrim — focus trapped and restored, page scroll locked, Escape / backdrop dismiss. Footer takes the system Buttons.">
             <GalleryCard label="Form · confirm" wide><ModalDemo /></GalleryCard>
