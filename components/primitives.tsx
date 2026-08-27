@@ -2,7 +2,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ElementType, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
-  IconAlignLeft, IconArrowUp, IconArrowUpRight, IconChartBar, IconCheck,
+  IconAlertCircle, IconAlignLeft, IconArrowUp, IconArrowUpRight, IconChartBar, IconCheck, IconCircleCheck,
   IconChevronDown, IconChevronRight, IconClock, IconDots, IconFileText, IconHome,
   IconCopy, IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion, IconMicrophone,
   IconMoodSmile, IconPaperclip, IconPencil, IconPlus, IconRefresh, IconScissors,
@@ -65,7 +65,7 @@ export type IconName =
   | "lines" | "external"
   | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar"
   | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right"
-  | "copy";
+  | "copy" | "circle-check" | "alert";
 const ICONS: Record<IconName, TablerIcon> = {
   chevron: IconChevronDown,
   check: IconCheck,
@@ -97,6 +97,8 @@ const ICONS: Record<IconName, TablerIcon> = {
   typography: IconTypography,
   "chevron-right": IconChevronRight,
   copy: IconCopy,
+  "circle-check": IconCircleCheck,
+  alert: IconAlertCircle,
 };
 export function Icon({
   name,

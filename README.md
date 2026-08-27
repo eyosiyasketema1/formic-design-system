@@ -65,6 +65,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `Input` | Form trio (exports `Field`, `Textarea`): Field wires label/hint/error aria onto its control; quiet field focus | sizes `sm`, `md` |
 | `Select` | Combobox on the quiet field style: portal listbox matched to trigger width, keyboard-driven via `aria-activedescendant` | sizes `sm`, `md` |
 | `Modal` | Portal dialog on the system scrim: focus trap + restore, scroll lock, Escape/backdrop dismiss, footer action row | `sm`, `md`, `lg` |
+| `Toast` | App notifications (exports `ToastProvider`, `useToast`): bottom-right stack, auto-dismiss with hover pause, optional action | tones `neutral`, `success`, `error` |
 
 ## Theming
 

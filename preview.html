@@ -602,7 +602,7 @@ tfoot .records-sticky-cell { z-index: 5; }
 <body>
 <div id="root"></div>
 <script type="text/babel" data-presets="react">
-const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useId, cloneElement, isValidElement } = React;
+const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useId, cloneElement, isValidElement, createContext, useContext } = React;
 
 /* ═══════════ Primitives ═══════════ */
 /* Icons: real projects use @tabler/icons-react through the Icon wrapper in
@@ -641,6 +641,8 @@ const ICON_PATHS = {  /* authentic Tabler outline path data (@tabler/icons, MIT)
   typography: (<><path d="M4 20l3 0" /><path d="M14 20l7 0" /><path d="M6.9 15l6.9 0" /><path d="M10.2 6.3l5.8 13.7" /><path d="M5 20l6 -16l2 0l7 16" /></>),
   "chevron-right": <path d="M9 6l6 6l-6 6" />,
   copy: (<><path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></>),
+  "circle-check": (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></>),
+  alert: (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 8v4" /><path d="M12 16h.01" /></>),
 };
 function Icon({ name, size = 14, strokeWidth = 2.2, className, style }) {
   return (
@@ -4932,6 +4934,144 @@ function Modal({
   );
 }
 
+/* ═══════════ Toast ═══════════ */
+const TO_DEFAULT_DURATION = 4500;
+const TO_EXIT_MS = 160;
+const TO_MAX_STACK = 5;
+const TO_TONE_ICONS = {
+  success: { name: "circle-check", className: "text-green" },
+  error: { name: "alert", className: "text-red" }
+};
+const TO_ToastContext = createContext(null);
+function useToast() {
+  const toast = useContext(TO_ToastContext);
+  if (!toast) throw new Error("useToast must be used inside <ToastProvider>");
+  return toast;
+}
+function TO_ToastCard({
+  item,
+  onDismiss,
+  onHold,
+  onRelease
+}) {
+  const tone = item.tone ?? "neutral";
+  const icon = tone === "neutral" ? null : TO_TONE_ICONS[tone];
+  return (
+    /* announcements come from the provider's always-mounted live
+       regions — a role on this freshly-inserted node is unreliable */
+    <div
+      onMouseEnter={onHold}
+      onMouseLeave={onRelease}
+      onFocus={onHold}
+      onBlur={onRelease}
+      className="pointer-events-auto flex items-start gap-2.5 rounded-md bg-surface p-3 shadow-overlay"
+      style={item.leaving ? {
+        opacity: 0,
+        transform: "translateY(6px)",
+        transition: "opacity 150ms ease-out, transform 150ms ease-out"
+      } : { animation: "fade-up 250ms var(--ease-out-quint) both" }}
+    >
+      {icon && <Icon name={icon.name} size={16} strokeWidth={2} className={`mt-px shrink-0 ${icon.className}`} />}
+      <div className="min-w-0 flex-1">
+        <p className="text-caption font-medium text-ink">{item.title}</p>
+        {item.description && <p className="mt-0.5 text-small text-ink-2">{item.description}</p>}
+        {item.action && <button
+      type="button"
+      onClick={() => {
+        item.action?.onClick();
+        onDismiss();
+      }}
+      className="animated-underline mt-0.5 flex h-6 items-center text-small font-medium text-accent"
+    >
+            {item.action.label}
+          </button>}
+      </div>
+      <IconButton
+      label="Dismiss notification"
+      onClick={onDismiss}
+      className="-mt-1 -mr-1 text-ink-3 hover:bg-hover hover:text-ink"
+    >
+        <Icon name="close" size={12} strokeWidth={2.2} />
+      </IconButton>
+    </div>
+  );
+}
+function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([]);
+  const [politeMessage, setPoliteMessage] = useState("");
+  const [assertiveMessage, setAssertiveMessage] = useState("");
+  const idRef = useRef(0);
+  const timersRef = useRef(/* @__PURE__ */ new Map());
+  const clearTimer = useCallback((id) => {
+    const timer = timersRef.current.get(id);
+    if (timer) window.clearTimeout(timer);
+    timersRef.current.delete(id);
+  }, []);
+  useEffect(
+    () => () => {
+      timersRef.current.forEach((timer) => window.clearTimeout(timer));
+      timersRef.current.clear();
+    },
+    []
+  );
+  const dismiss = useCallback((id) => {
+    clearTimer(id);
+    setToasts(
+      (current) => current.map((item) => item.id === id ? { ...item, leaving: true } : item)
+    );
+    window.setTimeout(
+      () => setToasts((current) => current.filter((item) => item.id !== id)),
+      TO_EXIT_MS
+    );
+  }, [clearTimer]);
+  const schedule = useCallback(
+    (id, duration) => {
+      timersRef.current.set(id, window.setTimeout(() => dismiss(id), duration));
+    },
+    [dismiss]
+  );
+  const toast = useCallback(
+    (options) => {
+      const id = ++idRef.current;
+      setToasts((current) => {
+        const next = [...current, { ...options, id, leaving: false }];
+        next.slice(0, Math.max(0, next.length - TO_MAX_STACK)).forEach((evicted) => clearTimer(evicted.id));
+        return next.slice(-TO_MAX_STACK);
+      });
+      schedule(id, options.duration ?? TO_DEFAULT_DURATION);
+      const message = options.description ? `${options.title}. ${options.description}` : options.title;
+      if (options.tone === "error") setAssertiveMessage(message);
+      else setPoliteMessage(message);
+    },
+    [schedule, clearTimer]
+  );
+  return <TO_ToastContext.Provider value={toast}>
+      {children}
+      {typeof document !== "undefined" && ReactDOM.createPortal(
+    <div
+      aria-label="Notifications"
+      className="pointer-events-none fixed right-4 bottom-4 z-[60] flex w-80 max-w-[calc(100vw-32px)] flex-col gap-2"
+    >
+            <span className="sr-only" role="status" aria-live="polite">{politeMessage}</span>
+            <span className="sr-only" role="alert" aria-live="assertive">{assertiveMessage}</span>
+            {toasts.map((item) => <TO_ToastCard
+      key={item.id}
+      item={item}
+      onDismiss={() => dismiss(item.id)}
+      onHold={() => {
+        const timer = timersRef.current.get(item.id);
+        if (timer) window.clearTimeout(timer);
+      }}
+      onRelease={() => {
+        if (!item.leaving) schedule(item.id, item.duration ?? TO_DEFAULT_DURATION);
+      }}
+    />)}
+          </div>,
+    document.body
+  )}
+    </TO_ToastContext.Provider>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -4948,6 +5088,16 @@ function GalleryCard({ label, wide, children }) {
       <p className="mb-3 font-mono text-micro tracking-wide text-ink-3 uppercase">{label}</p>
       {children}
     </Card>
+  );
+}
+function ToastDemo() {
+  const toast = useToast();
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button variant="primary" onClick={() => toast({ tone: "success", title: "Flavor saved", description: "Roasted Pistachio is live on the menu." })}>Success</Button>
+      <Button variant="secondary" onClick={() => toast({ tone: "error", title: "Restock failed", description: "Supplier API timed out — try again." })}>Error</Button>
+      <Button variant="secondary" onClick={() => toast({ title: "Batch queued for Friday", action: { label: "Undo", onClick: () => {} } })}>With action</Button>
+    </div>
   );
 }
 function ModalDemo() {
@@ -5097,6 +5247,7 @@ const DOC_NAV = [
   ]},
   { label: "Overlays", items: [
     { id: "modal", title: "Modal" },
+    { id: "toast", title: "Toast" },
   ]},
   { label: "Feedback", items: [
     { id: "loadingstate", title: "LoadingState" },
@@ -5233,7 +5384,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 23 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 24 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -5375,6 +5526,9 @@ function App() {
           <Section id="modal" title="Modal" note="Portal dialog on the system scrim — focus trapped and restored, page scroll locked, Escape / backdrop dismiss. Footer takes the system Buttons.">
             <GalleryCard label="Form · confirm" wide><ModalDemo /></GalleryCard>
           </Section>
+          <Section id="toast" title="Toast" note="App notifications from anywhere via useToast() — bottom-right stack, auto-dismiss (hover pauses), success / error tones, optional action. Errors announce assertively.">
+            <GalleryCard label="Tones · action" wide><ToastDemo /></GalleryCard>
+          </Section>
           <Section id="loadingstate" title="LoadingState" note="Pixel-grid loader with shimmer label and elapsed timer.">
             <GalleryCard label="Drive"><LoadingState variant="Drive" /></GalleryCard>
             <GalleryCard label="Dots"><LoadingState variant="Dots" /></GalleryCard>
@@ -5450,7 +5604,7 @@ function App() {
     </div>
   );
 }
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<ToastProvider><App /></ToastProvider>);
 </script>
 </body>
 </html>
