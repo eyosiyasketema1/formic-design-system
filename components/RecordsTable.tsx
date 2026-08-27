@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { GlideMenu } from "./primitives";
+import { GlideMenu, Switch } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * RECORDS TABLE — an AI spreadsheet grid. Columns are
  * *properties*: click a header to open its configuration
@@ -249,24 +249,6 @@ function CalcCell() {
       <span className="records-muted">Calculating…</span>
       <span className="records-pulse" />
     </span>
-  );
-}
-function MiniSwitch({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: string }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      onClick={onToggle}
-      className="relative h-4.5 w-7.5 shrink-0 rounded-full transition-colors duration-150"
-      style={{ background: on ? "var(--accent)" : "var(--line-strong)" }}
-    >
-      <span
-        className="absolute top-0.5 left-0.5 size-3.5 rounded-full bg-canvas shadow-btn transition-transform duration-150"
-        style={{ transform: on ? "translateX(12px)" : "translateX(0)", transitionTimingFunction: "var(--ease-out-quint)" }}
-      />
-    </button>
   );
 }
 function HeaderCell({ label, icon, sortKey, sort, onSort, onResizeStart, resizing = false, className = "", selected = false, onPick }: { label: string; icon: React.ReactNode; sortKey?: SortKey; sort: { key: SortKey; dir: 1 | -1 }; onSort: (key: SortKey) => void; onResizeStart: (event: React.PointerEvent<HTMLSpanElement>) => void; resizing?: boolean; className?: string; selected?: boolean; onPick?: (event: React.MouseEvent) => void }) {
@@ -759,7 +741,7 @@ export default function RecordsTable({
           </ConfigRow>
           <ConfigRow label="Grounding">
             <span className="flex items-center gap-2">
-              <MiniSwitch label="Grounding" on={grounding} onToggle={() => setGrounding((current) => !current)} />
+              <Switch size="sm" label="Grounding" on={grounding} onToggle={() => setGrounding((current) => !current)} />
               <button
                 type="button"
                 aria-label="About grounding"
@@ -890,13 +872,13 @@ export default function RecordsTable({
             <div className="mt-2 border-t border-line pt-2" style={{ animation: "fade-up 160ms var(--ease-out-quint) both" }}>
               <div className="pb-1 text-tiny font-medium text-ink-3">Behavior</div>
               <ConfigRow label="Required value">
-                <MiniSwitch label="Required value" on={advancedSettings.required} onToggle={() => setAdvancedSettings((current) => ({ ...current, required: !current.required }))} />
+                <Switch size="sm" label="Required value" on={advancedSettings.required} onToggle={() => setAdvancedSettings((current) => ({ ...current, required: !current.required }))} />
               </ConfigRow>
               <ConfigRow label="Allow empty results">
-                <MiniSwitch label="Allow empty results" on={advancedSettings.allowEmpty} onToggle={() => setAdvancedSettings((current) => ({ ...current, allowEmpty: !current.allowEmpty }))} />
+                <Switch size="sm" label="Allow empty results" on={advancedSettings.allowEmpty} onToggle={() => setAdvancedSettings((current) => ({ ...current, allowEmpty: !current.allowEmpty }))} />
               </ConfigRow>
               <ConfigRow label="Show confidence">
-                <MiniSwitch label="Show confidence" on={advancedSettings.confidence} onToggle={() => setAdvancedSettings((current) => ({ ...current, confidence: !current.confidence }))} />
+                <Switch size="sm" label="Show confidence" on={advancedSettings.confidence} onToggle={() => setAdvancedSettings((current) => ({ ...current, confidence: !current.confidence }))} />
               </ConfigRow>
             </div>
           )}

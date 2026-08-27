@@ -13,18 +13,24 @@ import { useStream } from "./hooks";
 /* ─────────────────────────────────────────────────────────
  * PRIMITIVES — the atoms every component composes
  *
- *   Icon          shared stroke-icon set (chevron, check, …)
+ *   Icon          shared stroke-icon set (Tabler, name-mapped)
  *   Spinner       the one loading ring (currentColor)
  *   ShimmerLabel  gradient shimmer over a working label
+ *   StreamText    word-by-word blur-in text stream
+ *   StreamCaret   the cursor shown while text streams
  *   Chip          inline pill: tones field/surface/inset
  *   DiffStat      "+74 −41" green/red tabular counts
  *   IconButton    24px square hover button
+ *   SendButton    round/square send arrow control
+ *   Switch        toggle: role=switch, sizes sm/md
  *   Disclosure    expand/collapse (grid-rows 0fr→1fr)
+ *   GlideMenu     one highlight glides across menu rows
  *   Card          surface container (rounded-card + shadow)
  *   Badge         status pill: green/red/neutral tints
  *   RadioCheck    custom radio/checkbox visual
  *   AvatarStack   overlapping mini avatars
  *   Popover       fixed-position portal (Escape closes)
+ *   inertWhen     version-safe inert for hidden regions
  *   fadeUp/popIn  staggered entrance style helpers
  *
  * Everything reads tokens only; no theme branching.
@@ -337,6 +343,59 @@ export function RadioCheck({ type, on }: { type: "radio" | "check"; on: boolean 
         <Icon name="check" size={12} strokeWidth={3} />
       )}
     </span>
+  );
+}
+
+/* ── Switch ────────────────────────────────────────────── */
+export type SwitchSize = "sm" | "md";
+/* sm is the dense-popover size (sanctioned sub-24px exception —
+ * RecordsTable precedent); md, the default, meets the 24px floor */
+const SWITCH_SIZES: Record<SwitchSize, { track: string; thumb: string; travel: number }> = {
+  sm: { track: "h-4.5 w-7.5", thumb: "size-3.5", travel: 12 },
+  md: { track: "h-6 w-10", thumb: "size-5", travel: 16 },
+};
+export function Switch({
+  on,
+  onToggle,
+  label,
+  size = "md",
+  disabled = false,
+  className = "",
+  id,
+  "aria-describedby": describedBy,
+}: {
+  on: boolean;
+  onToggle: () => void;
+  /** accessible name — required unless a Field label targets this via id */
+  label?: string;
+  size?: SwitchSize;
+  disabled?: boolean;
+  className?: string;
+  id?: string;
+  "aria-describedby"?: string;
+}) {
+  const spec = SWITCH_SIZES[size];
+  return (
+    <button
+      type="button"
+      role="switch"
+      id={id}
+      aria-checked={on}
+      aria-label={label}
+      aria-describedby={describedBy}
+      disabled={disabled}
+      onClick={onToggle}
+      className={`relative shrink-0 rounded-full transition-colors duration-150 disabled:opacity-60 ${spec.track} ${className}`}
+      style={{ background: on ? "var(--accent)" : "var(--line-strong)" }}
+    >
+      <span
+        className={`absolute top-0.5 left-0.5 rounded-full bg-canvas shadow-btn transition-transform duration-150 ${spec.thumb}`}
+        style={{
+          transform: on ? `translateX(${spec.travel}px)` : "translateX(0)",
+          transitionTimingFunction: "var(--ease-out-quint)",
+        }}
+      />
+    </button>
   );
 }
 

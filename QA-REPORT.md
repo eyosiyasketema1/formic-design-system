@@ -43,3 +43,8 @@ Directionally trustworthy, numerically loose, materially incomplete. Every flagg
 3. ~~Add motion + type-scale tokens and sweep~~ — `--ease-out-quint` (3 curves → 1), `--duration-*`, 5-step type scale, `--radius-sm/md`; components + preview swept.
 
 Also resolved: hover durations unified to 150ms, reduced-motion now covers transitions, stale `variant` claim fixed in AUDIT.md, vestigial `variant` props removed.
+
+## Accepted exceptions — Switch promotion (2026-08-27)
+
+- **Off-state track contrast**: `--line-strong` on canvas ≈ 1.4–1.8:1, below the 3:1 non-text minimum. Accepted: state is conveyed redundantly (thumb position + `aria-checked` + on-state accent fill); the off track is deliberately recessive, matching RadioCheck's off state. Not gated; revisit if a "quiet off" complaint surfaces.
+- **Switch `sm` touch target** (18×30px): sanctioned sub-24px exception for dense popover rows (RecordsTable precedent); pair with a Field label or row-level hit area when used elsewhere. The default `md` is 24px tall and meets the floor.

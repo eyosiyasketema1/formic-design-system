@@ -749,6 +749,21 @@ function RadioCheck({ type, on }) {
     </span>
   );
 }
+const SWITCH_SIZES = {
+  sm: { track: "h-4.5 w-7.5", thumb: "size-3.5", travel: 12 },
+  md: { track: "h-6 w-10", thumb: "size-5", travel: 16 },
+};
+function Switch({ on, onToggle, label, size = "md", disabled = false, className = "", id, "aria-describedby": describedBy }) {
+  const spec = SWITCH_SIZES[size];
+  return (
+    <button type="button" role="switch" id={id} aria-checked={on} aria-label={label} aria-describedby={describedBy} disabled={disabled} onClick={onToggle}
+      className={`relative shrink-0 rounded-full transition-colors duration-150 disabled:opacity-60 ${spec.track} ${className}`}
+      style={{ background: on ? "var(--accent)" : "var(--line-strong)" }}>
+      <span className={`absolute top-0.5 left-0.5 rounded-full bg-canvas shadow-btn transition-transform duration-150 ${spec.thumb}`}
+        style={{ transform: on ? `translateX(${spec.travel}px)` : "translateX(0)", transitionTimingFunction: "var(--ease-out-quint)" }} />
+    </button>
+  );
+}
 function AvatarStack({ srcs, className = "" }) {
   return (
     <span className={`flex -space-x-1 ${className}`}>
@@ -2813,22 +2828,6 @@ function RtCalcCell() {
       <span className="records-pulse" />
     </span>;
 }
-function RtMiniSwitch({ on, onToggle, label }) {
-  return <button
-    type="button"
-    role="switch"
-    aria-checked={on}
-    aria-label={label}
-    onClick={onToggle}
-    className="relative h-4.5 w-7.5 shrink-0 rounded-full transition-colors duration-150"
-    style={{ background: on ? "var(--accent)" : "var(--line-strong)" }}
-  >
-      <span
-    className="absolute top-0.5 left-0.5 size-3.5 rounded-full bg-canvas shadow-btn transition-transform duration-150"
-    style={{ transform: on ? "translateX(12px)" : "translateX(0)", transitionTimingFunction: "var(--ease-out-quint)" }}
-  />
-    </button>;
-}
 function RtHeaderCell({ label, icon, sortKey, sort, onSort, onResizeStart, resizing = false, className = "", selected = false, onPick }) {
   return <th data-recpop className={`records-header-cell ${selected ? "is-colsel" : ""} ${className}`}>
       {
@@ -3266,7 +3265,7 @@ function RecordsTable({
           </RtConfigRow>
           <RtConfigRow label="Grounding">
             <span className="flex items-center gap-2">
-              <RtMiniSwitch label="Grounding" on={grounding} onToggle={() => setGrounding((current) => !current)} />
+              <Switch size="sm" label="Grounding" on={grounding} onToggle={() => setGrounding((current) => !current)} />
               <button
     type="button"
     aria-label="About grounding"
@@ -3382,13 +3381,13 @@ function RecordsTable({
           {moreSettingsOpen && <div className="mt-2 border-t border-line pt-2" style={{ animation: "fade-up 160ms var(--ease-out-quint) both" }}>
               <div className="pb-1 text-tiny font-medium text-ink-3">Behavior</div>
               <RtConfigRow label="Required value">
-                <RtMiniSwitch label="Required value" on={advancedSettings.required} onToggle={() => setAdvancedSettings((current) => ({ ...current, required: !current.required }))} />
+                <Switch size="sm" label="Required value" on={advancedSettings.required} onToggle={() => setAdvancedSettings((current) => ({ ...current, required: !current.required }))} />
               </RtConfigRow>
               <RtConfigRow label="Allow empty results">
-                <RtMiniSwitch label="Allow empty results" on={advancedSettings.allowEmpty} onToggle={() => setAdvancedSettings((current) => ({ ...current, allowEmpty: !current.allowEmpty }))} />
+                <Switch size="sm" label="Allow empty results" on={advancedSettings.allowEmpty} onToggle={() => setAdvancedSettings((current) => ({ ...current, allowEmpty: !current.allowEmpty }))} />
               </RtConfigRow>
               <RtConfigRow label="Show confidence">
-                <RtMiniSwitch label="Show confidence" on={advancedSettings.confidence} onToggle={() => setAdvancedSettings((current) => ({ ...current, confidence: !current.confidence }))} />
+                <Switch size="sm" label="Show confidence" on={advancedSettings.confidence} onToggle={() => setAdvancedSettings((current) => ({ ...current, confidence: !current.confidence }))} />
               </RtConfigRow>
             </div>}
         </div>}
@@ -4831,6 +4830,29 @@ function GalleryCard({ label, wide, children }) {
     </Card>
   );
 }
+function SwitchDemo() {
+  const [restock, setRestock] = useState(true);
+  const [notify, setNotify] = useState(false);
+  const [ground, setGround] = useState(true);
+  return (
+    <div className="flex flex-col gap-4">
+      <Field label="Auto-restock" hint="Reorders base ingredients when a batch runs low.">
+        <Switch on={restock} onToggle={() => setRestock((v) => !v)} />
+      </Field>
+      <div className="flex items-center gap-5">
+        <span className="flex items-center gap-2 text-caption text-ink-2">
+          <Switch size="sm" label="Notifications" on={notify} onToggle={() => setNotify((v) => !v)} /> sm
+        </span>
+        <span className="flex items-center gap-2 text-caption text-ink-2">
+          <Switch label="Grounding" on={ground} onToggle={() => setGround((v) => !v)} /> md
+        </span>
+        <span className="flex items-center gap-2 text-caption text-ink-3">
+          <Switch label="Disabled" disabled on={false} onToggle={() => {}} /> disabled
+        </span>
+      </div>
+    </div>
+  );
+}
 function useTheme() {
   const [theme, setTheme] = useState(() => {
     const stored = localStorage.getItem("ds-theme");
@@ -4917,6 +4939,7 @@ const DOC_NAV = [
   { label: "Forms", items: [
     { id: "input", title: "Field & Input" },
     { id: "select", title: "Select" },
+    { id: "switch", title: "Switch" },
   ]},
   { label: "Feedback", items: [
     { id: "loadingstate", title: "LoadingState" },
@@ -5095,7 +5118,7 @@ function App() {
             </div>
           </header>
           <FoundationsSections />
-          <Section id="primitives" title="Primitives" note="The atoms everything below composes: Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Popover + timing hooks (useSequence, useElapsed, useStream).">
+          <Section id="primitives" title="Primitives" note="The atoms everything below composes: Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Switch, Popover + timing hooks (useSequence, useElapsed, useStream).">
             <GalleryCard label="Primitives" wide>
               <div className="flex flex-wrap items-center gap-3">
                 <ShimmerLabel>Shimmering</ShimmerLabel>
@@ -5188,6 +5211,9 @@ function App() {
                 </Field>
               </div>
             </GalleryCard>
+          </Section>
+          <Section id="switch" title="Switch" note="The system toggle, promoted from RecordsTable's private switch — role=switch, two sizes, Field-compatible. RecordsTable now consumes the same primitive.">
+            <GalleryCard label="Field · sizes · disabled" wide><SwitchDemo /></GalleryCard>
           </Section>
           <Section id="loadingstate" title="LoadingState" note="Pixel-grid loader with shimmer label and elapsed timer.">
             <GalleryCard label="Drive"><LoadingState variant="Drive" /></GalleryCard>
