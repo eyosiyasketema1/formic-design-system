@@ -166,6 +166,8 @@
 input[type="range"].primitive-slider:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .shadow-hairline { box-shadow: 0 0 0 1px var(--line); }
 @keyframes progress-slide { from { transform: translateX(-110%); } to { transform: translateX(440%); } }
+@keyframes drawer-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes drawer-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 @media (prefers-reduced-motion: reduce) { .progress-indeterminate-bar { width: 100% !important; } }
 .source-avatar { object-fit: cover; }
 .animated-underline {
@@ -977,6 +979,62 @@ function useAnchoredLayer(layerId) {
     };
   }, [open, layerId]);
   return { open, setOpen, position, anchorRef, openAt, close };
+}
+const FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+let scrollLocks = 0;
+let previousOverflow = "";
+const lockScroll = () => {
+  if (scrollLocks === 0) {
+    previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+  }
+  scrollLocks += 1;
+};
+const unlockScroll = () => {
+  scrollLocks = Math.max(0, scrollLocks - 1);
+  if (scrollLocks === 0) document.body.style.overflow = previousOverflow;
+};
+function useModalLayer(ref, open, { onClose, closeOnEscape = true }) {
+  useEffect(() => {
+    if (!open) return;
+    const container = ref.current;
+    const restore = document.activeElement;
+    const focusables = () => Array.from(container?.querySelectorAll(FOCUSABLE) ?? []);
+    (focusables()[0] ?? container)?.focus();
+    const onKey = (event) => {
+      if (event.key === "Escape" && closeOnEscape) {
+        if (event.defaultPrevented || document.querySelector("[data-popover-layer]")) return;
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const list = focusables();
+      if (list.length === 0) {
+        event.preventDefault();
+        return;
+      }
+      const first = list[0];
+      const last = list[list.length - 1];
+      const activeElement = document.activeElement;
+      if (!container?.contains(activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && (activeElement === first || activeElement === container)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    lockScroll();
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      unlockScroll();
+      restore?.focus();
+    };
+  }, [open, closeOnEscape]);
 }
 function useElapsed() {
   const [ds, setDs] = useState(0);
@@ -4925,20 +4983,6 @@ const MO_MODAL_WIDTHS = {
   md: "max-w-105",
   lg: "max-w-130"
 };
-const MO_FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
-let MO_scrollLocks = 0;
-let MO_previousOverflow = "";
-const MO_lockScroll = () => {
-  if (MO_scrollLocks === 0) {
-    MO_previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-  }
-  MO_scrollLocks += 1;
-};
-const MO_unlockScroll = () => {
-  MO_scrollLocks = Math.max(0, MO_scrollLocks - 1);
-  if (MO_scrollLocks === 0) document.body.style.overflow = MO_previousOverflow;
-};
 function Modal({
   open,
   onClose,
@@ -4950,47 +4994,7 @@ function Modal({
 }) {
   const titleId = useId();
   const dialogRef = useRef(null);
-  const restoreRef = useRef(null);
-  useEffect(() => {
-    if (!open) return;
-    const dialog = dialogRef.current;
-    restoreRef.current = document.activeElement;
-    const focusables = () => Array.from(dialog?.querySelectorAll(MO_FOCUSABLE) ?? []);
-    (focusables()[0] ?? dialog)?.focus();
-    const onKey = (event) => {
-      if (event.key === "Escape" && dismissible) {
-        if (event.defaultPrevented || document.querySelector("[data-popover-layer]")) return;
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const list = focusables();
-      if (list.length === 0) {
-        event.preventDefault();
-        return;
-      }
-      const first = list[0];
-      const last = list[list.length - 1];
-      const activeElement = document.activeElement;
-      if (!dialog?.contains(activeElement)) {
-        event.preventDefault();
-        (event.shiftKey ? last : first).focus();
-      } else if (event.shiftKey && (activeElement === first || activeElement === dialog)) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    MO_lockScroll();
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      MO_unlockScroll();
-      restoreRef.current?.focus();
-    };
-  }, [open]);
+  useModalLayer(dialogRef, open, { onClose, closeOnEscape: dismissible });
   if (!open || typeof document === "undefined") return null;
   return ReactDOM.createPortal(
     <div
@@ -6181,6 +6185,238 @@ function OTPInput({
     </div>;
 }
 
+/* ═══════════ Drawer ═══════════ */
+function Drawer({
+  open,
+  onClose,
+  title,
+  side = "right",
+  dismissible = true,
+  footer,
+  children
+}) {
+  const titleId = useId();
+  const panelRef = useRef(null);
+  useModalLayer(panelRef, open, { onClose, closeOnEscape: dismissible });
+  if (!open || typeof document === "undefined") return null;
+  return ReactDOM.createPortal(
+    <div
+      className="fixed inset-0 z-50"
+      style={{ background: "var(--scrim)", animation: "fade-in 150ms ease-out both" }}
+      onMouseDown={(event) => {
+        if (dismissible && event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+      ref={panelRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      tabIndex={-1}
+      className={`fixed inset-y-0 flex w-full max-w-95 flex-col overflow-hidden bg-surface shadow-overlay outline-none ${side === "right" ? "right-0" : "left-0"}`}
+      style={{
+        animation: `${side === "right" ? "drawer-in-right" : "drawer-in-left"} 280ms var(--ease-out-quint) both`
+      }}
+    >
+        <div className="flex items-center justify-between gap-3 border-b border-line py-3 pr-3 pl-4">
+          <h2 id={titleId} className="min-w-0 truncate text-title font-semibold text-ink">
+            {title}
+          </h2>
+          {dismissible && <IconButton
+      label="Close panel"
+      onClick={onClose}
+      className="text-ink-3 hover:bg-hover hover:text-ink"
+    >
+              <Icon name="close" size={14} strokeWidth={2.2} />
+            </IconButton>}
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3.5 text-body leading-relaxed text-ink-2">
+          {children}
+        </div>
+        {footer && <div className="flex items-center justify-end gap-2 border-t border-line px-4 py-3">
+            {footer}
+          </div>}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+/* ═══════════ Steps ═══════════ */
+const SP_DEFAULT_STEPS = [
+  { key: "recipe", label: "Recipe", description: "Base and mix-ins" },
+  { key: "churn", label: "Churn", description: "Overnight batch" },
+  { key: "case", label: "Case", description: "Set and display" },
+  { key: "launch", label: "Launch", description: "On the board" }
+];
+function SP_StepCircle({
+  state,
+  index,
+  label,
+  clickable,
+  onClick
+}) {
+  const visual = state === "done" ? <Icon name="check" size={12} strokeWidth={2.5} /> : <span>{index + 1}</span>;
+  const classes = state === "done" ? "bg-ink text-canvas" : state === "current" ? "bg-surface text-ink shadow-[0_0_0_1.5px_var(--accent)]" : "bg-inset text-ink-3 shadow-hairline";
+  if (clickable) {
+    return <button
+      type="button"
+      aria-label={`Go back to step: ${label}`}
+      onClick={onClick}
+      className={`flex size-6 shrink-0 items-center justify-center rounded-full text-tiny font-medium transition-transform duration-150 hover:scale-110 ${classes}`}
+    >
+        {visual}
+      </button>;
+  }
+  return <span
+    aria-hidden
+    className={`flex size-6 shrink-0 items-center justify-center rounded-full text-tiny font-medium ${classes}`}
+  >
+      {visual}
+    </span>;
+}
+function Steps({
+  steps = SP_DEFAULT_STEPS,
+  current = 1,
+  onStepClick,
+  vertical = false,
+  className = ""
+} = {}) {
+  return <ol className={`${vertical ? "flex flex-col" : "flex w-full items-start"} ${className}`}>
+      {steps.map((step, index) => {
+    const state = index < current ? "done" : index === current ? "current" : "todo";
+    const last = index === steps.length - 1;
+    const clickable = state === "done" && onStepClick !== void 0;
+    const labelBlock = <>
+            <p
+      className={`text-caption font-medium ${state === "todo" ? "text-ink-3" : "text-ink"}`}
+    >
+              {step.label}
+            </p>
+            {step.description && <p className="text-small text-ink-3">{step.description}</p>}
+          </>;
+    if (vertical) {
+      return <li
+        key={step.key}
+        aria-current={state === "current" ? "step" : void 0}
+        className="flex gap-3"
+      >
+              <div className="flex flex-col items-center">
+                <SP_StepCircle state={state} index={index} label={step.label} clickable={clickable} onClick={() => onStepClick?.(index)} />
+                {!last && <div className={`my-1 w-px flex-1 ${state === "done" ? "bg-ink" : "bg-line"}`} style={{ minHeight: 16 }} />}
+              </div>
+              <div className={`min-w-0 ${last ? "" : "pb-4"}`}>{labelBlock}</div>
+            </li>;
+    }
+    return <li
+      key={step.key}
+      aria-current={state === "current" ? "step" : void 0}
+      className={`min-w-0 ${last ? "" : "flex-1"}`}
+    >
+            <div className="flex items-center">
+              <SP_StepCircle state={state} index={index} label={step.label} clickable={clickable} onClick={() => onStepClick?.(index)} />
+              {!last && <div className={`mx-2 h-px flex-1 ${state === "done" ? "bg-ink" : "bg-line"}`} />}
+            </div>
+            <div className="mt-1.5 min-w-0 pr-2">{labelBlock}</div>
+          </li>;
+  })}
+    </ol>;
+}
+
+/* ═══════════ Timeline ═══════════ */
+const TL_TONE_DOTS = {
+  neutral: "bg-line-strong",
+  accent: "bg-accent",
+  green: "bg-green",
+  red: "bg-red"
+};
+const TL_DEFAULT_ITEMS = [
+  { key: "queued", title: "Batch queued", time: "07:12", tone: "neutral", description: "Double pistachio, drum 2." },
+  { key: "churn", title: "Churn started", time: "07:30", tone: "accent" },
+  { key: "fault", title: "Cold-chain dip", time: "09:02", tone: "red", description: "Drum 2 rose to \u22129\xB0C for 4 minutes \u2014 flagged for QA taste check." },
+  { key: "cased", title: "Cased and set", time: "11:45", tone: "green", description: "Passed taste check; on the board for the weekend." }
+];
+function Timeline({
+  items = TL_DEFAULT_ITEMS,
+  className = ""
+} = {}) {
+  return <ol className={`flex w-full flex-col ${className}`}>
+      {items.map((item, index) => {
+    const last = index === items.length - 1;
+    return <li key={item.key} className="flex gap-3" style={fadeUp(index, { duration: 300, stagger: 90 })}>
+            <div className="flex w-2.5 flex-col items-center">
+              <span
+      aria-hidden
+      className={`mt-1.5 size-2.5 shrink-0 rounded-full ${TL_TONE_DOTS[item.tone ?? "neutral"]}`}
+    />
+              {!last && <div className="my-1 w-px flex-1 bg-line" style={{ minHeight: 12 }} />}
+            </div>
+            <div className={`min-w-0 flex-1 ${last ? "" : "pb-4"}`}>
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="min-w-0 truncate text-body font-medium text-ink">{item.title}</p>
+                {item.time && <span className="shrink-0 font-mono text-micro text-ink-3">{item.time}</span>}
+              </div>
+              {item.description && <p className="mt-0.5 text-caption leading-relaxed text-ink-2">{item.description}</p>}
+            </div>
+          </li>;
+  })}
+    </ol>;
+}
+
+/* ═══════════ Menubar ═══════════ */
+const MB_DEFAULT_MENUS = [
+  {
+    key: "flavors",
+    label: "Flavors",
+    items: [
+      { key: "new", label: "New flavor", icon: "plus" },
+      { key: "edit", label: "Edit selected", icon: "edit" },
+      { type: "divider" },
+      { key: "retire", label: "Retire selected", icon: "close", danger: true }
+    ]
+  },
+  {
+    key: "batches",
+    label: "Batches",
+    items: [
+      { key: "queue", label: "Queue batch", icon: "plus" },
+      { key: "history", label: "Batch history", icon: "clock" }
+    ]
+  },
+  {
+    key: "suppliers",
+    label: "Suppliers",
+    items: [
+      { key: "invite", label: "Invite supplier", icon: "user-add" },
+      { key: "prices", label: "Price sync", icon: "retry" },
+      { key: "export", label: "Export list", icon: "upload", disabled: true }
+    ]
+  }
+];
+function Menubar({
+  menus = MB_DEFAULT_MENUS,
+  onSelect,
+  className = ""
+} = {}) {
+  return <nav
+    aria-label="Application menus"
+    className={`flex w-fit max-w-full items-center gap-0.5 overflow-x-auto rounded-control bg-surface p-1 shadow-btn [scrollbar-width:none] ${className}`}
+  >
+      {menus.map((menu) => <DropdownMenu
+    key={menu.key}
+    items={menu.items}
+    onSelect={(itemKey) => onSelect?.(menu.key, itemKey)}
+  >
+          <button
+    type="button"
+    className="flex h-7 shrink-0 items-center rounded-sm px-2.5 text-caption font-medium text-ink-2 transition-colors duration-150 hover:bg-hover hover:text-ink aria-expanded:bg-hover aria-expanded:text-ink"
+  >
+            {menu.label}
+          </button>
+        </DropdownMenu>)}
+    </nav>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -6277,6 +6513,46 @@ function SliderOtpDemo() {
       </Field>
     </div>
   );
+}
+function DrawerDemo() {
+  const [open, setOpen] = useState(false);
+  const [left, setLeft] = useState(false);
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button variant="primary" onClick={() => setOpen(true)}>Flavor details</Button>
+      <Button variant="secondary" onClick={() => setLeft(true)}>Left side</Button>
+      <Drawer open={open} onClose={() => setOpen(false)} title="Roasted Pistachio"
+        footer={<>
+          <Button variant="ghost" onClick={() => setOpen(false)}>Close</Button>
+          <Button variant="primary" onClick={() => setOpen(false)}>Save changes</Button>
+        </>}>
+        <div className="flex flex-col gap-4">
+          <Field label="Display name"><Input defaultValue="Roasted Pistachio" /></Field>
+          <Field label="Margin target" hint="Percent of sale price."><Slider defaultValue={38} showValue /></Field>
+          <Timeline />
+        </div>
+      </Drawer>
+      <Drawer open={left} onClose={() => setLeft(false)} title="Batch notes" side="left">
+        Churn overnight so the batch sets before Saturday open. QA taste check at 11:00.
+      </Drawer>
+    </div>
+  );
+}
+function StepsTimelineDemo() {
+  const [current, setCurrent] = useState(2);
+  return (
+    <div className="flex w-full flex-col gap-6">
+      <Steps current={current} onStepClick={setCurrent} />
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant="secondary" onClick={() => setCurrent((value) => Math.max(0, value - 1))}>Back</Button>
+        <Button size="sm" variant="primary" onClick={() => setCurrent((value) => Math.min(3, value + 1))}>Advance</Button>
+      </div>
+    </div>
+  );
+}
+function MenubarDemo() {
+  const toast = useToast();
+  return <Menubar onSelect={(menuKey, itemKey) => toast({ title: `${menuKey} → ${itemKey}` })} />;
 }
 function ModalDemo() {
   const [open, setOpen] = useState(false);
@@ -6562,11 +6838,14 @@ const DOC_NAV = [
   ]},
   { label: "Structure", items: [
     { id: "accordion", title: "Accordion" },
+    { id: "steps", title: "Steps" },
+    { id: "timeline", title: "Timeline" },
   ]},
   { label: "Overlays", items: [
     { id: "modal", title: "Modal" },
     { id: "toast", title: "Toast" },
     { id: "dropdownmenu", title: "DropdownMenu" },
+    { id: "drawer", title: "Drawer" },
   ]},
   { label: "Feedback", items: [
     { id: "alert", title: "Alert" },
@@ -6597,6 +6876,7 @@ const DOC_NAV = [
     { id: "tabs", title: "Tabs" },
     { id: "pagination", title: "Pagination" },
     { id: "breadcrumbs", title: "Breadcrumbs" },
+    { id: "menubar", title: "Menubar" },
     { id: "sidebarnav", title: "SidebarNav" },
     { id: "searchlist", title: "SearchList" },
   ]},
@@ -6710,7 +6990,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 35 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 39 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -6887,8 +7167,18 @@ function App() {
           <Section id="accordion" title="Accordion" note="Stacked disclosure rows on Disclosure — single-open by default, closed content inert, house easing throughout.">
             <GalleryCard label="Single open" wide><Accordion defaultOpen={["restock"]} /></GalleryCard>
           </Section>
+          <Section id="steps" title="Steps" note="Wizard progress — completed circles fill ink, the current step rings accent with aria-current, completed steps are clickable to go back.">
+            <GalleryCard label="Interactive" wide><StepsTimelineDemo /></GalleryCard>
+            <GalleryCard label="Vertical"><Steps vertical current={2} /></GalleryCard>
+          </Section>
+          <Section id="timeline" title="Timeline" note="Event history on a rail — toned dots, monospaced times, staggered entrance.">
+            <GalleryCard label="Batch history" wide><Timeline /></GalleryCard>
+          </Section>
           <Section id="modal" title="Modal" note="Portal dialog on the system scrim — focus trapped and restored, page scroll locked, Escape / backdrop dismiss. Footer takes the system Buttons.">
             <GalleryCard label="Form · confirm" wide><ModalDemo /></GalleryCard>
+          </Section>
+          <Section id="drawer" title="Drawer" note="Side panel on the same machinery as Modal (shared useModalLayer: trap, restore, layered Escape, scroll lock) — slides from either edge, full height, footer actions.">
+            <GalleryCard label="Right · left" wide><DrawerDemo /></GalleryCard>
           </Section>
           <Section id="toast" title="Toast" note="App notifications from anywhere via useToast() — bottom-right stack, auto-dismiss (hover pauses), success / error tones, optional action. Errors announce assertively.">
             <GalleryCard label="Tones · action" wide><ToastDemo /></GalleryCard>
@@ -6991,6 +7281,9 @@ function App() {
           </Section>
           <Section id="breadcrumbs" title="Breadcrumbs" note="Path trail — long trails collapse their middle into a DropdownMenu, the current page carries aria-current, labels truncate instead of breaking the row. Navigating fires a toast here.">
             <GalleryCard label="Collapsed · short" wide><BreadcrumbsDemo /></GalleryCard>
+          </Section>
+          <Section id="menubar" title="Menubar" note="A bar of action menus, each a DropdownMenu — dividers, disabled and destructive items included. Selections fire toasts here.">
+            <GalleryCard label="Default" wide><MenubarDemo /></GalleryCard>
           </Section>
           <Section id="sidebarnav" title="SidebarNav" note="Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.">
             <div className="flex"><SidebarNav /></div>

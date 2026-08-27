@@ -4,23 +4,16 @@ import { createPortal } from "react-dom";
 import { useModalLayer } from "./hooks";
 import { Icon, IconButton } from "./primitives";
 /* ─────────────────────────────────────────────────────────
- * MODAL
- * Portal dialog on the system scrim: focus is trapped while
- * open and restored on close, the page behind stops
- * scrolling, and Escape / backdrop click dismiss (unless
- * dismissible is off — e.g. a required decision).
+ * DRAWER
+ * Side panel on the system scrim — same machinery as Modal
+ * (useModalLayer: focus trap + restore, layered Escape,
+ * scroll lock) but sliding from an edge and full height.
  * ───────────────────────────────────────────────────────── */
-export type ModalSize = "sm" | "md" | "lg";
-const MODAL_WIDTHS: Record<ModalSize, string> = {
-  sm: "max-w-80",
-  md: "max-w-105",
-  lg: "max-w-130",
-};
-export default function Modal({
+export default function Drawer({
   open,
   onClose,
   title,
-  size = "md",
+  side = "right",
   dismissible = true,
   footer,
   children,
@@ -28,34 +21,37 @@ export default function Modal({
   open: boolean;
   onClose: () => void;
   title: string;
-  size?: ModalSize;
+  side?: "right" | "left";
   /** allow Escape / backdrop / × to close */
   dismissible?: boolean;
-  /** action row rendered below the body (usually Buttons) */
+  /** action row pinned below the body (usually Buttons) */
   footer?: ReactNode;
   children: ReactNode;
 }) {
   const titleId = useId();
-  const dialogRef = useRef<HTMLDivElement>(null);
-  /* focus trap + restore, layered Escape, scroll lock — shared with Drawer */
-  useModalLayer(dialogRef, open, { onClose, closeOnEscape: dismissible });
+  const panelRef = useRef<HTMLDivElement>(null);
+  useModalLayer(panelRef, open, { onClose, closeOnEscape: dismissible });
   if (!open || typeof document === "undefined") return null;
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50"
       style={{ background: "var(--scrim)", animation: "fade-in 150ms ease-out both" }}
       onMouseDown={(event) => {
         if (dismissible && event.target === event.currentTarget) onClose();
       }}
     >
       <div
-        ref={dialogRef}
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`flex max-h-full w-full flex-col overflow-hidden rounded-card bg-surface shadow-overlay outline-none ${MODAL_WIDTHS[size]}`}
-        style={{ animation: "pop-in 220ms var(--ease-out-quint) both" }}
+        className={`fixed inset-y-0 flex w-full max-w-95 flex-col overflow-hidden bg-surface shadow-overlay outline-none ${
+          side === "right" ? "right-0" : "left-0"
+        }`}
+        style={{
+          animation: `${side === "right" ? "drawer-in-right" : "drawer-in-left"} 280ms var(--ease-out-quint) both`,
+        }}
       >
         <div className="flex items-center justify-between gap-3 border-b border-line py-3 pr-3 pl-4">
           <h2 id={titleId} className="min-w-0 truncate text-title font-semibold text-ink">
@@ -63,7 +59,7 @@ export default function Modal({
           </h2>
           {dismissible && (
             <IconButton
-              label="Close dialog"
+              label="Close panel"
               onClick={onClose}
               className="text-ink-3 hover:bg-hover hover:text-ink"
             >

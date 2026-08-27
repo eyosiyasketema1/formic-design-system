@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 /* ─────────────────────────────────────────────────────────
  * HOOKS — shared timing utilities
  *
@@ -8,6 +8,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
  *   useStream        reveal N items one-by-one (streamed text)
  *   useAnchoredLayer anchored popover state: measure, clamp,
  *                    flip, close on outside press/scroll/resize
+ *   useModalLayer    dialog machinery: focus trap + restore,
+ *                    layered Escape, ref-counted scroll lock
  * ───────────────────────────────────────────────────────── */
 
 /** Steps through 0..steps.length-1, waiting steps[i] ms at each stage.
@@ -117,6 +119,77 @@ export function useAnchoredLayer<T extends HTMLElement>(layerId: string) {
     };
   }, [open, layerId]);
   return { open, setOpen, position, anchorRef, openAt, close };
+}
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+/* one shared scroll lock so stacked modal layers don't unlock early */
+let scrollLocks = 0;
+let previousOverflow = "";
+const lockScroll = () => {
+  if (scrollLocks === 0) {
+    previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+  }
+  scrollLocks += 1;
+};
+const unlockScroll = () => {
+  scrollLocks = Math.max(0, scrollLocks - 1);
+  if (scrollLocks === 0) document.body.style.overflow = previousOverflow;
+};
+/** The machinery every modal surface shares (Modal, Drawer):
+ *  saves and restores focus, traps Tab inside the container,
+ *  locks page scroll (ref-counted for stacking), and closes on
+ *  Escape — deferring to open popover layers so only the
+ *  innermost layer dismisses. */
+export function useModalLayer(
+  ref: RefObject<HTMLElement | null>,
+  open: boolean,
+  { onClose, closeOnEscape = true }: { onClose: () => void; closeOnEscape?: boolean },
+) {
+  useEffect(() => {
+    if (!open) return;
+    const container = ref.current;
+    const restore = document.activeElement as HTMLElement | null;
+    const focusables = () =>
+      Array.from(container?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []);
+    (focusables()[0] ?? container)?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && closeOnEscape) {
+        /* an open popover layer (Select listbox, menu) owns this Escape */
+        if (event.defaultPrevented || document.querySelector("[data-popover-layer]")) return;
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const list = focusables();
+      if (list.length === 0) {
+        event.preventDefault();
+        return;
+      }
+      const first = list[0];
+      const last = list[list.length - 1];
+      const activeElement = document.activeElement;
+      if (!container?.contains(activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && (activeElement === first || activeElement === container)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    lockScroll();
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      unlockScroll();
+      restore?.focus();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-arm only on open/close
+  }, [open, closeOnEscape]);
 }
 
 /** Ticks every 100ms from mount; returns a formatted elapsed string. */

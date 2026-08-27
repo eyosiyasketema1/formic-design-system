@@ -42,7 +42,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | Component | Purpose | Variants |
 |---|---|---|
 | `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Skeleton`, `Avatar`, `Tooltip`, `Progress`, `Separator`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`, `fadeUp`/`popIn` | — |
-| `hooks` | Shared hooks: `useSequence` (staged reveals), `useElapsed` (live clock), `useStream` (word-by-word reveal), `useAnchoredLayer` (anchored popover engine) | — |
+| `hooks` | Shared hooks: `useSequence` (staged reveals), `useElapsed` (live clock), `useStream` (word-by-word reveal), `useAnchoredLayer` (anchored popover engine), `useModalLayer` (dialog trap/lock/Escape) | — |
 | `Button` | The workhorse control: sizes sm/md, disabled + loading states, optional icon | `primary`, `secondary`, `ghost`, `destructive`, `accent`, `success` |
 | `LoadingState` | Loader for long-running work: pixel grid + shimmer label + elapsed timer | `Drive`, `Dots`, `Orbit`, `Surfer` |
 | `ThinkingState` | Expandable agent trace with animated timeline | `Steps`, `Reasoning`, `Search`, `Coding` |
@@ -77,6 +77,10 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `Accordion` | Stacked disclosure rows on the Disclosure primitive — single-open or multiple, inert closed content | — |
 | `Slider` | Native range input drawn with tokens (`.primitive-slider`): platform keyboard/touch, optional value readout, Field-ready | — |
 | `OTPInput` | One-time-code cells on the quiet field style: typing/paste/autofill distribute, backspace walks, Field-ready | — |
+| `Steps` | Wizard progress: ink-filled completed circles, accent-ringed current with `aria-current="step"`, clickable go-back | horizontal, `vertical` |
+| `Timeline` | Event history on a rail: toned dots, mono times, staggered entrance | — |
+| `Drawer` | Side panel on the shared modal machinery (trap, restore, layered Escape, scroll lock), slides from either edge | `right`, `left` |
+| `Menubar` | Horizontal bar of DropdownMenus with a shared `(menuKey, itemKey)` selection callback | — |
 
 ## Theming
 

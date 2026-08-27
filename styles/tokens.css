@@ -240,6 +240,14 @@ input[type="range"].primitive-slider:focus-visible {
   from { transform: translateX(-110%); }
   to { transform: translateX(440%); }
 }
+@keyframes drawer-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes drawer-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
 /* with reduced motion the sweep freezes — a full quiet bar reads
    better than one parked at 30% (which looks stalled) */
 @media (prefers-reduced-motion: reduce) {
