@@ -73,12 +73,15 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `Breadcrumbs` | Path trail: middle collapses into a DropdownMenu, current page carries `aria-current`, links or SPA callbacks | — |
 | `Markdown` | Dependency-free renderer for AI output: headings, emphasis, safe links, nested lists, quotes, scrollable tables, fenced code via CodeBlock | — |
 | `FileDropzone` | Drag-and-drop upload with browse fallback: accept/size validation with announced rejections, file chips with remove | — |
+| `theme` | Runtime theming utilities: `setAccent(color)` re-accents the system live (AA-fitted light+dark variants), `deriveAccentVariants` for build-time use | — |
 
 ## Theming
 
 Light and dark palettes ship in `styles/tokens.css`. Dark mode activates automatically from the OS (`prefers-color-scheme`) or explicitly via `<html data-theme="dark">`; `data-theme="light"` forces light. Components never branch on theme — they only read the CSS variables, so both modes come for free.
 
 Five color themes ship in `styles/themes.css` (load it after `tokens.css`), each with light + dark variants: **Paper** (default warm neutral), **Sage** (muted green), **Twilight** (indigo), **Clay** (terracotta), **Ocean** (teal). Activate with `<html data-palette="sage">` — no attribute means Paper. Palette and dark mode combine freely (e.g. `data-palette="ocean" data-theme="dark"`).
+
+For an arbitrary brand accent at runtime, call `setAccent("#e11d48")` from `components/theme.ts` — it derives a light-mode and a dark-mode variant that both pass WCAG AA (walking lightness against worst-case surfaces) and injects them with the same structure as the token sheets, so mode switching keeps working and `--accent-tint` re-derives itself. `setAccent(null)` returns to the active palette. The preview's color picker (next to the palette swatches) is built on exactly this.
 
 ## Conventions
 

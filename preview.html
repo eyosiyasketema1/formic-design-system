@@ -6075,7 +6075,115 @@ function usePalette() {
   }, [palette]);
   return [palette, setPalette];
 }
-function ThemeControls({ theme, setTheme, palette, setPalette }) {
+/* ── runtime accent (components/theme.ts mirror) ── */
+const TH_OVERRIDE_ID = "ds-accent-override";
+const TH_LIGHT_ANCHOR = "#ffffff";
+const TH_DARK_ANCHOR = "#262626";
+const TH_MIN_CONTRAST = 4.5;
+function TH_hexToRgb(hex) {
+  const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!match) return null;
+  const value = parseInt(match[1], 16);
+  return { r: value >> 16 & 255, g: value >> 8 & 255, b: value & 255 };
+}
+const TH_toHex = ({ r, g, b }) => `#${[r, g, b].map((channel) => Math.round(channel).toString(16).padStart(2, "0")).join("")}`;
+function TH_luminance({ r, g, b }) {
+  const channel = (value) => {
+    const scaled = value / 255;
+    return scaled <= 0.03928 ? scaled / 12.92 : ((scaled + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+}
+function TH_contrast(a, b) {
+  const la = TH_luminance(a);
+  const lb = TH_luminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+function TH_rgbToHsl({ r, g, b }) {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const l = (max + min) / 2;
+  if (max === min) return { h: 0, s: 0, l };
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h = max === rn ? ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6 : max === gn ? ((bn - rn) / d + 2) / 6 : ((rn - gn) / d + 4) / 6;
+  return { h, s, l };
+}
+function TH_hslToRgb({ h, s, l }) {
+  if (s === 0) return { r: l * 255, g: l * 255, b: l * 255 };
+  const hue = (p2, q2, t) => {
+    let tn = t;
+    if (tn < 0) tn += 1;
+    if (tn > 1) tn -= 1;
+    if (tn < 1 / 6) return p2 + (q2 - p2) * 6 * tn;
+    if (tn < 1 / 2) return q2;
+    if (tn < 2 / 3) return p2 + (q2 - p2) * (2 / 3 - tn) * 6;
+    return p2;
+  };
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  return {
+    r: hue(p, q, h + 1 / 3) * 255,
+    g: hue(p, q, h) * 255,
+    b: hue(p, q, h - 1 / 3) * 255
+  };
+}
+function TH_fitContrast(color, anchor, direction) {
+  const hsl = TH_rgbToHsl(color);
+  let rounded = color;
+  for (let step = 0; step <= 100; step += 1) {
+    const candidate = TH_hslToRgb({
+      ...hsl,
+      l: Math.min(1, Math.max(0, hsl.l + direction * step * 0.01))
+    });
+    rounded = {
+      r: Math.round(candidate.r),
+      g: Math.round(candidate.g),
+      b: Math.round(candidate.b)
+    };
+    if (TH_contrast(rounded, anchor) >= TH_MIN_CONTRAST) return rounded;
+  }
+  return rounded;
+}
+function deriveAccentVariants(color) {
+  const rgb = TH_hexToRgb(color);
+  if (!rgb) return null;
+  const lightAnchor = TH_hexToRgb(TH_LIGHT_ANCHOR);
+  const darkAnchor = TH_hexToRgb(TH_DARK_ANCHOR);
+  return {
+    light: TH_toHex(TH_fitContrast(rgb, lightAnchor, -1)),
+    dark: TH_toHex(TH_fitContrast(rgb, darkAnchor, 1))
+  };
+}
+function setAccent(color) {
+  if (typeof document === "undefined") return null;
+  const existing = document.getElementById(TH_OVERRIDE_ID);
+  if (!color) {
+    existing?.remove();
+    return null;
+  }
+  const variants = deriveAccentVariants(color);
+  if (!variants) return null;
+  const element = existing ?? document.createElement("style");
+  element.id = TH_OVERRIDE_ID;
+  element.textContent = `:root:root:root:root { --accent: ${variants.light}; }
+@media (prefers-color-scheme: dark) { :root:root:root:root:not([data-theme="light"]) { --accent: ${variants.dark}; } }
+:root:root:root:root[data-theme="dark"] { --accent: ${variants.dark}; }`;
+  if (!existing) document.head.appendChild(element);
+  return variants;
+}
+function useAccent() {
+  const [accent, setAccentState] = useState(() => { try { return localStorage.getItem("ds-accent") || ""; } catch { return ""; } });
+  useEffect(() => {
+    setAccent(accent || null);
+    try { accent ? localStorage.setItem("ds-accent", accent) : localStorage.removeItem("ds-accent"); } catch {}
+  }, [accent]);
+  return [accent, setAccentState];
+}
+function ThemeControls({ theme, setTheme, palette, setPalette, accent, onAccent }) {
   return (
     <div className="flex shrink-0 items-center gap-2">
       <div className="flex items-center gap-1 rounded-control bg-surface p-1.5 shadow-btn">
@@ -6097,6 +6205,33 @@ function ThemeControls({ theme, setTheme, palette, setPalette }) {
           />
         ))}
       </div>
+      <label
+        title="Custom accent"
+        className="relative flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-control bg-surface shadow-btn transition-transform duration-150 hover:scale-105 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent"
+      >
+        <span
+          aria-hidden
+          className="size-4 rounded-full"
+          style={{ background: accent || "conic-gradient(#e5484d, #e5a50a, #46a758, #0e7490, #6e56cf, #e5484d)", boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.15)" }}
+        />
+        <input
+          type="color"
+          aria-label="Custom accent color"
+          value={accent || "#3b5bdb"}
+          onChange={(event) => onAccent(event.target.value)}
+          className="absolute inset-0 size-full cursor-pointer opacity-0"
+        />
+      </label>
+      {accent && (
+        <button
+          type="button"
+          aria-label="Reset custom accent"
+          onClick={() => onAccent("")}
+          className="flex size-8 shrink-0 items-center justify-center rounded-control bg-surface text-ink-3 shadow-btn transition-colors duration-150 hover:bg-hover hover:text-ink"
+        >
+          <Icon name="close" size={13} strokeWidth={2.2} />
+        </button>
+      )}
       <button
         type="button"
         aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
@@ -6275,6 +6410,7 @@ function App() {
   const [thinkKey, setThinkKey] = useState(0);
   const [theme, setTheme] = useTheme();
   const [palette, setPalette] = usePalette();
+  const [accent, setAccentState] = useAccent();
   const active = useScrollSpy(DOC_NAV.flatMap((group) => group.items.map((item) => item.id)));
   return (
     <div className="flex min-h-screen">
@@ -6282,7 +6418,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 31 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 32 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -6307,7 +6443,7 @@ function App() {
           ))}
         </nav>
         <div className="mt-auto px-2 pt-4">
-          <ThemeControls theme={theme} setTheme={setTheme} palette={palette} setPalette={setPalette} />
+          <ThemeControls theme={theme} setTheme={setTheme} palette={palette} setPalette={setPalette} accent={accent} onAccent={setAccentState} />
         </div>
       </aside>
       <main className="min-w-0 flex-1 px-6 py-8 lg:px-10">
@@ -6320,7 +6456,7 @@ function App() {
               </p>
             </div>
             <div className="lg:hidden">
-              <ThemeControls theme={theme} setTheme={setTheme} palette={palette} setPalette={setPalette} />
+              <ThemeControls theme={theme} setTheme={setTheme} palette={palette} setPalette={setPalette} accent={accent} onAccent={setAccentState} />
             </div>
           </header>
           <FoundationsSections />
