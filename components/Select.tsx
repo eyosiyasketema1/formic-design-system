@@ -141,7 +141,10 @@ export default function Select({
     } else if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       choose(options[active]);
-    } else if (event.key === "Escape" || event.key === "Tab") {
+    } else if (event.key === "Escape") {
+      event.preventDefault(); /* innermost layer consumes the Escape */
+      setOpen(false);
+    } else if (event.key === "Tab") {
       setOpen(false);
     }
   };

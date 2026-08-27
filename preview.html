@@ -29,6 +29,7 @@
   --canvas: #faf9f7;
   --surface: #ffffff;
   --field: #f5f5f5;
+  --scrim: rgba(20, 19, 18, 0.35);
   --green-tint: #eef9f2;
   --red-tint: #fdecec;
   --accent-tint: color-mix(in srgb, var(--accent) 10%, var(--surface));
@@ -52,7 +53,8 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --ink: #f0efec; --ink-2: #b0aeaa; --ink-3: #8d8b86;
+    --ink: #f0efec;
+    --scrim: rgba(0, 0, 0, 0.55); --ink-2: #b0aeaa; --ink-3: #8d8b86;
     --line: #2a2a29; --line-strong: #3f3e3c;
     --hover: #232322; --hover-2: #292928; --inset: #232322;
     --accent: #7c96ff; --orange: #e08514; --green: #22c55e; --red: #f87171;
@@ -67,7 +69,8 @@
   }
 }
 :root[data-theme="dark"] {
-  --ink: #f0efec; --ink-2: #b0aeaa; --ink-3: #8d8b86;
+  --ink: #f0efec;
+    --scrim: rgba(0, 0, 0, 0.55); --ink-2: #b0aeaa; --ink-3: #8d8b86;
   --line: #2a2a29; --line-strong: #3f3e3c;
   --hover: #232322; --hover-2: #292928; --inset: #232322;
   --accent: #7c96ff; --orange: #e08514; --green: #22c55e; --red: #f87171;
@@ -781,7 +784,7 @@ function Popover({ x, top, bottom, width, id, role = "tooltip", className = "w-7
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
   return ReactDOM.createPortal(
-    <div id={id} role={role} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}
+    <div id={id} role={role} data-popover-layer="" onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}
       className={`fixed z-50 overflow-hidden rounded-md bg-surface shadow-overlay ${className}`}
       style={{ left: x, top, bottom, width, animation: "pop-in 160ms var(--ease-out-quint) both", transformOrigin: top === undefined ? "bottom left" : "top left" }}>
       {children}
@@ -4753,7 +4756,10 @@ function Select({
     } else if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       choose(options[active]);
-    } else if (event.key === "Escape" || event.key === "Tab") {
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      setOpen(false);
+    } else if (event.key === "Tab") {
       setOpen(false);
     }
   };
@@ -4812,6 +4818,120 @@ function Select({
     </>;
 }
 
+/* ═══════════ Modal ═══════════ */
+const MO_MODAL_WIDTHS = {
+  sm: "max-w-80",
+  md: "max-w-105",
+  lg: "max-w-130"
+};
+const MO_FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+let MO_scrollLocks = 0;
+let MO_previousOverflow = "";
+const MO_lockScroll = () => {
+  if (MO_scrollLocks === 0) {
+    MO_previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+  }
+  MO_scrollLocks += 1;
+};
+const MO_unlockScroll = () => {
+  MO_scrollLocks = Math.max(0, MO_scrollLocks - 1);
+  if (MO_scrollLocks === 0) document.body.style.overflow = MO_previousOverflow;
+};
+function Modal({
+  open,
+  onClose,
+  title,
+  size = "md",
+  dismissible = true,
+  footer,
+  children
+}) {
+  const titleId = useId();
+  const dialogRef = useRef(null);
+  const restoreRef = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const dialog = dialogRef.current;
+    restoreRef.current = document.activeElement;
+    const focusables = () => Array.from(dialog?.querySelectorAll(MO_FOCUSABLE) ?? []);
+    (focusables()[0] ?? dialog)?.focus();
+    const onKey = (event) => {
+      if (event.key === "Escape" && dismissible) {
+        if (event.defaultPrevented || document.querySelector("[data-popover-layer]")) return;
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const list = focusables();
+      if (list.length === 0) {
+        event.preventDefault();
+        return;
+      }
+      const first = list[0];
+      const last = list[list.length - 1];
+      const activeElement = document.activeElement;
+      if (!dialog?.contains(activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && (activeElement === first || activeElement === dialog)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    MO_lockScroll();
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      MO_unlockScroll();
+      restoreRef.current?.focus();
+    };
+  }, [open]);
+  if (!open || typeof document === "undefined") return null;
+  return ReactDOM.createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "var(--scrim)", animation: "fade-in 150ms ease-out both" }}
+      onMouseDown={(event) => {
+        if (dismissible && event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      tabIndex={-1}
+      className={`flex max-h-full w-full flex-col overflow-hidden rounded-card bg-surface shadow-overlay outline-none ${MO_MODAL_WIDTHS[size]}`}
+      style={{ animation: "pop-in 220ms var(--ease-out-quint) both" }}
+    >
+        <div className="flex items-center justify-between gap-3 border-b border-line py-3 pr-3 pl-4">
+          <h2 id={titleId} className="min-w-0 truncate text-title font-semibold text-ink">
+            {title}
+          </h2>
+          {dismissible && <IconButton
+      label="Close dialog"
+      onClick={onClose}
+      className="text-ink-3 hover:bg-hover hover:text-ink"
+    >
+              <Icon name="close" size={14} strokeWidth={2.2} />
+            </IconButton>}
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3.5 text-body leading-relaxed text-ink-2">
+          {children}
+        </div>
+        {footer && <div className="flex items-center justify-end gap-2 border-t border-line px-4 py-3">
+            {footer}
+          </div>}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -4828,6 +4948,40 @@ function GalleryCard({ label, wide, children }) {
       <p className="mb-3 font-mono text-micro tracking-wide text-ink-3 uppercase">{label}</p>
       {children}
     </Card>
+  );
+}
+function ModalDemo() {
+  const [open, setOpen] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button variant="primary" onClick={() => setOpen(true)}>Edit flavor</Button>
+      <Button variant="secondary" onClick={() => setConfirm(true)}>Retire flavor…</Button>
+      <Modal open={open} onClose={() => setOpen(false)} title="Edit flavor"
+        footer={<>
+          <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="primary" onClick={() => setOpen(false)}>Save changes</Button>
+        </>}>
+        <div className="flex flex-col gap-4">
+          <Field label="Flavor name" hint="Shown on the menu board.">
+            <Input defaultValue="Roasted Pistachio" />
+          </Field>
+          <Field label="Category">
+            <Select defaultValue="classic" options={[
+              { value: "classic", label: "Classic" },
+              { value: "seasonal", label: "Seasonal" },
+            ]} />
+          </Field>
+        </div>
+      </Modal>
+      <Modal open={confirm} onClose={() => setConfirm(false)} title="Retire Bubblegum?" size="sm"
+        footer={<>
+          <Button variant="ghost" onClick={() => setConfirm(false)}>Keep it</Button>
+          <Button variant="destructive" onClick={() => setConfirm(false)}>Retire flavor</Button>
+        </>}>
+        Retiring removes it from the menu and pauses supplier restocks. Sales history stays.
+      </Modal>
+    </div>
   );
 }
 function SwitchDemo() {
@@ -4940,6 +5094,9 @@ const DOC_NAV = [
     { id: "input", title: "Field & Input" },
     { id: "select", title: "Select" },
     { id: "switch", title: "Switch" },
+  ]},
+  { label: "Overlays", items: [
+    { id: "modal", title: "Modal" },
   ]},
   { label: "Feedback", items: [
     { id: "loadingstate", title: "LoadingState" },
@@ -5076,7 +5233,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 22 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 23 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -5214,6 +5371,9 @@ function App() {
           </Section>
           <Section id="switch" title="Switch" note="The system toggle, promoted from RecordsTable's private switch — role=switch, two sizes, Field-compatible. RecordsTable now consumes the same primitive.">
             <GalleryCard label="Field · sizes · disabled" wide><SwitchDemo /></GalleryCard>
+          </Section>
+          <Section id="modal" title="Modal" note="Portal dialog on the system scrim — focus trapped and restored, page scroll locked, Escape / backdrop dismiss. Footer takes the system Buttons.">
+            <GalleryCard label="Form · confirm" wide><ModalDemo /></GalleryCard>
           </Section>
           <Section id="loadingstate" title="LoadingState" note="Pixel-grid loader with shimmer label and elapsed timer.">
             <GalleryCard label="Drive"><LoadingState variant="Drive" /></GalleryCard>

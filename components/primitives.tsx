@@ -456,6 +456,8 @@ export function Popover({
     <div
       id={id}
       role={role}
+      /* layered dismissal: Modal defers its Escape while a popover layer is open */
+      data-popover-layer=""
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       className={`fixed z-50 overflow-hidden rounded-md bg-surface shadow-overlay ${className}`}
