@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useStream } from "./hooks";
-import { AvatarStack, Chip, Disclosure, fadeUp, IconButton } from "./primitives";
+import { AvatarStack, Chip, Disclosure, fadeUp, IconButton, StreamCaret } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * STREAMING TEXT
  * Words resolve out of blur, inline citations appear in
@@ -113,12 +113,7 @@ export default function StreamingText({
             </span>
           ),
         )}
-        {!done && (
-          <span
-            className="ml-0.5 inline-block h-3 w-0.5 translate-y-0.5 rounded-full bg-ink"
-            style={{ animation: "fade-in 150ms ease-out both" }}
-          />
-        )}
+        {!done && <StreamCaret />}
       </p>
       {/* action icons row */}
       <div

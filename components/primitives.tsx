@@ -182,6 +182,18 @@ export function StreamText({
   );
 }
 
+/* ── StreamCaret ───────────────────────────────────────── */
+/* The cursor shown while text streams in. */
+export function StreamCaret({ className = "" }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={`ml-0.5 inline-block h-3 w-0.5 translate-y-0.5 rounded-full bg-ink ${className}`}
+      style={{ animation: "fade-in 150ms ease-out both" }}
+    />
+  );
+}
+
 /* ── Chip ──────────────────────────────────────────────── */
 export type ChipTone = "field" | "surface" | "inset";
 export type ChipSize = "xs" | "sm" | "md";

@@ -686,6 +686,9 @@ function DiffStat({ add, del = 0, className = "" }) {
     </span>
   );
 }
+function StreamCaret({ className = "" }) {
+  return <span aria-hidden className={`ml-0.5 inline-block h-3 w-0.5 translate-y-0.5 rounded-full bg-ink ${className}`} style={{ animation: "fade-in 150ms ease-out both" }} />;
+}
 function StreamText({ text, intervalMs = 45, className = "", onProgress, onDone }) {
   const words = text.split(" ");
   const { count } = useStream(words.length, { intervalMs, onDone });
@@ -1197,9 +1200,7 @@ function StreamingText({ loop = true, fill = false }) {
             </span>
           ),
         )}
-        {!done && (
-          <span className="ml-0.5 inline-block h-3 w-0.5 translate-y-0.5 rounded-full bg-ink" style={{ animation: "fade-in 150ms ease-out both" }} />
-        )}
+        {!done && <StreamCaret />}
       </p>
       <div className="mt-2 flex items-center gap-0.5 transition-opacity duration-400"
         style={{ opacity: done ? 1 : 0, pointerEvents: done ? "auto" : "none" }}>
@@ -4380,6 +4381,69 @@ function SelectionActions({
     </div>;
 }
 
+/* ═══════════ ChatThread ═══════════ */
+const CT_DEFAULT_MESSAGES = [
+  { id: "m1", role: "user", text: "Which flavor should we push this weekend?" },
+  {
+    id: "m2",
+    role: "assistant",
+    text: "Pistachio is the strongest candidate \u2014 sales are up 23% this month and it carries the best margin on the menu."
+  },
+  { id: "m3", role: "user", text: "Draft the weekend plan for it." },
+  {
+    id: "m4",
+    role: "assistant",
+    text: "Here's the plan: churn a double batch Friday night, feature it on the A-board Saturday morning, and pair it with the waffle special through Sunday close."
+  }
+];
+function MessageBubble({
+  role,
+  className = "",
+  style,
+  children
+}) {
+  if (role === "user") {
+    return <div className={`flex justify-end ${className}`} style={style}>
+        <div className="max-w-[85%] rounded-card rounded-br-sm bg-inset px-3.5 py-2 text-body leading-relaxed text-ink shadow-hairline">
+          {children}
+        </div>
+      </div>;
+  }
+  return <div className={`text-body leading-relaxed text-ink ${className}`} style={style}>
+      {children}
+    </div>;
+}
+function ChatThread({
+  messages = CT_DEFAULT_MESSAGES,
+  streamLast = true,
+  onDone
+} = {}) {
+  const last = messages[messages.length - 1];
+  const streamed = streamLast && last?.role === "assistant";
+  const [done, setDone] = useState(!streamed);
+  return <div className="flex w-full max-w-105 flex-col gap-4">
+      {messages.map((message, index) => {
+    const isStreaming = streamed && index === messages.length - 1;
+    return <MessageBubble
+      key={message.id}
+      role={message.role}
+      style={fadeUp(index, { duration: 350, stagger: 120 })}
+    >
+            {isStreaming ? <span aria-live="polite" aria-busy={!done}>
+                <StreamText
+      text={message.text}
+      onDone={() => {
+        setDone(true);
+        onDone?.();
+      }}
+    />
+                {!done && <StreamCaret />}
+              </span> : message.text}
+          </MessageBubble>;
+  })}
+    </div>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -4488,6 +4552,7 @@ const DOC_NAV = [
     { id: "toolchips", title: "ToolChips" },
   ]},
   { label: "Conversation", items: [
+    { id: "chatthread", title: "ChatThread" },
     { id: "streamingtext", title: "StreamingText" },
     { id: "selectionactions", title: "SelectionActions" },
     { id: "approvalcard", title: "ApprovalCard" },
@@ -4614,7 +4679,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 18 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 19 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -4656,11 +4721,12 @@ function App() {
             </div>
           </header>
           <FoundationsSections />
-          <Section id="primitives" title="Primitives" note="The atoms everything below composes: Icon, Spinner, ShimmerLabel, StreamText, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Popover + timing hooks (useSequence, useElapsed, useStream).">
+          <Section id="primitives" title="Primitives" note="The atoms everything below composes: Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Popover + timing hooks (useSequence, useElapsed, useStream).">
             <GalleryCard label="Primitives" wide>
               <div className="flex flex-wrap items-center gap-3">
                 <ShimmerLabel>Shimmering</ShimmerLabel>
                 <Spinner className="text-ink-2" />
+                <span className="text-body text-ink">caret<StreamCaret /></span>
                 <Chip tone="field" mono>field chip</Chip>
                 <Chip tone="surface" mono>surface chip</Chip>
                 <Chip tone="inset" mono>inset chip</Chip>
@@ -4729,6 +4795,9 @@ function App() {
           </Section>
           <Section id="toolchips" title="ToolChips" note="Agent run as compact rows. Click rows to expand; hover the file chips for diff previews.">
             <GalleryCard label="Default"><ToolChips /></GalleryCard>
+          </Section>
+          <Section id="chatthread" title="ChatThread" note="A conversation column — user bubbles right, assistant replies flat. The final reply streams in once; embed StreamingText, ToolChips, or ApprovalCard as message children in a real thread.">
+            <GalleryCard label="Default" wide><ChatThread /></GalleryCard>
           </Section>
           <Section id="streamingtext" title="StreamingText" note="Words resolve out of blur; citations, sources, and follow-ups appear when done. Loops.">
             <GalleryCard label="Default" wide><StreamingText /></GalleryCard>
