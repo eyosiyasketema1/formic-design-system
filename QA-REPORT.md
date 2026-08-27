@@ -48,3 +48,7 @@ Also resolved: hover durations unified to 150ms, reduced-motion now covers trans
 
 - **Off-state track contrast**: `--line-strong` on canvas ≈ 1.4–1.8:1, below the 3:1 non-text minimum. Accepted: state is conveyed redundantly (thumb position + `aria-checked` + on-state accent fill); the off track is deliberately recessive, matching RadioCheck's off state. Not gated; revisit if a "quiet off" complaint surfaces.
 - **Switch `sm` touch target** (18×30px): sanctioned sub-24px exception for dense popover rows (RecordsTable precedent); pair with a Field label or row-level hit area when used elsewhere. The default `md` is 24px tall and meets the floor.
+
+## Accepted exception — DropdownMenu keyboard architecture (2026-08-27)
+
+DropdownMenu keeps focus on the trigger and drives the active item via `aria-activedescendant`, matching Select's engine (one anchored-layer architecture system-wide). The APG menu-button pattern instead moves DOM focus into the menu; `aria-activedescendant` on a plain button is not spec-sanctioned, so some screen readers may not announce the active item. Accepted for architectural consistency; revisit with roving focus if assistive-tech testing shows announcement gaps.

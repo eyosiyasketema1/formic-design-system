@@ -42,7 +42,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | Component | Purpose | Variants |
 |---|---|---|
 | `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`, `fadeUp`/`popIn` | — |
-| `hooks` | Timing utilities: `useSequence` (staged reveals), `useElapsed` (live clock), `useStream` (word-by-word reveal) | — |
+| `hooks` | Shared hooks: `useSequence` (staged reveals), `useElapsed` (live clock), `useStream` (word-by-word reveal), `useAnchoredLayer` (anchored popover engine) | — |
 | `Button` | The workhorse control: sizes sm/md, disabled + loading states, optional icon | `primary`, `secondary`, `ghost`, `destructive`, `accent`, `success` |
 | `LoadingState` | Loader for long-running work: pixel grid + shimmer label + elapsed timer | `Drive`, `Dots`, `Orbit`, `Surfer` |
 | `ThinkingState` | Expandable agent trace with animated timeline | `Steps`, `Reasoning`, `Search`, `Coding` |
@@ -66,6 +66,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `Select` | Combobox on the quiet field style: portal listbox matched to trigger width, keyboard-driven via `aria-activedescendant` | sizes `sm`, `md` |
 | `Modal` | Portal dialog on the system scrim: focus trap + restore, scroll lock, Escape/backdrop dismiss, footer action row | `sm`, `md`, `lg` |
 | `Toast` | App notifications (exports `ToastProvider`, `useToast`): bottom-right stack, auto-dismiss with hover pause, optional action | tones `neutral`, `success`, `error` |
+| `DropdownMenu` | Standard action menu around any trigger: keyboard-driven, dividers, disabled + destructive items, start/end align | — |
 
 ## Theming
 

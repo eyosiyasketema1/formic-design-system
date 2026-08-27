@@ -1,11 +1,13 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 /* ─────────────────────────────────────────────────────────
  * HOOKS — shared timing utilities
  *
- *   useSequence  advance a stage counter through timed steps
- *   useElapsed   live elapsed clock, "4.2s" / "1m 12.5s"
- *   useStream    reveal N items one-by-one (streamed text)
+ *   useSequence      advance a stage counter through timed steps
+ *   useElapsed       live elapsed clock, "4.2s" / "1m 12.5s"
+ *   useStream        reveal N items one-by-one (streamed text)
+ *   useAnchoredLayer anchored popover state: measure, clamp,
+ *                    flip, close on outside press/scroll/resize
  * ───────────────────────────────────────────────────────── */
 
 /** Steps through 0..steps.length-1, waiting steps[i] ms at each stage.
@@ -48,6 +50,73 @@ export function useStream(
     // eslint-disable-next-line react-hooks/exhaustive-deps -- callbacks stay out so re-created handlers don't restart the stream
   }, [count, done, loop, length]);
   return { count, done };
+}
+
+export type AnchoredPosition = { x: number; width?: number; top?: number; bottom?: number };
+/** Shared engine for anchored floating layers (Select's listbox,
+ *  DropdownMenu). Measures the anchor, clamps x inside the viewport,
+ *  flips above when the estimated height doesn't fit below, and closes
+ *  on outside press, page scroll (scrolls inside the layer excepted),
+ *  and resize. The caller renders the layer with `id={layerId}`. */
+export function useAnchoredLayer<T extends HTMLElement>(layerId: string) {
+  const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<AnchoredPosition | null>(null);
+  const anchorRef = useRef<T>(null);
+  const close = useCallback(() => setOpen(false), []);
+  const openAt = useCallback(
+    ({
+      estimatedHeight,
+      width,
+      matchWidth = false,
+      align = "start",
+    }: {
+      estimatedHeight: number;
+      /** fixed layer width in px (for clamping and end-alignment) */
+      width?: number;
+      /** size the layer to the anchor (Select) */
+      matchWidth?: boolean;
+      align?: "start" | "end";
+    }) => {
+      const rect = anchorRef.current?.getBoundingClientRect();
+      if (!rect) return false;
+      const layerWidth = matchWidth ? rect.width : width;
+      const rawX = align === "end" && layerWidth !== undefined ? rect.right - layerWidth : rect.left;
+      const fitsBelow = rect.bottom + 4 + estimatedHeight < window.innerHeight - 8;
+      setPosition({
+        x: Math.max(8, Math.min(rawX, window.innerWidth - (layerWidth ?? rect.width) - 8)),
+        width: layerWidth,
+        ...(fitsBelow
+          ? { top: rect.bottom + 4 }
+          : { bottom: window.innerHeight - rect.top + 4 }),
+      });
+      setOpen(true);
+      return true;
+    },
+    [],
+  );
+  useEffect(() => {
+    if (!open) return;
+    const layer = () => document.getElementById(layerId);
+    const onScroll = (event: Event) => {
+      if (layer()?.contains(event.target as Node)) return;
+      setOpen(false);
+    };
+    const onResize = () => setOpen(false);
+    const onDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (anchorRef.current?.contains(target) || layer()?.contains(target)) return;
+      setOpen(false);
+    };
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize);
+    window.addEventListener("mousedown", onDown);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("mousedown", onDown);
+    };
+  }, [open, layerId]);
+  return { open, setOpen, position, anchorRef, openAt, close };
 }
 
 /** Ticks every 100ms from mount; returns a formatted elapsed string. */

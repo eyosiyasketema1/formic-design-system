@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { useAnchoredLayer } from "./hooks";
 import { Icon, Popover } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * SELECT
@@ -19,7 +20,6 @@ const DEFAULT_OPTIONS: SelectOption[] = [
   { value: "rocky", label: "Rocky Road" },
   { value: "mint", label: "Mint Chip" },
 ];
-type Position = { x: number; width: number; top?: number; bottom?: number };
 export default function Select({
   options = DEFAULT_OPTIONS,
   value,
@@ -54,28 +54,16 @@ export default function Select({
   const [internal, setInternal] = useState(defaultValue);
   const selectedValue = value !== undefined ? value : internal;
   const selected = options.find((option) => option.value === selectedValue);
-  const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
-  const [position, setPosition] = useState<Position | null>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  /* anchored-layer engine: position/clamp/flip + outside/scroll/resize close */
+  const { open, setOpen, position, anchorRef: triggerRef, openAt } =
+    useAnchoredLayer<HTMLButtonElement>(listboxId);
   const openMenu = () => {
     if (options.length === 0) return;
-    const rect = triggerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    /* clamp inside the viewport; flip above when the estimated
-       list height doesn't fit below (rule 11 for popovers) */
-    const estimated = Math.min(options.length, 7) * 32 + 8;
-    const fitsBelow = rect.bottom + 4 + estimated < window.innerHeight - 8;
-    setPosition({
-      x: Math.max(8, Math.min(rect.left, window.innerWidth - rect.width - 8)),
-      width: rect.width,
-      ...(fitsBelow
-        ? { top: rect.bottom + 4 }
-        : { bottom: window.innerHeight - rect.top + 4 }),
-    });
+    if (!openAt({ estimatedHeight: Math.min(options.length, 7) * 32 + 8, matchWidth: true }))
+      return;
     const selectedIndex = options.findIndex((option) => option.value === selectedValue);
     setActive(Math.max(0, selectedIndex));
-    setOpen(true);
   };
   const choose = (option?: SelectOption) => {
     if (!option) return;
@@ -84,40 +72,11 @@ export default function Select({
     setOpen(false);
     triggerRef.current?.focus();
   };
-  /* the fixed-position listbox can't follow the page — close instead;
-     scrolls inside the listbox's own overflow container don't count */
-  useEffect(() => {
-    if (!open) return;
-    const onScroll = (event: Event) => {
-      if (document.getElementById(listboxId)?.contains(event.target as Node)) return;
-      setOpen(false);
-    };
-    const onResize = () => setOpen(false);
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", onResize);
-    return () => {
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onResize);
-    };
-  }, [open, listboxId]);
   /* keep the keyboard-active option visible in long lists */
   useEffect(() => {
     if (!open) return;
     document.getElementById(`${listboxId}-${active}`)?.scrollIntoView({ block: "nearest" });
   }, [open, active, listboxId]);
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (
-        !triggerRef.current?.contains(target) &&
-        !document.getElementById(listboxId)?.contains(target)
-      )
-        setOpen(false);
-    };
-    window.addEventListener("mousedown", onDown);
-    return () => window.removeEventListener("mousedown", onDown);
-  }, [open, listboxId]);
   const onKeyDown = (event: React.KeyboardEvent) => {
     if (!open) {
       if (["ArrowDown", "ArrowUp", "Enter", " "].includes(event.key)) {
