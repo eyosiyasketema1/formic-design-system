@@ -656,6 +656,7 @@ const ICON_PATHS = {  /* authentic Tabler outline path data (@tabler/icons, MIT)
   info: (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 9h.01" /><path d="M11 12h1v4h1" /></>),
   "chevron-left": <path d="M15 6l-6 6l6 6" />,
   upload: (<><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 9l5 -5l5 5" /><path d="M12 4l0 12" /></>),
+  calendar: (<><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M11 15h1" /><path d="M12 15v3" /></>),
 };
 function Icon({ name, size = 14, strokeWidth = 2.2, className, style }) {
   return (
@@ -6417,6 +6418,265 @@ function Menubar({
     </nav>;
 }
 
+/* ═══════════ Calendar ═══════════ */
+const CAL_atMidnight = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+const CAL_sameDay = (a, b) => !!a && !!b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+function Calendar({
+  value,
+  defaultValue,
+  onChange,
+  min,
+  max,
+  weekStartsOn = 1,
+  autoFocus = false,
+  className = ""
+} = {}) {
+  const id = useId();
+  const [internal, setInternal] = useState(defaultValue ?? null);
+  const selected = value !== void 0 ? value : internal;
+  const [focusDate, setFocusDate] = useState(() => CAL_atMidnight(selected ?? /* @__PURE__ */ new Date()));
+  const shouldFocus = useRef(autoFocus);
+  const year = focusDate.getFullYear();
+  const month = focusDate.getMonth();
+  const dayId = (date) => `${id}-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  useEffect(() => {
+    if (!shouldFocus.current) return;
+    document.getElementById(dayId(focusDate))?.focus();
+  }, [focusDate]);
+  const isDisabled = (date) => min !== void 0 && date < CAL_atMidnight(min) || max !== void 0 && date > CAL_atMidnight(max);
+  const moveDays = (days) => {
+    shouldFocus.current = true;
+    setFocusDate((current) => new Date(current.getFullYear(), current.getMonth(), current.getDate() + days));
+  };
+  const moveMonth = (delta, focusGrid) => {
+    shouldFocus.current = focusGrid;
+    setFocusDate((current) => {
+      const lastOfTarget = new Date(current.getFullYear(), current.getMonth() + delta + 1, 0).getDate();
+      return new Date(current.getFullYear(), current.getMonth() + delta, Math.min(current.getDate(), lastOfTarget));
+    });
+  };
+  const select = (date) => {
+    if (isDisabled(date)) return;
+    if (value === void 0) setInternal(date);
+    onChange?.(date);
+  };
+  const onKeyDown = (event) => {
+    switch (event.key) {
+      case "ArrowLeft":
+        event.preventDefault();
+        moveDays(-1);
+        break;
+      case "ArrowRight":
+        event.preventDefault();
+        moveDays(1);
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        moveDays(-7);
+        break;
+      case "ArrowDown":
+        event.preventDefault();
+        moveDays(7);
+        break;
+      case "PageUp":
+        event.preventDefault();
+        moveMonth(-1, true);
+        break;
+      case "PageDown":
+        event.preventDefault();
+        moveMonth(1, true);
+        break;
+      case "Home": {
+        event.preventDefault();
+        const column = (focusDate.getDay() - weekStartsOn + 7) % 7;
+        moveDays(-column);
+        break;
+      }
+      case "End": {
+        event.preventDefault();
+        const column = (focusDate.getDay() - weekStartsOn + 7) % 7;
+        moveDays(6 - column);
+        break;
+      }
+      case "Enter":
+      case " ":
+        event.preventDefault();
+        select(focusDate);
+        break;
+    }
+  };
+  const firstColumn = (new Date(year, month, 1).getDay() - weekStartsOn + 7) % 7;
+  const total = new Date(year, month + 1, 0).getDate();
+  const cells = [
+    ...Array.from({ length: firstColumn }, () => null),
+    ...Array.from({ length: total }, (_, index) => new Date(year, month, index + 1))
+  ];
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weeks = [];
+  for (let index = 0; index < cells.length; index += 7) weeks.push(cells.slice(index, index + 7));
+  const monthLabel = new Intl.DateTimeFormat(void 0, { month: "long", year: "numeric" }).format(focusDate);
+  const narrow = new Intl.DateTimeFormat(void 0, { weekday: "narrow" });
+  const long = new Intl.DateTimeFormat(void 0, { weekday: "long" });
+  const weekdays = Array.from({ length: 7 }, (_, index) => {
+    const reference = new Date(2024, 0, 7 + weekStartsOn + index);
+    return { short: narrow.format(reference), full: long.format(reference) };
+  });
+  const today = CAL_atMidnight(/* @__PURE__ */ new Date());
+  return <div className={`w-fit select-none ${className}`}>
+      <div className="flex items-center justify-between gap-2 pb-2">
+        <IconButton label="Previous month" onClick={() => moveMonth(-1, false)} className="text-ink-3 hover:bg-hover hover:text-ink">
+          <Icon name="chevron-left" size={14} strokeWidth={2} />
+        </IconButton>
+        <span aria-live="polite" className="text-caption font-medium text-ink">
+          {monthLabel}
+        </span>
+        <IconButton label="Next month" onClick={() => moveMonth(1, false)} className="text-ink-3 hover:bg-hover hover:text-ink">
+          <Icon name="chevron-right" size={14} strokeWidth={2} />
+        </IconButton>
+      </div>
+      <div role="grid" aria-label={monthLabel} onKeyDown={onKeyDown}>
+        <div role="row" className="grid grid-cols-7 gap-1 pb-1">
+          {weekdays.map((weekday, index) => <span key={index} role="columnheader" aria-label={weekday.full} className="flex size-8 items-center justify-center text-micro font-medium text-ink-3 uppercase">
+              <span aria-hidden>{weekday.short}</span>
+            </span>)}
+        </div>
+        {weeks.map((week, weekIndex) => <div key={weekIndex} role="row" className="grid grid-cols-7 gap-1">
+            {week.map((day, dayIndex) => {
+    if (!day) return <span key={dayIndex} className="size-8" />;
+    const isSelected = CAL_sameDay(day, selected);
+    const isToday = CAL_sameDay(day, today);
+    const dayDisabled = isDisabled(day);
+    return <button
+      key={dayIndex}
+      type="button"
+      role="gridcell"
+      id={dayId(day)}
+      aria-selected={isSelected}
+      aria-disabled={dayDisabled || void 0}
+      tabIndex={CAL_sameDay(day, focusDate) ? 0 : -1}
+      onClick={() => {
+        shouldFocus.current = true;
+        setFocusDate(day);
+        select(day);
+      }}
+      className={`flex size-8 items-center justify-center rounded-control text-caption tabular-nums transition-colors duration-150 ${isSelected ? "bg-ink font-medium text-canvas" : dayDisabled ? "cursor-default text-ink-3 opacity-40" : "text-ink hover:bg-hover"} ${isToday && !isSelected ? "font-medium shadow-hairline" : ""}`}
+      style={isSelected ? { boxShadow: "var(--highlight-raised)" } : void 0}
+    >
+                  {day.getDate()}
+                </button>;
+  })}
+          </div>)}
+      </div>
+    </div>;
+}
+
+/* ═══════════ DatePicker ═══════════ */
+const DP_PICKER_HEIGHTS = { sm: "h-8", md: "h-9" };
+function DatePicker({
+  value,
+  defaultValue,
+  onChange,
+  placeholder = "Pick a date\u2026",
+  min,
+  max,
+  size = "md",
+  weekStartsOn = 1,
+  invalid = false,
+  disabled = false,
+  clearable = false,
+  className = "",
+  id,
+  "aria-describedby": describedBy,
+  "aria-labelledby": labelledBy
+} = {}) {
+  const autoId = useId();
+  const triggerId = id ?? `${autoId}-trigger`;
+  const layerId = `${autoId}-calendar`;
+  const [internal, setInternal] = useState(defaultValue ?? null);
+  const selected = value !== void 0 ? value : internal;
+  const { open, setOpen, position, anchorRef, openAt } = useAnchoredLayer(layerId);
+  const close = (refocus) => {
+    setOpen(false);
+    if (refocus) anchorRef.current?.focus();
+  };
+  const choose = (date) => {
+    if (value === void 0) setInternal(date);
+    onChange?.(date);
+    close(true);
+  };
+  const clear = () => {
+    if (value === void 0) setInternal(null);
+    onChange?.(null);
+    anchorRef.current?.focus();
+  };
+  const formatted = selected ? new Intl.DateTimeFormat(void 0, { dateStyle: "medium" }).format(selected) : null;
+  return <span className={`relative flex w-full items-center ${className}`}>
+      <button
+    ref={anchorRef}
+    type="button"
+    id={triggerId}
+    disabled={disabled}
+    aria-haspopup="dialog"
+    aria-expanded={open}
+    aria-controls={open ? layerId : void 0}
+    aria-invalid={invalid || void 0}
+    aria-describedby={describedBy}
+    aria-labelledby={labelledBy}
+    data-invalid={invalid || void 0}
+    onClick={() => open ? close(false) : openAt({ estimatedHeight: 316, width: 276 })}
+    onKeyDown={(event) => {
+      if (!open && ["ArrowDown", "Enter", " "].includes(event.key)) {
+        event.preventDefault();
+        openAt({ estimatedHeight: 316, width: 276 });
+      }
+    }}
+    className={`primitive-field flex w-full items-center gap-2 rounded-control border border-line bg-field px-3 text-left transition-opacity duration-150 disabled:opacity-60 ${DP_PICKER_HEIGHTS[size]} ${clearable && formatted ? "pr-9" : ""}`}
+  >
+        <Icon name="calendar" size={14} strokeWidth={2} className="shrink-0 text-ink-3" />
+        <span className={`min-w-0 flex-1 truncate text-body ${formatted ? "text-ink" : "text-ink-3"}`}>
+          {formatted ?? placeholder}
+        </span>
+      </button>
+      {clearable && formatted && !disabled && <IconButton
+    label="Clear date"
+    onClick={clear}
+    className="absolute right-1.5 text-ink-3 hover:bg-hover hover:text-ink"
+  >
+          <Icon name="close" size={12} strokeWidth={2.2} />
+        </IconButton>}
+      {open && position && <Popover
+    x={position.x}
+    top={position.top}
+    bottom={position.bottom}
+    width={position.width}
+    id={layerId}
+    role="dialog"
+    className="p-3"
+    onClose={() => close(true)}
+  >
+          {
+    /* Tab past the grid's edge leaves the dialog — close it then */
+  }
+          <div
+    onBlur={(event) => {
+      const next = event.relatedTarget;
+      if (next && !event.currentTarget.contains(next) && next !== anchorRef.current)
+        close(false);
+    }}
+  >
+            <Calendar
+    autoFocus
+    value={selected}
+    onChange={choose}
+    min={min}
+    max={max}
+    weekStartsOn={weekStartsOn}
+  />
+          </div>
+        </Popover>}
+    </span>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -6510,6 +6770,20 @@ function SliderOtpDemo() {
       </Field>
       <Field label="Locked code" error="This code expired — request a new one.">
         <OTPInput length={4} defaultValue="42" />
+      </Field>
+    </div>
+  );
+}
+function DatePickerDemo() {
+  const toast = useToast();
+  const [launch, setLaunch] = useState(null);
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Field label="Launch date" hint="When the flavor hits the board.">
+        <DatePicker clearable value={launch} onChange={(date) => { setLaunch(date); if (date) toast({ tone: "success", title: "Launch set", description: new Intl.DateTimeFormat(undefined, { dateStyle: "full" }).format(date) }); }} />
+      </Field>
+      <Field label="Restock by" required error="A restock date is required.">
+        <DatePicker size="sm" min={new Date()} placeholder="After today…" />
       </Field>
     </div>
   );
@@ -6835,6 +7109,7 @@ const DOC_NAV = [
     { id: "switch", title: "Switch" },
     { id: "filedropzone", title: "FileDropzone" },
     { id: "slider-otp", title: "Slider & OTP" },
+    { id: "datepicker", title: "DatePicker" },
   ]},
   { label: "Structure", items: [
     { id: "accordion", title: "Accordion" },
@@ -6990,7 +7265,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 39 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 41 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -7163,6 +7438,10 @@ function App() {
           </Section>
           <Section id="slider-otp" title="Slider & OTP" note="Two more Field-ready controls — Slider is a native range drawn with tokens (platform keyboard and touch for free); OTPInput distributes typing, paste, and one-time-code autofill across quiet field cells.">
             <GalleryCard label="Field-wrapped" wide><SliderOtpDemo /></GalleryCard>
+          </Section>
+          <Section id="datepicker" title="DatePicker & Calendar" note="A dependency-free month grid on the APG date pattern — arrows move by day, PageUp/Down by month, Home/End across the week. DatePicker drops it behind the quiet field trigger; Intl renders the host locale.">
+            <GalleryCard label="Field-wrapped" wide><DatePickerDemo /></GalleryCard>
+            <GalleryCard label="Standalone Calendar"><Calendar defaultValue={new Date()} /></GalleryCard>
           </Section>
           <Section id="accordion" title="Accordion" note="Stacked disclosure rows on Disclosure — single-open by default, closed content inert, house easing throughout.">
             <GalleryCard label="Single open" wide><Accordion defaultOpen={["restock"]} /></GalleryCard>

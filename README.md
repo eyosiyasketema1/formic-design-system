@@ -81,6 +81,8 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `Timeline` | Event history on a rail: toned dots, mono times, staggered entrance | — |
 | `Drawer` | Side panel on the shared modal machinery (trap, restore, layered Escape, scroll lock), slides from either edge | `right`, `left` |
 | `Menubar` | Horizontal bar of DropdownMenus with a shared `(menuKey, itemKey)` selection callback | — |
+| `Calendar` | Dependency-free APG month grid: roving focus, arrows/PageUp/Down/Home/End, min/max, Intl locale labels | — |
+| `DatePicker` | Calendar behind the quiet field trigger via Popover — focus moves into the grid, clearable, Field-ready | sizes `sm`, `md` |
 
 ## Theming
 

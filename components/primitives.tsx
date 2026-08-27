@@ -2,7 +2,7 @@
 import { cloneElement, isValidElement, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ElementType, type ReactElement, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
-  IconAlertCircle, IconAlignLeft, IconArrowUp, IconArrowUpRight, IconChartBar, IconCheck, IconCircleCheck,
+  IconAlertCircle, IconAlignLeft, IconArrowUp, IconArrowUpRight, IconCalendar, IconChartBar, IconCheck, IconCircleCheck,
   IconChevronDown, IconChevronLeft, IconChevronRight, IconClock, IconDots, IconFileText, IconHome,
   IconCopy, IconInfoCircle, IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion, IconMicrophone,
   IconMoodSmile, IconPaperclip, IconPencil, IconPlus, IconRefresh, IconScissors,
@@ -65,7 +65,7 @@ export type IconName =
   | "lines" | "external"
   | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar"
   | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right"
-  | "copy" | "circle-check" | "alert" | "info" | "chevron-left" | "upload";
+  | "copy" | "circle-check" | "alert" | "info" | "chevron-left" | "upload" | "calendar";
 const ICONS: Record<IconName, TablerIcon> = {
   chevron: IconChevronDown,
   check: IconCheck,
@@ -102,6 +102,7 @@ const ICONS: Record<IconName, TablerIcon> = {
   info: IconInfoCircle,
   "chevron-left": IconChevronLeft,
   upload: IconUpload,
+  calendar: IconCalendar,
 };
 export function Icon({
   name,
