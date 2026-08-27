@@ -52,3 +52,7 @@ Also resolved: hover durations unified to 150ms, reduced-motion now covers trans
 ## Accepted exception — DropdownMenu keyboard architecture (2026-08-27)
 
 DropdownMenu keeps focus on the trigger and drives the active item via `aria-activedescendant`, matching Select's engine (one anchored-layer architecture system-wide). The APG menu-button pattern instead moves DOM focus into the menu; `aria-activedescendant` on a plain button is not spec-sanctioned, so some screen readers may not announce the active item. Accepted for architectural consistency; revisit with roving focus if assistive-tech testing shows announcement gaps.
+
+## Accepted exception — Markdown heading mapping (2026-08-27)
+
+Markdown renders `#`/`##`/`###+` as `h3`/`h4`/`h5+` on the compact type scale (text-title/lead/body) so AI output never competes with the host page's own h1/h2. This can skip heading levels in the DOM outline (WCAG advisory, not a failure). Bold-inside-italic degrades to plain emphasis (single-pass inline parser); `***bold-italic***` is supported directly.
