@@ -61,6 +61,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `SearchList` | Command search with live filtering, gliding results, empty state | — |
 | `SelectionActions` | Contextual AI bar beneath selected text: quick actions, free-text edits, streamed rewrite with keep/discard | — |
 | `ChatThread` | Conversation column: user bubbles + flat assistant replies, streamed final message (exports `MessageBubble`) | — |
+| `CodeBlock` | AI code output: dependency-free syntax highlighting on theme tokens, copy action, optional line numbers | `ts`, `js`, `py`, `json`, `bash`, `css`, `text` |
 
 ## Theming
 

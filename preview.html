@@ -636,6 +636,7 @@ const ICON_PATHS = {  /* authentic Tabler outline path data (@tabler/icons, MIT)
   "mood-smile": (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 10l.01 0" /><path d="M15 10l.01 0" /><path d="M9.5 15a3.5 3.5 0 0 0 5 0" /></>),
   typography: (<><path d="M4 20l3 0" /><path d="M14 20l7 0" /><path d="M6.9 15l6.9 0" /><path d="M10.2 6.3l5.8 13.7" /><path d="M5 20l6 -16l2 0l7 16" /></>),
   "chevron-right": <path d="M9 6l6 6l-6 6" />,
+  copy: (<><path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></>),
 };
 function Icon({ name, size = 14, strokeWidth = 2.2, className, style }) {
   return (
@@ -4444,6 +4445,128 @@ function ChatThread({
     </div>;
 }
 
+/* ═══════════ CodeBlock ═══════════ */
+const CB_KEYWORDS = {
+  ts: ["const", "let", "var", "function", "return", "if", "else", "for", "while", "import", "from", "export", "default", "type", "interface", "class", "extends", "new", "async", "await", "try", "catch", "throw", "switch", "case", "break", "continue", "typeof", "in", "of", "null", "undefined", "true", "false"],
+  js: ["const", "let", "var", "function", "return", "if", "else", "for", "while", "import", "from", "export", "default", "class", "extends", "new", "async", "await", "try", "catch", "throw", "switch", "case", "break", "continue", "typeof", "in", "of", "null", "undefined", "true", "false"],
+  py: ["def", "return", "if", "elif", "else", "for", "while", "import", "from", "as", "class", "try", "except", "raise", "with", "lambda", "pass", "None", "True", "False", "and", "or", "not", "in", "is", "yield"],
+  json: ["true", "false", "null"],
+  bash: ["if", "then", "else", "fi", "for", "do", "done", "echo", "export", "function", "case", "esac", "while", "local"],
+  css: [],
+  text: []
+};
+const CB_TOKEN_COLORS = {
+  plain: "var(--ink-2)",
+  keyword: "var(--accent)",
+  string: "var(--green)",
+  comment: "var(--ink-3)",
+  number: "var(--orange)",
+  fn: "var(--ink)"
+};
+function CB_highlightLine(line, language) {
+  if (language === "text") return [{ text: line, kind: "plain" }];
+  const keywords = CB_KEYWORDS[language];
+  const comment = language === "py" || language === "bash" ? "#.*" : language === "css" ? "\\/\\*.*?\\*\\/" : "\\/\\/.*|\\/\\*.*?\\*\\/";
+  const re = new RegExp(
+    `(${comment})|("(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*'|\`(?:[^\`\\\\]|\\\\.)*\`)|(\\b\\d+(?:\\.\\d+)?\\b)|(\\b[A-Za-z_$][\\w$]*\\b)`,
+    "g"
+  );
+  const tokens = [];
+  let cursor = 0;
+  let match;
+  while (match = re.exec(line)) {
+    if (match.index > cursor) tokens.push({ text: line.slice(cursor, match.index), kind: "plain" });
+    const [full, com, str, num, word] = match;
+    let kind = "plain";
+    if (com) kind = "comment";
+    else if (str) kind = "string";
+    else if (num) kind = "number";
+    else if (word) kind = keywords.includes(word) ? "keyword" : line[re.lastIndex] === "(" ? "fn" : "plain";
+    tokens.push({ text: full, kind });
+    cursor = re.lastIndex;
+  }
+  if (cursor < line.length) tokens.push({ text: line.slice(cursor), kind: "plain" });
+  return tokens;
+}
+const CB_DEFAULT_CODE = `export function restock(flavor: string, batches = 2) {
+  // churn overnight so it sets by open
+  const start = Date.now();
+  return schedule({ flavor, batches, at: "05:30" })
+    .then((job) => log(\`queued \${flavor} x\${batches}\`, job.id));
+}`;
+function CodeBlock({
+  code = CB_DEFAULT_CODE,
+  language = "ts",
+  filename,
+  lineNumbers = false,
+  onCopy
+} = {}) {
+  const [copied, setCopied] = useState(false);
+  const lines = useMemo(
+    () => code.split("\n").map((line) => CB_highlightLine(line, language)),
+    [code, language]
+  );
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      onCopy?.(code);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+    }
+  };
+  return <div className="w-full max-w-105">
+      <div className="overflow-hidden rounded-card bg-surface shadow-card">
+        <div className="primitive-card-bar flex items-center justify-between border-b border-line">
+          <span className="min-w-0 truncate font-mono text-micro tracking-wide text-ink-3 uppercase">
+            {filename ?? language}
+          </span>
+          <span className="flex items-center gap-1.5">
+            {
+    /* announce the confirmation; the icon swap alone is silent */
+  }
+            <span aria-live="polite" className="text-micro text-ink-3">
+              {copied ? "Copied" : ""}
+            </span>
+            <IconButton
+    label="Copy code"
+    onClick={copy}
+    className={copied ? "text-green" : "text-ink-3 hover:bg-hover hover:text-ink"}
+  >
+              <Icon name={copied ? "check" : "copy"} size={13} strokeWidth={2} />
+            </IconButton>
+          </span>
+        </div>
+        {
+    /* keyboard-scrollable like FilterTable's region — long lines
+       must be reachable without a pointer */
+  }
+        <div className="overflow-x-auto" role="region" aria-label={`Code: ${filename ?? language}`} tabIndex={0}>
+          <pre className="w-fit min-w-full px-3.5 py-3 font-mono text-caption leading-relaxed">
+            {lines.map((tokens, index) => (
+    /* min-h-[1lh] keeps empty lines tall without placeholder
+       characters that would pollute manual text selection */
+    <div key={index} className="flex min-h-[1lh] whitespace-pre">
+                {lineNumbers && <span
+      aria-hidden
+      className="mr-3.5 w-5 shrink-0 select-none text-right text-ink-3"
+      style={{ opacity: 0.7 }}
+    >
+                    {index + 1}
+                  </span>}
+                <span className="flex-1">
+                  {tokens.map((token, i) => <span key={i} style={{ color: CB_TOKEN_COLORS[token.kind] }}>
+                      {token.text}
+                    </span>)}
+                </span>
+              </div>
+  ))}
+          </pre>
+        </div>
+      </div>
+    </div>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -4554,6 +4677,7 @@ const DOC_NAV = [
   { label: "Conversation", items: [
     { id: "chatthread", title: "ChatThread" },
     { id: "streamingtext", title: "StreamingText" },
+    { id: "codeblock", title: "CodeBlock" },
     { id: "selectionactions", title: "SelectionActions" },
     { id: "approvalcard", title: "ApprovalCard" },
     { id: "promptbar", title: "PromptBar" },
@@ -4679,7 +4803,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 19 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 20 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -4801,6 +4925,10 @@ function App() {
           </Section>
           <Section id="streamingtext" title="StreamingText" note="Words resolve out of blur; citations, sources, and follow-ups appear when done. Loops.">
             <GalleryCard label="Default" wide><StreamingText /></GalleryCard>
+          </Section>
+          <Section id="codeblock" title="CodeBlock" note="AI code output — dependency-free syntax highlighting on theme tokens, copy action, optional line numbers. Block comments spanning lines stay plain (accepted).">
+            <GalleryCard label="TypeScript" wide><CodeBlock /></GalleryCard>
+            <GalleryCard label="Python · line numbers" wide><CodeBlock language="py" lineNumbers filename="restock.py" code={'def restock(flavor, batches=2):\n    # churn overnight so it sets by open\n    job = schedule(flavor, batches, at="05:30")\n    log(f"queued {flavor} x{batches}", job.id)\n    return job'} /></GalleryCard>
           </Section>
           <Section id="selectionactions" title="SelectionActions" note="Contextual AI bar beneath selected text — quick actions, free-text edit instructions, streamed rewrite with keep / discard.">
             <GalleryCard label="Default" wide><SelectionActions /></GalleryCard>

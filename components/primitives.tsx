@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import {
   IconAlignLeft, IconArrowUp, IconArrowUpRight, IconChartBar, IconCheck,
   IconChevronDown, IconChevronRight, IconClock, IconDots, IconFileText, IconHome,
-  IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion, IconMicrophone,
+  IconCopy, IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion, IconMicrophone,
   IconMoodSmile, IconPaperclip, IconPencil, IconPlus, IconRefresh, IconScissors,
   IconSearch, IconSettings, IconSparkles, IconStack2, IconTypography,
   IconUserPlus, IconWorld, IconX, type Icon as TablerIcon,
@@ -58,7 +58,8 @@ export type IconName =
   | "mic" | "file" | "clip" | "chart" | "layers" | "globe"
   | "lines" | "external"
   | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar"
-  | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right";
+  | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right"
+  | "copy";
 const ICONS: Record<IconName, TablerIcon> = {
   chevron: IconChevronDown,
   check: IconCheck,
@@ -89,6 +90,7 @@ const ICONS: Record<IconName, TablerIcon> = {
   "mood-smile": IconMoodSmile,
   typography: IconTypography,
   "chevron-right": IconChevronRight,
+  copy: IconCopy,
 };
 export function Icon({
   name,

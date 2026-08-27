@@ -87,6 +87,8 @@ PAIRS = [  # (fg var | literal, bg var, minimum, label)
     ("--green", "--surface", 4.5, "added lines on cards"),
     ("--red", "--surface", 4.5, "deletions on cards"),
     ("--ink-3", "--field", 4.5, "placeholder text on fields"),
+    ("--accent", "--surface", 4.5, "code keywords on cards"),
+    ("--orange", "--surface", 4.5, "code numbers on cards"),
 ]
 # sanity: the parser must actually find the base palette, or every light-mode
 # check silently becomes a no-op (this happened once — never again)
