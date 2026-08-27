@@ -41,7 +41,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 
 | Component | Purpose | Variants |
 |---|---|---|
-| `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`, `fadeUp`/`popIn` | — |
+| `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Skeleton`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`, `fadeUp`/`popIn` | — |
 | `hooks` | Shared hooks: `useSequence` (staged reveals), `useElapsed` (live clock), `useStream` (word-by-word reveal), `useAnchoredLayer` (anchored popover engine) | — |
 | `Button` | The workhorse control: sizes sm/md, disabled + loading states, optional icon | `primary`, `secondary`, `ghost`, `destructive`, `accent`, `success` |
 | `LoadingState` | Loader for long-running work: pixel grid + shimmer label + elapsed timer | `Drive`, `Dots`, `Orbit`, `Surfer` |
@@ -67,6 +67,8 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `Modal` | Portal dialog on the system scrim: focus trap + restore, scroll lock, Escape/backdrop dismiss, footer action row | `sm`, `md`, `lg` |
 | `Toast` | App notifications (exports `ToastProvider`, `useToast`): bottom-right stack, auto-dismiss with hover pause, optional action | tones `neutral`, `success`, `error` |
 | `DropdownMenu` | Standard action menu around any trigger: keyboard-driven, dividers, disabled + destructive items, start/end align | — |
+| `Alert` | Inline callout on the system tints with optional dismiss — copy stays ink so every palette keeps AA | `neutral`, `info`, `success`, `warning`, `error` |
+| `Tabs` | APG tablist with roving tabindex, arrow-key activation, and a sliding underline; scrolls on narrow viewports | — |
 
 ## Theming
 

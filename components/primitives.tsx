@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import {
   IconAlertCircle, IconAlignLeft, IconArrowUp, IconArrowUpRight, IconChartBar, IconCheck, IconCircleCheck,
   IconChevronDown, IconChevronRight, IconClock, IconDots, IconFileText, IconHome,
-  IconCopy, IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion, IconMicrophone,
+  IconCopy, IconInfoCircle, IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion, IconMicrophone,
   IconMoodSmile, IconPaperclip, IconPencil, IconPlus, IconRefresh, IconScissors,
   IconSearch, IconSettings, IconSparkles, IconStack2, IconTypography,
   IconUserPlus, IconWorld, IconX, type Icon as TablerIcon,
@@ -65,7 +65,7 @@ export type IconName =
   | "lines" | "external"
   | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar"
   | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right"
-  | "copy" | "circle-check" | "alert";
+  | "copy" | "circle-check" | "alert" | "info";
 const ICONS: Record<IconName, TablerIcon> = {
   chevron: IconChevronDown,
   check: IconCheck,
@@ -99,6 +99,7 @@ const ICONS: Record<IconName, TablerIcon> = {
   copy: IconCopy,
   "circle-check": IconCircleCheck,
   alert: IconAlertCircle,
+  info: IconInfoCircle,
 };
 export function Icon({
   name,
@@ -345,6 +346,26 @@ export function RadioCheck({ type, on }: { type: "radio" | "check"; on: boolean 
         <Icon name="check" size={12} strokeWidth={3} />
       )}
     </span>
+  );
+}
+
+/* ── Skeleton ──────────────────────────────────────────── */
+/* Loading placeholder block — shape it with className
+ * (e.g. "size-8 rounded-full" for an avatar). The block is
+ * decorative; put aria-busy on the loading region so
+ * assistive tech knows content is on the way. */
+export function Skeleton({ className = "h-4 w-full" }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={`block rounded-sm ${className}`}
+      style={{
+        backgroundImage:
+          "linear-gradient(90deg, var(--inset) 35%, var(--hover) 50%, var(--inset) 65%)",
+        backgroundSize: "200% 100%",
+        animation: "shimmer-text 1.4s linear infinite",
+      }}
+    />
   );
 }
 

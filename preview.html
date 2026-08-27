@@ -643,6 +643,7 @@ const ICON_PATHS = {  /* authentic Tabler outline path data (@tabler/icons, MIT)
   copy: (<><path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></>),
   "circle-check": (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></>),
   alert: (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 8v4" /><path d="M12 16h.01" /></>),
+  info: (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 9h.01" /><path d="M11 12h1v4h1" /></>),
 };
 function Icon({ name, size = 14, strokeWidth = 2.2, className, style }) {
   return (
@@ -752,6 +753,12 @@ function RadioCheck({ type, on }) {
         <Icon name="check" size={12} strokeWidth={3} />
       )}
     </span>
+  );
+}
+function Skeleton({ className = "h-4 w-full" }) {
+  return (
+    <span aria-hidden className={`block rounded-sm ${className}`}
+      style={{ backgroundImage: "linear-gradient(90deg, var(--inset) 35%, var(--hover) 50%, var(--inset) 65%)", backgroundSize: "200% 100%", animation: "shimmer-text 1.4s linear infinite" }} />
   );
 }
 const SWITCH_SIZES = {
@@ -5215,6 +5222,157 @@ function DropdownMenu({
     </>;
 }
 
+/* ═══════════ Alert ═══════════ */
+const AL_TONES = {
+  neutral: { background: "var(--inset)", icon: null, color: "var(--ink-2)" },
+  info: { background: "var(--accent-tint)", icon: "info", color: "var(--accent)" },
+  success: { background: "var(--green-tint)", icon: "circle-check", color: "var(--green)" },
+  warning: { background: "var(--orange-tint)", icon: "alert", color: "var(--orange)" },
+  error: { background: "var(--red-tint)", icon: "alert", color: "var(--red)" }
+};
+function Alert({
+  tone = "neutral",
+  title,
+  onDismiss,
+  className = "",
+  children
+}) {
+  const spec = AL_TONES[tone];
+  return <div
+    className={`flex w-full items-start gap-2.5 rounded-md p-3 shadow-hairline ${className}`}
+    style={{ background: spec.background }}
+  >
+      {spec.icon && <Icon
+    name={spec.icon}
+    size={16}
+    strokeWidth={2}
+    className="mt-px shrink-0"
+    style={{ color: spec.color }}
+  />}
+      <div className="min-w-0 flex-1">
+        <p className="text-caption font-medium text-ink">{title}</p>
+        {children && <div className="mt-0.5 text-small leading-relaxed text-ink-2">{children}</div>}
+      </div>
+      {onDismiss && <IconButton
+    label="Dismiss"
+    onClick={onDismiss}
+    className="-mt-1 -mr-1 text-ink-3 hover:bg-hover hover:text-ink"
+  >
+          <Icon name="close" size={12} strokeWidth={2.2} />
+        </IconButton>}
+    </div>;
+}
+
+/* ═══════════ Tabs ═══════════ */
+const TB_DEFAULT_TABS = [
+  {
+    key: "overview",
+    label: "Overview",
+    content: "Pistachio leads the weekend menu \u2014 sales up 23% with the best margin on the board."
+  },
+  {
+    key: "batches",
+    label: "Batches",
+    content: "Two batches churned Friday night; the second finishes setting by Saturday open."
+  },
+  {
+    key: "suppliers",
+    label: "Suppliers",
+    content: "Maple Orbit covers the base; Aurora Scoops is on standby for the waffle special."
+  }
+];
+function Tabs({
+  tabs = TB_DEFAULT_TABS,
+  value,
+  defaultValue,
+  onChange,
+  className = ""
+} = {}) {
+  const id = useId();
+  const [internal, setInternal] = useState(defaultValue ?? tabs[0]?.key);
+  const activeKey = value !== void 0 ? value : internal;
+  const active = tabs.find((tab) => tab.key === activeKey);
+  const listRef = useRef(null);
+  const [bar, setBar] = useState(null);
+  const tabId = (key) => `${id}-tab-${key}`;
+  const panelId = (key) => `${id}-panel-${key}`;
+  const select = (key, focus = false) => {
+    if (value === void 0) setInternal(key);
+    onChange?.(key);
+    if (focus) document.getElementById(tabId(key))?.focus();
+  };
+  const measure = () => {
+    const el = activeKey === void 0 ? null : document.getElementById(tabId(activeKey));
+    if (el) setBar({ left: el.offsetLeft, width: el.offsetWidth });
+  };
+  useLayoutEffect(measure, [activeKey, tabs]);
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [activeKey]);
+  const onKeyDown = (event) => {
+    const index = tabs.findIndex((tab) => tab.key === activeKey);
+    if (index < 0) return;
+    let next = index;
+    if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
+    else if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = tabs.length - 1;
+    else return;
+    event.preventDefault();
+    select(tabs[next].key, true);
+  };
+  return <div className={`w-full ${className}`}>
+      <div
+    ref={listRef}
+    role="tablist"
+    onKeyDown={onKeyDown}
+    className="relative flex items-center gap-1 overflow-x-auto border-b border-line [scrollbar-width:none]"
+  >
+        {tabs.map((tab) => {
+    const isActive = tab.key === activeKey;
+    return <button
+      key={tab.key}
+      id={tabId(tab.key)}
+      type="button"
+      role="tab"
+      aria-selected={isActive}
+      aria-controls={tab.content !== void 0 ? panelId(tab.key) : void 0}
+      tabIndex={isActive ? 0 : -1}
+      onClick={() => select(tab.key)}
+      className={`flex h-9 shrink-0 items-center gap-1.5 px-2.5 text-caption font-medium whitespace-nowrap transition-colors duration-150 ${isActive ? "text-ink" : "text-ink-3 hover:text-ink-2"}`}
+    >
+              {tab.icon && <Icon name={tab.icon} size={14} strokeWidth={2} />}
+              {tab.label}
+            </button>;
+  })}
+        {bar && <span
+    aria-hidden
+    className="absolute bottom-0 h-0.5 rounded-full bg-ink"
+    style={{
+      left: bar.left,
+      width: bar.width,
+      transition: "left 250ms var(--ease-out-quint), width 250ms var(--ease-out-quint)"
+    }}
+  />}
+      </div>
+      {active?.content !== void 0 && <div
+    key={active.key}
+    role="tabpanel"
+    id={panelId(active.key)}
+    aria-labelledby={tabId(active.key)}
+    tabIndex={0}
+    className="pt-3 text-body leading-relaxed text-ink-2"
+    style={{ animation: "fade-in 200ms ease-out both" }}
+  >
+          {active.content}
+        </div>}
+    </div>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -5231,6 +5389,22 @@ function GalleryCard({ label, wide, children }) {
       <p className="mb-3 font-mono text-micro tracking-wide text-ink-3 uppercase">{label}</p>
       {children}
     </Card>
+  );
+}
+function AlertDemo() {
+  const [shown, setShown] = useState(true);
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <Alert tone="info" title="Model updated">Sprinkles 5 now powers flavor recommendations.</Alert>
+      <Alert tone="success" title="Batch complete">Friday's pistachio double batch is set and cased.</Alert>
+      <Alert tone="warning" title="Low stock">Waffle cones dip below two days of cover on Sunday.</Alert>
+      <Alert tone="error" title="Sync failed">Supplier price sync errored — totals may be stale.</Alert>
+      {shown ? (
+        <Alert tone="neutral" title="Tip" onDismiss={() => setShown(false)}>Drag column edges in RecordsTable to resize.</Alert>
+      ) : (
+        <Button variant="ghost" onClick={() => setShown(true)}>Restore dismissed alert</Button>
+      )}
+    </div>
   );
 }
 function DropdownMenuDemo() {
@@ -5413,6 +5587,8 @@ const DOC_NAV = [
     { id: "dropdownmenu", title: "DropdownMenu" },
   ]},
   { label: "Feedback", items: [
+    { id: "alert", title: "Alert" },
+    { id: "skeleton", title: "Skeleton" },
     { id: "loadingstate", title: "LoadingState" },
     { id: "thinkingstate", title: "ThinkingState" },
     { id: "taskrows", title: "TaskRows" },
@@ -5435,6 +5611,7 @@ const DOC_NAV = [
     { id: "recommendationcard", title: "RecommendationCard" },
   ]},
   { label: "Navigation", items: [
+    { id: "tabs", title: "Tabs" },
     { id: "sidebarnav", title: "SidebarNav" },
     { id: "searchlist", title: "SearchList" },
   ]},
@@ -5547,7 +5724,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 25 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 27 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -5589,7 +5766,7 @@ function App() {
             </div>
           </header>
           <FoundationsSections />
-          <Section id="primitives" title="Primitives" note="The atoms everything below composes: Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Switch, Popover + timing hooks (useSequence, useElapsed, useStream).">
+          <Section id="primitives" title="Primitives" note="The atoms everything below composes: Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Skeleton, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Switch, Popover + timing hooks (useSequence, useElapsed, useStream).">
             <GalleryCard label="Primitives" wide>
               <div className="flex flex-wrap items-center gap-3">
                 <ShimmerLabel>Shimmering</ShimmerLabel>
@@ -5695,6 +5872,25 @@ function App() {
           <Section id="dropdownmenu" title="DropdownMenu" note="The standard action menu — wrap any trigger; keyboard-driven via aria-activedescendant, dividers, disabled and destructive items. Selecting fires a toast here.">
             <GalleryCard label="Button · icon trigger" wide><DropdownMenuDemo /></GalleryCard>
           </Section>
+          <Section id="alert" title="Alert" note="Inline callouts on the system tints — five tones, optional dismiss. Copy stays ink so every palette keeps AA contrast.">
+            <GalleryCard label="Tones · dismissible" wide><AlertDemo /></GalleryCard>
+          </Section>
+          <Section id="skeleton" title="Skeleton" note="Loading placeholders — one primitive, shaped entirely by className. Compose avatars, lines, and cards from it.">
+            <GalleryCard label="Card placeholder" wide>
+              <div className="flex items-start gap-3">
+                <Skeleton className="size-9 shrink-0 rounded-full" />
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <Skeleton className="h-3.5 w-2/5" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-4/5" />
+                  <div className="mt-1 flex gap-2">
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                  </div>
+                </div>
+              </div>
+            </GalleryCard>
+          </Section>
           <Section id="loadingstate" title="LoadingState" note="Pixel-grid loader with shimmer label and elapsed timer.">
             <GalleryCard label="Drive"><LoadingState variant="Drive" /></GalleryCard>
             <GalleryCard label="Dots"><LoadingState variant="Dots" /></GalleryCard>
@@ -5758,6 +5954,9 @@ function App() {
           </Section>
           <Section id="recommendationcard" title="RecommendationCard" note="Ranked recommendation with an alternatives drawer — pick an option to promote it, then accept.">
             <GalleryCard label="Default" wide><RecommendationCard /></GalleryCard>
+          </Section>
+          <Section id="tabs" title="Tabs" note="APG tablist — arrow keys with automatic activation, Home/End, and an underline that slides with the house easing. The list scrolls on narrow viewports.">
+            <GalleryCard label="Default" wide><Tabs /></GalleryCard>
           </Section>
           <Section id="sidebarnav" title="SidebarNav" note="Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.">
             <div className="flex"><SidebarNav /></div>
