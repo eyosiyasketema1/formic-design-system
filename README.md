@@ -43,7 +43,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 |---|---|---|
 | `primitives` | Shared atoms: `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Skeleton`, `Avatar`, `Tooltip`, `Progress`, `Separator`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`, `fadeUp`/`popIn` | — |
 | `hooks` | Shared hooks: `useSequence` (staged reveals), `useElapsed` (live clock), `useStream` (word-by-word reveal), `useAnchoredLayer` (anchored popover engine), `useModalLayer` (dialog trap/lock/Escape) | — |
-| `Button` | The workhorse control: sizes sm/md, disabled + loading states, optional icon | `primary`, `secondary`, `ghost`, `destructive`, `accent`, `success` |
+| `Button` | The workhorse control: sizes xs/sm/md/lg, leading/trailing icons, fullWidth, `href` link rendering, disabled + loading | `primary`, `secondary`, `outline`, `ghost`, `link`, `destructive`, `destructive-soft`, `accent`, `accent-soft`, `success` |
 | `LoadingState` | Loader for long-running work: pixel grid + shimmer label + elapsed timer | `Drive`, `Dots`, `Orbit`, `Surfer` |
 | `ThinkingState` | Expandable agent trace with animated timeline | `Steps`, `Reasoning`, `Search`, `Coding` |
 | `ApprovalCard` | Human-in-the-loop question card: radio/checkbox answers, pager dots, send arrow | — |

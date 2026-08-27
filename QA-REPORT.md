@@ -56,3 +56,7 @@ DropdownMenu keeps focus on the trigger and drives the active item via `aria-act
 ## Accepted exception — Markdown heading mapping (2026-08-27)
 
 Markdown renders `#`/`##`/`###+` as `h3`/`h4`/`h5+` on the compact type scale (text-title/lead/body) so AI output never competes with the host page's own h1/h2. This can skip heading levels in the DOM outline (WCAG advisory, not a failure). Bold-inside-italic degrades to plain emphasis (single-pass inline parser); `***bold-italic***` is supported directly.
+
+## Accepted exception — Button outline border (2026-08-28)
+
+The `outline` variant's `line-strong` border sits below the 3:1 non-text minimum against canvas (~1.4–1.9:1 across palettes). Accepted under WCAG 1.4.11's boundary exemption: the ≥4.5:1 text label identifies the control, matching the Switch off-track precedent. The border differentiates `outline` from `ghost` visually; both remain fully usable if it were invisible.
