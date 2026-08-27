@@ -361,6 +361,7 @@ export function Popover({
   x,
   top,
   bottom,
+  width,
   id,
   role = "tooltip",
   className = "w-72",
@@ -372,6 +373,8 @@ export function Popover({
   x: number;
   top?: number;
   bottom?: number;
+  /** explicit pixel width — e.g. to match a trigger; overrides className sizing */
+  width?: number;
   id?: string;
   role?: string;
   className?: string;
@@ -401,6 +404,7 @@ export function Popover({
         left: x,
         top,
         bottom,
+        width,
         animation: "pop-in 160ms var(--ease-out-quint) both",
         transformOrigin: top === undefined ? "bottom left" : "top left",
       }}

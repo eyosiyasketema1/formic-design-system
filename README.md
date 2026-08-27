@@ -63,6 +63,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `ChatThread` | Conversation column: user bubbles + flat assistant replies, streamed final message (exports `MessageBubble`) | — |
 | `CodeBlock` | AI code output: dependency-free syntax highlighting on theme tokens, copy action, optional line numbers | `ts`, `js`, `py`, `json`, `bash`, `css`, `text` |
 | `Input` | Form trio (exports `Field`, `Textarea`): Field wires label/hint/error aria onto its control; quiet field focus | sizes `sm`, `md` |
+| `Select` | Combobox on the quiet field style: portal listbox matched to trigger width, keyboard-driven via `aria-activedescendant` | sizes `sm`, `md` |
 
 ## Theming
 
