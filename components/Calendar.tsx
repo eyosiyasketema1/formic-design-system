@@ -6,9 +6,11 @@ import { Icon, IconButton } from "./primitives";
  * Dependency-free month grid on the APG date-grid pattern:
  * roving focus, arrows move by day, PageUp / PageDown by
  * month, Home / End to the week's bounds, Enter / Space
- * selects. Month and weekday labels come from Intl, so the
- * host locale renders for free.
+ * selects. mode="range" picks a start and an end — hovering
+ * (or arrowing) previews the band, and picking backwards
+ * swaps the ends. Labels come from Intl.
  * ───────────────────────────────────────────────────────── */
+export type DateRange = { from: Date | null; to: Date | null };
 const atMidnight = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const sameDay = (a?: Date | null, b?: Date | null) =>
   !!a &&
@@ -17,19 +19,29 @@ const sameDay = (a?: Date | null, b?: Date | null) =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 export default function Calendar({
+  mode = "single",
   value,
   defaultValue,
   onChange,
+  rangeValue,
+  defaultRange,
+  onRangeChange,
   min,
   max,
   weekStartsOn = 1,
   autoFocus = false,
   className = "",
 }: {
-  /** controlled selection — omit and use defaultValue for uncontrolled */
+  mode?: "single" | "range";
+  /** controlled selection (single mode) — omit and use defaultValue for uncontrolled */
   value?: Date | null;
   defaultValue?: Date | null;
   onChange?: (date: Date) => void;
+  /** controlled selection (range mode) */
+  rangeValue?: DateRange;
+  defaultRange?: DateRange;
+  /** fires on each pick — `to` is null until the second pick lands */
+  onRangeChange?: (range: DateRange) => void;
   /** earliest / latest selectable day (inclusive) */
   min?: Date;
   max?: Date;
@@ -42,7 +54,14 @@ export default function Calendar({
   const id = useId();
   const [internal, setInternal] = useState<Date | null>(defaultValue ?? null);
   const selected = value !== undefined ? value : internal;
-  const [focusDate, setFocusDate] = useState<Date>(() => atMidnight(selected ?? new Date()));
+  const [internalRange, setInternalRange] = useState<DateRange>(
+    defaultRange ?? { from: null, to: null },
+  );
+  const range = rangeValue !== undefined ? rangeValue : internalRange;
+  const [hovered, setHovered] = useState<Date | null>(null);
+  const [focusDate, setFocusDate] = useState<Date>(() =>
+    atMidnight((mode === "range" ? range.from : selected) ?? new Date()),
+  );
   const shouldFocus = useRef(autoFocus);
   const year = focusDate.getFullYear();
   const month = focusDate.getMonth();
@@ -66,11 +85,33 @@ export default function Calendar({
       return new Date(current.getFullYear(), current.getMonth() + delta, Math.min(current.getDate(), lastOfTarget));
     });
   };
+  const commitRange = (next: DateRange) => {
+    if (rangeValue === undefined) setInternalRange(next);
+    onRangeChange?.(next);
+  };
   const select = (date: Date) => {
     if (isDisabled(date)) return;
+    if (mode === "range") {
+      if (!range.from || range.to) commitRange({ from: date, to: null });
+      else if (date < range.from) commitRange({ from: date, to: range.from });
+      else commitRange({ from: range.from, to: date });
+      return;
+    }
     if (value === undefined) setInternal(date);
     onChange?.(date);
   };
+  /* while picking the second end, hover (or the keyboard focus) previews the
+     band — never onto a disabled day */
+  const previewCandidate = hovered ?? focusDate;
+  const previewEnd =
+    mode === "range" &&
+    range.from &&
+    !range.to &&
+    previewCandidate > range.from &&
+    !isDisabled(previewCandidate)
+      ? previewCandidate
+      : null;
+  const bandEnd = range.to ?? previewEnd;
   const onKeyDown = (event: React.KeyboardEvent) => {
     switch (event.key) {
       case "ArrowLeft": event.preventDefault(); moveDays(-1); break;
@@ -130,8 +171,14 @@ export default function Calendar({
           <Icon name="chevron-right" size={14} strokeWidth={2} />
         </IconButton>
       </div>
-      <div role="grid" aria-label={monthLabel} onKeyDown={onKeyDown}>
-        <div role="row" className="grid grid-cols-7 gap-1 pb-1">
+      <div
+        role="grid"
+        aria-label={monthLabel}
+        onKeyDown={onKeyDown}
+        onMouseLeave={mode === "range" ? () => setHovered(null) : undefined}
+      >
+        {/* range mode drops the gaps so the band reads as one piece */}
+        <div role="row" className={`grid grid-cols-7 pb-1 ${mode === "range" ? "gap-0" : "gap-1"}`}>
           {weekdays.map((weekday, index) => (
             <span key={index} role="columnheader" aria-label={weekday.full} className="flex size-8 items-center justify-center text-micro font-medium text-ink-3 uppercase">
               <span aria-hidden>{weekday.short}</span>
@@ -139,32 +186,58 @@ export default function Calendar({
           ))}
         </div>
         {weeks.map((week, weekIndex) => (
-          <div key={weekIndex} role="row" className="grid grid-cols-7 gap-1">
+          <div key={weekIndex} role="row" className={`grid grid-cols-7 ${mode === "range" ? "gap-0" : "gap-1"}`}>
             {week.map((day, dayIndex) => {
               if (!day) return <span key={dayIndex} className="size-8" />;
-              const isSelected = sameDay(day, selected);
               const isToday = sameDay(day, today);
               const dayDisabled = isDisabled(day);
+              const isStart = mode === "range" && sameDay(day, range.from);
+              const isEnd = mode === "range" && sameDay(day, range.to);
+              const inBand =
+                mode === "range" &&
+                !!range.from &&
+                !!bandEnd &&
+                day > range.from &&
+                day < bandEnd;
+              const isPreviewEnd = mode === "range" && !range.to && sameDay(day, previewEnd);
+              const isSelected =
+                mode === "range" ? isStart || isEnd : sameDay(day, selected);
+              const shape =
+                mode === "range"
+                  ? (isStart && isEnd) || (isStart && !range.to && !previewEnd)
+                    ? "rounded-control" /* single-day range / lone start stay whole */
+                    : isStart
+                      ? "rounded-l-control rounded-r-none"
+                      : isEnd
+                        ? "rounded-r-control rounded-l-none"
+                        : inBand || isPreviewEnd
+                          ? "rounded-none"
+                          : "rounded-control"
+                  : "rounded-control";
               return (
                 <button
                   key={dayIndex}
                   type="button"
                   role="gridcell"
                   id={dayId(day)}
-                  aria-selected={isSelected}
+                  /* preview is visual only — announce selection for committed state */
+                  aria-selected={isSelected || (inBand && range.to !== null)}
                   aria-disabled={dayDisabled || undefined}
                   tabIndex={sameDay(day, focusDate) ? 0 : -1}
+                  onMouseEnter={mode === "range" && !dayDisabled ? () => setHovered(day) : undefined}
                   onClick={() => {
                     shouldFocus.current = true;
                     setFocusDate(day);
                     select(day);
                   }}
-                  className={`flex size-8 items-center justify-center rounded-control text-caption tabular-nums transition-colors duration-150 ${
+                  className={`flex size-8 items-center justify-center text-caption tabular-nums transition-colors duration-150 ${shape} ${
                     isSelected
                       ? "bg-ink font-medium text-canvas"
                       : dayDisabled
-                        ? "cursor-default text-ink-3 opacity-40"
-                        : "text-ink hover:bg-hover"
+                        ? "cursor-default text-ink-3 opacity-40" /* stays muted even inside a band */
+                        : inBand || isPreviewEnd
+                          ? "bg-accent-tint text-ink"
+                          : "text-ink hover:bg-hover"
                   } ${isToday && !isSelected ? "font-medium shadow-hairline" : ""}`}
                   style={isSelected ? { boxShadow: "var(--highlight-raised)" } : undefined}
                 >
