@@ -75,6 +75,8 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `FileDropzone` | Drag-and-drop upload with browse fallback: accept/size validation with announced rejections, file chips with remove | — |
 | `theme` | Runtime theming utilities: `setAccent(color)` re-accents the system live (AA-fitted light+dark variants), `deriveAccentVariants` for build-time use | — |
 | `Accordion` | Stacked disclosure rows on the Disclosure primitive — single-open or multiple, inert closed content | — |
+| `Slider` | Native range input drawn with tokens (`.primitive-slider`): platform keyboard/touch, optional value readout, Field-ready | — |
+| `OTPInput` | One-time-code cells on the quiet field style: typing/paste/autofill distribute, backspace walks, Field-ready | — |
 
 ## Theming
 

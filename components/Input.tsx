@@ -37,17 +37,20 @@ export function Field({
 }) {
   const id = useId();
   const controlId = `${id}-control`;
+  const labelId = `${id}-label`;
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   const control = isValidElement(children)
     ? cloneElement(children as ReactElement<Record<string, unknown>>, {
         id: controlId,
+        /* names grouped controls (OTP cells) and comboboxes, not just inputs */
+        "aria-labelledby": labelId,
         ...(describedBy ? { "aria-describedby": describedBy } : {}),
         ...(error ? { invalid: true } : {}),
       })
     : children;
   return (
     <div className={`flex w-full flex-col gap-1.5 ${className}`}>
-      <label htmlFor={controlId} className="text-caption font-medium text-ink">
+      <label id={labelId} htmlFor={controlId} className="text-caption font-medium text-ink">
         {label}
         {required && (
           <span aria-hidden className="text-red">

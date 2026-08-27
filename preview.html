@@ -158,6 +158,12 @@
 .primitive-field { box-shadow: var(--shadow-field); transition: border-color 150ms; }
 .primitive-field:focus-within { border-color: var(--line-strong); }
 .primitive-field[data-invalid="true"], .primitive-field[data-invalid="true"]:focus-within { border-color: var(--red); }
+.primitive-slider { appearance: none; height: 24px; background: transparent; }
+.primitive-slider::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--slider-fill, 0%), var(--inset) var(--slider-fill, 0%)); box-shadow: 0 0 0 1px var(--line); }
+.primitive-slider::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; margin-top: -5px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn); }
+.primitive-slider::-moz-range-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--slider-fill, 0%), var(--inset) var(--slider-fill, 0%)); box-shadow: 0 0 0 1px var(--line); }
+.primitive-slider::-moz-range-thumb { width: 13px; height: 13px; border: none; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn); }
+input[type="range"].primitive-slider:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .shadow-hairline { box-shadow: 0 0 0 1px var(--line); }
 @keyframes progress-slide { from { transform: translateX(-110%); } to { transform: translateX(440%); } }
 @media (prefers-reduced-motion: reduce) { .progress-indeterminate-bar { width: 100% !important; } }
@@ -4707,14 +4713,17 @@ function Field({
 }) {
   const id = useId();
   const controlId = `${id}-control`;
+  const labelId = `${id}-label`;
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : void 0;
   const control = isValidElement(children) ? cloneElement(children, {
     id: controlId,
+    /* names grouped controls (OTP cells) and comboboxes, not just inputs */
+    "aria-labelledby": labelId,
     ...describedBy ? { "aria-describedby": describedBy } : {},
     ...error ? { invalid: true } : {}
   }) : children;
   return <div className={`flex w-full flex-col gap-1.5 ${className}`}>
-      <label htmlFor={controlId} className="text-caption font-medium text-ink">
+      <label id={labelId} htmlFor={controlId} className="text-caption font-medium text-ink">
         {label}
         {required && <span aria-hidden className="text-red">
             {" "}
@@ -6049,6 +6058,129 @@ function Accordion({
     </div>;
 }
 
+/* ═══════════ Slider ═══════════ */
+function Slider({
+  min = 0,
+  max = 100,
+  step = 1,
+  value,
+  defaultValue,
+  onChange,
+  label,
+  showValue = false,
+  disabled = false,
+  className = "",
+  id,
+  "aria-describedby": describedBy
+} = {}) {
+  const [internal, setInternal] = useState(defaultValue ?? min);
+  const current = Math.min(max, Math.max(min, value !== void 0 ? value : internal));
+  const percent = max === min ? 0 : (current - min) / (max - min) * 100;
+  return <span className={`flex w-full items-center gap-3 ${className}`}>
+      <input
+    type="range"
+    id={id}
+    min={min}
+    max={max}
+    step={step}
+    value={current}
+    disabled={disabled}
+    aria-label={label}
+    aria-describedby={describedBy}
+    onChange={(event) => {
+      const next = Number(event.target.value);
+      if (value === void 0) setInternal(next);
+      onChange?.(next);
+    }}
+    className="primitive-slider w-full min-w-0 cursor-pointer disabled:cursor-default disabled:opacity-60"
+    style={{ "--slider-fill": `${percent}%` }}
+  />
+      {showValue && <span className="min-w-9 shrink-0 text-right text-caption tabular-nums text-ink-2">
+          {current}
+        </span>}
+    </span>;
+}
+
+/* ═══════════ OTPInput ═══════════ */
+function OTPInput({
+  length = 6,
+  value,
+  defaultValue = "",
+  onChange,
+  onComplete,
+  invalid = false,
+  disabled = false,
+  className = "",
+  id,
+  label,
+  "aria-describedby": describedBy,
+  "aria-labelledby": labelledBy
+} = {}) {
+  const [internal, setInternal] = useState(defaultValue.slice(0, length));
+  const code = (value !== void 0 ? value : internal).slice(0, length);
+  const refs = useRef([]);
+  const commit = (next) => {
+    if (value === void 0) setInternal(next);
+    onChange?.(next);
+    if (next.length === length) onComplete?.(next);
+  };
+  const insertAt = (index, raw) => {
+    const digits = raw.replace(/\D/g, "");
+    if (!digits) return;
+    const next = (code.slice(0, index) + digits + code.slice(index + digits.length)).slice(0, length);
+    if (next === code) return;
+    commit(next);
+    refs.current[Math.min(index + digits.length, length - 1)]?.focus();
+  };
+  const onKeyDown = (index, event) => {
+    if (event.key === "Backspace") {
+      event.preventDefault();
+      if (code[index]) {
+        commit(code.slice(0, index) + code.slice(index + 1));
+      } else if (index > 0) {
+        commit(code.slice(0, index - 1) + code.slice(index));
+        refs.current[index - 1]?.focus();
+      }
+    } else if (event.key === "ArrowLeft" && index > 0) {
+      event.preventDefault();
+      refs.current[index - 1]?.focus();
+    } else if (event.key === "ArrowRight" && index < length - 1) {
+      event.preventDefault();
+      refs.current[index + 1]?.focus();
+    }
+  };
+  return <div
+    role="group"
+    aria-label={labelledBy ? void 0 : label}
+    aria-labelledby={labelledBy}
+    aria-describedby={describedBy}
+    className={`flex gap-2 ${className}`}
+  >
+      {Array.from({ length }).map((_, index) => <input
+    key={index}
+    ref={(el) => {
+      refs.current[index] = el;
+    }}
+    id={index === 0 ? id : void 0}
+    value={code[index] ?? ""}
+    inputMode="numeric"
+    autoComplete={index === 0 ? "one-time-code" : "off"}
+    aria-label={`Digit ${index + 1} of ${length}`}
+    aria-invalid={invalid || void 0}
+    data-invalid={invalid || void 0}
+    disabled={disabled}
+    onChange={(event) => insertAt(index, event.target.value)}
+    onKeyDown={(event) => onKeyDown(index, event)}
+    onFocus={(event) => event.target.select()}
+    onPaste={(event) => {
+      event.preventDefault();
+      insertAt(index, event.clipboardData.getData("text"));
+    }}
+    className="primitive-field size-10 min-w-0 rounded-control border border-line bg-field text-center text-title text-ink outline-none disabled:opacity-60"
+  />)}
+    </div>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -6123,6 +6255,26 @@ function ToastDemo() {
       <Button variant="primary" onClick={() => toast({ tone: "success", title: "Flavor saved", description: "Roasted Pistachio is live on the menu." })}>Success</Button>
       <Button variant="secondary" onClick={() => toast({ tone: "error", title: "Restock failed", description: "Supplier API timed out — try again." })}>Error</Button>
       <Button variant="secondary" onClick={() => toast({ title: "Batch queued for Friday", action: { label: "Undo", onClick: () => {} } })}>With action</Button>
+    </div>
+  );
+}
+function SliderOtpDemo() {
+  const toast = useToast();
+  const [churn, setChurn] = useState(60);
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Field label="Churn speed" hint="Percent of maximum drum speed.">
+        <Slider value={churn} onChange={setChurn} showValue />
+      </Field>
+      <Field label="Batch sweetness">
+        <Slider defaultValue={35} disabled label="Batch sweetness (locked)" />
+      </Field>
+      <Field label="Supplier verification code" hint="Sent to the account phone.">
+        <OTPInput onComplete={(codeValue) => toast({ tone: "success", title: "Code accepted", description: `Verified ${codeValue}.` })} />
+      </Field>
+      <Field label="Locked code" error="This code expired — request a new one.">
+        <OTPInput length={4} defaultValue="42" />
+      </Field>
     </div>
   );
 }
@@ -6406,6 +6558,7 @@ const DOC_NAV = [
     { id: "select", title: "Select" },
     { id: "switch", title: "Switch" },
     { id: "filedropzone", title: "FileDropzone" },
+    { id: "slider-otp", title: "Slider & OTP" },
   ]},
   { label: "Structure", items: [
     { id: "accordion", title: "Accordion" },
@@ -6557,7 +6710,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 33 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 35 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -6727,6 +6880,9 @@ function App() {
             <GalleryCard label="Single file" wide>
               <FileDropzone multiple={false} label="Drop the batch sheet" hint="One file replaces the last" />
             </GalleryCard>
+          </Section>
+          <Section id="slider-otp" title="Slider & OTP" note="Two more Field-ready controls — Slider is a native range drawn with tokens (platform keyboard and touch for free); OTPInput distributes typing, paste, and one-time-code autofill across quiet field cells.">
+            <GalleryCard label="Field-wrapped" wide><SliderOtpDemo /></GalleryCard>
           </Section>
           <Section id="accordion" title="Accordion" note="Stacked disclosure rows on Disclosure — single-open by default, closed content inert, house easing throughout.">
             <GalleryCard label="Single open" wide><Accordion defaultOpen={["restock"]} /></GalleryCard>
