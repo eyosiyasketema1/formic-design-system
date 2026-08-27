@@ -72,6 +72,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `Pagination` | Numbered pages with sibling windows + gap ellipses, `aria-current` on the active page, edge-disabled prev/next | — |
 | `Breadcrumbs` | Path trail: middle collapses into a DropdownMenu, current page carries `aria-current`, links or SPA callbacks | — |
 | `Markdown` | Dependency-free renderer for AI output: headings, emphasis, safe links, nested lists, quotes, scrollable tables, fenced code via CodeBlock | — |
+| `FileDropzone` | Drag-and-drop upload with browse fallback: accept/size validation with announced rejections, file chips with remove | — |
 
 ## Theming
 

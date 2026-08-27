@@ -645,6 +645,7 @@ const ICON_PATHS = {  /* authentic Tabler outline path data (@tabler/icons, MIT)
   alert: (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 8v4" /><path d="M12 16h.01" /></>),
   info: (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 9h.01" /><path d="M11 12h1v4h1" /></>),
   "chevron-left": <path d="M15 6l-6 6l6 6" />,
+  upload: (<><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 9l5 -5l5 5" /><path d="M12 4l0 12" /></>),
 };
 function Icon({ name, size = 14, strokeWidth = 2.2, className, style }) {
   return (
@@ -5767,6 +5768,151 @@ function Markdown({
     </div>;
 }
 
+/* ═══════════ FileDropzone ═══════════ */
+const FD_formatSize = (bytes) => bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : bytes >= 1024 ? `${Math.round(bytes / 1024)} KB` : `${bytes} B`;
+function FD_matchesAccept(file, accept) {
+  if (!accept) return true;
+  const name = file.name.toLowerCase();
+  const mime = file.type.toLowerCase();
+  return accept.split(",").map((rule) => rule.trim().toLowerCase()).filter(Boolean).some((rule) => {
+    if (rule.startsWith(".")) return name.endsWith(rule);
+    if (rule.endsWith("/*")) return mime.startsWith(rule.slice(0, -1));
+    return mime === rule;
+  });
+}
+function FileDropzone({
+  accept,
+  maxSize,
+  multiple = true,
+  label = "Drop files here or browse",
+  hint,
+  defaultFiles = [],
+  onChange,
+  className = ""
+} = {}) {
+  const inputRef = useRef(null);
+  const idRef = useRef(0);
+  const dragDepth = useRef(0);
+  const [files, setFiles] = useState(defaultFiles);
+  const [dragging, setDragging] = useState(false);
+  const [error, setError] = useState("");
+  const [announce, setAnnounce] = useState("");
+  const commit = (next, message) => {
+    setFiles(next);
+    setAnnounce(message);
+    onChange?.(next);
+  };
+  const add = (incoming) => {
+    const rejected = [];
+    let accepted = [];
+    for (const file of incoming) {
+      if (!FD_matchesAccept(file, accept)) {
+        rejected.push(`${file.name} isn't an accepted type`);
+        continue;
+      }
+      if (maxSize !== void 0 && file.size > maxSize) {
+        rejected.push(`${file.name} is over ${FD_formatSize(maxSize)}`);
+        continue;
+      }
+      accepted.push({
+        /* "picked-" namespace keeps generated ids clear of consumer defaultFiles ids */
+        id: `picked-${idRef.current += 1}`,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        file
+      });
+    }
+    if (!multiple) accepted = accepted.slice(0, 1);
+    setError(rejected.join(". "));
+    if (accepted.length > 0) {
+      const next = multiple ? [...files, ...accepted] : accepted;
+      commit(
+        next,
+        `${accepted.length} file${accepted.length > 1 ? "s" : ""} added, ${next.length} attached`
+      );
+    }
+  };
+  return <div className={`w-full ${className}`}>
+      <button
+    type="button"
+    onClick={() => inputRef.current?.click()}
+    onDragEnter={(event) => {
+      event.preventDefault();
+      dragDepth.current += 1;
+      setDragging(true);
+    }}
+    onDragOver={(event) => event.preventDefault()}
+    onDragLeave={() => {
+      dragDepth.current = Math.max(0, dragDepth.current - 1);
+      if (dragDepth.current === 0) setDragging(false);
+    }}
+    onDrop={(event) => {
+      event.preventDefault();
+      dragDepth.current = 0;
+      setDragging(false);
+      add(Array.from(event.dataTransfer.files));
+    }}
+    className={`flex w-full flex-col items-center justify-center gap-1.5 rounded-md border border-dashed px-6 py-7 transition-colors duration-150 ${dragging ? "border-accent bg-accent-tint" : "border-line-strong bg-field hover:bg-hover"}`}
+  >
+        <Icon
+    name="upload"
+    size={18}
+    strokeWidth={1.8}
+    className={dragging ? "text-accent" : "text-ink-3"}
+  />
+        <span className="text-caption font-medium text-ink">{label}</span>
+        {hint && <span className="text-small text-ink-3">{hint}</span>}
+      </button>
+      {
+    /* the zone button is the accessible control; the input is plumbing */
+  }
+      <input
+    ref={inputRef}
+    type="file"
+    accept={accept}
+    multiple={multiple}
+    tabIndex={-1}
+    aria-hidden
+    className="hidden"
+    onChange={(event) => {
+      add(Array.from(event.target.files ?? []));
+      event.target.value = "";
+    }}
+  />
+      {
+    /* always mounted so rejections and confirmations actually announce */
+  }
+      <span role="status" aria-live="polite" className="block">
+        <span className="sr-only">{announce}</span>
+        {error && <span className="mt-1.5 block text-small text-red">{error}</span>}
+      </span>
+      {files.length > 0 && <ul className="mt-2 flex flex-col gap-1.5">
+          {files.map((file) => <li
+    key={file.id}
+    className="flex h-9 items-center gap-2 rounded-control bg-surface px-2.5 shadow-hairline"
+    style={{ animation: "fade-up 250ms var(--ease-out-quint) both" }}
+  >
+              <Icon name="file" size={14} strokeWidth={2} className="shrink-0 text-ink-3" />
+              <span className="min-w-0 flex-1 truncate text-caption text-ink">{file.name}</span>
+              <span className="shrink-0 font-mono text-micro text-ink-3">
+                {FD_formatSize(file.size)}
+              </span>
+              <IconButton
+    label={`Remove ${file.name}`}
+    onClick={() => commit(
+      files.filter((entry) => entry.id !== file.id),
+      `${file.name} removed, ${files.length - 1} attached`
+    )}
+    className="text-ink-3 hover:bg-hover hover:text-ink"
+  >
+                <Icon name="close" size={12} strokeWidth={2.2} />
+              </IconButton>
+            </li>)}
+        </ul>}
+    </div>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -5988,6 +6134,7 @@ const DOC_NAV = [
     { id: "input", title: "Field & Input" },
     { id: "select", title: "Select" },
     { id: "switch", title: "Switch" },
+    { id: "filedropzone", title: "FileDropzone" },
   ]},
   { label: "Overlays", items: [
     { id: "modal", title: "Modal" },
@@ -6135,7 +6282,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 30 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 31 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -6273,6 +6420,18 @@ function App() {
           </Section>
           <Section id="switch" title="Switch" note="The system toggle, promoted from RecordsTable's private switch — role=switch, two sizes, Field-compatible. RecordsTable now consumes the same primitive.">
             <GalleryCard label="Field · sizes · disabled" wide><SwitchDemo /></GalleryCard>
+          </Section>
+          <Section id="filedropzone" title="FileDropzone" note="Drag files onto the zone or click to browse — accept / size validation announces rejections, accepted files become chips with remove. Try dropping anything.">
+            <GalleryCard label="Images · 5 MB cap" wide>
+              <FileDropzone accept="image/*,.pdf" maxSize={5242880} hint="Images or PDF · up to 5 MB"
+                defaultFiles={[
+                  { id: "demo-1", name: "flavor-board-photo.jpg", size: 482304, type: "image/jpeg" },
+                  { id: "demo-2", name: "supplier-price-list.pdf", size: 1284523, type: "application/pdf" },
+                ]} />
+            </GalleryCard>
+            <GalleryCard label="Single file" wide>
+              <FileDropzone multiple={false} label="Drop the batch sheet" hint="One file replaces the last" />
+            </GalleryCard>
           </Section>
           <Section id="modal" title="Modal" note="Portal dialog on the system scrim — focus trapped and restored, page scroll locked, Escape / backdrop dismiss. Footer takes the system Buttons.">
             <GalleryCard label="Form · confirm" wide><ModalDemo /></GalleryCard>

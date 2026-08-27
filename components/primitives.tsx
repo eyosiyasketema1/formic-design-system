@@ -7,7 +7,7 @@ import {
   IconCopy, IconInfoCircle, IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion, IconMicrophone,
   IconMoodSmile, IconPaperclip, IconPencil, IconPlus, IconRefresh, IconScissors,
   IconSearch, IconSettings, IconSparkles, IconStack2, IconTypography,
-  IconUserPlus, IconWorld, IconX, type Icon as TablerIcon,
+  IconUpload, IconUserPlus, IconWorld, IconX, type Icon as TablerIcon,
 } from "@tabler/icons-react";
 import { useStream } from "./hooks";
 /* ─────────────────────────────────────────────────────────
@@ -65,7 +65,7 @@ export type IconName =
   | "lines" | "external"
   | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar"
   | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right"
-  | "copy" | "circle-check" | "alert" | "info" | "chevron-left";
+  | "copy" | "circle-check" | "alert" | "info" | "chevron-left" | "upload";
 const ICONS: Record<IconName, TablerIcon> = {
   chevron: IconChevronDown,
   check: IconCheck,
@@ -101,6 +101,7 @@ const ICONS: Record<IconName, TablerIcon> = {
   alert: IconAlertCircle,
   info: IconInfoCircle,
   "chevron-left": IconChevronLeft,
+  upload: IconUpload,
 };
 export function Icon({
   name,
