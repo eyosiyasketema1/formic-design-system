@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import { createPortal } from "react-dom";
 import {
   IconAlertCircle, IconAlignLeft, IconArrowUp, IconArrowUpRight, IconChartBar, IconCheck, IconCircleCheck,
-  IconChevronDown, IconChevronRight, IconClock, IconDots, IconFileText, IconHome,
+  IconChevronDown, IconChevronLeft, IconChevronRight, IconClock, IconDots, IconFileText, IconHome,
   IconCopy, IconInfoCircle, IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion, IconMicrophone,
   IconMoodSmile, IconPaperclip, IconPencil, IconPlus, IconRefresh, IconScissors,
   IconSearch, IconSettings, IconSparkles, IconStack2, IconTypography,
@@ -65,7 +65,7 @@ export type IconName =
   | "lines" | "external"
   | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar"
   | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right"
-  | "copy" | "circle-check" | "alert" | "info";
+  | "copy" | "circle-check" | "alert" | "info" | "chevron-left";
 const ICONS: Record<IconName, TablerIcon> = {
   chevron: IconChevronDown,
   check: IconCheck,
@@ -100,6 +100,7 @@ const ICONS: Record<IconName, TablerIcon> = {
   "circle-check": IconCircleCheck,
   alert: IconAlertCircle,
   info: IconInfoCircle,
+  "chevron-left": IconChevronLeft,
 };
 export function Icon({
   name,

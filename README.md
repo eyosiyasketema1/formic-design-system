@@ -69,6 +69,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `DropdownMenu` | Standard action menu around any trigger: keyboard-driven, dividers, disabled + destructive items, start/end align | — |
 | `Alert` | Inline callout on the system tints with optional dismiss — copy stays ink so every palette keeps AA | `neutral`, `info`, `success`, `warning`, `error` |
 | `Tabs` | APG tablist with roving tabindex, arrow-key activation, and a sliding underline; scrolls on narrow viewports | — |
+| `Pagination` | Numbered pages with sibling windows + gap ellipses, `aria-current` on the active page, edge-disabled prev/next | — |
 
 ## Theming
 

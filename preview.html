@@ -644,6 +644,7 @@ const ICON_PATHS = {  /* authentic Tabler outline path data (@tabler/icons, MIT)
   "circle-check": (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></>),
   alert: (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 8v4" /><path d="M12 16h.01" /></>),
   info: (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 9h.01" /><path d="M11 12h1v4h1" /></>),
+  "chevron-left": <path d="M15 6l-6 6l6 6" />,
 };
 function Icon({ name, size = 14, strokeWidth = 2.2, className, style }) {
   return (
@@ -5373,6 +5374,84 @@ function Tabs({
     </div>;
 }
 
+/* ═══════════ Pagination ═══════════ */
+function PG_pageRange(page, count, siblings) {
+  const visible = siblings * 2 + 5;
+  if (count <= visible) return Array.from({ length: count }, (_, i) => i + 1);
+  const start = Math.max(2, Math.min(page - siblings, count - (visible - 3)));
+  const end = Math.min(count - 1, Math.max(page + siblings, visible - 2));
+  const range = [1];
+  if (start > 3) range.push("gap");
+  else if (start === 3) range.push(2);
+  for (let i = start; i <= end; i += 1) range.push(i);
+  if (end < count - 2) range.push("gap");
+  else if (end === count - 2) range.push(count - 1);
+  range.push(count);
+  return range;
+}
+function Pagination({
+  pageCount = 12,
+  page,
+  defaultPage = 1,
+  onChange,
+  siblingCount = 1,
+  className = ""
+} = {}) {
+  const [internal, setInternal] = useState(defaultPage);
+  const current = Math.min(Math.max(page !== void 0 ? page : internal, 1), pageCount);
+  const go = (next) => {
+    const clamped = Math.min(Math.max(next, 1), pageCount);
+    if (clamped === current) return;
+    if (page === void 0) setInternal(clamped);
+    onChange?.(clamped);
+  };
+  const arrow = "flex size-8 shrink-0 items-center justify-center rounded-control text-ink-2 transition-colors duration-150 enabled:hover:bg-hover enabled:hover:text-ink disabled:opacity-40";
+  return <nav aria-label="Pagination" className={`w-full ${className}`}>
+      <ul className="flex flex-wrap items-center gap-1">
+        <li>
+          <button
+    type="button"
+    aria-label="Previous page"
+    disabled={current <= 1}
+    onClick={() => go(current - 1)}
+    className={arrow}
+  >
+            <Icon name="chevron-left" size={15} strokeWidth={2} />
+          </button>
+        </li>
+        {PG_pageRange(current, pageCount, siblingCount).map(
+    (entry, index) => entry === "gap" ? <li key={`gap-${index}`} aria-hidden>
+              <span className="flex size-8 items-end justify-center pb-2 text-ink-3">
+                <Icon name="ellipsis" size={13} strokeWidth={2} />
+              </span>
+            </li> : <li key={entry}>
+              <button
+      type="button"
+      aria-label={`Page ${entry}`}
+      aria-current={entry === current ? "page" : void 0}
+      onClick={() => go(entry)}
+      className={`flex h-8 min-w-8 shrink-0 items-center justify-center rounded-control px-1 text-caption font-medium tabular-nums transition-colors duration-150 ${entry === current ? "bg-ink text-canvas" : "text-ink-2 hover:bg-hover hover:text-ink"}`}
+      style={entry === current ? { boxShadow: "var(--highlight-raised)" } : void 0}
+    >
+                {entry}
+              </button>
+            </li>
+  )}
+        <li>
+          <button
+    type="button"
+    aria-label="Next page"
+    disabled={current >= pageCount}
+    onClick={() => go(current + 1)}
+    className={arrow}
+  >
+            <Icon name="chevron-right" size={15} strokeWidth={2} />
+          </button>
+        </li>
+      </ul>
+    </nav>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -5612,6 +5691,7 @@ const DOC_NAV = [
   ]},
   { label: "Navigation", items: [
     { id: "tabs", title: "Tabs" },
+    { id: "pagination", title: "Pagination" },
     { id: "sidebarnav", title: "SidebarNav" },
     { id: "searchlist", title: "SearchList" },
   ]},
@@ -5724,7 +5804,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 27 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 28 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -5781,7 +5861,7 @@ function App() {
                 <SendButton enabled />
                 <SendButton enabled={false} />
                 <span className="flex flex-wrap items-center gap-1 text-ink-3">
-                  <Icon name="chevron" /><Icon name="check" /><Icon name="retry" /><Icon name="arrow-up" /><Icon name="plus" /><Icon name="clock" /><Icon name="ellipsis" /><Icon name="mic" /><Icon name="file" /><Icon name="clip" /><Icon name="chart" /><Icon name="layers" /><Icon name="globe" /><Icon name="lines" /><Icon name="external" /><Icon name="edit" /><Icon name="home" /><Icon name="gear" /><Icon name="user-add" /><Icon name="sign-out" /><Icon name="sidebar" /><Icon name="message-question" /><Icon name="sparkles" /><Icon name="scissors" /><Icon name="mood-smile" /><Icon name="typography" /><Icon name="chevron-right" />
+                  <Icon name="chevron" /><Icon name="check" /><Icon name="retry" /><Icon name="arrow-up" /><Icon name="plus" /><Icon name="clock" /><Icon name="ellipsis" /><Icon name="mic" /><Icon name="file" /><Icon name="clip" /><Icon name="chart" /><Icon name="layers" /><Icon name="globe" /><Icon name="lines" /><Icon name="external" /><Icon name="edit" /><Icon name="home" /><Icon name="gear" /><Icon name="user-add" /><Icon name="sign-out" /><Icon name="sidebar" /><Icon name="message-question" /><Icon name="sparkles" /><Icon name="scissors" /><Icon name="mood-smile" /><Icon name="typography" /><Icon name="chevron-right" /><Icon name="chevron-left" /><Icon name="copy" /><Icon name="circle-check" /><Icon name="alert" /><Icon name="info" />
                 </span>
               </div>
             </GalleryCard>
@@ -5957,6 +6037,10 @@ function App() {
           </Section>
           <Section id="tabs" title="Tabs" note="APG tablist — arrow keys with automatic activation, Home/End, and an underline that slides with the house easing. The list scrolls on narrow viewports.">
             <GalleryCard label="Default" wide><Tabs /></GalleryCard>
+          </Section>
+          <Section id="pagination" title="Pagination" note="Numbered pages with sibling windows and gap ellipses — first and last stay reachable, active page carries aria-current, edges disable prev / next.">
+            <GalleryCard label="Twelve pages" wide><Pagination defaultPage={5} /></GalleryCard>
+            <GalleryCard label="Few pages" wide><Pagination pageCount={4} /></GalleryCard>
           </Section>
           <Section id="sidebarnav" title="SidebarNav" note="Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.">
             <div className="flex"><SidebarNav /></div>
