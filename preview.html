@@ -602,7 +602,7 @@ tfoot .records-sticky-cell { z-index: 5; }
 <body>
 <div id="root"></div>
 <script type="text/babel" data-presets="react">
-const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useId, cloneElement, isValidElement, createContext, useContext } = React;
+const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useId, cloneElement, isValidElement, createContext, useContext, Fragment } = React;
 
 /* ═══════════ Primitives ═══════════ */
 /* Icons: real projects use @tabler/icons-react through the Icon wrapper in
@@ -5452,6 +5452,77 @@ function Pagination({
     </nav>;
 }
 
+/* ═══════════ Breadcrumbs ═══════════ */
+const BC_DEFAULT_CRUMBS = [
+  { key: "home", label: "Home" },
+  { key: "flavors", label: "Flavors" },
+  { key: "seasonal", label: "Seasonal" },
+  { key: "pistachio", label: "Roasted Pistachio" },
+  { key: "batch", label: "Batch 42" }
+];
+const BC_linkClass = "flex h-6 max-w-40 items-center rounded-sm px-1 text-caption text-ink-3 transition-colors duration-150 hover:bg-hover hover:text-ink";
+function BC_CrumbLink({ crumb, onNavigate }) {
+  if (crumb.href) {
+    return <a href={crumb.href} onClick={() => onNavigate?.(crumb.key)} className={BC_linkClass}>
+        <span className="min-w-0 truncate">{crumb.label}</span>
+      </a>;
+  }
+  return <button type="button" onClick={() => onNavigate?.(crumb.key)} className={BC_linkClass}>
+      <span className="min-w-0 truncate">{crumb.label}</span>
+    </button>;
+}
+function Breadcrumbs({
+  items = BC_DEFAULT_CRUMBS,
+  maxVisible = 4,
+  onNavigate,
+  className = ""
+} = {}) {
+  const limit = Math.max(3, maxVisible);
+  const collapsed = items.length > limit;
+  const hidden = collapsed ? items.slice(1, items.length - (limit - 2)) : [];
+  const trail = collapsed ? [items[0], ...items.slice(items.length - (limit - 2))] : items;
+  const separator = <Icon name="chevron-right" size={13} strokeWidth={2} className="shrink-0 text-ink-3" />;
+  return <nav aria-label="Breadcrumb" className={`w-full ${className}`}>
+      <ol className="flex flex-wrap items-center gap-0.5">
+        {trail.map((crumb, index) => {
+    const isLast = index === trail.length - 1;
+    return <Fragment key={crumb.key}>
+              {collapsed && index === 1 && <li className="flex items-center gap-0.5">
+                  <DropdownMenu
+      menuWidth={192}
+      items={hidden.map((entry) => ({ key: entry.key, label: entry.label }))}
+      onSelect={(key) => {
+        onNavigate?.(key);
+        const target = hidden.find((entry) => entry.key === key);
+        if (target?.href) window.location.assign(target.href);
+      }}
+    >
+                    <IconButton
+      label={`Show ${hidden.length} hidden levels`}
+      className="text-ink-3 hover:bg-hover hover:text-ink"
+    >
+                      <Icon name="ellipsis" size={13} strokeWidth={2} />
+                    </IconButton>
+                  </DropdownMenu>
+                  <span aria-hidden>{separator}</span>
+                </li>}
+              <li className="flex min-w-0 items-center gap-0.5">
+              {isLast ? <span
+      aria-current="page"
+      className="flex h-6 max-w-48 items-center px-1 text-caption font-medium text-ink"
+    >
+                  <span className="min-w-0 truncate">{crumb.label}</span>
+                </span> : <>
+                  <BC_CrumbLink crumb={crumb} onNavigate={onNavigate} />
+                  <span aria-hidden>{separator}</span>
+                </>}
+              </li>
+            </Fragment>;
+  })}
+      </ol>
+    </nav>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -5468,6 +5539,20 @@ function GalleryCard({ label, wide, children }) {
       <p className="mb-3 font-mono text-micro tracking-wide text-ink-3 uppercase">{label}</p>
       {children}
     </Card>
+  );
+}
+function BreadcrumbsDemo() {
+  const toast = useToast();
+  const go = (key) => toast({ title: `Navigate: ${key}` });
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <Breadcrumbs onNavigate={go} />
+      <Breadcrumbs onNavigate={go} items={[
+        { key: "home", label: "Home" },
+        { key: "suppliers", label: "Suppliers" },
+        { key: "maple", label: "Maple Orbit" },
+      ]} />
+    </div>
   );
 }
 function AlertDemo() {
@@ -5692,6 +5777,7 @@ const DOC_NAV = [
   { label: "Navigation", items: [
     { id: "tabs", title: "Tabs" },
     { id: "pagination", title: "Pagination" },
+    { id: "breadcrumbs", title: "Breadcrumbs" },
     { id: "sidebarnav", title: "SidebarNav" },
     { id: "searchlist", title: "SearchList" },
   ]},
@@ -5804,7 +5890,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 28 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 29 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -6041,6 +6127,9 @@ function App() {
           <Section id="pagination" title="Pagination" note="Numbered pages with sibling windows and gap ellipses — first and last stay reachable, active page carries aria-current, edges disable prev / next.">
             <GalleryCard label="Twelve pages" wide><Pagination defaultPage={5} /></GalleryCard>
             <GalleryCard label="Few pages" wide><Pagination pageCount={4} /></GalleryCard>
+          </Section>
+          <Section id="breadcrumbs" title="Breadcrumbs" note="Path trail — long trails collapse their middle into a DropdownMenu, the current page carries aria-current, labels truncate instead of breaking the row. Navigating fires a toast here.">
+            <GalleryCard label="Collapsed · short" wide><BreadcrumbsDemo /></GalleryCard>
           </Section>
           <Section id="sidebarnav" title="SidebarNav" note="Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.">
             <div className="flex"><SidebarNav /></div>
