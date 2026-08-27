@@ -188,6 +188,10 @@ textarea:focus-visible {
 .primitive-field:focus-within {
   border-color: var(--line-strong);
 }
+.primitive-field[data-invalid="true"],
+.primitive-field[data-invalid="true"]:focus-within {
+  border-color: var(--red);
+}
 .shadow-hairline { box-shadow: 0 0 0 1px var(--line); }
 .source-avatar { object-fit: cover; }
 .animated-underline {

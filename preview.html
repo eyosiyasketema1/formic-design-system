@@ -154,6 +154,7 @@
 .primitive-icon-button { display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; }
 .primitive-field { box-shadow: var(--shadow-field); transition: border-color 150ms; }
 .primitive-field:focus-within { border-color: var(--line-strong); }
+.primitive-field[data-invalid="true"], .primitive-field[data-invalid="true"]:focus-within { border-color: var(--red); }
 .shadow-hairline { box-shadow: 0 0 0 1px var(--line); }
 .source-avatar { object-fit: cover; }
 .animated-underline {
@@ -598,7 +599,7 @@ tfoot .records-sticky-cell { z-index: 5; }
 <body>
 <div id="root"></div>
 <script type="text/babel" data-presets="react">
-const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } = React;
+const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useId, cloneElement, isValidElement } = React;
 
 /* ═══════════ Primitives ═══════════ */
 /* Icons: real projects use @tabler/icons-react through the Icon wrapper in
@@ -4567,6 +4568,88 @@ function CodeBlock({
     </div>;
 }
 
+/* ═══════════ Field · Input · Textarea ═══════════ */
+function Field({
+  label,
+  hint,
+  error,
+  required = false,
+  className = "",
+  children
+}) {
+  const id = useId();
+  const controlId = `${id}-control`;
+  const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : void 0;
+  const control = isValidElement(children) ? cloneElement(children, {
+    id: controlId,
+    ...describedBy ? { "aria-describedby": describedBy } : {},
+    ...error ? { invalid: true } : {}
+  }) : children;
+  return <div className={`flex w-full flex-col gap-1.5 ${className}`}>
+      <label htmlFor={controlId} className="text-caption font-medium text-ink">
+        {label}
+        {required && <span aria-hidden className="text-red">
+            {" "}
+            *
+          </span>}
+      </label>
+      {control}
+      {error ? <p id={`${id}-error`} role="alert" className="text-small text-red">
+          {error}
+        </p> : hint ? <p id={`${id}-hint`} className="text-small text-ink-3">
+          {hint}
+        </p> : null}
+    </div>;
+}
+const IN_INPUT_HEIGHTS = { sm: "h-8", md: "h-9" };
+function Input({
+  size = "md",
+  leadingIcon,
+  invalid = false,
+  className = "",
+  ...rest
+}) {
+  const innerRef = useRef(null);
+  return (
+    /* clicking anywhere on the field focuses the input — same
+       affordance as ChatComposer's wrapper */
+    <span
+      data-invalid={invalid || void 0}
+      onClick={() => innerRef.current?.focus()}
+      className={`primitive-field flex w-full cursor-text items-center gap-2 rounded-control border border-line bg-field px-3 ${IN_INPUT_HEIGHTS[size]} ${className}`}
+    >
+      {leadingIcon && <Icon name={leadingIcon} size={14} strokeWidth={2} className="shrink-0 text-ink-3" />}
+      <input
+      ref={innerRef}
+      aria-invalid={invalid || void 0}
+      className="min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-3"
+      {...rest}
+    />
+    </span>
+  );
+}
+function Textarea({
+  rows = 3,
+  invalid = false,
+  className = "",
+  ...rest
+}) {
+  const innerRef = useRef(null);
+  return <span
+    data-invalid={invalid || void 0}
+    onClick={() => innerRef.current?.focus()}
+    className={`primitive-field flex w-full cursor-text rounded-control border border-line bg-field px-3 py-2 ${className}`}
+  >
+      <textarea
+    ref={innerRef}
+    rows={rows}
+    aria-invalid={invalid || void 0}
+    className="min-w-0 flex-1 resize-none bg-transparent text-body leading-relaxed text-ink outline-none placeholder:text-ink-3"
+    {...rest}
+  />
+    </span>;
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -4667,6 +4750,9 @@ const DOC_NAV = [
   ]},
   { label: "Controls", items: [
     { id: "button", title: "Button" },
+  ]},
+  { label: "Forms", items: [
+    { id: "input", title: "Field & Input" },
   ]},
   { label: "Feedback", items: [
     { id: "loadingstate", title: "LoadingState" },
@@ -4803,7 +4889,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 20 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 21 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -4893,6 +4979,28 @@ function App() {
           </Section>
           <Section id="button" title="Button" note="Six variants × two sizes; disabled and loading states. Click the loader to try it.">
             <GalleryCard label="Variants · sizes · states" wide><ButtonDemo /></GalleryCard>
+          </Section>
+          <Section id="input" title="Field & Input" note="The form trio — Field owns label / hint / error and wires aria onto its control; Input and Textarea share the system's quiet field focus (border shift, no ring).">
+            <GalleryCard label="Default" wide>
+              <div className="flex flex-col gap-4">
+                <Field label="Flavor name" hint="Shown on the menu board.">
+                  <Input placeholder="e.g. Roasted pistachio" />
+                </Field>
+                <Field label="Search suppliers">
+                  <Input leadingIcon="search" placeholder="Search…" size="sm" />
+                </Field>
+              </div>
+            </GalleryCard>
+            <GalleryCard label="Error · textarea" wide>
+              <div className="flex flex-col gap-4">
+                <Field label="Batch size" required error="Must be between 1 and 12.">
+                  <Input defaultValue="40" inputMode="numeric" />
+                </Field>
+                <Field label="Tasting notes" hint="Optional — appears on the flavor page.">
+                  <Textarea placeholder="Buttery, lightly salted…" />
+                </Field>
+              </div>
+            </GalleryCard>
           </Section>
           <Section id="loadingstate" title="LoadingState" note="Pixel-grid loader with shimmer label and elapsed timer.">
             <GalleryCard label="Drive"><LoadingState variant="Drive" /></GalleryCard>

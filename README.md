@@ -62,6 +62,7 @@ Point the tool at this folder or repo and say: *"Use my AI Design System — fol
 | `SelectionActions` | Contextual AI bar beneath selected text: quick actions, free-text edits, streamed rewrite with keep/discard | — |
 | `ChatThread` | Conversation column: user bubbles + flat assistant replies, streamed final message (exports `MessageBubble`) | — |
 | `CodeBlock` | AI code output: dependency-free syntax highlighting on theme tokens, copy action, optional line numbers | `ts`, `js`, `py`, `json`, `bash`, `css`, `text` |
+| `Input` | Form trio (exports `Field`, `Textarea`): Field wires label/hint/error aria onto its control; quiet field focus | sizes `sm`, `md` |
 
 ## Theming
 
