@@ -155,6 +155,7 @@
 }
 .primitive-icon-button { display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; }
 .optical-text { text-box: trim-both cap alphabetic; }
+@supports not (text-box: trim-both cap alphabetic) { .optical-text { transform: translateY(0.026em); } }
 .corner-smooth { corner-shape: squircle; }
 .primitive-field { box-shadow: var(--shadow-field); transition: border-color 150ms; corner-shape: squircle; }
 .primitive-field:focus-within { border-color: var(--line-strong); }
@@ -1495,14 +1496,14 @@ function Button({
   onClick,
   ...rest
 }) {
-  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium leading-none optical-text corner-smooth
+  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium leading-none corner-smooth
     ${shape === "pill" ? "rounded-full" : "rounded-control"}
     transition-[background-color,color,box-shadow,opacity,transform] duration-150
     enabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-45
     ${BTN_SIZES[size]} ${BTN_VARIANTS[variant]} ${className}`;
   const content = <>
       {loading ? <Spinner /> : icon && <span aria-hidden className="shrink-0">{icon}</span>}
-      {children}
+      <span className="optical-text">{children}</span>
       {!loading && iconEnd && <span aria-hidden className="shrink-0">{iconEnd}</span>}
     </>;
   if (href !== void 0 && !disabled) {

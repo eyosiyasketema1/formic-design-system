@@ -186,6 +186,12 @@ textarea:focus-visible {
    into squircles — Figma-style corner smoothing. Browsers without
    support simply render the plain box. */
 .optical-text { text-box: trim-both cap alphabetic; }
+/* measured Questrial metrics: 158/1000em above caps vs 210 below the
+   baseline inside the line box — box-centered text sits 0.026em high.
+   Where text-box isn't supported, nudge by exactly that. */
+@supports not (text-box: trim-both cap alphabetic) {
+  .optical-text { transform: translateY(0.026em); }
+}
 .corner-smooth { corner-shape: squircle; }
 /* Field wrapper focus: the wrapper (not the inner input) carries the
    ring. Plain CSS so no utility-ordering can swallow it. */

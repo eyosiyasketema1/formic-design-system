@@ -101,9 +101,10 @@ export default function Button({
   style?: CSSProperties;
   onClick?: () => void;
 } & Record<string, unknown>) {
-  /* leading-none + .optical-text center the visible letters, not the
-     em box; .corner-smooth squircles the radius where supported */
-  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium leading-none optical-text corner-smooth
+  /* .corner-smooth squircles the radius where supported; the label span
+     below carries .optical-text (text-box needs a block container —
+     it is inert on the flex button itself) */
+  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium leading-none corner-smooth
     ${shape === "pill" ? "rounded-full" : "rounded-control"}
     transition-[background-color,color,box-shadow,opacity,transform] duration-150
     enabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-45
@@ -115,7 +116,7 @@ export default function Button({
       ) : (
         icon && <span aria-hidden className="shrink-0">{icon}</span>
       )}
-      {children}
+      <span className="optical-text">{children}</span>
       {!loading && iconEnd && <span aria-hidden className="shrink-0">{iconEnd}</span>}
     </>
   );
