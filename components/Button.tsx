@@ -101,9 +101,9 @@ export default function Button({
   style?: CSSProperties;
   onClick?: () => void;
 } & Record<string, unknown>) {
-  /* leading-none keeps the label optically centered — the font's own
-     line box otherwise floats the text a pixel off center */
-  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium leading-none
+  /* leading-none + .optical-text center the visible letters, not the
+     em box; .corner-smooth squircles the radius where supported */
+  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium leading-none optical-text corner-smooth
     ${shape === "pill" ? "rounded-full" : "rounded-control"}
     transition-[background-color,color,box-shadow,opacity,transform] duration-150
     enabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-45

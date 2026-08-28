@@ -154,7 +154,9 @@
   color: color-mix(in srgb, var(--status-base) 50%, var(--ink));
 }
 .primitive-icon-button { display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; }
-.primitive-field { box-shadow: var(--shadow-field); transition: border-color 150ms; }
+.optical-text { text-box: trim-both cap alphabetic; }
+.corner-smooth { corner-shape: squircle; }
+.primitive-field { box-shadow: var(--shadow-field); transition: border-color 150ms; corner-shape: squircle; }
 .primitive-field:focus-within { border-color: var(--line-strong); }
 .primitive-field[data-invalid="true"], .primitive-field[data-invalid="true"]:focus-within { border-color: var(--red); }
 .primitive-slider { appearance: none; height: 24px; background: transparent; }
@@ -1493,7 +1495,7 @@ function Button({
   onClick,
   ...rest
 }) {
-  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium leading-none
+  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium leading-none optical-text corner-smooth
     ${shape === "pill" ? "rounded-full" : "rounded-control"}
     transition-[background-color,color,box-shadow,opacity,transform] duration-150
     enabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-45

@@ -179,11 +179,20 @@ textarea:focus-visible {
   display: flex; align-items: center; justify-content: center;
   width: 24px; height: 24px; border-radius: 6px;
 }
+/* Optical control finish — progressive enhancements with safe
+   fallbacks. text-box trims the line box to cap height / baseline so
+   flex centering centers the visible letters, not the font's em box
+   (Questrial's glyphs sit high in theirs). corner-shape smooths radii
+   into squircles — Figma-style corner smoothing. Browsers without
+   support simply render the plain box. */
+.optical-text { text-box: trim-both cap alphabetic; }
+.corner-smooth { corner-shape: squircle; }
 /* Field wrapper focus: the wrapper (not the inner input) carries the
    ring. Plain CSS so no utility-ordering can swallow it. */
 .primitive-field {
   box-shadow: var(--shadow-field);
   transition: border-color 150ms;
+  corner-shape: squircle;
 }
 .primitive-field:focus-within {
   border-color: var(--line-strong);
