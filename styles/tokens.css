@@ -5,11 +5,11 @@
  * ───────────────────────────────────────────────────────── */
 
 /* Default typeface */
-@import url("https://fonts.googleapis.com/css2?family=Questrial&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Urbanist:wght@300..800&display=swap");
 
 :root {
   /* Typography */
-  --font-sans: "Questrial", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Urbanist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
 
   /* Type scale — one standard ramp, 14px base, integer steps:
@@ -185,17 +185,14 @@ textarea:focus-visible {
 }
 /* Optical control finish — progressive enhancements with safe
    fallbacks. text-box trims the line box to cap height / baseline so
-   flex centering centers the visible letters, not the font's em box
-   (Questrial's glyphs sit high in theirs). corner-shape smooths radii
+   flex centering centers the visible letters, not the font's em box.
+   corner-shape smooths radii
    into squircles — Figma-style corner smoothing. Browsers without
    support simply render the plain box. */
 .optical-text { text-box: trim-both cap alphabetic; }
-/* measured Questrial metrics: 158/1000em above caps vs 210 below the
-   baseline inside the line box — box-centered text sits 0.026em high.
-   Where text-box isn't supported, nudge by exactly that. */
-@supports not (text-box: trim-both cap alphabetic) {
-  .optical-text { transform: translateY(0.026em); }
-}
+/* Urbanist's measured metrics are symmetric (500/2000em above caps,
+   500 below baseline) — box-centered text is already optically centered,
+   so no fallback nudge is needed where text-box is unsupported. */
 .corner-smooth { corner-shape: squircle; }
 /* Field wrapper focus: the wrapper (not the inner input) carries the
    ring. Plain CSS so no utility-ordering can swallow it. */

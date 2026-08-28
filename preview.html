@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Questrial&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300..800&display=swap" rel="stylesheet" />
 <style type="text/tailwindcss">
 /* ── Design tokens (mirrors styles/tokens.css) ── */
 :root {
@@ -158,7 +158,6 @@
 }
 .primitive-icon-button { display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; }
 .optical-text { text-box: trim-both cap alphabetic; }
-@supports not (text-box: trim-both cap alphabetic) { .optical-text { transform: translateY(0.026em); } }
 .corner-smooth { corner-shape: squircle; }
 .primitive-field { box-shadow: var(--shadow-field); transition: border-color 150ms; corner-shape: squircle; }
 .primitive-field:focus-within { border-color: var(--line-strong); }
@@ -242,7 +241,7 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 :root { color-scheme: light dark; }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] { color-scheme: dark; }
-body { background: var(--canvas); color: var(--ink); font-family: "Questrial", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; transition: background-color 250ms ease, color 250ms ease; }
+body { background: var(--canvas); color: var(--ink); font-family: "Urbanist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; transition: background-color 250ms ease, color 250ms ease; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 /* ─────────────────────────────────────────────────────────
  * RECORDS TABLE — component stylesheet
@@ -7479,7 +7478,7 @@ function FoundationsSections() {
           ))}
         </div>
       </Section>
-      <Section id="typography" title="Typography" note="One standard ramp — 14px base, integer steps, 10 to 48 — plus the weight ramp. text-nano (8px) stays reserved for mini-badge letters.">
+      <Section id="typography" title="Typography" note="Urbanist (variable, 300–800). One standard ramp — 14px base, integer steps, 10 to 48 — plus the true weight ramp. text-nano (8px) stays reserved for mini-badge letters.">
         <Card className="w-full max-w-105 p-5">
           <div className="flex flex-col gap-2.5">
             {DOC_TYPE.map(([step, px]) => (
@@ -7495,7 +7494,7 @@ function FoundationsSections() {
                 <span className="shrink-0 font-mono text-micro text-ink-3">{label}</span>
               </div>
             ))}
-            <p className="text-small text-ink-3">Questrial ships one weight — medium through bold render synthesized and light falls back to regular. Swap a multi-weight family into --font-sans to unlock the true ramp.</p>
+            <p className="text-small text-ink-3">Urbanist is a variable font — every weight above is real, no synthesis.</p>
           </div>
         </Card>
       </Section>
