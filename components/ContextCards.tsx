@@ -98,7 +98,7 @@ export default function ContextCards({
                   }}
                 >
                   <span
-                    className={`flex size-3.5 items-center justify-center rounded-[4px] ${TONES[chunk.tone]} text-nano font-bold text-canvas`}
+                    className={`flex size-4 items-center justify-center rounded-[4px] ${TONES[chunk.tone]} text-nano font-bold text-canvas`}
                   >
                     {chunk.badge}
                   </span>

@@ -47,7 +47,10 @@
   --text-micro: var(--text-micro);
   --text-nano: var(--text-nano);
   --text-title: var(--text-title);
+  --text-heading: var(--text-heading);
   --text-display: var(--text-display);
+  --text-display-lg: var(--text-display-lg);
+  --text-display-xl: var(--text-display-xl);
 
   /* Radii */
   --radius-sm: var(--radius-sm);

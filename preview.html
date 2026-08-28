@@ -44,8 +44,8 @@
   --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
   --shadow-overlay: 0 4px 16px rgba(0,0,0,0.12), 0 12px 32px rgba(0,0,0,0.10);
   --shadow-field: 0 1px 2px rgba(0,0,0,0.035);
-  --text-lead: 14px; --text-body: 13px; --text-caption: 12.5px; --text-small: 12px; --text-tiny: 11.5px; --text-micro: 10.5px; --text-nano: 7px;
-  --text-title: 15px; --text-display: 22px;
+  --text-lead: 14px; --text-body: 13px; --text-caption: 12px; --text-small: 12px; --text-tiny: 11px; --text-micro: 10px; --text-nano: 8px;
+  --text-title: 16px; --text-heading: 20px; --text-display: 24px; --text-display-lg: 32px; --text-display-xl: 48px;
   --radius-sm: 6px; --radius-chip: 7px; --radius-control: 8px; --radius-md: 10px; --radius-card: 14px; --radius-capsule: 22px;
   --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
   --duration-fast: 150ms; --duration-base: 300ms; --duration-slow: 500ms;
@@ -120,7 +120,10 @@
   --text-micro: var(--text-micro);
   --text-nano: var(--text-nano);
   --text-title: var(--text-title);
+  --text-heading: var(--text-heading);
   --text-display: var(--text-display);
+  --text-display-lg: var(--text-display-lg);
+  --text-display-xl: var(--text-display-xl);
   --ease-out-quint: var(--ease-out-quint);
 }
 @keyframes pixel-on { 0%,100% { opacity:.15 } 40% { opacity:1 } }
@@ -2702,7 +2705,7 @@ function ContextCards({
       }}
     >
                   <span
-      className={`flex size-3.5 items-center justify-center rounded-[4px] ${CTX_TONES[chunk.tone]} text-nano font-bold text-canvas`}
+      className={`flex size-4 items-center justify-center rounded-[4px] ${CTX_TONES[chunk.tone]} text-nano font-bold text-canvas`}
     >
                     {chunk.badge}
                   </span>
@@ -7450,8 +7453,9 @@ const DOC_COLORS = [
   "accent", "accent-tint", "green", "green-tint", "red", "red-tint", "orange", "orange-tint",
 ];
 const DOC_TYPE = [
-  ["display", "22px"], ["title", "15px"], ["lead", "14px"], ["body", "13px"],
-  ["caption", "12.5px"], ["small", "12px"], ["tiny", "11.5px"], ["micro", "10.5px"],
+  ["display-xl", "48px"], ["display-lg", "32px"], ["display", "24px"], ["heading", "20px"],
+  ["title", "16px"], ["lead", "14px"], ["body", "13px"], ["caption", "12px · alias of small"],
+  ["small", "12px · base"], ["tiny", "11px"], ["micro", "10px"],
 ];
 const DOC_RADII = [
   ["rounded-sm", "6px"], ["rounded-chip", "7px"], ["rounded-control", "8px"],
@@ -7471,7 +7475,7 @@ function FoundationsSections() {
           ))}
         </div>
       </Section>
-      <Section id="typography" title="Typography" note="Questrial, single weight — heavier weights are synthesized. Eight working steps plus text-nano (7px) reserved for mini-badge letters.">
+      <Section id="typography" title="Typography" note="One standard ramp — 12px base, integer steps, 10 to 48. Questrial, single weight (heavier weights synthesized); text-nano (8px) stays reserved for mini-badge letters.">
         <Card className="w-full max-w-105 p-5">
           <div className="flex flex-col gap-2.5">
             {DOC_TYPE.map(([step, px]) => (

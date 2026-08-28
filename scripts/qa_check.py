@@ -11,7 +11,7 @@ fails = []
 
 # ── 1. Forbidden patterns in components ─────────────────────
 FORBIDDEN = [
-    (r"text-\[\d", "hardcoded font size — use text-body/caption/small/tiny/micro"),
+    (r"text-\[\d", "hardcoded font size — use the text-* ramp (rule 2)"),
     (r"cubic-bezier\(", "hardcoded easing — use var(--ease-out-quint)"),
     (r"rounded-\[(6|7|8|10)px\]", "hardcoded radius — use rounded-sm/control/md/card"),
     (r"duration-100\b", "off-standard hover duration — use duration-150"),
@@ -111,6 +111,20 @@ for var, val in base_light.items():
     m = re.search(rf"{re.escape(var)}\s*:\s*(#[0-9a-fA-F]{{6}})", preview)
     if m and m.group(1).lower() != val.lower():
         fails.append(f"drift: {var} is {val} in tokens.css but {m.group(1)} in preview.html")
+
+# ── 3a1c. Type scale drift: tokens.css ↔ preview px values ──
+_scale_src = dict(re.findall(r"(--text-[\w-]+):\s*([\d.]+px)", (ROOT / "styles" / "tokens.css").read_text()))
+_scale_pv = dict(re.findall(r"(--text-[\w-]+):\s*([\d.]+px)", (ROOT / "preview.html").read_text()))
+for name, val in _scale_src.items():
+    if name not in _scale_pv:
+        fails.append(f"type-scale drift: {name} missing from preview.html")
+    elif _scale_pv[name] != val:
+        fails.append(f"type-scale drift: {name} is {val} in tokens.css but {_scale_pv[name]} in preview.html")
+
+# ── 3a1b. Type scale: integer steps only (rule 2) ───────────
+for src_path in (ROOT / "styles" / "tokens.css", ROOT / "preview.html"):
+    for m in re.finditer(r"(--text-[\w-]+):\s*(\d+\.\d+)px", src_path.read_text()):
+        fails.append(f"{src_path.name}: {m.group(1)} is {m.group(2)}px — fractional font sizes are banned (rule 2)")
 
 # ── 3a2. Responsiveness basics ──────────────────────────────
 if 'name="viewport"' not in preview:

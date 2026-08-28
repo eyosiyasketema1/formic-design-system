@@ -5,7 +5,7 @@ Rules for any AI agent (or human) working in this repo. These exist because past
 ## Design standards (non-negotiable)
 
 1. **Tokens only.** Components never hardcode colors, font sizes, radii, shadows, or easings. Everything reads CSS variables from `styles/tokens.css`. If a needed value has no token, add the token first.
-2. **Type scale**: `text-display` (22px), `text-title` (15px), `text-lead` (14px), `text-body` (13px), `text-caption` (12.5px), `text-small` (12px), `text-tiny` (11.5px), `text-micro` (10.5px), `text-nano` (7px, mini-badge letters only). Never `text-[Npx]`. On colored dots/badges use `text-canvas` (never `text-white`) so dark mode keeps contrast.
+2. **Type scale**: one standard ramp, 12px base, integer steps — `text-nano` (8, mini-badge letters only), `text-micro` (10), `text-tiny` (11), `text-small` (12, base), `text-caption` (12, alias of small — role name for secondary labels), `text-body` (13), `text-lead` (14), `text-title` (16), `text-heading` (20), `text-display` (24), `text-display-lg` (32), `text-display-xl` (48). Never `text-[Npx]`, never fractional sizes. On colored dots/badges use `text-canvas` (never `text-white`) so dark mode keeps contrast.
 3. **Radii**: `rounded-sm` (6px), `rounded-control` (8px), `rounded-md` (10px), `rounded-card` (14px). Tiny optical radii (1–5px) may stay arbitrary.
 4. **Motion**: one easing — `var(--ease-out-quint)`. Never write a `cubic-bezier(...)` literal (the token's own definition is the sole exception). CSS keyword easings (`ease-out`, `linear`) are allowed for simple fades and spins. Hover color transitions are `duration-150`.
 5. **Contrast (WCAG AA)**: text ≥4.5:1, non-text UI ≥3:1 — in light, dark, and all 5 palettes. Any new color token must pass before commit.
