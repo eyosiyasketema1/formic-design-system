@@ -12,18 +12,16 @@
   --font-sans: "Questrial", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
 
-  /* Type scale — one standard ramp, 12px base, integer steps:
-     8 · 10 · 11 · 12 · 13 · 14 · 16 · 20 · 24 · 32 · 48.
-     Role names map onto the ramp; caption aliases the base
-     (12) as a role name for secondary labels. */
+  /* Type scale — one standard ramp, 14px base, integer steps:
+     8 · 10 · 11 · 12 · 13 · 14 · 16 · 18 · 20 · 24 · 32 · 48. */
   --text-nano: 8px;        /* letters inside mini badges (PDF/CSV squares) */
   --text-micro: 10px;      /* mono chips, fine print */
   --text-tiny: 11px;       /* row secondaries, diff counts */
-  --text-small: 12px;      /* base — timers, meta labels */
-  --text-caption: 12px;    /* secondary labels, options (role alias of small) */
-  --text-body: 13px;       /* primary UI text */
-  --text-lead: 14px;       /* hero inputs, lead copy */
-  --text-title: 16px;      /* section headings */
+  --text-small: 12px;      /* timers, meta labels */
+  --text-caption: 13px;    /* secondary labels, options */
+  --text-body: 14px;       /* base — primary UI text */
+  --text-lead: 16px;       /* hero inputs, lead copy */
+  --text-title: 18px;      /* section headings */
   --text-heading: 20px;    /* page-section headings */
   --text-display: 24px;    /* page headings */
   --text-display-lg: 32px; /* feature / marketing headings */

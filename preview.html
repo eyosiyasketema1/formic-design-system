@@ -44,8 +44,8 @@
   --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
   --shadow-overlay: 0 4px 16px rgba(0,0,0,0.12), 0 12px 32px rgba(0,0,0,0.10);
   --shadow-field: 0 1px 2px rgba(0,0,0,0.035);
-  --text-lead: 14px; --text-body: 13px; --text-caption: 12px; --text-small: 12px; --text-tiny: 11px; --text-micro: 10px; --text-nano: 8px;
-  --text-title: 16px; --text-heading: 20px; --text-display: 24px; --text-display-lg: 32px; --text-display-xl: 48px;
+  --text-lead: 16px; --text-body: 14px; --text-caption: 13px; --text-small: 12px; --text-tiny: 11px; --text-micro: 10px; --text-nano: 8px;
+  --text-title: 18px; --text-heading: 20px; --text-display: 24px; --text-display-lg: 32px; --text-display-xl: 48px;
   --radius-sm: 6px; --radius-chip: 7px; --radius-control: 8px; --radius-md: 10px; --radius-card: 14px; --radius-capsule: 22px;
   --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
   --duration-fast: 150ms; --duration-base: 300ms; --duration-slow: 500ms;
@@ -7454,8 +7454,12 @@ const DOC_COLORS = [
 ];
 const DOC_TYPE = [
   ["display-xl", "48px"], ["display-lg", "32px"], ["display", "24px"], ["heading", "20px"],
-  ["title", "16px"], ["lead", "14px"], ["body", "13px"], ["caption", "12px · alias of small"],
-  ["small", "12px · base"], ["tiny", "11px"], ["micro", "10px"],
+  ["title", "18px"], ["lead", "16px"], ["body", "14px · base"], ["caption", "13px"],
+  ["small", "12px"], ["tiny", "11px"], ["micro", "10px"],
+];
+const DOC_WEIGHTS = [
+  ["font-light", "Light · 300"], ["font-normal", "Regular · 400"], ["font-medium", "Medium · 500"],
+  ["font-semibold", "SemiBold · 600"], ["font-bold", "Bold · 700"],
 ];
 const DOC_RADII = [
   ["rounded-sm", "6px"], ["rounded-chip", "7px"], ["rounded-control", "8px"],
@@ -7475,7 +7479,7 @@ function FoundationsSections() {
           ))}
         </div>
       </Section>
-      <Section id="typography" title="Typography" note="One standard ramp — 12px base, integer steps, 10 to 48. Questrial, single weight (heavier weights synthesized); text-nano (8px) stays reserved for mini-badge letters.">
+      <Section id="typography" title="Typography" note="One standard ramp — 14px base, integer steps, 10 to 48 — plus the weight ramp. text-nano (8px) stays reserved for mini-badge letters.">
         <Card className="w-full max-w-105 p-5">
           <div className="flex flex-col gap-2.5">
             {DOC_TYPE.map(([step, px]) => (
@@ -7484,6 +7488,14 @@ function FoundationsSections() {
                 <span className="shrink-0 font-mono text-micro text-ink-3">text-{step} · {px}</span>
               </div>
             ))}
+            <div className="my-1 h-px bg-line" />
+            {DOC_WEIGHTS.map(([cls, label]) => (
+              <div key={cls} className="flex items-baseline justify-between gap-4">
+                <span className={`${cls} min-w-0 truncate text-lead text-ink`}>The quick brown fox</span>
+                <span className="shrink-0 font-mono text-micro text-ink-3">{label}</span>
+              </div>
+            ))}
+            <p className="text-small text-ink-3">Questrial ships one weight — medium through bold render synthesized and light falls back to regular. Swap a multi-weight family into --font-sans to unlock the true ramp.</p>
           </div>
         </Card>
       </Section>
