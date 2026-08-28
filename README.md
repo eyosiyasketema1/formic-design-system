@@ -1,4 +1,4 @@
-# AI Design System
+# Formic AI Design System
 
 A reusable design system for web projects: CSS design tokens + React (Tailwind) components.
 
@@ -35,7 +35,7 @@ A reusable design system for web projects: CSS design tokens + React (Tailwind) 
 
 ## Using with AI tools (Claude, etc.)
 
-Point the tool at this folder or repo and say: *"Use my AI Design System — follow the tokens in `styles/tokens.css` and the component patterns in `components/`."*
+Point the tool at this folder or repo and say: *"Use the Formic AI Design System — follow the tokens in `styles/tokens.css` and the component patterns in `components/`."*
 
 ## Components
 

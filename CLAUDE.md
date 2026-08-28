@@ -1,4 +1,4 @@
-# AI Design System — Working Rules
+# Formic AI Design System — Working Rules
 
 Rules for any AI agent (or human) working in this repo. These exist because past mistakes were caught late by audits; following them prevents the mistakes instead.
 
