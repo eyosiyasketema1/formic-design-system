@@ -6936,6 +6936,104 @@ function DateRangePicker({
     </PickerField>;
 }
 
+/* ═══════════ ChatApp ═══════════ */
+const CA_DEFAULT_CONVERSATION = [
+  {
+    id: "u1",
+    role: "user",
+    content: "What's selling best this month? Show me the numbers and the restock function."
+  },
+  {
+    id: "a1",
+    role: "assistant",
+    content: <div className="flex flex-col gap-3">
+        <Markdown
+      content={`Pistachio leads with **214 scoops** this week, up 9%. The top three:
+
+| Flavor | Scoops | Trend |
+| --- | --- | --- |
+| Pistachio | 214 | Rising |
+| Vanilla Bean | 167 | Flat |
+| Rocky Road | 121 | Falling |`}
+    />
+        <CodeBlock filename="restock.ts" />
+      </div>
+  }
+];
+const CA_DEFAULT_REPLY = "Queued \u2014 a double pistachio batch churns Friday night and cases by Saturday open. I also nudged Maple Orbit for extra base; approve the order in Suppliers when it lands.";
+function ChatApp({
+  conversation = CA_DEFAULT_CONVERSATION,
+  reply = CA_DEFAULT_REPLY,
+  activeTitle = "Weekend flavor plan",
+  userName = "Turumba Team",
+  className = ""
+} = {}) {
+  const [messages, setMessages] = useState(conversation);
+  const [phase, setPhase] = useState("idle");
+  const idRef = useRef(0);
+  const scrollRef = useRef(null);
+  const scrollToEnd = () => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  };
+  useEffect(scrollToEnd, [messages, phase]);
+  useEffect(() => {
+    if (phase !== "thinking") return;
+    const timer = window.setTimeout(() => setPhase("streaming"), 900);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
+  const send = (text) => {
+    if (phase !== "idle") return;
+    setMessages((current) => [
+      ...current,
+      { id: `sent-${idRef.current += 1}`, role: "user", content: text }
+    ]);
+    setPhase("thinking");
+  };
+  const settle = () => {
+    setMessages((current) => [
+      ...current,
+      { id: `reply-${idRef.current += 1}`, role: "assistant", content: reply }
+    ]);
+    setPhase("idle");
+  };
+  return (
+    /* demo app frame — a fixed-height shell like ChatComposer's card */
+    <div className={`flex h-[560px] w-full overflow-hidden rounded-card border border-line bg-canvas shadow-card ${className}`}>
+      <div className="hidden shrink-0 md:flex">
+        <SidebarNav fill activeTitle={activeTitle} />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-line px-4">
+          <span className="min-w-0 truncate text-body font-medium text-ink">{activeTitle}</span>
+          <Avatar name={userName} size="sm" />
+        </header>
+        <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-5">
+          <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
+            {messages.map((message) => <MessageBubble key={message.id} role={message.role}>
+                {message.content}
+              </MessageBubble>)}
+            {phase === "thinking" && <MessageBubble role="assistant">
+                <ShimmerLabel>Thinking…</ShimmerLabel>
+              </MessageBubble>}
+            {phase === "streaming" && <MessageBubble role="assistant">
+                <span aria-live="polite" aria-busy>
+                  <StreamText text={reply} onProgress={scrollToEnd} onDone={settle} />
+                  <StreamCaret />
+                </span>
+              </MessageBubble>}
+          </div>
+        </div>
+        <div className="shrink-0 border-t border-line px-4 py-3">
+          <div className="mx-auto w-full max-w-2xl">
+            <PromptBar demo={false} placeholder="Message Creamery Ops…" onSend={send} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ═══════════ Gallery ═══════════ */
 function Section({ id, title, note, children }) {
   return (
@@ -7393,6 +7491,7 @@ const DOC_NAV = [
     { id: "toolchips", title: "ToolChips" },
   ]},
   { label: "Conversation", items: [
+    { id: "chatapp", title: "ChatApp" },
     { id: "chatthread", title: "ChatThread" },
     { id: "streamingtext", title: "StreamingText" },
     { id: "codeblock", title: "CodeBlock" },
@@ -7540,7 +7639,7 @@ function App() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
           <h1 className="text-title font-semibold tracking-tight text-ink">Formic AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 42 components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 43 components</p>
         </div>
         <nav className="flex flex-col">
           {DOC_NAV.map((group) => (
@@ -7788,6 +7887,9 @@ function App() {
           </Section>
           <Section id="toolchips" title="ToolChips" note="Agent run as compact rows. Click rows to expand; hover the file chips for diff previews.">
             <GalleryCard label="Default"><ToolChips /></GalleryCard>
+          </Section>
+          <Section id="chatapp" title="ChatApp" note="The whole system composed into one surface — SidebarNav rail, a thread of MessageBubbles embedding Markdown and CodeBlock, PromptBar below. Send a message: it thinks, then streams the reply. Built by the formic-design-system skill following its own recipe.">
+            <div className="w-full"><ChatApp /></div>
           </Section>
           <Section id="chatthread" title="ChatThread" note="A conversation column — user bubbles right, assistant replies flat. The final reply streams in once; embed StreamingText, ToolChips, or ApprovalCard as message children in a real thread.">
             <GalleryCard label="Default" wide><ChatThread /></GalleryCard>

@@ -84,6 +84,7 @@ Point the tool at this folder or repo and say: *"Use the Formic AI Design System
 | `Calendar` | Dependency-free APG month grid: roving focus, arrows/PageUp/Down/Home/End, min/max, Intl locale labels | `single`, `range` |
 | `DatePicker` | Calendar behind the quiet field trigger via Popover — focus moves into the grid, clearable, Field-ready | sizes `sm`, `md` |
 | `DateRangePicker` | Span selection: start pick, live preview band, closes on completion; `Intl.formatRange` label, clearable, Field-ready | sizes `sm`, `md` |
+| `ChatApp` | The full AI chat surface composed from the system: SidebarNav + rich MessageBubble thread (Markdown/CodeBlock embeds) + PromptBar with scripted thinking→streaming replies | — |
 
 ## Theming
 
