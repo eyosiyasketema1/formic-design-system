@@ -4,12 +4,12 @@ import { Spinner } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * BUTTON — the workhorse control
  *
- * Fills      primary (ink) · destructive (red) · accent · success
+ * Fills      primary (ink) · destructive (red) · accent · success — flat, no inner sheen
  * Quiet      secondary (surface) · outline (border) · ghost (bare)
  * Soft       accent-soft · destructive-soft (tint + tone text)
  * Inline     link (accent text, animated underline)
  *
- * Sizes xs (24) / sm (28) / md (32) / lg (40); shape square
+ * Sizes xs (24) / sm (32) / md (36) / lg (40); shape square
  * (rounded-control) or pill. States: hover, active press,
  * disabled (opacity — keeps the variant's identity in both
  * modes), loading (spinner, clicks ignored). icon / iconEnd
@@ -51,15 +51,16 @@ const VARIANTS: Record<ButtonVariant, string> = {
   "accent-soft": "bg-accent-tint text-accent enabled:hover:opacity-85",
   success: "bg-green text-canvas enabled:hover:opacity-90",
 };
-/* icons size themselves to the button — callers never measure */
+/* Control metrics (CLAUDE.md rule 11): heights shared with the form
+ * fields (24 / 32 / 36 / 40 — a md button lines up with a md input),
+ * horizontal padding ≈ height/3 on the spacing scale, icons sized to
+ * the button — callers never measure. */
 const SIZES: Record<ButtonSize, string> = {
   xs: "h-6 gap-1 px-2 text-tiny [&_svg]:size-3",
-  sm: "h-7 gap-1.5 px-2.5 text-caption [&_svg]:size-3.5",
-  md: "h-8 gap-2 px-3 text-body [&_svg]:size-3.5",
+  sm: "h-8 gap-1.5 px-3 text-caption [&_svg]:size-3.5",
+  md: "h-9 gap-2 px-3.5 text-body [&_svg]:size-3.5",
   lg: "h-10 gap-2 px-4 text-lead [&_svg]:size-4",
 };
-/* raised fills get a subtle top highlight, like the send arrow */
-const RAISED: ButtonVariant[] = ["primary", "destructive", "accent", "success"];
 export default function Button({
   children = "Button",
   variant = "primary",
@@ -100,15 +101,13 @@ export default function Button({
   style?: CSSProperties;
   onClick?: () => void;
 } & Record<string, unknown>) {
-  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium
+  /* leading-none keeps the label optically centered — the font's own
+     line box otherwise floats the text a pixel off center */
+  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium leading-none
     ${shape === "pill" ? "rounded-full" : "rounded-control"}
     transition-[background-color,color,box-shadow,opacity,transform] duration-150
     enabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-45
     ${SIZES[size]} ${VARIANTS[variant]} ${className}`;
-  const raised =
-    RAISED.includes(variant) && !disabled
-      ? { ...style, boxShadow: "var(--highlight-raised)" }
-      : style;
   const content = (
     <>
       {loading ? (
@@ -138,7 +137,7 @@ export default function Button({
         }}
         /* :enabled never matches anchors — drop the guards (links can't be disabled) */
         className={classes.replaceAll("enabled:", "")}
-        style={raised}
+        style={style}
       >
         {content}
       </a>
@@ -161,7 +160,7 @@ export default function Button({
         onClick?.();
       }}
       className={classes}
-      style={raised}
+      style={style}
     >
       {content}
     </button>

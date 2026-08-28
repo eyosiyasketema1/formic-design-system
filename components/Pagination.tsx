@@ -85,7 +85,6 @@ export default function Pagination({
                     ? "bg-ink text-canvas"
                     : "text-ink-2 hover:bg-hover hover:text-ink"
                 }`}
-                style={entry === current ? { boxShadow: "var(--highlight-raised)" } : undefined}
               >
                 {entry}
               </button>

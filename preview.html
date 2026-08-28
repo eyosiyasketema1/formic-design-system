@@ -43,7 +43,6 @@
   --shadow-btn: 0 1px 2px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05);
   --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
   --shadow-overlay: 0 4px 16px rgba(0,0,0,0.12), 0 12px 32px rgba(0,0,0,0.10);
-  --highlight-raised: inset 0 1px 0 rgba(255,255,255,0.14);
   --shadow-field: 0 1px 2px rgba(0,0,0,0.035);
   --text-lead: 14px; --text-body: 13px; --text-caption: 12.5px; --text-small: 12px; --text-tiny: 11.5px; --text-micro: 10.5px; --text-nano: 7px;
   --text-title: 15px; --text-display: 22px;
@@ -883,7 +882,7 @@ function SendButton({ enabled = true, label = "Send", round = false, className =
       style={{
         background: enabled ? "var(--ink)" : "var(--field)",
         color: enabled ? "var(--surface)" : "var(--ink-3)",
-        boxShadow: enabled ? "var(--highlight-raised)" : "var(--shadow-btn)",
+        boxShadow: "var(--shadow-btn)",
       }}>
       <Icon name="arrow-up" strokeWidth={2.5} />
     </button>
@@ -1472,11 +1471,10 @@ const BTN_VARIANTS = {
 };
 const BTN_SIZES = {
   xs: "h-6 gap-1 px-2 text-tiny [&_svg]:size-3",
-  sm: "h-7 gap-1.5 px-2.5 text-caption [&_svg]:size-3.5",
-  md: "h-8 gap-2 px-3 text-body [&_svg]:size-3.5",
+  sm: "h-8 gap-1.5 px-3 text-caption [&_svg]:size-3.5",
+  md: "h-9 gap-2 px-3.5 text-body [&_svg]:size-3.5",
   lg: "h-10 gap-2 px-4 text-lead [&_svg]:size-4"
 };
-const BTN_RAISED = ["primary", "destructive", "accent", "success"];
 function Button({
   children = "Button",
   variant = "primary",
@@ -1495,12 +1493,11 @@ function Button({
   onClick,
   ...rest
 }) {
-  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium
+  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium leading-none
     ${shape === "pill" ? "rounded-full" : "rounded-control"}
     transition-[background-color,color,box-shadow,opacity,transform] duration-150
     enabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-45
     ${BTN_SIZES[size]} ${BTN_VARIANTS[variant]} ${className}`;
-  const raised = BTN_RAISED.includes(variant) && !disabled ? { ...style, boxShadow: "var(--highlight-raised)" } : style;
   const content = <>
       {loading ? <Spinner /> : icon && <span aria-hidden className="shrink-0">{icon}</span>}
       {children}
@@ -1522,7 +1519,7 @@ function Button({
         onClick?.();
       }}
       className={classes.replaceAll("enabled:", "")}
-      style={raised}
+      style={style}
     >
         {content}
       </a>;
@@ -1541,7 +1538,7 @@ function Button({
       onClick?.();
     }}
     className={classes}
-    style={raised}
+    style={style}
   >
       {content}
     </button>;
@@ -5559,7 +5556,6 @@ function Pagination({
       aria-current={entry === current ? "page" : void 0}
       onClick={() => go(entry)}
       className={`flex h-8 min-w-8 shrink-0 items-center justify-center rounded-control px-1 text-caption font-medium tabular-nums transition-colors duration-150 ${entry === current ? "bg-ink text-canvas" : "text-ink-2 hover:bg-hover hover:text-ink"}`}
-      style={entry === current ? { boxShadow: "var(--highlight-raised)" } : void 0}
     >
                 {entry}
               </button>
@@ -6647,7 +6643,6 @@ function Calendar({
         select(day);
       }}
       className={`flex size-8 items-center justify-center text-caption tabular-nums transition-colors duration-150 ${shape} ${isSelected ? "bg-ink font-medium text-canvas" : dayDisabled ? "cursor-default text-ink-3 opacity-40" : inBand || isPreviewEnd ? "bg-accent-tint text-ink" : "text-ink hover:bg-hover"} ${isToday && !isSelected ? "font-medium shadow-hairline" : ""}`}
-      style={isSelected ? { boxShadow: "var(--highlight-raised)" } : void 0}
     >
                   {day.getDate()}
                 </button>;

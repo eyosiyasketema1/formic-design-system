@@ -235,7 +235,7 @@ export default function SelectionActions({
           <div
             ref={barRef}
             /* on viewports narrower than the content, the pill becomes its own
-               scroll container (rule 11) — keyboard focus scrolls controls into
+               scroll container (rule 12) — keyboard focus scrolls controls into
                view instead of landing on clipped, invisible buttons */
             className="flex h-9 w-fit max-w-[calc(100vw-48px)] items-center gap-0.5 overflow-x-auto overflow-y-hidden rounded-full bg-surface p-1 text-ink shadow-overlay [scrollbar-width:none]"
             style={{

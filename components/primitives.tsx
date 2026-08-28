@@ -744,7 +744,7 @@ export function SendButton({
       style={{
         background: enabled ? "var(--ink)" : "var(--field)",
         color: enabled ? "var(--surface)" : "var(--ink-3)",
-        boxShadow: enabled ? "var(--highlight-raised)" : "var(--shadow-btn)",
+        boxShadow: "var(--shadow-btn)",
       }}
     >
       <Icon name="arrow-up" strokeWidth={2.5} />

@@ -239,7 +239,6 @@ export default function Calendar({
                           ? "bg-accent-tint text-ink"
                           : "text-ink hover:bg-hover"
                   } ${isToday && !isSelected ? "font-medium shadow-hairline" : ""}`}
-                  style={isSelected ? { boxShadow: "var(--highlight-raised)" } : undefined}
                 >
                   {day.getDate()}
                 </button>
