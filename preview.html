@@ -1548,43 +1548,98 @@ function Button({
 function ButtonDemo() {
   const [busy, setBusy] = useState(false);
   const fire = () => { setBusy(true); setTimeout(() => setBusy(false), 2000); };
+  const variants = Object.keys(BTN_VARIANTS);
+  const sizes = Object.keys(BTN_SIZES);
+  const head = "font-mono text-micro tracking-wide text-ink-3 uppercase";
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Button variant="primary">Save changes</Button>
-        <Button variant="secondary">Preview</Button>
-        <Button variant="outline">Export</Button>
-        <Button variant="ghost">Dismiss</Button>
-        <Button variant="link" href="#button">Flavor docs</Button>
+    <div className="flex w-full flex-col gap-8">
+      {/* ── every variant × every size ── */}
+      <div className="w-full overflow-x-auto">
+        <div className="grid w-max min-w-full grid-cols-[110px_repeat(4,minmax(0,auto))] items-center gap-x-5 gap-y-2.5">
+          <span className={head}>Variant</span>
+          {sizes.map((size) => <span key={size} className={head}>{size}</span>)}
+          {variants.map((variant) => (
+            <Fragment key={variant}>
+              <span className="font-mono text-micro text-ink-3">{variant}</span>
+              {sizes.map((size) => (
+                <span key={size} className="justify-self-start">
+                  <Button variant={variant} size={size}>Save changes</Button>
+                </span>
+              ))}
+            </Fragment>
+          ))}
+        </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Button variant="accent">Accept</Button>
-        <Button variant="accent-soft">Maybe later</Button>
-        <Button variant="success">Accepted</Button>
-        <Button variant="destructive">Delete flavor</Button>
-        <Button variant="destructive-soft">Archive</Button>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Button size="xs" variant="secondary">Extra small</Button>
-        <Button size="sm" variant="secondary">Small</Button>
-        <Button size="md" variant="secondary">Medium</Button>
-        <Button size="lg" variant="secondary">Large</Button>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Button shape="pill">Pill primary</Button>
-        <Button shape="pill" variant="secondary">Pill secondary</Button>
-        <Button shape="pill" variant="accent-soft" iconEnd={<Icon name="sparkles" size={13} />}>Pill soft</Button>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Button variant="secondary" icon={<Icon name="plus" size={13} strokeWidth={2.2} />}>New flavor</Button>
-        <Button variant="secondary" iconEnd={<Icon name="chevron-right" size={13} strokeWidth={2.2} />}>Next step</Button>
-        <Button variant="secondary" disabled>Disabled</Button>
-        <Button variant="primary" loading={busy} onClick={fire}>{busy ? "Churning…" : "Click to load"}</Button>
-      </div>
-      <Button variant="outline" fullWidth icon={<Icon name="upload" size={13} strokeWidth={2.2} />}>Full-width upload</Button>
     </div>
   );
 }
+function ButtonStatesDemo() {
+  const variants = Object.keys(BTN_VARIANTS);
+  const head = "font-mono text-micro tracking-wide text-ink-3 uppercase";
+  return (
+    <div className="w-full overflow-x-auto">
+      <div className="grid w-max min-w-full grid-cols-[110px_repeat(3,minmax(0,auto))] items-center gap-x-5 gap-y-2.5">
+        <span className={head}>Variant</span>
+        <span className={head}>Default</span>
+        <span className={head}>Disabled</span>
+        <span className={head}>Loading</span>
+        {variants.map((variant) => (
+          <Fragment key={variant}>
+            <span className="font-mono text-micro text-ink-3">{variant}</span>
+            <span><Button variant={variant}>Save changes</Button></span>
+            <span><Button variant={variant} disabled>Save changes</Button></span>
+            <span><Button variant={variant} loading>Save changes</Button></span>
+          </Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
+function ButtonShapesDemo() {
+  const sizes = Object.keys(BTN_SIZES);
+  const head = "font-mono text-micro tracking-wide text-ink-3 uppercase";
+  return (
+    <div className="w-full overflow-x-auto">
+      <div className="grid w-max min-w-full grid-cols-[110px_repeat(4,minmax(0,auto))] items-center gap-x-5 gap-y-2.5">
+        <span className={head}>Shape</span>
+        {sizes.map((size) => <span key={size} className={head}>{size}</span>)}
+        {["square", "pill"].map((shape) => (
+          <Fragment key={shape}>
+            <span className="font-mono text-micro text-ink-3">{shape}</span>
+            {sizes.map((size) => (
+              <span key={size}><Button shape={shape} size={size} variant={shape === "pill" ? "secondary" : "primary"}>Save changes</Button></span>
+            ))}
+          </Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
+function ButtonExtrasDemo() {
+  const [busy, setBusy] = useState(false);
+  const fire = () => { setBusy(true); setTimeout(() => setBusy(false), 2000); };
+  const sizes = Object.keys(BTN_SIZES);
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <div className="flex flex-wrap items-center gap-2">
+        {sizes.map((size) => (
+          <Button key={size} size={size} variant="secondary" icon={<Icon name="plus" />}>New flavor</Button>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {sizes.map((size) => (
+          <Button key={size} size={size} variant="outline" iconEnd={<Icon name="chevron-right" />}>Next step</Button>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="link" href="#button">Link rendering (href)</Button>
+        <Button variant="primary" loading={busy} onClick={fire}>{busy ? "Churning…" : "Click to load"}</Button>
+      </div>
+      <Button variant="outline" fullWidth icon={<Icon name="upload" />}>Full-width upload</Button>
+    </div>
+  );
+}
+
 const TC_STEP_MS = 700;
 const TC_ICONS = {
   think: <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />,
@@ -6888,9 +6943,9 @@ function Section({ id, title, note, children }) {
     </section>
   );
 }
-function GalleryCard({ label, wide, children }) {
+function GalleryCard({ label, wide, full, children }) {
   return (
-    <Card className={`p-5 ${wide ? "w-full max-w-105" : ""}`}>
+    <Card className={`p-5 ${full ? "w-full" : wide ? "w-full max-w-105" : ""}`}>
       <p className="mb-3 font-mono text-micro tracking-wide text-ink-3 uppercase">{label}</p>
       {children}
     </Card>
@@ -7577,8 +7632,11 @@ function App() {
               </GlideMenu>
             </GalleryCard>
           </Section>
-          <Section id="button" title="Button" note="Ten variants × four sizes — fills, quiet, soft tints, and an inline link; leading/trailing icons, full width, disabled and loading. Click the loader to try it.">
-            <GalleryCard label="Variants · sizes · states" wide><ButtonDemo /></GalleryCard>
+          <Section id="button" title="Button" note="The complete matrix — every variant at every size, every state, both shapes, icons, width, links, and live loading. Rows generate from the component's own maps, so this page can never drift from the code.">
+            <GalleryCard label="Variants × sizes" full><ButtonDemo /></GalleryCard>
+            <GalleryCard label="States × variants" full><ButtonStatesDemo /></GalleryCard>
+            <GalleryCard label="Shapes × sizes" full><ButtonShapesDemo /></GalleryCard>
+            <GalleryCard label="Icons · width · link · loading" full><ButtonExtrasDemo /></GalleryCard>
           </Section>
           <Section id="input" title="Field & Input" note="The form trio — Field owns label / hint / error and wires aria onto its control; Input and Textarea share the system's quiet field focus (border shift, no ring).">
             <GalleryCard label="Default" wide>
