@@ -9,11 +9,18 @@ import { Spinner } from "./primitives";
  * Soft       accent-soft · destructive-soft (tint + tone text)
  * Inline     link (accent text, animated underline)
  *
- * Sizes xs (24) / sm (28) / md (32) / lg (40). States: hover,
- * active press, disabled, loading (spinner, clicks ignored).
- * icon / iconEnd flank the label; fullWidth stretches; href
- * renders a real <a> with the same look. Focus ring comes
- * from the shared :focus-visible rule.
+ * Sizes xs (24) / sm (28) / md (32) / lg (40); shape square
+ * (rounded-control) or pill. States: hover, active press,
+ * disabled (opacity — keeps the variant's identity in both
+ * modes), loading (spinner, clicks ignored). icon / iconEnd
+ * flank the label and size themselves to the button; fullWidth
+ * stretches; href renders a real <a> with the same look.
+ * Focus ring comes from the shared :focus-visible rule.
+ *
+ * Usage: one primary per view — everything beside it is
+ * secondary/outline/ghost. One destructive per view. Width
+ * hugs the label; never fix it. Icon-only actions use the
+ * IconButton primitive, not a label-less Button.
  * ───────────────────────────────────────────────────────── */
 export type ButtonVariant =
   | "primary"
@@ -27,33 +34,29 @@ export type ButtonVariant =
   | "accent-soft"
   | "success";
 export type ButtonSize = "xs" | "sm" | "md" | "lg";
+export type ButtonShape = "square" | "pill";
+/* disabled is uniform opacity — the variant keeps its identity and
+ * both themes come out right without per-variant disabled colors.
+ * 45% (vs the 60% on bordered form fields) because colored fills
+ * need a deeper dim to read as inactive. */
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary:
-    "bg-ink text-canvas enabled:hover:opacity-90 disabled:bg-field disabled:text-ink-3",
-  secondary:
-    "bg-surface text-ink shadow-btn enabled:hover:bg-hover disabled:bg-field disabled:text-ink-3 disabled:shadow-none",
-  outline:
-    "border border-line-strong text-ink enabled:hover:bg-hover disabled:border-line disabled:text-ink-3",
-  ghost:
-    "text-ink-2 enabled:hover:bg-hover-2 enabled:hover:text-ink disabled:text-ink-3",
-  link:
-    "animated-underline px-1 text-accent enabled:hover:opacity-90 disabled:text-ink-3",
-  destructive:
-    "bg-red text-canvas enabled:hover:opacity-90 disabled:bg-field disabled:text-ink-3",
-  "destructive-soft":
-    "bg-red-tint text-red enabled:hover:opacity-85 disabled:bg-field disabled:text-ink-3",
-  accent:
-    "bg-accent text-canvas enabled:hover:opacity-90 disabled:bg-field disabled:text-ink-3",
-  "accent-soft":
-    "bg-accent-tint text-accent enabled:hover:opacity-85 disabled:bg-field disabled:text-ink-3",
-  success:
-    "bg-green text-canvas enabled:hover:opacity-90 disabled:bg-field disabled:text-ink-3",
+  primary: "bg-ink text-canvas enabled:hover:opacity-90",
+  secondary: "bg-surface text-ink shadow-btn enabled:hover:bg-hover",
+  outline: "border border-line-strong text-ink enabled:hover:bg-hover",
+  ghost: "text-ink-2 enabled:hover:bg-hover-2 enabled:hover:text-ink",
+  link: "animated-underline !px-1 text-accent enabled:hover:opacity-90 disabled:pointer-events-none",
+  destructive: "bg-red text-canvas enabled:hover:opacity-90",
+  "destructive-soft": "bg-red-tint text-red enabled:hover:opacity-85",
+  accent: "bg-accent text-canvas enabled:hover:opacity-90",
+  "accent-soft": "bg-accent-tint text-accent enabled:hover:opacity-85",
+  success: "bg-green text-canvas enabled:hover:opacity-90",
 };
+/* icons size themselves to the button — callers never measure */
 const SIZES: Record<ButtonSize, string> = {
-  xs: "h-6 gap-1 px-2 text-tiny",
-  sm: "h-7 gap-1.5 px-2.5 text-caption",
-  md: "h-8 gap-2 px-3 text-body",
-  lg: "h-10 gap-2 px-4 text-lead",
+  xs: "h-6 gap-1 px-2 text-tiny [&_svg]:size-3",
+  sm: "h-7 gap-1.5 px-2.5 text-caption [&_svg]:size-3.5",
+  md: "h-8 gap-2 px-3 text-body [&_svg]:size-3.5",
+  lg: "h-10 gap-2 px-4 text-lead [&_svg]:size-4",
 };
 /* raised fills get a subtle top highlight, like the send arrow */
 const RAISED: ButtonVariant[] = ["primary", "destructive", "accent", "success"];
@@ -61,6 +64,7 @@ export default function Button({
   children = "Button",
   variant = "primary",
   size = "md",
+  shape = "square",
   loading = false,
   disabled = false,
   fullWidth = false,
@@ -77,14 +81,16 @@ export default function Button({
   children?: ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /** square (rounded-control) or fully round pill */
+  shape?: ButtonShape;
   /** shows a spinner and ignores clicks, keeping the variant's look */
   loading?: boolean;
   disabled?: boolean;
   /** stretch to the container's width */
   fullWidth?: boolean;
-  /** leading icon (sized by the caller, ~14px) */
+  /** leading icon — sized automatically to the button */
   icon?: ReactNode;
-  /** trailing icon */
+  /** trailing icon — sized automatically to the button */
   iconEnd?: ReactNode;
   /** render a real link with the button's look */
   href?: string;
@@ -94,9 +100,10 @@ export default function Button({
   style?: CSSProperties;
   onClick?: () => void;
 } & Record<string, unknown>) {
-  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center rounded-control font-medium
+  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium
+    ${shape === "pill" ? "rounded-full" : "rounded-control"}
     transition-[background-color,color,box-shadow,opacity,transform] duration-150
-    enabled:active:scale-[0.97] disabled:cursor-default
+    enabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-45
     ${SIZES[size]} ${VARIANTS[variant]} ${className}`;
   const raised =
     RAISED.includes(variant) && !disabled

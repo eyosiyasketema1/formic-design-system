@@ -1459,28 +1459,29 @@ function StreamingText({ loop = true, fill = false }) {
 
 /* ═══════════ Button ═══════════ */
 const BTN_VARIANTS = {
-  primary: "bg-ink text-canvas enabled:hover:opacity-90 disabled:bg-field disabled:text-ink-3",
-  secondary: "bg-surface text-ink shadow-btn enabled:hover:bg-hover disabled:bg-field disabled:text-ink-3 disabled:shadow-none",
-  outline: "border border-line-strong text-ink enabled:hover:bg-hover disabled:border-line disabled:text-ink-3",
-  ghost: "text-ink-2 enabled:hover:bg-hover-2 enabled:hover:text-ink disabled:text-ink-3",
-  link: "animated-underline px-1 text-accent enabled:hover:opacity-90 disabled:text-ink-3",
-  destructive: "bg-red text-canvas enabled:hover:opacity-90 disabled:bg-field disabled:text-ink-3",
-  "destructive-soft": "bg-red-tint text-red enabled:hover:opacity-85 disabled:bg-field disabled:text-ink-3",
-  accent: "bg-accent text-canvas enabled:hover:opacity-90 disabled:bg-field disabled:text-ink-3",
-  "accent-soft": "bg-accent-tint text-accent enabled:hover:opacity-85 disabled:bg-field disabled:text-ink-3",
-  success: "bg-green text-canvas enabled:hover:opacity-90 disabled:bg-field disabled:text-ink-3"
+  primary: "bg-ink text-canvas enabled:hover:opacity-90",
+  secondary: "bg-surface text-ink shadow-btn enabled:hover:bg-hover",
+  outline: "border border-line-strong text-ink enabled:hover:bg-hover",
+  ghost: "text-ink-2 enabled:hover:bg-hover-2 enabled:hover:text-ink",
+  link: "animated-underline !px-1 text-accent enabled:hover:opacity-90 disabled:pointer-events-none",
+  destructive: "bg-red text-canvas enabled:hover:opacity-90",
+  "destructive-soft": "bg-red-tint text-red enabled:hover:opacity-85",
+  accent: "bg-accent text-canvas enabled:hover:opacity-90",
+  "accent-soft": "bg-accent-tint text-accent enabled:hover:opacity-85",
+  success: "bg-green text-canvas enabled:hover:opacity-90"
 };
 const BTN_SIZES = {
-  xs: "h-6 gap-1 px-2 text-tiny",
-  sm: "h-7 gap-1.5 px-2.5 text-caption",
-  md: "h-8 gap-2 px-3 text-body",
-  lg: "h-10 gap-2 px-4 text-lead"
+  xs: "h-6 gap-1 px-2 text-tiny [&_svg]:size-3",
+  sm: "h-7 gap-1.5 px-2.5 text-caption [&_svg]:size-3.5",
+  md: "h-8 gap-2 px-3 text-body [&_svg]:size-3.5",
+  lg: "h-10 gap-2 px-4 text-lead [&_svg]:size-4"
 };
 const BTN_RAISED = ["primary", "destructive", "accent", "success"];
 function Button({
   children = "Button",
   variant = "primary",
   size = "md",
+  shape = "square",
   loading = false,
   disabled = false,
   fullWidth = false,
@@ -1494,9 +1495,10 @@ function Button({
   onClick,
   ...rest
 }) {
-  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center rounded-control font-medium
+  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium
+    ${shape === "pill" ? "rounded-full" : "rounded-control"}
     transition-[background-color,color,box-shadow,opacity,transform] duration-150
-    enabled:active:scale-[0.97] disabled:cursor-default
+    enabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-45
     ${BTN_SIZES[size]} ${BTN_VARIANTS[variant]} ${className}`;
   const raised = BTN_RAISED.includes(variant) && !disabled ? { ...style, boxShadow: "var(--highlight-raised)" } : style;
   const content = <>
@@ -1568,6 +1570,11 @@ function ButtonDemo() {
         <Button size="sm" variant="secondary">Small</Button>
         <Button size="md" variant="secondary">Medium</Button>
         <Button size="lg" variant="secondary">Large</Button>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button shape="pill">Pill primary</Button>
+        <Button shape="pill" variant="secondary">Pill secondary</Button>
+        <Button shape="pill" variant="accent-soft" iconEnd={<Icon name="sparkles" size={13} />}>Pill soft</Button>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Button variant="secondary" icon={<Icon name="plus" size={13} strokeWidth={2.2} />}>New flavor</Button>
