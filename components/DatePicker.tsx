@@ -197,7 +197,7 @@ export default function DatePicker({
       open={open}
       position={position}
       anchorRef={anchorRef}
-      onOpen={() => openAt({ estimatedHeight: 316, width: 276 })}
+      onOpen={() => openAt({ estimatedHeight: 316, width: 272 })}
       onClose={close}
       onClear={clear}
       className={className}

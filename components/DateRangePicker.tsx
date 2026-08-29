@@ -95,7 +95,7 @@ export default function DateRangePicker({
       open={open}
       position={position}
       anchorRef={anchorRef}
-      onOpen={() => openAt({ estimatedHeight: 316, width: 276 })}
+      onOpen={() => openAt({ estimatedHeight: 316, width: 248 })}
       onClose={close}
       onClear={clear}
       className={className}
