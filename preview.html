@@ -6657,6 +6657,7 @@ function Calendar({
     aria-label={monthLabel}
     onKeyDown={onKeyDown}
     onMouseLeave={mode === "range" ? () => setHovered(null) : void 0}
+    className="mx-auto w-max"
   >
         {
     /* range mode drops the gaps so the band reads as one piece */

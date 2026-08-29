@@ -176,6 +176,9 @@ export default function Calendar({
         aria-label={monthLabel}
         onKeyDown={onKeyDown}
         onMouseLeave={mode === "range" ? () => setHovered(null) : undefined}
+        /* range mode drops column gaps, so the grid is narrower than the
+           panel — w-max + mx-auto keeps left/right padding equal */
+        className="mx-auto w-max"
       >
         {/* range mode drops the gaps so the band reads as one piece */}
         <div role="row" className={`grid grid-cols-7 pb-1 ${mode === "range" ? "gap-0" : "gap-1"}`}>
