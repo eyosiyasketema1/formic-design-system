@@ -26,9 +26,10 @@
   --orange: #a34a08;
   --green: #15803d;
   --red: #b91c1c;
-  --canvas: #faf9f7;
+  --canvas: #ffffff;
   --surface: #ffffff;
   --field: #f5f5f5;
+  --sidebar: #fafafa;
   --scrim: rgba(20, 19, 18, 0.35);
   --green-tint: #eef9f2;
   --red-tint: #fdecec;
@@ -40,32 +41,15 @@
   --tooltip-bg: #1f1f1f;
   --tooltip-fg: #f2f1ef;
   --tooltip-muted: #9a9a9a;
-  --shadow-btn: 0 1px 2px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05);
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
-  --shadow-overlay: 0 4px 16px rgba(0,0,0,0.12), 0 12px 32px rgba(0,0,0,0.10);
-  --shadow-field: 0 1px 2px rgba(0,0,0,0.035);
+  --shadow-btn: 0 0 0 1px rgba(0,0,0,0.07);
+  --shadow-card: 0 0 0 1px var(--line);
+  --shadow-overlay: 0 0 0 1px var(--line-strong);
+  --shadow-field: none;
   --text-lead: 16px; --text-body: 14px; --text-caption: 13px; --text-small: 12px; --text-tiny: 11px; --text-micro: 10px; --text-nano: 8px;
   --text-title: 18px; --text-heading: 20px; --text-display: 24px; --text-display-lg: 32px; --text-display-xl: 48px;
   --radius-sm: 6px; --radius-chip: 7px; --radius-control: 8px; --radius-md: 10px; --radius-card: 14px; --radius-capsule: 22px;
   --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
   --duration-fast: 150ms; --duration-base: 300ms; --duration-slow: 500ms;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --ink: #f0efec;
-    --scrim: rgba(0, 0, 0, 0.55); --ink-2: #b0aeaa; --ink-3: #8d8b86;
-    --line: #2a2a29; --line-strong: #3f3e3c;
-    --hover: #232322; --hover-2: #292928; --inset: #232322;
-    --accent: #7c96ff; --orange: #e08514; --green: #22c55e; --red: #f87171;
-    --canvas: #131312; --surface: #1c1c1b; --field: #232322;
-    --green-tint: #16281c;
-    --red-tint: #2e1a19;
-    --tooltip-bg: #2c2c2b; --tooltip-muted: #9c9a95;
-    --shadow-btn: 0 1px 2px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07);
-    --shadow-card: 0 0 0 1px rgba(255,255,255,0.06), 0 1px 3px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.35);
-    --shadow-overlay: 0 0 0 1px rgba(255,255,255,0.07), 0 4px 16px rgba(0,0,0,0.55), 0 12px 32px rgba(0,0,0,0.45);
-    --shadow-field: 0 1px 2px rgba(0,0,0,0.4);
-  }
 }
 :root[data-theme="dark"] {
   --ink: #f0efec;
@@ -73,14 +57,14 @@
   --line: #2a2a29; --line-strong: #3f3e3c;
   --hover: #232322; --hover-2: #292928; --inset: #232322;
   --accent: #7c96ff; --orange: #e08514; --green: #22c55e; --red: #f87171;
-  --canvas: #131312; --surface: #1c1c1b; --field: #232322;
+  --canvas: #131312; --surface: #1c1c1b; --field: #232322; --sidebar: #181817;
   --green-tint: #16281c;
   --red-tint: #2e1a19;
   --tooltip-bg: #2c2c2b; --tooltip-muted: #9c9a95;
-  --shadow-btn: 0 1px 2px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07);
-  --shadow-card: 0 0 0 1px rgba(255,255,255,0.06), 0 1px 3px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.35);
-  --shadow-overlay: 0 0 0 1px rgba(255,255,255,0.07), 0 4px 16px rgba(0,0,0,0.55), 0 12px 32px rgba(0,0,0,0.45);
-  --shadow-field: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-btn: 0 0 0 1px rgba(255,255,255,0.09);
+  --shadow-card: 0 0 0 1px var(--line);
+  --shadow-overlay: 0 0 0 1px var(--line-strong);
+  --shadow-field: none;
 }
 @theme inline {
   --color-ink: var(--ink);
@@ -108,6 +92,7 @@
   --radius-md: var(--radius-md);
   --radius-card: var(--radius-card);
   --radius-capsule: var(--radius-capsule);
+  --color-sidebar: var(--sidebar);
   --shadow-btn: var(--shadow-btn);
   --shadow-card: var(--shadow-card);
   --shadow-overlay: var(--shadow-overlay);
@@ -626,6 +611,11 @@ const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useI
 const inertWhen = (hidden) => ({ ref: (el) => { if (el) el.inert = hidden; } });
 const ICON_PATHS = {  /* authentic Tabler outline path data (@tabler/icons, MIT) */
   chevron: <path d="M6 9l6 6l6 -6" />,
+  bell: (<><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" /><path d="M9 17v1a3 3 0 0 0 6 0v-1" /></>),
+  moon: <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />,
+  sun: (<><path d="M8 12a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" /></>),
+  eye: (<><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></>),
+  trash: (<><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></>),
   check: <path d="M5 12l5 5l10 -10" />,
   close: (<><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></>),
   search: (<><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></>),
@@ -808,16 +798,15 @@ function Progress({ value = 0, max = 100, label, tone = "accent", indeterminate 
     </div>
   );
 }
-const AVATAR_SIZES = { sm: "size-6 text-micro", md: "size-7 text-tiny", lg: "size-9 text-caption" };
-const avatarInitials = (name) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0].toUpperCase()).join("");
-const avatarHue = (name) => { let hash = 0; for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) % 360; return hash; };
-function Avatar({ name, src, size = "md", className = "" }) {
+const AVATAR_SIZES = { sm: "size-6 text-micro", md: "size-7 text-tiny", lg: "size-10 text-caption", xl: "size-12 text-body" };
+const AVATAR_TONES = ["bg-accent-tint text-accent", "bg-green-tint text-green", "bg-orange-tint text-orange", "bg-field text-ink-2"];
+const avatarInitials = (name) => { const words = name.split(/\s+/).filter(Boolean); if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase(); return (words[0] || "").slice(0, 2).toUpperCase(); };
+const avatarTone = (name) => { let hash = 0; for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) % 997; return AVATAR_TONES[hash % AVATAR_TONES.length]; };
+function Avatar({ name, src, size = "md", tone, className = "" }) {
   if (src) return <img src={src} alt={name} className={`source-avatar shrink-0 rounded-full bg-surface shadow-hairline ${AVATAR_SIZES[size]} ${className}`} />;
-  const hue = avatarHue(name);
   return (
     <span role="img" aria-label={name}
-      className={`flex shrink-0 items-center justify-center rounded-full font-medium shadow-hairline ${AVATAR_SIZES[size]} ${className}`}
-      style={{ background: `color-mix(in srgb, oklch(0.72 0.12 ${hue}) 16%, var(--surface))`, color: `color-mix(in srgb, oklch(0.72 0.12 ${hue}) 50%, var(--ink))` }}>
+      className={`flex shrink-0 items-center justify-center rounded-full font-medium shadow-hairline ${tone !== undefined ? AVATAR_TONES[tone] : avatarTone(name)} ${AVATAR_SIZES[size]} ${className}`}>
       {avatarInitials(name)}
     </span>
   );
@@ -2704,7 +2693,7 @@ function ContextCards({
       }}
     >
                   <span
-      className={`flex size-4 items-center justify-center rounded-[4px] ${CTX_TONES[chunk.tone]} text-nano font-bold text-canvas`}
+      className={`flex size-4 items-center justify-center rounded-[4px] ${CTX_TONES[chunk.tone]} text-nano font-semibold text-canvas`}
     >
                     {chunk.badge}
                   </span>
@@ -4071,7 +4060,7 @@ function SidebarNav({
   return <aside
     data-sidebar-collapsed={collapsed}
     aria-label="Workspace navigation"
-    className={`relative flex shrink-0 overflow-hidden transition-[width] ${fill ? "h-full" : "h-[600px]"} ${className}`}
+    className={`relative flex shrink-0 overflow-hidden border-r border-line bg-sidebar transition-[width] ${fill ? "h-full" : "h-[600px]"} ${className}`}
     style={{
       width: collapsed ? SN_MOTION.collapsedWidth : SN_MOTION.expandedWidth,
       transitionDuration: `${SN_MOTION.duration}ms`,
@@ -7249,7 +7238,7 @@ function useTheme() {
   const [theme, setTheme] = useState(() => {
     const stored = localStorage.getItem("ds-theme");
     if (stored === "light" || stored === "dark") return stored;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    return "light"; // light is the default — dark is opt-in only
   });
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -7368,7 +7357,6 @@ function setAccent(color) {
   const element = existing ?? document.createElement("style");
   element.id = TH_OVERRIDE_ID;
   element.textContent = `:root:root:root:root { --accent: ${variants.light}; }
-@media (prefers-color-scheme: dark) { :root:root:root:root:not([data-theme="light"]) { --accent: ${variants.dark}; } }
 :root:root:root:root[data-theme="dark"] { --accent: ${variants.dark}; }`;
   if (!existing) document.head.appendChild(element);
   return variants;
@@ -7557,7 +7545,7 @@ const DOC_TYPE = [
 ];
 const DOC_WEIGHTS = [
   ["font-light", "Light · 300"], ["font-normal", "Regular · 400"], ["font-medium", "Medium · 500"],
-  ["font-semibold", "SemiBold · 600"], ["font-bold", "Bold · 700"],
+  ["font-semibold", "SemiBold · 600"],
 ];
 const DOC_RADII = [
   ["rounded-sm", "6px"], ["rounded-chip", "7px"], ["rounded-control", "8px"],

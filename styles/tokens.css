@@ -46,9 +46,10 @@
   --red: #b91c1c;
 
   /* Backgrounds */
-  --canvas: #faf9f7;       /* page background — warm paper */
+  --canvas: #ffffff;       /* page background — clean white (Turumba decision 2026-08-29) */
   --surface: #ffffff;      /* card surface */
   --field: #f5f5f5;        /* input/disabled control background */
+  --sidebar: #fafafa;      /* app rail background — whisper grey, one step off canvas */
   --scrim: rgba(20, 19, 18, 0.35); /* modal backdrop */
 
   /* Accent tints */
@@ -77,10 +78,10 @@
   --radius-capsule: 22px; /* collapsed capsule rows */
 
   /* Shadows */
-  --shadow-btn: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.06);
-  --shadow-overlay: 0 4px 16px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.10);
-  --shadow-field: 0 1px 2px rgba(0, 0, 0, 0.035); /* soft inset-adjacent field shadow */
+  --shadow-btn: 0 0 0 1px rgba(0, 0, 0, 0.07);
+  --shadow-card: 0 0 0 1px var(--line);
+  --shadow-overlay: 0 0 0 1px var(--line-strong);
+  --shadow-field: none;
 
   /* Motion */
   --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1); /* the house easing */
@@ -90,36 +91,8 @@
 }
 
 /* ── Dark theme ────────────────────────────────────────── */
-/* Applies when the OS is dark (unless the app forces light)
-   or when the app sets <html data-theme="dark">. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --ink: #f0efec;
-    --scrim: rgba(0, 0, 0, 0.55);
-    --ink-2: #b0aeaa;
-    --ink-3: #8d8b86;
-    --line: #2a2a29;
-    --line-strong: #3f3e3c;
-    --hover: #232322;
-    --hover-2: #292928;
-    --inset: #232322;
-    --accent: #7c96ff;
-    --orange: #e08514;
-    --green: #22c55e;
-    --red: #f87171;
-    --canvas: #131312;
-    --surface: #1c1c1b;
-    --field: #232322;
-    --green-tint: #16281c;
-    --red-tint: #2e1a19;
-    --tooltip-bg: #2c2c2b;
-    --tooltip-muted: #9c9a95;
-    --shadow-btn: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.07);
-    --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 1px 3px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.35);
-    --shadow-overlay: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 4px 16px rgba(0, 0, 0, 0.55), 0 12px 32px rgba(0, 0, 0, 0.45);
-    --shadow-field: 0 1px 2px rgba(0, 0, 0, 0.4);
-  }
-}
+/* Light is the default everywhere (Turumba decision 2026-08-29).
+   Dark is opt-in only: the app sets <html data-theme="dark">. */
 :root[data-theme="dark"] {
   --ink: #f0efec;
   --scrim: rgba(0, 0, 0, 0.55);
@@ -137,14 +110,15 @@
   --canvas: #131312;
   --surface: #1c1c1b;
   --field: #232322;
+  --sidebar: #181817;
   --green-tint: #16281c;
   --red-tint: #2e1a19;
   --tooltip-bg: #2c2c2b;
   --tooltip-muted: #9c9a95;
-  --shadow-btn: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.07);
-  --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 1px 3px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.35);
-  --shadow-overlay: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 4px 16px rgba(0, 0, 0, 0.55), 0 12px 32px rgba(0, 0, 0, 0.45);
-  --shadow-field: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-btn: 0 0 0 1px rgba(255, 255, 255, 0.09);
+  --shadow-card: 0 0 0 1px var(--line);
+  --shadow-overlay: 0 0 0 1px var(--line-strong);
+  --shadow-field: none;
 }
 
 /* ── Base ──────────────────────────────────────────────── */

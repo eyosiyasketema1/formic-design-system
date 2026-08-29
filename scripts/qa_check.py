@@ -17,6 +17,8 @@ FORBIDDEN = [
     (r"duration-100\b", "off-standard hover duration — use duration-150"),
     (r"variant\?: string", "untyped variant prop — use a union type"),
     (r"text-white", "hardcoded white — use text-canvas so dark mode keeps contrast"),
+    (r"font-bold", "font-bold — semibold is the maximum weight (rule 2)"),
+    (r"tracking-\[", "arbitrary letter-spacing — use tracking-wide / tracking-tight (rule 2)"),
 ]
 for f in sorted((ROOT / "components").rglob("*.tsx")) + [ROOT / "preview.html"]:
     text = f.read_text()
@@ -28,6 +30,16 @@ for f in sorted((ROOT / "components").rglob("*.tsx")) + [ROOT / "preview.html"]:
             if "--ease-out-quint:" in lines[line - 1]:
                 continue
             fails.append(f"{f.name}:{line}: {msg}")
+
+# ── 1b. Flat shadows: --shadow-* tokens must be rings or none ──
+for _shadow_file in ("styles/tokens.css", "preview.html"):
+    _shadow_src = (ROOT / _shadow_file).read_text()
+    for m in re.finditer(r"(--shadow-[\w-]+):\s*([^;]+);", _shadow_src):
+        val = m.group(2).strip()
+        if val.startswith("var("):
+            continue  # bridge lines like --shadow-btn: var(--shadow-btn)
+        if val != "none" and not val.startswith("0 0 0 "):
+            fails.append(f"{_shadow_file}: {m.group(1)} is a drop shadow ({val!r}) — rings only (rule 12)")
 
 # ── 2. WCAG contrast for every mode × palette ───────────────
 def lum(h):

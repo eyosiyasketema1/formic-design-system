@@ -256,7 +256,7 @@ export default function SidebarNav({
     <aside
       data-sidebar-collapsed={collapsed}
       aria-label="Workspace navigation"
-      className={`relative flex shrink-0 overflow-hidden transition-[width] ${fill ? "h-full" : "h-[600px]"} ${className}`}
+      className={`relative flex shrink-0 overflow-hidden border-r border-line bg-sidebar transition-[width] ${fill ? "h-full" : "h-[600px]"} ${className}`}
       style={{
         width: collapsed ? SIDEBAR_MOTION.collapsedWidth : SIDEBAR_MOTION.expandedWidth,
         transitionDuration: `${SIDEBAR_MOTION.duration}ms`,

@@ -48,39 +48,10 @@
 }
 
 /* ═══ Dark variants ═══
+ * Dark is opt-in only (data-theme="dark") — no OS auto-detect.
  * Higher specificity than both the palette-light blocks
  * above and the base dark block in tokens.css. */
 
-@media (prefers-color-scheme: dark) {
-  :root[data-palette="sage"]:not([data-theme="light"]) {
-    --ink: #eef1ec; --ink-2: #adb5ac; --ink-3: #8b938a;
-    --line: #272c28; --line-strong: #3a413b;
-    --hover: #212622; --hover-2: #272c28; --inset: #212622;
-    --canvas: #121513; --surface: #1b1f1c; --field: #212622;
-    --accent: #7fb08d; --green-tint: #16281c;
-  }
-  :root[data-palette="twilight"]:not([data-theme="light"]) {
-    --ink: #eeeef4; --ink-2: #aeafc0; --ink-3: #8f91a4;
-    --line: #27272f; --line-strong: #3b3b46;
-    --hover: #222229; --hover-2: #27272f; --inset: #222229;
-    --canvas: #131318; --surface: #1c1c23; --field: #222229;
-    --accent: #8b97ff;
-  }
-  :root[data-palette="clay"]:not([data-theme="light"]) {
-    --ink: #f2ede8; --ink-2: #b5aca2; --ink-3: #948a81;
-    --line: #2d2721; --line-strong: #423a32;
-    --hover: #262019; --hover-2: #2d2721; --inset: #262019;
-    --canvas: #16120f; --surface: #201b17; --field: #262019;
-    --accent: #d98253;
-  }
-  :root[data-palette="ocean"]:not([data-theme="light"]) {
-    --ink: #ebf1f2; --ink-2: #a9b6b9; --ink-3: #879699;
-    --line: #252c2e; --line-strong: #3a4548;
-    --hover: #1f2628; --hover-2: #252c2e; --inset: #1f2628;
-    --canvas: #101516; --surface: #191f21; --field: #1f2628;
-    --accent: #45a5c4;
-  }
-}
 
 :root[data-palette="sage"][data-theme="dark"] {
   --ink: #eef1ec; --ink-2: #adb5ac; --ink-3: #8b938a;

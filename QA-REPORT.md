@@ -60,3 +60,7 @@ Markdown renders `#`/`##`/`###+` as `h3`/`h4`/`h5+` on the compact type scale (t
 ## Accepted exception — Button outline border (2026-08-28)
 
 The `outline` variant's `line-strong` border sits below the 3:1 non-text minimum against canvas (~1.4–1.9:1 across palettes). Accepted under WCAG 1.4.11's boundary exemption: the ≥4.5:1 text label identifies the control, matching the Switch off-track precedent. The border differentiates `outline` from `ghost` visually; both remain fully usable if it were invisible.
+
+## 2026-08-29 — Turumba production feedback round
+
+Independent QA review (subagent) of the flat-elevation / light-default / tonal-avatar batch found 4 blockers, all fixed before commit: preview dark shadow tokens still drop shadows; `--sidebar` missing from preview dark block; five new icons unmirrored in `ICON_PATHS`; README still claimed OS auto-dark. Hardened `qa_check.py` per its recommendation: the flat-shadow gate now also scans `preview.html`. Rule 14 (`--sidebar` rails) received a real consumer (SidebarNav aside). Gate: PASSED.

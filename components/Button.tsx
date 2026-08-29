@@ -17,8 +17,9 @@ import { Spinner } from "./primitives";
  * stretches; href renders a real <a> with the same look.
  * Focus ring comes from the shared :focus-visible rule.
  *
- * Usage: one primary per view — everything beside it is
- * secondary/outline/ghost. One destructive per view. Width
+ * Usage: the page's main CTA is the accent variant — one per
+ * view; ink primary is for secondary-emphasis fills. Everything
+ * beside them is secondary/outline/ghost. One destructive per view. Width
  * hugs the label; never fix it. Icon-only actions use the
  * IconButton primitive, not a label-less Button.
  * ───────────────────────────────────────────────────────── */

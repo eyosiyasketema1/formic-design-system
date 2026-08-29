@@ -130,7 +130,6 @@ export function setAccent(color: string | null): { light: string; dark: string }
    * palette rule — themes.css peaks at (0,3,0) for palette+dark combos,
    * so light rides at (0,4,0) and dark at (0,5,0). */
   element.textContent = `:root:root:root:root { --accent: ${variants.light}; }
-@media (prefers-color-scheme: dark) { :root:root:root:root:not([data-theme="light"]) { --accent: ${variants.dark}; } }
 :root:root:root:root[data-theme="dark"] { --accent: ${variants.dark}; }`;
   if (!existing) document.head.appendChild(element);
   return variants;

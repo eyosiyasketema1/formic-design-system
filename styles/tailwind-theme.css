@@ -31,6 +31,7 @@
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
   --color-field: var(--field);
+  --color-sidebar: var(--sidebar);
   --color-green-tint: var(--green-tint);
   --color-red-tint: var(--red-tint);
   --color-accent-tint: var(--accent-tint);

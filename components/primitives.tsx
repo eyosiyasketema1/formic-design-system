@@ -6,7 +6,7 @@ import {
   IconChevronDown, IconChevronLeft, IconChevronRight, IconClock, IconDots, IconFileText, IconHome,
   IconCopy, IconInfoCircle, IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion, IconMicrophone,
   IconMoodSmile, IconPaperclip, IconPencil, IconPlus, IconRefresh, IconScissors,
-  IconSearch, IconSettings, IconSparkles, IconStack2, IconTypography,
+  IconBell, IconEye, IconMoon, IconSun, IconTrash, IconSearch, IconSettings, IconSparkles, IconStack2, IconTypography,
   IconUpload, IconUserPlus, IconWorld, IconX, type Icon as TablerIcon,
 } from "@tabler/icons-react";
 import { useStream } from "./hooks";
@@ -65,9 +65,15 @@ export type IconName =
   | "lines" | "external"
   | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar"
   | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right"
-  | "copy" | "circle-check" | "alert" | "info" | "chevron-left" | "upload" | "calendar";
+  | "copy" | "circle-check" | "alert" | "info" | "chevron-left" | "upload" | "calendar"
+  | "bell" | "moon" | "sun" | "eye" | "trash";
 const ICONS: Record<IconName, TablerIcon> = {
   chevron: IconChevronDown,
+  bell: IconBell,
+  moon: IconMoon,
+  sun: IconSun,
+  eye: IconEye,
+  trash: IconTrash,
   check: IconCheck,
   close: IconX,
   search: IconSearch,
@@ -493,34 +499,48 @@ export function Progress({
 /* Image when src is given; otherwise initials on a hue hashed
  * from the name via the verified tag formula (16% bg / 50%
  * into ink — ≥4.5:1 in every mode × palette). */
-export type AvatarSize = "sm" | "md" | "lg";
+export type AvatarSize = "sm" | "md" | "lg" | "xl";
+export type AvatarTone = 0 | 1 | 2 | 3;
 const AVATAR_SIZES: Record<AvatarSize, string> = {
   sm: "size-6 text-micro",
   md: "size-7 text-tiny",
-  lg: "size-9 text-caption",
+  lg: "size-10 text-caption",
+  xl: "size-12 text-body",
 };
-const initialsOf = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0]!.toUpperCase())
-    .join("");
-const hueOf = (name: string) => {
+/* The four system tint tones (accent / green / orange / neutral) —
+ * initials stay inside the token palette instead of a free hue,
+ * so avatars read as part of the same family as badges and chips
+ * (Turumba decision 2026-08-29; replaces the oklch hue hash). */
+const AVATAR_TONES = [
+  "bg-accent-tint text-accent",
+  "bg-green-tint text-green",
+  "bg-orange-tint text-orange",
+  "bg-field text-ink-2",
+];
+const initialsOf = (name: string) => {
+  const words = name.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  return (words[0] ?? "").slice(0, 2).toUpperCase(); // "Amina" → "AM"
+};
+const toneOf = (name: string) => {
   let hash = 0;
-  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) % 360;
-  return hash;
+  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) % 997;
+  return AVATAR_TONES[hash % AVATAR_TONES.length];
 };
 export function Avatar({
   name,
   src,
   size = "md",
+  tone,
   className = "",
 }: {
-  /** person's name — drives initials and the fallback hue */
+  /** person's name — drives initials and the deterministic tone */
   name: string;
+  /** photo URL — renders the image (hairline ring) instead of initials */
   src?: string;
   size?: AvatarSize;
+  /** pin a tone (0 accent · 1 green · 2 orange · 3 neutral) instead of hashing the name */
+  tone?: AvatarTone;
   className?: string;
 }) {
   if (src) {
@@ -532,16 +552,13 @@ export function Avatar({
       />
     );
   }
-  const hue = hueOf(name);
   return (
     <span
       role="img"
       aria-label={name}
-      className={`flex shrink-0 items-center justify-center rounded-full font-medium shadow-hairline ${AVATAR_SIZES[size]} ${className}`}
-      style={{
-        background: `color-mix(in srgb, oklch(0.72 0.12 ${hue}) 16%, var(--surface))`,
-        color: `color-mix(in srgb, oklch(0.72 0.12 ${hue}) 50%, var(--ink))`,
-      }}
+      className={`flex shrink-0 items-center justify-center rounded-full font-medium shadow-hairline ${
+        tone !== undefined ? AVATAR_TONES[tone] : toneOf(name)
+      } ${AVATAR_SIZES[size]} ${className}`}
     >
       {initialsOf(name)}
     </span>
