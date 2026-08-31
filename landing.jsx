@@ -2462,8 +2462,8 @@ function Bento() {
           <LoadingState label="Thinking" variant="Dots" />
         </div>
       </BentoCard>
-      <BentoCard label="SelectionActions · inline rewrite" span="sp4"><SelectionActions /></BentoCard>
-      <BentoCard label="ChatComposer · tabs and replies" span="sp2"><ChatComposer /></BentoCard>
+      <BentoCard label="SelectionActions · inline rewrite" span="sp3"><SelectionActions /></BentoCard>
+      <BentoCard label="ChatComposer · tabs and replies" span="sp3"><ChatComposer /></BentoCard>
       <BentoCard label="PromptBar · a working chat" span="sp3"><ChatDemo /></BentoCard>
       <BentoCard label="StreamingText · citations and follow ups" span="sp3"><StreamingText /></BentoCard>
     </div>
