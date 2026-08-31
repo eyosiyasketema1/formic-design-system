@@ -2084,6 +2084,65 @@ function PrincipleCards() {
   );
 }
 
+const CHAT_REPLIES = [
+  "Formic ships tokens first, so every component reads CSS variables instead of hardcoded values. Change one token and the whole page follows.",
+  "The AI surface is the point: chat threads, prompt bars, streaming text, agent traces, approvals. The everyday controls around them match to the pixel.",
+  "Contrast is checked by a script across light, dark and five palettes. If a pair drops under AA, the gate fails and the work is not done.",
+  "Copy the styles folder and the components you need, import one CSS stack, and compose. Two peer dependencies: React and Tabler icons.",
+];
+
+function ChatDemo() {
+  const [messages, setMessages] = useState([
+    { id: "m0", role: "assistant", text: "Ask me anything about Formic. This thread is running on the real PromptBar component.", done: true },
+  ]);
+  const [replyIndex, setReplyIndex] = useState(0);
+  const endRef = useRef(null);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+  }, [messages]);
+
+  const handleSend = (text) => {
+    if (!text) return;
+    const stamp = Date.now();
+    const reply = CHAT_REPLIES[replyIndex % CHAT_REPLIES.length];
+    setReplyIndex((i) => i + 1);
+    setMessages((list) => [...list, { id: `u${stamp}`, role: "user", text, done: true }]);
+    window.setTimeout(() => {
+      setMessages((list) => [...list, { id: `a${stamp}`, role: "assistant", text: reply, done: false }]);
+    }, 260);
+  };
+
+  return (
+    <div className="flex h-full flex-col gap-3">
+      <div className="chat-scroll flex flex-col gap-2.5">
+        {messages.map((message) =>
+          message.role === "user" ? (
+            <div key={message.id} className="flex justify-end">
+              <span className="corner-smooth max-w-[85%] rounded-card bg-hover-2 px-3 py-2 text-caption text-ink">
+                {message.text}
+              </span>
+            </div>
+          ) : (
+            <div key={message.id} className="flex gap-2.5">
+              <span className="corner-smooth flex size-7 shrink-0 items-center justify-center rounded-chip bg-accent-tint text-accent">
+                <Icon name="sparkles" size={14} strokeWidth={2} />
+              </span>
+              <span className="max-w-[85%] pt-0.5 text-caption text-ink-2">
+                {message.done ? message.text : <StreamText text={message.text} intervalMs={26} />}
+              </span>
+            </div>
+          ),
+        )}
+        <div ref={endRef} />
+      </div>
+      <div className="mt-auto">
+        <PromptBar demo={false} placeholder="Ask about tokens, components, or the QA gate" onSend={handleSend} />
+      </div>
+    </div>
+  );
+}
+
 function BentoCard({ label, span = "sp3", children }) {
   return (
     <div className={`bento-card ${span}`}>
@@ -2098,9 +2157,8 @@ function BentoCard({ label, span = "sp3", children }) {
 function Bento() {
   return (
     <div className="bento">
-      <BentoCard label="ApprovalCard · answer it" span="sp3"><ApprovalCard /></BentoCard>
-      <BentoCard label="TaskRows · agent progress" span="sp3"><TaskRows /></BentoCard>
-      <BentoCard label="SelectionActions · inline rewrite" span="sp4"><SelectionActions /></BentoCard>
+      <BentoCard label="ApprovalCard · answer it" span="sp2"><ApprovalCard /></BentoCard>
+      <BentoCard label="TaskRows · agent progress" span="sp2"><TaskRows /></BentoCard>
       <BentoCard label="LoadingState · three variants" span="sp2">
         <div className="flex h-full flex-col justify-center gap-5 py-2">
           <LoadingState label="Indexing sources" variant="Orbit" />
@@ -2108,10 +2166,11 @@ function Bento() {
           <LoadingState label="Thinking" variant="Dots" />
         </div>
       </BentoCard>
-      <BentoCard label="PromptBar · type a prompt" span="sp4"><PromptBar /></BentoCard>
+      <BentoCard label="SelectionActions · inline rewrite" span="sp4"><SelectionActions /></BentoCard>
       <BentoCard label="Calendar · pick a range" span="sp2">
         <div className="flex justify-center"><Calendar mode="range" /></div>
       </BentoCard>
+      <BentoCard label="PromptBar · a working chat" span="sp6"><ChatDemo /></BentoCard>
     </div>
   );
 }
