@@ -652,10 +652,23 @@ main, header.site, footer.site { position: relative; z-index: 1; }
   grid-auto-flow: dense;
 }
 .bento-card {
-  min-width: 0; display: flex; flex-direction: column;
+  position: relative; min-width: 0; display: flex; flex-direction: column;
   border: 1px solid var(--line); border-radius: var(--radius-card);
   background: var(--surface); padding: 16px; corner-shape: squircle;
+  transition: border-color 300ms var(--ease-out-quint);
 }
+/* glow follows the cursor: --mx / --my are set on pointermove */
+.bento-card::before {
+  content: ""; position: absolute; inset: 0; z-index: 0;
+  border-radius: inherit; pointer-events: none;
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%),
+    color-mix(in srgb, var(--accent) 20%, transparent), transparent 68%);
+  opacity: 0; transition: opacity 300ms var(--ease-out-quint);
+}
+.bento-card:hover { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.bento-card:hover::before { opacity: 1; }
+.bento-card > * { position: relative; z-index: 1; }
+@media (prefers-reduced-motion: reduce) { .bento-card::before { display: none; } }
 /* span presets — 6-column base */
 .bento-card.sp2 { grid-column: span 2; }
 .bento-card.sp3 { grid-column: span 3; }
@@ -967,6 +980,15 @@ curl -o ~/.claude/skills/formic-design-system/SKILL.md \
     paint();
   });
   paint();
+
+  /* glow that follows the cursor across the bento cards */
+  document.addEventListener("pointermove", function (event) {
+    var card = event.target.closest ? event.target.closest(".bento-card") : null;
+    if (!card) return;
+    var rect = card.getBoundingClientRect();
+    card.style.setProperty("--mx", ((event.clientX - rect.left) / rect.width) * 100 + "%");
+    card.style.setProperty("--my", ((event.clientY - rect.top) / rect.height) * 100 + "%");
+  }, { passive: true });
 
   /* ═══ 3. copy button on every code block ═══ */
   var COPY = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></svg>';
