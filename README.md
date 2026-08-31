@@ -2,7 +2,7 @@
 
 A token-driven React + Tailwind v4 design system for AI product interfaces: chat threads, prompt bars, streaming text, agent traces, approval cards, and the whole app shell around them.
 
-**[Live site](https://eyosiyasketema1.github.io/formic-design-system/)** · **[Component gallery](https://eyosiyasketema1.github.io/formic-design-system/preview.html)**
+**[Live site](https://formicai.dev/)** · **[Component gallery](https://formicai.dev/preview.html)**
 
 - 40+ components, 5 palettes x light/dark
 - Tokens only: no hardcoded colors, sizes, radii, shadows, or easings
@@ -102,7 +102,7 @@ Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (d
 
 **Primitives** (`components/primitives.tsx`): Icon, Spinner, StreamText, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, Badge, IconButton, SendButton, Switch, Disclosure, GlideMenu, Card, Popover, AvatarStack
 
-Open the [gallery](https://eyosiyasketema1.github.io/formic-design-system/preview.html) to see them all running, and switch theme, palette, and accent live.
+Open the [gallery](https://formicai.dev/preview.html) to see them all running, and switch theme, palette, and accent live.
 
 ---
 

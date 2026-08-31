@@ -2,7 +2,7 @@
 
 Read this before writing UI in a project that uses the Formic AI Design System. It applies to Claude Code, Cursor, Copilot, and any other coding agent.
 
-Gallery: https://eyosiyasketema1.github.io/formic-design-system/preview.html
+Gallery: https://formicai.dev/preview.html
 
 ## Compose, never fork
 

@@ -8,7 +8,7 @@ description: Use the Formic AI Design System (tokens + React components) wheneve
 A token-driven React + Tailwind v4 design system for AI product interfaces, by Eyosiyas Ketema.
 
 **Source of truth:** https://github.com/eyosiyasketema1/formic-design-system
-**Live gallery:** https://eyosiyasketema1.github.io/formic-design-system/preview.html
+**Live gallery:** https://formicai.dev/preview.html
 
 If the repo is not already in the project, clone or copy it in:
 
