@@ -625,7 +625,14 @@ header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in sr
 .licon-btn:hover { background: var(--hover-2); color: var(--ink); }
 /* sections separate by rhythm and soft bands — no rule lines */
 /* animated flowing paths behind the whole page (tokens + one keyframe) */
-.hero-bg { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; color: var(--ink); opacity: 0.15; z-index: 0; }
+/* the paths take a tint of the accent, so the picker themes them too;
+   blended with ink so the accent still belongs to the CTA */
+.hero-bg {
+  position: fixed; inset: 0; width: 100vw; height: 100vh;
+  pointer-events: none; z-index: 0; opacity: 0.15;
+  color: color-mix(in srgb, var(--accent) 60%, var(--ink));
+  transition: color 300ms var(--ease-out-quint);
+}
 .hero-bg svg { width: 100%; height: 100%; }
 .hero-bg .bgp { stroke-dasharray: 760 420; animation-name: path-drift; animation-timing-function: linear; animation-iteration-count: infinite; }
 @keyframes path-drift { from { stroke-dashoffset: 1180; } to { stroke-dashoffset: 0; } }
