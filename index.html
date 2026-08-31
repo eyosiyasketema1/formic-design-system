@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Formic AI Design System</title>
-<meta name="description" content="A token-driven React + Tailwind v4 design system for AI product interfaces. 40+ components, flat elevation, WCAG AA in every mode — and a live hero you can play with." />
+<meta name="description" content="A token-driven React + Tailwind v4 design system for AI product interfaces. 40+ components, WCAG AA in every mode — and a live hero you can play with." />
 <meta property="og:title" content="Formic AI Design System" />
 <meta property="og:description" content="Token-driven React + Tailwind components for AI product interfaces — chat threads, prompt bars, agent traces, and the whole app shell around them." />
 <meta property="og:type" content="website" />
@@ -659,6 +659,28 @@ header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in sr
   .bento { grid-template-columns: 1fr; }
   .bento-card.sp2, .bento-card.sp3, .bento-card.sp4, .bento-card.sp6 { grid-column: span 1; }
 }
+.principle-deck { position: relative; }
+.principle-card {
+  border: 1px solid var(--line); border-radius: var(--radius-card);
+  background: var(--surface); padding: 16px; corner-shape: squircle;
+  display: flex; flex-direction: column; cursor: pointer;
+  transition: border-color 150ms, transform 300ms var(--ease-out-quint);
+}
+.principle-card:hover { border-color: var(--line-strong); }
+.principle-card.is-open { border-color: var(--accent); }
+.principle-card.is-top { cursor: grab; touch-action: pan-y; }
+.principle-card.is-top:active { cursor: grabbing; }
+.principle-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* stack: fanned cards, one on top */
+.principle-deck.is-stack { height: 232px; max-width: 420px; margin: 0 auto; }
+.principle-deck.is-stack .principle-card { position: absolute; inset: 0; height: 196px; will-change: transform; }
+/* grid + list: everything visible, no overflow */
+.principle-deck.is-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.principle-deck.is-list { display: flex; flex-direction: column; gap: 12px; }
+@media (max-width: 640px) {
+  .principle-deck.is-grid { grid-template-columns: 1fr; }
+  .principle-deck.is-stack { max-width: 100%; }
+}
 .landing-section { padding: 64px 0; }
 .landing-section.band { background: var(--sidebar); }
 .kicker { font-size: var(--text-micro); font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-3); }
@@ -759,15 +781,8 @@ footer.site a:hover { color: var(--ink); }
     <div class="wrap">
       <div class="kicker">Principles</div>
       <h2>Opinionated where it matters</h2>
-      <p class="section-sub">Fifteen non-negotiable rules keep every component on the same grid — enforced by an automated QA gate, not by hoping.</p>
-      <div class="principles">
-        <div class="lp-card"><span class="p-icon bg-accent-tint text-accent"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l-8 4l8 4l8 -4l-8 -4"/><path d="M4 12l8 4l8 -4"/><path d="M4 16l8 4l8 -4"/></svg></span><h3>Tokens only</h3><p>No hardcoded colors, sizes, radii, shadows, or easings — everything reads CSS variables, so themes and palettes come for free.</p></div>
-        <div class="lp-card"><span class="p-icon bg-green-tint text-green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/></svg></span><h3>WCAG AA, everywhere</h3><p>Every text and UI pair is contrast-checked across light, dark, and all five palettes — automatically, on every change.</p></div>
-        <div class="lp-card"><span class="p-icon bg-orange-tint text-orange"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12"/><path d="M4 12h16"/></svg></span><h3>Flat elevation</h3><p>No drop shadows — hairline borders carry depth. Fills are flat, corners are squircles, and one easing moves everything.</p></div>
-        <div class="lp-card"><span class="p-icon bg-accent-tint text-accent"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l3 0"/><path d="M14 20l7 0"/><path d="M6.9 15l6.9 0"/><path d="M10.2 6.3l5.8 13.7"/><path d="M5 20l6 -16l2 0l7 16"/></svg></span><h3>One type ramp</h3><p>Twelve integer steps on a 14px base, set in Urbanist. Medium is the working weight; semibold is the ceiling.</p></div>
-        <div class="lp-card"><span class="p-icon bg-green-tint text-green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/></svg></span><h3>Light by default</h3><p>Every surface renders light unless the app explicitly opts into dark. Components never branch on theme — they only read tokens.</p></div>
-        <div class="lp-card"><span class="p-icon bg-orange-tint text-orange"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2l4 -4"/><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"/></svg></span><h3>A QA gate, not a wiki</h3><p>One script checks forbidden patterns, contrast, token drift, and compilation. Work is not done while it fails.</p></div>
-      </div>
+      <p class="section-sub">Four rules do most of the work — stack them, spread them, or list them out.</p>
+      <div id="principles-cards" style="margin-top: 28px;"></div>
     </div>
   </section>
 

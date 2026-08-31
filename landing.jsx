@@ -12,6 +12,7 @@ const inertWhen = (hidden) => ({ ref: (el) => { if (el) el.inert = hidden; } });
 const ICON_PATHS = {  /* authentic Tabler outline path data (@tabler/icons, MIT) */
   chevron: <path d="M6 9l6 6l6 -6" />,
   bell: (<><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" /><path d="M9 17v1a3 3 0 0 0 6 0v-1" /></>),
+  grid: (<><path d="M4 6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M14 6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M4 16a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M14 16a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /></>),
   moon: <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />,
   sun: (<><path d="M8 12a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" /></>),
   eye: (<><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></>),
@@ -1728,6 +1729,171 @@ function AccentPicker() {
   );
 }
 
+/* ── Morphing principle cards ───────────────────────────
+ * Stack / grid / list, swipeable, expandable. Built on the
+ * system's own tokens and easing — no motion library, no
+ * second icon set (rules 1, 3, 4).
+ * ─────────────────────────────────────────────────────── */
+const PRINCIPLES = [
+  {
+    id: "tokens",
+    icon: "layers",
+    tone: "bg-accent-tint text-accent",
+    title: "Tokens only",
+    description: "No hardcoded colors, sizes, radii, shadows, or easings — every component reads CSS variables, so themes and palettes come for free.",
+  },
+  {
+    id: "contrast",
+    icon: "circle-check",
+    tone: "bg-green-tint text-green",
+    title: "WCAG AA, everywhere",
+    description: "Every text and UI pair is contrast-checked across light, dark, and all five palettes — automatically, on every change.",
+  },
+  {
+    id: "type",
+    icon: "typography",
+    tone: "bg-orange-tint text-orange",
+    title: "One type ramp",
+    description: "Twelve integer steps on a 14px base, set in Urbanist. Medium is the working weight; semibold is the ceiling; bold never appears.",
+  },
+  {
+    id: "qa",
+    icon: "gear",
+    tone: "bg-accent-tint text-accent",
+    title: "A QA gate, not a wiki",
+    description: "One script checks forbidden patterns, contrast, token drift, and compilation. Work is not done while it fails.",
+  },
+];
+
+const LAYOUT_MODES = [
+  { key: "stack", icon: "layers", label: "Stack" },
+  { key: "grid", icon: "grid", label: "Grid" },
+  { key: "list", icon: "lines", label: "List" },
+];
+const SWIPE_THRESHOLD = 56;
+
+function PrincipleCards() {
+  const [layout, setLayout] = useState("stack");
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [expanded, setExpanded] = useState(null);
+  const [drag, setDrag] = useState(0);
+  const dragState = useRef({ startX: 0, active: false, moved: false });
+
+  const count = PRINCIPLES.length;
+  const advance = (step) => setActiveIndex((i) => (i + step + count) % count);
+
+  const onPointerDown = (event) => {
+    if (layout !== "stack") return;
+    dragState.current = { startX: event.clientX, active: true, moved: false };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+  const onPointerMove = (event) => {
+    if (!dragState.current.active) return;
+    const dx = event.clientX - dragState.current.startX;
+    if (Math.abs(dx) > 4) dragState.current.moved = true;
+    setDrag(dx);
+  };
+  const onPointerUp = () => {
+    if (!dragState.current.active) return;
+    const dx = drag;
+    dragState.current.active = false;
+    setDrag(0);
+    if (dx < -SWIPE_THRESHOLD) advance(1);
+    else if (dx > SWIPE_THRESHOLD) advance(-1);
+  };
+
+  /* stack order: active card on top, the rest fanned behind it */
+  const ordered = layout === "stack"
+    ? Array.from({ length: count }, (_, i) => ({ ...PRINCIPLES[(activeIndex + i) % count], pos: i }))
+    : PRINCIPLES.map((card, i) => ({ ...card, pos: i }));
+
+  return (
+    <div>
+      {/* layout toggle — same segmented control the system uses */}
+      <div className="mx-auto mb-6 flex w-fit items-center gap-0.5 rounded-control bg-field p-1 shadow-hairline">
+        {LAYOUT_MODES.map((mode) => (
+          <button
+            key={mode.key}
+            type="button"
+            onClick={() => setLayout(mode.key)}
+            aria-pressed={layout === mode.key}
+            aria-label={`${mode.label} layout`}
+            className={`corner-smooth flex h-7 items-center gap-1.5 rounded-sm px-2.5 text-small font-medium transition-colors duration-150 ${
+              layout === mode.key ? "bg-surface text-ink shadow-btn" : "text-ink-3 hover:text-ink"
+            }`}
+          >
+            <Icon name={mode.icon} size={14} strokeWidth={2} />
+            {mode.label}
+          </button>
+        ))}
+      </div>
+
+      <div className={`principle-deck is-${layout}`}>
+        {ordered.map((card) => {
+          const isTop = layout === "stack" && card.pos === 0;
+          const isOpen = expanded === card.id;
+          const stacked = layout === "stack";
+          const style = stacked
+            ? {
+                zIndex: count - card.pos,
+                transform: `translate3d(${(isTop ? drag : 0) + card.pos * 10}px, ${card.pos * 10}px, 0) rotate(${(card.pos - 1) * 1.4}deg) scale(${isOpen ? 1.02 : 1 - card.pos * 0.02})`,
+                opacity: card.pos > 2 ? 0 : 1,
+                transition: dragState.current.active ? "none" : "transform 300ms var(--ease-out-quint), opacity 300ms var(--ease-out-quint)",
+              }
+            : { transition: "transform 300ms var(--ease-out-quint)", transform: isOpen ? "scale(1.01)" : "none" };
+          return (
+            <article
+              key={card.id}
+              onPointerDown={isTop ? onPointerDown : undefined}
+              onPointerMove={isTop ? onPointerMove : undefined}
+              onPointerUp={isTop ? onPointerUp : undefined}
+              onPointerCancel={isTop ? onPointerUp : undefined}
+              onClick={() => {
+                if (dragState.current.moved) return;
+                setExpanded(isOpen ? null : card.id);
+              }}
+              className={`principle-card${isOpen ? " is-open" : ""}${isTop ? " is-top" : ""}`}
+              style={style}
+            >
+              <div className="flex items-start gap-3">
+                <span className={`corner-smooth flex size-8 shrink-0 items-center justify-center rounded-control ${card.tone}`}>
+                  <Icon name={card.icon} size={16} strokeWidth={2} />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-lead font-semibold text-ink">{card.title}</h3>
+                  <p className={`mt-1 text-caption text-ink-2 ${isOpen || layout === "stack" ? "" : "principle-clamp"}`}>
+                    {card.description}
+                  </p>
+                </div>
+              </div>
+              {isTop ? (
+                <span className="mt-auto pt-3 text-center text-micro text-ink-3">Drag or use the dots to flip through</span>
+              ) : null}
+            </article>
+          );
+        })}
+      </div>
+
+      {layout === "stack" ? (
+        <div className="mt-5 flex justify-center gap-1.5">
+          {PRINCIPLES.map((card, index) => (
+            <button
+              key={card.id}
+              type="button"
+              onClick={() => setActiveIndex(index)}
+              aria-label={`Show ${card.title}`}
+              aria-current={index === activeIndex}
+              className={`h-1.5 rounded-full transition-all duration-150 ${
+                index === activeIndex ? "w-5 bg-accent" : "w-1.5 bg-line-strong hover:bg-ink-3"
+              }`}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function BentoCard({ label, span = "sp3", children }) {
   return (
     <div className={`bento-card ${span}`}>
@@ -1764,4 +1930,5 @@ function mount(id, element) {
 if (typeof document !== "undefined") {
   mount("accent-picker", <AccentPicker />);
   mount("rail", <Bento />);
+  mount("principles-cards", <PrincipleCards />);
 }
