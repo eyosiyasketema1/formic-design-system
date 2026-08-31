@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Formic AI Design System</title>
-<meta name="description" content="A token-driven React + Tailwind v4 design system for AI product interfaces. 40+ components, WCAG AA in every mode — and a live hero you can play with." />
+<meta name="description" content="A token-driven React + Tailwind v4 design system for AI product interfaces. 40+ components, WCAG AA in every mode, and a live hero you can play with." />
 <meta property="og:title" content="Formic AI Design System" />
-<meta property="og:description" content="Token-driven React + Tailwind components for AI product interfaces — chat threads, prompt bars, agent traces, and the whole app shell around them." />
+<meta property="og:description" content="Token-driven React + Tailwind components for AI product interfaces: chat threads, prompt bars, agent traces, and the whole app shell around them." />
 <meta property="og:type" content="website" />
 <meta property="og:image" content="./assets/formic-logomark-512.png" />
 <link rel="icon" type="image/png" href="./assets/favicon.png" />
@@ -605,7 +605,7 @@ tfoot .records-sticky-cell { z-index: 5; }
 
 /* ── Landing page layout (index.html only) ─────────────── */
 .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
-header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--canvas) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--canvas) 88%, transparent); backdrop-filter: blur(8px); }
 .site-row { display: flex; align-items: center; gap: 10px; height: 56px; }
 .brand { display: flex; align-items: center; gap: 9px; font-size: var(--text-lead); font-weight: 600; color: var(--ink); text-decoration: none; }
 .logo-img { width: 28px; height: 28px; object-fit: contain; }
@@ -626,7 +626,10 @@ header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in sr
 .hero { padding: 64px 0 56px; text-align: center; }
 .hero-copy { max-width: 720px; margin: 0 auto; }
 .eyebrow { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: var(--radius-chip); background: var(--accent-tint); color: var(--accent); font-size: var(--text-small); font-weight: 500; }
-.hero h1 { font-size: var(--text-display-xl); font-weight: 600; letter-spacing: -0.02em; line-height: 1.06; text-wrap: balance; margin: 18px 0 14px; color: var(--ink); }
+.hero h1 { font-size: var(--text-display-lg); font-weight: 600; letter-spacing: -0.02em; line-height: 1.22; margin: 20px 0 26px; color: var(--ink); }
+.hero-lines span { display: block; }
+.hero-lines span + span { color: var(--ink-2); }
+@media (min-width: 720px) { .hero h1 { font-size: var(--text-display-xl); line-height: 1.14; } }
 .hero .lede { font-size: var(--text-lead); color: var(--ink-2); max-width: 52ch; margin: 0 auto; }
 .hero-ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 26px 0 22px; }
 .hero-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-bottom: 26px; font-size: var(--text-small); color: var(--ink-3); }
@@ -731,15 +734,15 @@ footer.site a:hover { color: var(--ink); }
       <a href="./preview.html">Gallery</a>
     </nav>
     <button class="licon-btn" id="theme-toggle" aria-label="Toggle dark mode" style="corner-shape: squircle;">
-      <svg id="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"/></svg>
-      <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M8 12a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/></svg>
+      <svg id="icon-moon" width="16" style="display:none" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"/></svg>
+      <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/></svg>
     </button>
     <a class="lbtn lbtn-md lbtn-secondary" href="https://github.com/eyosiyasketema1/formic-ai-design-system"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"/></svg> GitHub</a>
   </div>
 </header>
 
 <main>
-  <!-- ══ Hero — live components ══ -->
+  <!-- ══ Hero ══ -->
   <div class="wrap hero">
     <div class="hero-copy">
       <div>
@@ -747,12 +750,11 @@ footer.site a:hover { color: var(--ink); }
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/></svg>
           Open source · React + Tailwind v4
         </span>
-        <h1>The design system for AI product interfaces</h1>
-        <p class="lede">
-          Formic is a token-driven component library for the interfaces AI products actually need —
-          approvals, agent tasks, inline rewrites, prompt bars — and the whole app shell around them.
-          Everything on this page is running live. Go ahead, touch it.
-        </p>
+        <h1 class="hero-lines">
+          <span>Tokens, not hardcoded values.</span>
+          <span>Components made for AI interfaces.</span>
+          <span>AA contrast in every theme.</span>
+        </h1>
         <div class="hero-ctas">
           <a class="lbtn lbtn-accent" href="https://github.com/eyosiyasketema1/formic-ai-design-system"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"/></svg> View on GitHub</a>
           <a class="lbtn lbtn-secondary" href="./preview.html">Open the live gallery</a>
@@ -760,7 +762,7 @@ footer.site a:hover { color: var(--ink); }
         <div class="hero-meta">
           <span>40+ components</span><span>·</span><span>5 palettes × light/dark</span><span>·</span><span>Two dependencies</span>
         </div>
-        <div id="accent-picker" style="display: flex; justify-content: center;"></div>
+        <div id="accent-picker" style="display: flex; justify-content: center; text-align: center;"></div>
       </div>
     </div>
   </div>
@@ -770,7 +772,7 @@ footer.site a:hover { color: var(--ink); }
     <div class="rail-head">
       <div>
         <div class="kicker">Live components</div>
-        <h2>Everything here is real — go ahead, touch it</h2>
+        <h2>Everything here is real, go ahead and touch it</h2>
       </div>
     </div>
     <div id="rail" aria-label="Live Formic components"></div>
@@ -781,7 +783,7 @@ footer.site a:hover { color: var(--ink); }
     <div class="wrap">
       <div class="kicker">Principles</div>
       <h2>Opinionated where it matters</h2>
-      <p class="section-sub">Four rules do most of the work — stack them, spread them, or list them out.</p>
+      <p class="section-sub">Four rules do most of the work. Stack them, spread them, or list them out.</p>
       <div id="principles-cards" style="margin-top: 28px;"></div>
     </div>
   </section>
@@ -791,7 +793,7 @@ footer.site a:hover { color: var(--ink); }
     <div class="wrap">
       <div class="kicker">Components</div>
       <h2>Built for AI products, not adapted to them</h2>
-      <p class="section-sub">The AI-specific surface is first-class — highlighted below — and the everyday controls around it match to the pixel.</p>
+      <p class="section-sub">The AI-specific surface is first-class, highlighted below, and the everyday controls around it match to the pixel.</p>
       <div class="inventory">
         <a class="inv-chip ai" href="./preview.html">ChatThread</a><a class="inv-chip ai" href="./preview.html">PromptBar</a><a class="inv-chip ai" href="./preview.html">StreamingText</a><a class="inv-chip ai" href="./preview.html">ThinkingState</a><a class="inv-chip ai" href="./preview.html">ToolChips</a><a class="inv-chip ai" href="./preview.html">ApprovalCard</a><a class="inv-chip ai" href="./preview.html">TaskRows</a><a class="inv-chip ai" href="./preview.html">Markdown</a><a class="inv-chip ai" href="./preview.html">CodeBlock</a><a class="inv-chip ai" href="./preview.html">SelectionActions</a><a class="inv-chip" href="./preview.html">Button</a><a class="inv-chip" href="./preview.html">Input</a><a class="inv-chip" href="./preview.html">Select</a><a class="inv-chip" href="./preview.html">Calendar</a><a class="inv-chip" href="./preview.html">DateRangePicker</a><a class="inv-chip" href="./preview.html">Modal</a><a class="inv-chip" href="./preview.html">Drawer</a><a class="inv-chip" href="./preview.html">Toast</a><a class="inv-chip" href="./preview.html">DropdownMenu</a><a class="inv-chip" href="./preview.html">Tabs</a><a class="inv-chip" href="./preview.html">Steps</a><a class="inv-chip" href="./preview.html">Breadcrumbs</a><a class="inv-chip" href="./preview.html">SidebarNav</a><a class="inv-chip" href="./preview.html">RecordsTable</a><a class="inv-chip" href="./preview.html">FilterTable</a><a class="inv-chip" href="./preview.html">Timeline</a><a class="inv-chip" href="./preview.html">Accordion</a><a class="inv-chip" href="./preview.html">Skeleton</a><a class="inv-chip" href="./preview.html">Avatar</a><a class="inv-chip" href="./preview.html">FileDropzone</a><a class="inv-chip" href="./preview.html">+ 10 more in the gallery</a>
       </div>
@@ -803,7 +805,7 @@ footer.site a:hover { color: var(--ink); }
     <div class="wrap">
       <div class="kicker">Quick start</div>
       <h2>Copy in, compose, ship</h2>
-      <p class="section-sub">Formic is vendored, not installed — copy <code>styles/</code> and the components you need, import one CSS stack, and compose. Two peer dependencies: React and Tabler icons.</p>
+      <p class="section-sub">Formic is vendored, not installed. Copy <code>styles/</code> and the components you need, import one CSS stack, and compose. Two peer dependencies: React and Tabler icons.</p>
       <div class="lcode">
         <div class="lcode-head">globals.css · Tailwind v4</div>
         <pre><span class="k">@import</span> "tailwindcss";

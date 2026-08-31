@@ -1683,6 +1683,197 @@ function useAccent() {
   return [accent, setAccentState];
 }
 
+/* ═══════════ Calendar ═══════════ */
+const CAL_atMidnight = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+const CAL_sameDay = (a, b) => !!a && !!b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+function Calendar({
+  mode = "single",
+  value,
+  defaultValue,
+  onChange,
+  rangeValue,
+  defaultRange,
+  onRangeChange,
+  min,
+  max,
+  weekStartsOn = 1,
+  autoFocus = false,
+  className = ""
+} = {}) {
+  const id = useId();
+  const [internal, setInternal] = useState(defaultValue ?? null);
+  const selected = value !== void 0 ? value : internal;
+  const [internalRange, setInternalRange] = useState(
+    defaultRange ?? { from: null, to: null }
+  );
+  const range = rangeValue !== void 0 ? rangeValue : internalRange;
+  const [hovered, setHovered] = useState(null);
+  const [focusDate, setFocusDate] = useState(
+    () => CAL_atMidnight((mode === "range" ? range.from : selected) ?? /* @__PURE__ */ new Date())
+  );
+  const shouldFocus = useRef(autoFocus);
+  const year = focusDate.getFullYear();
+  const month = focusDate.getMonth();
+  const dayId = (date) => `${id}-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  useEffect(() => {
+    if (!shouldFocus.current) return;
+    document.getElementById(dayId(focusDate))?.focus();
+  }, [focusDate]);
+  const isDisabled = (date) => min !== void 0 && date < CAL_atMidnight(min) || max !== void 0 && date > CAL_atMidnight(max);
+  const moveDays = (days) => {
+    shouldFocus.current = true;
+    setFocusDate((current) => new Date(current.getFullYear(), current.getMonth(), current.getDate() + days));
+  };
+  const moveMonth = (delta, focusGrid) => {
+    shouldFocus.current = focusGrid;
+    setFocusDate((current) => {
+      const lastOfTarget = new Date(current.getFullYear(), current.getMonth() + delta + 1, 0).getDate();
+      return new Date(current.getFullYear(), current.getMonth() + delta, Math.min(current.getDate(), lastOfTarget));
+    });
+  };
+  const commitRange = (next) => {
+    if (rangeValue === void 0) setInternalRange(next);
+    onRangeChange?.(next);
+  };
+  const select = (date) => {
+    if (isDisabled(date)) return;
+    if (mode === "range") {
+      if (!range.from || range.to) commitRange({ from: date, to: null });
+      else if (date < range.from) commitRange({ from: date, to: range.from });
+      else commitRange({ from: range.from, to: date });
+      return;
+    }
+    if (value === void 0) setInternal(date);
+    onChange?.(date);
+  };
+  const previewCandidate = hovered ?? focusDate;
+  const previewEnd = mode === "range" && range.from && !range.to && previewCandidate > range.from && !isDisabled(previewCandidate) ? previewCandidate : null;
+  const bandEnd = range.to ?? previewEnd;
+  const onKeyDown = (event) => {
+    switch (event.key) {
+      case "ArrowLeft":
+        event.preventDefault();
+        moveDays(-1);
+        break;
+      case "ArrowRight":
+        event.preventDefault();
+        moveDays(1);
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        moveDays(-7);
+        break;
+      case "ArrowDown":
+        event.preventDefault();
+        moveDays(7);
+        break;
+      case "PageUp":
+        event.preventDefault();
+        moveMonth(-1, true);
+        break;
+      case "PageDown":
+        event.preventDefault();
+        moveMonth(1, true);
+        break;
+      case "Home": {
+        event.preventDefault();
+        const column = (focusDate.getDay() - weekStartsOn + 7) % 7;
+        moveDays(-column);
+        break;
+      }
+      case "End": {
+        event.preventDefault();
+        const column = (focusDate.getDay() - weekStartsOn + 7) % 7;
+        moveDays(6 - column);
+        break;
+      }
+      case "Enter":
+      case " ":
+        event.preventDefault();
+        select(focusDate);
+        break;
+    }
+  };
+  const firstColumn = (new Date(year, month, 1).getDay() - weekStartsOn + 7) % 7;
+  const total = new Date(year, month + 1, 0).getDate();
+  const cells = [
+    ...Array.from({ length: firstColumn }, () => null),
+    ...Array.from({ length: total }, (_, index) => new Date(year, month, index + 1))
+  ];
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weeks = [];
+  for (let index = 0; index < cells.length; index += 7) weeks.push(cells.slice(index, index + 7));
+  const monthLabel = new Intl.DateTimeFormat(void 0, { month: "long", year: "numeric" }).format(focusDate);
+  const narrow = new Intl.DateTimeFormat(void 0, { weekday: "narrow" });
+  const long = new Intl.DateTimeFormat(void 0, { weekday: "long" });
+  const weekdays = Array.from({ length: 7 }, (_, index) => {
+    const reference = new Date(2024, 0, 7 + weekStartsOn + index);
+    return { short: narrow.format(reference), full: long.format(reference) };
+  });
+  const today = CAL_atMidnight(/* @__PURE__ */ new Date());
+  return <div className={`w-fit select-none ${className}`}>
+      <div className="flex items-center justify-between gap-2 pb-2">
+        <IconButton label="Previous month" onClick={() => moveMonth(-1, false)} className="text-ink-3 hover:bg-hover hover:text-ink">
+          <Icon name="chevron-left" size={14} strokeWidth={2} />
+        </IconButton>
+        <span aria-live="polite" className="text-caption font-medium text-ink">
+          {monthLabel}
+        </span>
+        <IconButton label="Next month" onClick={() => moveMonth(1, false)} className="text-ink-3 hover:bg-hover hover:text-ink">
+          <Icon name="chevron-right" size={14} strokeWidth={2} />
+        </IconButton>
+      </div>
+      <div
+    role="grid"
+    aria-label={monthLabel}
+    onKeyDown={onKeyDown}
+    onMouseLeave={mode === "range" ? () => setHovered(null) : void 0}
+    className="mx-auto w-max"
+  >
+        {
+    /* range mode drops the gaps so the band reads as one piece */
+  }
+        <div role="row" className={`grid grid-cols-7 pb-1 ${mode === "range" ? "gap-0" : "gap-1"}`}>
+          {weekdays.map((weekday, index) => <span key={index} role="columnheader" aria-label={weekday.full} className="flex size-8 items-center justify-center text-micro font-medium text-ink-3 uppercase">
+              <span aria-hidden>{weekday.short}</span>
+            </span>)}
+        </div>
+        {weeks.map((week, weekIndex) => <div key={weekIndex} role="row" className={`grid grid-cols-7 ${mode === "range" ? "gap-0" : "gap-1"}`}>
+            {week.map((day, dayIndex) => {
+    if (!day) return <span key={dayIndex} className="size-8" />;
+    const isToday = CAL_sameDay(day, today);
+    const dayDisabled = isDisabled(day);
+    const isStart = mode === "range" && CAL_sameDay(day, range.from);
+    const isEnd = mode === "range" && CAL_sameDay(day, range.to);
+    const inBand = mode === "range" && !!range.from && !!bandEnd && day > range.from && day < bandEnd;
+    const isPreviewEnd = mode === "range" && !range.to && CAL_sameDay(day, previewEnd);
+    const isSelected = mode === "range" ? isStart || isEnd : CAL_sameDay(day, selected);
+    const shape = mode === "range" ? isStart && isEnd || isStart && !range.to && !previewEnd ? "rounded-control" : isStart ? "rounded-l-control rounded-r-none" : isEnd ? "rounded-r-control rounded-l-none" : inBand || isPreviewEnd ? "rounded-none" : "rounded-control" : "rounded-control";
+    return <button
+      key={dayIndex}
+      type="button"
+      role="gridcell"
+      id={dayId(day)}
+      aria-selected={isSelected || inBand && range.to !== null}
+      aria-disabled={dayDisabled || void 0}
+      tabIndex={CAL_sameDay(day, focusDate) ? 0 : -1}
+      onMouseEnter={mode === "range" && !dayDisabled ? () => setHovered(day) : void 0}
+      onClick={() => {
+        shouldFocus.current = true;
+        setFocusDate(day);
+        select(day);
+      }}
+      className={`flex size-8 items-center justify-center text-caption tabular-nums transition-colors duration-150 ${shape} ${isSelected ? "bg-ink font-medium text-canvas" : dayDisabled ? "cursor-default text-ink-3 opacity-40" : inBand || isPreviewEnd ? "bg-accent-tint text-ink" : "text-ink hover:bg-hover"} ${isToday && !isSelected ? "font-medium shadow-hairline" : ""}`}
+    >
+                  {day.getDate()}
+                </button>;
+  })}
+          </div>)}
+      </div>
+    </div>;
+}
+
+
 /* ══ Landing page app — accent picker + live hero mounts ══ */
 const ACCENT_PRESETS = [
   { hex: "", swatch: "#3b5bdb", label: "Formic blue (default)" },
@@ -1696,8 +1887,8 @@ const ACCENT_PRESETS = [
 function AccentPicker() {
   const [accent, setAccentHex] = useAccent();
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-small font-medium text-ink-2">Make it yours — pick an accent:</span>
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      <span className="text-small font-medium text-ink-2">Pick an accent:</span>
       {ACCENT_PRESETS.map((preset) => (
         <button
           key={preset.label}
@@ -1705,14 +1896,14 @@ function AccentPicker() {
           aria-label={preset.label}
           aria-pressed={accent === preset.hex}
           onClick={() => setAccentHex(preset.hex)}
-          className={`size-6 rounded-full transition-transform duration-150 hover:scale-110 ${
+          className={`h-6 w-11 rounded-capsule transition-transform duration-150 hover:scale-105 ${
             accent === preset.hex ? "outline-2 outline-offset-2 outline-line-strong outline" : "shadow-hairline"
           }`}
           style={{ background: preset.swatch }}
         />
       ))}
       <label
-        className="flex size-6 cursor-pointer items-center justify-center rounded-full bg-field text-ink-2 shadow-hairline transition-transform duration-150 hover:scale-110"
+        className="flex h-6 w-11 cursor-pointer items-center justify-center rounded-capsule bg-field text-ink-2 shadow-hairline transition-transform duration-150 hover:scale-105"
         title="Custom color"
       >
         <Icon name="edit" size={12} strokeWidth={2} />
@@ -1724,14 +1915,13 @@ function AccentPicker() {
           aria-label="Custom accent color"
         />
       </label>
-      <span className="text-small text-ink-3">— every surface on this page follows, AA-fitted for both themes.</span>
     </div>
   );
 }
 
 /* ── Morphing principle cards ───────────────────────────
  * Stack / grid / list, swipeable, expandable. Built on the
- * system's own tokens and easing — no motion library, no
+ * system's own tokens and easing: no motion library, no
  * second icon set (rules 1, 3, 4).
  * ─────────────────────────────────────────────────────── */
 const PRINCIPLES = [
@@ -1740,14 +1930,14 @@ const PRINCIPLES = [
     icon: "layers",
     tone: "bg-accent-tint text-accent",
     title: "Tokens only",
-    description: "No hardcoded colors, sizes, radii, shadows, or easings — every component reads CSS variables, so themes and palettes come for free.",
+    description: "No hardcoded colors, sizes, radii, shadows, or easings. Every component reads CSS variables, so themes and palettes come for free.",
   },
   {
     id: "contrast",
     icon: "circle-check",
     tone: "bg-green-tint text-green",
     title: "WCAG AA, everywhere",
-    description: "Every text and UI pair is contrast-checked across light, dark, and all five palettes — automatically, on every change.",
+    description: "Every text and UI pair is contrast-checked across light, dark, and all five palettes, automatically, on every change.",
   },
   {
     id: "type",
@@ -1918,7 +2108,10 @@ function Bento() {
           <LoadingState label="Thinking" variant="Dots" />
         </div>
       </BentoCard>
-      <BentoCard label="PromptBar · type a prompt" span="sp6"><PromptBar /></BentoCard>
+      <BentoCard label="PromptBar · type a prompt" span="sp4"><PromptBar /></BentoCard>
+      <BentoCard label="Calendar · pick a range" span="sp2">
+        <div className="flex justify-center"><Calendar mode="range" /></div>
+      </BentoCard>
     </div>
   );
 }
