@@ -624,7 +624,7 @@ header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in sr
 .licon-btn:hover { background: var(--hover-2); color: var(--ink); }
 /* sections separate by rhythm and soft bands — no rule lines */
 /* animated flowing paths behind the whole page (tokens + one keyframe) */
-.hero-bg { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; color: var(--ink); opacity: 0.22; z-index: 0; }
+.hero-bg { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; color: var(--ink); opacity: 0.15; z-index: 0; }
 .hero-bg svg { width: 100%; height: 100%; }
 .hero-bg .bgp { stroke-dasharray: 760 420; animation-name: path-drift; animation-timing-function: linear; animation-iteration-count: infinite; }
 @keyframes path-drift { from { stroke-dashoffset: 1180; } to { stroke-dashoffset: 0; } }
@@ -660,6 +660,7 @@ main, header.site, footer.site { position: relative; z-index: 1; }
 .bento-card.sp3 { grid-column: span 3; }
 .bento-card.sp4 { grid-column: span 4; }
 .bento-card.sp6 { grid-column: span 6; }
+.bento-card.center { grid-column: 3 / span 2; }
 .bento-label { font-size: var(--text-micro); font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px; }
 .bento-body { min-width: 0; flex: 1; display: flex; flex-direction: column; }
 .chat-scroll { max-height: 260px; overflow-y: auto; padding-right: 4px; }
@@ -667,11 +668,11 @@ main, header.site, footer.site { position: relative; z-index: 1; }
 .chat-scroll::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; }
 @media (max-width: 1000px) {
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .bento-card.sp2, .bento-card.sp3, .bento-card.sp4, .bento-card.sp6 { grid-column: span 2; }
+  .bento-card.sp2, .bento-card.sp3, .bento-card.sp4, .bento-card.sp6, .bento-card.center { grid-column: span 2; }
 }
 @media (max-width: 640px) {
   .bento { grid-template-columns: 1fr; }
-  .bento-card.sp2, .bento-card.sp3, .bento-card.sp4, .bento-card.sp6 { grid-column: span 1; }
+  .bento-card.sp2, .bento-card.sp3, .bento-card.sp4, .bento-card.sp6, .bento-card.center { grid-column: span 1; }
 }
 .principle-deck { position: relative; }
 .principle-card {
@@ -859,6 +860,7 @@ footer.site a:hover { color: var(--ink); }
     <div class="links">
       <a href="https://github.com/eyosiyasketema1/formic-ai-design-system">GitHub</a>
       <a href="./preview.html">Live gallery</a>
+      <a href="mailto:eyosiyasketema@gmail.com">eyosiyasketema@gmail.com</a>
     </div>
   </div>
 </footer>

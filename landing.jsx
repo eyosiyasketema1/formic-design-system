@@ -1874,6 +1874,300 @@ function Calendar({
 }
 
 
+/* ═══════════ StreamingText ═══════════ */
+const WORD_MS = 55;
+const HOLD_MS = 3400;
+const STREAM_TOKENS = [
+  ..."Pistachio is your fastest-growing flavor — sales are up 23% this month and margins beat vanilla by 8 points.".split(" ").map((text) => ({ text })),
+  { text: "", cite: true },
+  ..."Stone-fruit flavors are trending in the same range.".split(" ").map((text) => ({ text })),
+];
+const FOLLOW_UPS = ["Which flavors sell best in winter", "Compare gelato and soft serve margins"];
+const SOURCE_IMAGES = {
+  scoop: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231f7a5f'/%3E%3Cpath d='M20 36c0 7 5.4 12 12 12s12-5 12-12H20Z' fill='%23fff'/%3E%3Ccircle cx='32' cy='25' r='11' fill='%23bff3dd'/%3E%3Cpath d='M24 24c4-7 13-7 17 0' fill='none' stroke='%231f7a5f' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E",
+  trends: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232f6fec'/%3E%3Cpath d='M15 43 27 31l8 7 14-18' fill='none' stroke='%23fff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='49' cy='20' r='5' fill='%23bfe0ff'/%3E%3C/svg%3E",
+  market: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23e56d24'/%3E%3Cpath d='M17 45V25h8v20h-8Zm11 0V16h8v29h-8Zm11 0V30h8v15h-8Z' fill='%23fff'/%3E%3Cpath d='M16 49h32' stroke='%23ffd6b8' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E",
+};
+const SOURCES = [
+  { name: "Scoop Data", domain: "scoopdata.io", href: "https://scoopdata.io/", image: SOURCE_IMAGES.scoop },
+  { name: "Trends Index", domain: "trends.google.com", href: "https://trends.google.com/trends/", image: SOURCE_IMAGES.trends },
+  { name: "Market Basket", domain: "marketbasket.io", href: "https://marketbasket.io/", image: SOURCE_IMAGES.market },
+];
+function SourceChip() {
+  const source = SOURCES[0];
+  return (
+    <Chip as="a" tone="inset" size="xs" mono href={source.href} target="_blank" rel="noreferrer"
+      className="ml-0 mr-1 translate-y-[-1px] align-middle hover:bg-hover hover:text-ink"
+      style={{ animation: "pop-in 250ms var(--ease-out-quint) both" }}>
+      <img src={source.image} alt="" className="source-avatar size-3 rounded-[3px]" />
+      <span>{source.domain}</span>
+    </Chip>
+  );
+}
+const ACTION_ICONS = [
+  <g key="copy"><rect x="9" y="9" width="12" height="12" rx="2.5" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></g>,
+  <path key="retry" d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" />,
+  <path key="up" d="M7 10v12M15 5.88L14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88z" />,
+  <path key="down" d="M17 14V2M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88z" />,
+];
+function StreamingText({ loop = true, fill = false }) {
+  const [sourcesOpen, setSourcesOpen] = useState(false);
+  const { count, done } = useStream(STREAM_TOKENS.length, { intervalMs: WORD_MS, holdMs: HOLD_MS, loop });
+  return (
+    <div className={fill ? "w-full" : "min-h-[15.5rem] w-full max-w-95"}>
+      <p className="text-body leading-relaxed text-ink" aria-live="polite" aria-busy={!done}>
+        {STREAM_TOKENS.slice(0, count).map((token, i) =>
+          token.cite ? (
+            <SourceChip key={i} />
+          ) : (
+            <span key={i} className="inline [will-change:filter,opacity]"
+              style={{ animation: "stream-in 420ms var(--ease-out-quint) both" }}>
+              {token.text}{" "}
+            </span>
+          ),
+        )}
+        {!done && <StreamCaret />}
+      </p>
+      <div className="mt-2 flex items-center gap-0.5 transition-opacity duration-400"
+        style={{ opacity: done ? 1 : 0, pointerEvents: done ? "auto" : "none" }}>
+        {ACTION_ICONS.map((icon, i) => (
+          <IconButton key={i} label="Action" className="text-ink-3 hover:bg-hover-2 hover:text-ink-2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
+          </IconButton>
+        ))}
+        <button type="button" aria-expanded={sourcesOpen} onClick={() => setSourcesOpen((current) => !current)}
+          className="ml-1.5 flex items-center gap-1.5 rounded-sm px-1 py-0.5 text-left transition-colors duration-150 hover:bg-hover">
+          <AvatarStack srcs={SOURCES.map((source) => source.image)} />
+          <span className="text-small text-ink-2">10 sources</span>
+        </button>
+      </div>
+      <Disclosure open={done && sourcesOpen} innerClassName="overflow-hidden">
+          <div className="mt-1.5 flex flex-col rounded-md bg-inset p-1 shadow-hairline">
+            {SOURCES.map((source) => (
+              <a key={source.domain} href={source.href} target="_blank" rel="noreferrer"
+                className="flex items-center gap-2 rounded-sm px-1.5 py-1 text-small text-ink-2 transition-colors duration-150 hover:bg-hover hover:text-ink">
+                <img src={source.image} alt="" className="source-avatar size-4 rounded-[4px]" />
+                <span className="animated-underline">{source.name}</span>
+                <span className="ml-auto font-mono text-micro text-ink-3">{source.domain}</span>
+              </a>
+            ))}
+          </div>
+      </Disclosure>
+      <div className="mt-2.5 transition-opacity duration-400" style={{ opacity: done ? 1 : 0, pointerEvents: done ? "auto" : "none" }}>
+        <p className="text-small font-medium text-ink-2">Follow-ups</p>
+        <div className="mt-0.5 flex flex-col">
+          {FOLLOW_UPS.map((text, i) => (
+            <button key={text}
+              className="-mx-1.5 flex items-center gap-2 rounded-sm border-b border-line px-1.5 py-1.5 text-left text-caption text-ink transition-colors duration-150 hover:bg-hover-2"
+              style={done ? fadeUp(i, { duration: 350, stagger: 90 }) : { opacity: 0 }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                <path d="M9 10l-5 5 5 5" /><path d="M20 4v7a4 4 0 0 1-4 4H4" />
+              </svg>
+              {text}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════ Button ═══════════ */
+const BTN_VARIANTS = {
+  primary: "bg-ink text-canvas enabled:hover:opacity-90",
+  secondary: "bg-surface text-ink shadow-btn enabled:hover:bg-hover",
+  outline: "border border-line-strong text-ink enabled:hover:bg-hover",
+  ghost: "text-ink-2 enabled:hover:bg-hover-2 enabled:hover:text-ink",
+  link: "animated-underline !px-1 text-accent enabled:hover:opacity-90 disabled:pointer-events-none",
+  destructive: "bg-red text-canvas enabled:hover:opacity-90",
+  "destructive-soft": "bg-red-tint text-red enabled:hover:opacity-85",
+  accent: "bg-accent text-canvas enabled:hover:opacity-90",
+  "accent-soft": "bg-accent-tint text-accent enabled:hover:opacity-85",
+  success: "bg-green text-canvas enabled:hover:opacity-90"
+};
+const BTN_SIZES = {
+  xs: "h-6 gap-1 px-2 text-tiny [&_svg]:size-3",
+  sm: "h-8 gap-1.5 px-3 text-caption [&_svg]:size-3.5",
+  md: "h-9 gap-2 px-3.5 text-body [&_svg]:size-3.5",
+  lg: "h-10 gap-2 px-4 text-lead [&_svg]:size-4"
+};
+function Button({
+  children = "Button",
+  variant = "primary",
+  size = "md",
+  shape = "square",
+  loading = false,
+  disabled = false,
+  fullWidth = false,
+  icon,
+  iconEnd,
+  href,
+  target,
+  type = "button",
+  className = "",
+  style,
+  onClick,
+  ...rest
+}) {
+  const classes = `${fullWidth ? "flex w-full" : "inline-flex"} items-center justify-center font-medium leading-none corner-smooth
+    ${shape === "pill" ? "rounded-full" : "rounded-control"}
+    transition-[background-color,color,box-shadow,opacity,transform] duration-150
+    enabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-45
+    ${BTN_SIZES[size]} ${BTN_VARIANTS[variant]} ${className}`;
+  const content = <>
+      {loading ? <Spinner /> : icon && <span aria-hidden className="shrink-0">{icon}</span>}
+      <span className="optical-text">{children}</span>
+      {!loading && iconEnd && <span aria-hidden className="shrink-0">{iconEnd}</span>}
+    </>;
+  if (href !== void 0 && !disabled) {
+    return <a
+      {...rest}
+      href={href}
+      target={target}
+      rel={target === "_blank" ? "noreferrer" : void 0}
+      aria-busy={loading || void 0}
+      aria-disabled={loading || void 0}
+      onClick={(event) => {
+        if (loading) {
+          event.preventDefault();
+          return;
+        }
+        onClick?.();
+      }}
+      className={classes.replaceAll("enabled:", "")}
+      style={style}
+    >
+        {content}
+      </a>;
+  }
+  return <button
+    {...rest}
+    type={type}
+    disabled={disabled}
+    aria-busy={loading || void 0}
+    aria-disabled={loading || void 0}
+    onClick={(event) => {
+      if (loading) {
+        event.preventDefault();
+        return;
+      }
+      onClick?.();
+    }}
+    className={classes}
+    style={style}
+  >
+      {content}
+    </button>;
+}
+
+/* ═══════════ ChatComposer ═══════════ */
+const CC_TABS = ["Flavors", "Suppliers"];
+const CC_ACTIONS = [
+  { name: "plus", label: "New chat" },
+  { name: "clock", label: "History" },
+  { name: "ellipsis", label: "More options" },
+];
+const CC_REPLIES = [
+  { label: "Sales History", sub: "Flavor Data", time: "4s", body: "Pulled 3 summers of mint chip sales for comparison." },
+  { label: "Comparison", sub: "Trend Detection", time: "2s", body: "Mint chip is up 12% with stronger weekend peaks." },
+];
+function ReplySection({ label, sub, time, body, resolving }) {
+  return (
+    <div
+      className="flex w-full flex-col gap-1.5 transition-[opacity,filter,transform] duration-400"
+      style={{
+        opacity: resolving ? 0.55 : 1,
+        filter: resolving ? "blur(0.5px)" : "blur(0)",
+        transform: resolving ? "scale(0.985)" : "scale(1)",
+        transformOrigin: "top left",
+        transitionTimingFunction: "var(--ease-out-quint)",
+        ...fadeUp(0, { duration: 400 }),
+      }}
+    >
+      <div className="flex items-center gap-1 text-small leading-[1.3]">
+        <span className="font-medium text-ink">{label}</span>
+        <span className="text-ink-2">{sub}</span>
+        <span className="text-ink">for {time}</span>
+      </div>
+      <p className="text-body leading-normal text-ink">{body}</p>
+    </div>
+  );
+}
+function ChatComposer({ tabs = CC_TABS, placeholder = "Prompt or tag a flavor with @", initialMessage = "Compare mint chip to last summer", replies = CC_REPLIES, onSend }) {
+  const [phase, setPhase] = useState(initialMessage ? "done" : "idle");
+  const [draft, setDraft] = useState("");
+  const [submitted, setSubmitted] = useState(initialMessage);
+  const [tab, setTab] = useState(tabs[0]);
+  const inputRef = useRef(null);
+  useEffect(() => {
+    let t;
+    if (phase === "sent") t = setTimeout(() => setPhase("reply1"), 500);
+    else if (phase === "reply1") t = setTimeout(() => setPhase("reply2"), 1400);
+    else if (phase === "reply2") t = setTimeout(() => setPhase("done"), 1200);
+    else return;
+    return () => clearTimeout(t);
+  }, [phase]);
+  const sent = phase !== "idle";
+  const canSend = draft.trim().length > 0;
+  const send = () => {
+    if (!canSend) return;
+    const text = draft.trim();
+    setSubmitted(text);
+    onSend?.(text);
+    setDraft("");
+    setPhase("sent");
+  };
+  return (
+    <Card className="flex h-[288px] w-full max-w-95 flex-col self-start">
+      <div className="flex shrink-0 items-center justify-between border-b border-line p-1.5">
+        <div className="flex items-center">
+          {tabs.map((item) => (
+            <button key={item} type="button" aria-pressed={tab === item} onClick={() => setTab(item)}
+              className={`rounded-sm px-2 py-[3px] text-body text-ink transition-[background-color,opacity] duration-150 ${tab === item ? "bg-field" : "opacity-50 hover:opacity-75"}`}>
+              {item}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1">
+          {CC_ACTIONS.map(({ name, label }) => (
+            <IconButton key={name} label={label} className="text-ink-3 hover:bg-hover hover:text-ink-2">
+              <Icon name={name} size={15} strokeWidth={2} />
+            </IconButton>
+          ))}
+        </div>
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-3 pt-2.5 pb-1">
+        <div className="flex justify-end pl-14">
+          <div className="rounded-md bg-field px-3 py-1.5 text-body leading-[1.4] text-ink transition-[opacity,transform] duration-300"
+            style={{ opacity: sent ? 1 : 0, transform: sent ? "translateY(0)" : "translateY(10px)", transitionTimingFunction: "var(--ease-out-quint)" }}>
+            {submitted}
+          </div>
+        </div>
+        <div aria-live="polite" className="contents">
+          {(phase === "reply1" || phase === "reply2" || phase === "done") && replies[0] ? (
+            <ReplySection {...replies[0]} />
+          ) : null}
+          {(phase === "reply2" || phase === "done") && replies[1] ? (
+            <ReplySection {...replies[1]} resolving={phase === "reply2"} />
+          ) : null}
+        </div>
+      </div>
+      <div className="mt-auto shrink-0 p-1.5">
+        <div role="presentation" onClick={() => inputRef.current?.focus()}
+          className="primitive-field flex cursor-text flex-col gap-2 rounded-control border border-line bg-field p-2.5">
+          <input ref={inputRef} value={draft} onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing) send(); }}
+            placeholder={placeholder} aria-label="Chat prompt"
+            className="min-h-4.5 bg-transparent text-body leading-[1.4] text-ink outline-none placeholder:text-ink-3" />
+          <div className="flex items-center justify-end">
+            <SendButton enabled={canSend} onClick={send} />
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 /* ══ Landing page app — accent picker + live hero mounts ══ */
 const ACCENT_PRESETS = [
   { hex: "", swatch: "#3b5bdb", label: "Formic blue (default)" },
@@ -2154,6 +2448,31 @@ function BentoCard({ label, span = "sp3", children }) {
 
 /* Bento grid on a 6-column base — asymmetric tiles sized to each
    component's natural shape. Everything visible; no overflow. */
+function ButtonVariants() {
+  return (
+    <div className="flex h-full flex-col justify-center gap-2">
+      <div className="flex flex-wrap gap-2">
+        <Button variant="accent" size="sm">Accent</Button>
+        <Button variant="primary" size="sm">Primary</Button>
+        <Button variant="secondary" size="sm">Secondary</Button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm">Outline</Button>
+        <Button variant="ghost" size="sm">Ghost</Button>
+        <Button variant="destructive" size="sm">Delete</Button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="accent-soft" size="sm">Accent soft</Button>
+        <Button variant="success" size="sm">Success</Button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="secondary" size="sm" loading>Saving</Button>
+        <Button variant="secondary" size="sm" disabled>Disabled</Button>
+      </div>
+    </div>
+  );
+}
+
 function Bento() {
   return (
     <div className="bento">
@@ -2166,11 +2485,11 @@ function Bento() {
           <LoadingState label="Thinking" variant="Dots" />
         </div>
       </BentoCard>
+      <BentoCard label="Button · the main variants" span="sp2"><ButtonVariants /></BentoCard>
       <BentoCard label="SelectionActions · inline rewrite" span="sp4"><SelectionActions /></BentoCard>
-      <BentoCard label="Calendar · pick a range" span="sp2">
-        <div className="flex justify-center"><Calendar mode="range" /></div>
-      </BentoCard>
-      <BentoCard label="PromptBar · a working chat" span="sp6"><ChatDemo /></BentoCard>
+      <BentoCard label="ChatComposer · tabs and replies" span="sp3"><ChatComposer /></BentoCard>
+      <BentoCard label="PromptBar · a working chat" span="sp3"><ChatDemo /></BentoCard>
+      <BentoCard label="StreamingText · citations and follow ups" span="center"><StreamingText /></BentoCard>
     </div>
   );
 }
