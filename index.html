@@ -657,18 +657,33 @@ main, header.site, footer.site { position: relative; z-index: 1; }
   background: var(--surface); padding: 16px; corner-shape: squircle;
   transition: border-color 300ms var(--ease-out-quint);
 }
-/* glow follows the cursor: --mx / --my are set on pointermove */
+/* proximity glow: --glow (0 to 1) rises as the cursor nears a card,
+   --mx / --my place the light. The ring is masked to the border. */
+.bento-card::after {
+  content: ""; position: absolute; inset: -1px; z-index: 2;
+  border-radius: inherit; pointer-events: none; padding: 1px;
+  background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--accent) 70%, transparent), transparent 62%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: calc(var(--glow, 0) * 0.85);
+  transition: opacity 200ms linear;
+}
+/* barely-there inner light, only when the cursor is right on the card */
 .bento-card::before {
   content: ""; position: absolute; inset: 0; z-index: 0;
   border-radius: inherit; pointer-events: none;
-  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%),
-    color-mix(in srgb, var(--accent) 20%, transparent), transparent 68%);
-  opacity: 0; transition: opacity 300ms var(--ease-out-quint);
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--accent) 6%, transparent), transparent 70%);
+  opacity: calc(max(var(--glow, 0) - 0.55, 0) * 2.2);
+  transition: opacity 200ms linear;
 }
-.bento-card:hover { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
-.bento-card:hover::before { opacity: 1; }
 .bento-card > * { position: relative; z-index: 1; }
-@media (prefers-reduced-motion: reduce) { .bento-card::before { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .bento-card::before, .bento-card::after { display: none; }
+}
 /* span presets — 6-column base */
 .bento-card.sp2 { grid-column: span 2; }
 .bento-card.sp3 { grid-column: span 3; }
@@ -981,14 +996,45 @@ curl -o ~/.claude/skills/formic-design-system/SKILL.md \
   });
   paint();
 
-  /* glow that follows the cursor across the bento cards */
+  /* proximity glow: every card reacts, strength falls off with distance */
+  var GLOW_RADIUS = 220;   /* px beyond a card's edge where the light dies */
+  var glowFrame = null;
+  var lastPointer = null;
+
+  function paintGlow() {
+    glowFrame = null;
+    var cards = document.querySelectorAll(".bento-card");
+    if (!lastPointer) {
+      cards.forEach(function (card) { card.style.setProperty("--glow", "0"); });
+      return;
+    }
+    var x = lastPointer.x;
+    var y = lastPointer.y;
+    cards.forEach(function (card) {
+      var rect = card.getBoundingClientRect();
+      /* distance from the pointer to the card's rectangle, 0 when inside */
+      var dx = Math.max(rect.left - x, 0, x - rect.right);
+      var dy = Math.max(rect.top - y, 0, y - rect.bottom);
+      var distance = Math.sqrt(dx * dx + dy * dy);
+      var strength = distance >= GLOW_RADIUS ? 0 : 1 - distance / GLOW_RADIUS;
+      strength = strength * strength; /* ease the falloff so far cards stay quiet */
+      card.style.setProperty("--glow", strength.toFixed(3));
+      if (strength > 0) {
+        card.style.setProperty("--mx", ((x - rect.left) / rect.width) * 100 + "%");
+        card.style.setProperty("--my", ((y - rect.top) / rect.height) * 100 + "%");
+      }
+    });
+  }
+
   document.addEventListener("pointermove", function (event) {
-    var card = event.target.closest ? event.target.closest(".bento-card") : null;
-    if (!card) return;
-    var rect = card.getBoundingClientRect();
-    card.style.setProperty("--mx", ((event.clientX - rect.left) / rect.width) * 100 + "%");
-    card.style.setProperty("--my", ((event.clientY - rect.top) / rect.height) * 100 + "%");
+    lastPointer = { x: event.clientX, y: event.clientY };
+    if (!glowFrame) glowFrame = requestAnimationFrame(paintGlow);
   }, { passive: true });
+
+  document.addEventListener("pointerleave", function () {
+    lastPointer = null;
+    if (!glowFrame) glowFrame = requestAnimationFrame(paintGlow);
+  });
 
   /* ═══ 3. copy button on every code block ═══ */
   var COPY = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></svg>';
