@@ -702,6 +702,10 @@ main, header.site, footer.site { position: relative; z-index: 1; }
 .bento-card.center { grid-column: 3 / span 2; }
 .bento-label { font-size: var(--text-micro); font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px; }
 .bento-body { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+/* centre a capped component inside a wider tile */
+.bento-card.body-center > .bento-body { align-items: center; }
+/* let a capped component stretch to the tile width */
+.bento-card.body-fill > .bento-body > * { max-width: 100%; align-self: stretch; }
 .chat-scroll { max-height: 260px; overflow-y: auto; padding-right: 4px; }
 .chat-scroll::-webkit-scrollbar { width: 6px; }
 .chat-scroll::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; }

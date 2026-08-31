@@ -2438,9 +2438,9 @@ function ChatDemo() {
   );
 }
 
-function BentoCard({ label, span = "sp3", children }) {
+function BentoCard({ label, span = "sp3", body = "", children }) {
   return (
-    <div className={`bento-card ${span}`}>
+    <div className={`bento-card ${span}${body ? ` ${body}` : ""}`}>
       <div className="bento-label">{label}</div>
       <div className="bento-body">{children}</div>
     </div>
@@ -2462,8 +2462,8 @@ function Bento() {
           <LoadingState label="Thinking" variant="Dots" />
         </div>
       </BentoCard>
-      <BentoCard label="SelectionActions · inline rewrite" span="sp3"><SelectionActions /></BentoCard>
-      <BentoCard label="ChatComposer · tabs and replies" span="sp3"><ChatComposer /></BentoCard>
+      <BentoCard label="SelectionActions · inline rewrite" span="sp3" body="body-center"><SelectionActions /></BentoCard>
+      <BentoCard label="ChatComposer · tabs and replies" span="sp3" body="body-fill"><ChatComposer /></BentoCard>
       <BentoCard label="PromptBar · a working chat" span="sp3"><ChatDemo /></BentoCard>
       <BentoCard label="StreamingText · citations and follow ups" span="sp3"><StreamingText /></BentoCard>
     </div>
