@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Formic AI Design System</title>
+<meta name="description" content="A token-driven React + Tailwind v4 design system for AI product interfaces. 40+ components, flat elevation, WCAG AA in every mode, one easing." />
+<meta property="og:title" content="Formic AI Design System" />
+<meta property="og:description" content="Token-driven React + Tailwind components for AI product interfaces — chat threads, prompt bars, agent traces, and the whole app shell around them." />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300..800&display=swap" rel="stylesheet" />
+<style>
+/* ── Formic tokens (mirrors styles/tokens.css) ─────────── */
+:root {
+  --font-sans: "Urbanist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+  --text-micro: 10px; --text-tiny: 11px; --text-small: 12px; --text-caption: 13px;
+  --text-body: 14px; --text-lead: 16px; --text-title: 18px; --text-heading: 20px;
+  --text-display: 24px; --text-display-lg: 32px; --text-display-xl: 48px;
+  --ink: #1a1a1a; --ink-2: #5c5c5c; --ink-3: #6f6f6f;
+  --line: #e5e5e5; --line-strong: #cfcfcf;
+  --hover: #f2f2f2; --hover-2: #ececec; --inset: #e9e9e9;
+  --accent: #3b5bdb; --orange: #a34a08; --green: #15803d; --red: #b91c1c;
+  --canvas: #ffffff; --surface: #ffffff; --field: #f5f5f5; --sidebar: #fafafa;
+  --green-tint: #eef9f2; --red-tint: #fdecec;
+  --accent-tint: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  --orange-tint: color-mix(in srgb, var(--orange) 12%, var(--surface));
+  --radius-sm: 6px; --radius-chip: 7px; --radius-control: 8px; --radius-md: 10px; --radius-card: 14px;
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+}
+:root[data-theme="dark"] {
+  --ink: #f0efec; --ink-2: #b0aeaa; --ink-3: #8d8b86;
+  --line: #2a2a29; --line-strong: #3f3e3c;
+  --hover: #232322; --hover-2: #292928; --inset: #232322;
+  --accent: #7c96ff; --orange: #e08514; --green: #22c55e; --red: #f87171;
+  --canvas: #131312; --surface: #1c1c1b; --field: #232322; --sidebar: #181817;
+  --green-tint: #16281c; --red-tint: #2e1a19;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans);
+  background: var(--canvas); color: var(--ink);
+  font-size: var(--text-body); line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+.corner-smooth { corner-shape: squircle; }
+svg { flex-shrink: 0; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+/* ── Controls (Formic metrics) ─────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 40px; padding: 0 16px; border-radius: var(--radius-control);
+  font-size: var(--text-lead); font-weight: 500; line-height: 1;
+  transition: opacity 150ms, background-color 150ms, transform 150ms;
+}
+.btn:active { transform: scale(0.98); }
+.btn-md { height: 36px; padding: 0 14px; font-size: var(--text-body); }
+.btn-accent { background: var(--accent); color: var(--surface); }
+.btn-accent:hover { opacity: 0.9; }
+.btn-secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.btn-secondary:hover { background: var(--hover); }
+.btn-ghost { color: var(--ink-2); }
+.btn-ghost:hover { background: var(--hover-2); color: var(--ink); }
+.icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: var(--radius-control);
+  color: var(--ink-3); transition: background-color 150ms, color 150ms;
+}
+.icon-btn:hover { background: var(--hover-2); color: var(--ink); }
+
+/* ── Header ────────────────────────────────────────────── */
+header.site {
+  position: sticky; top: 0; z-index: 10;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--canvas) 88%, transparent);
+  backdrop-filter: blur(8px);
+}
+.site-row { display: flex; align-items: center; gap: 10px; height: 56px; }
+.brand { display: flex; align-items: center; gap: 9px; font-size: var(--text-lead); font-weight: 600; }
+.brand-mark {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: var(--radius-chip);
+  background: var(--ink); color: var(--canvas); font-size: var(--text-caption); font-weight: 600;
+}
+.site-nav { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+.site-nav a { padding: 6px 10px; border-radius: var(--radius-control); font-size: var(--text-caption); color: var(--ink-2); transition: background-color 150ms, color 150ms; }
+.site-nav a:hover { background: var(--hover-2); color: var(--ink); }
+
+/* ── Hero ──────────────────────────────────────────────── */
+.hero { padding: 72px 0 56px; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 48px; align-items: center; }
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 24px; padding: 0 10px; border-radius: var(--radius-chip);
+  background: var(--accent-tint); color: var(--accent);
+  font-size: var(--text-small); font-weight: 500;
+}
+h1 { font-size: var(--text-display-xl); font-weight: 600; letter-spacing: -0.02em; line-height: 1.06; text-wrap: balance; margin: 18px 0 14px; }
+.hero p.lede { font-size: var(--text-lead); color: var(--ink-2); max-width: 46ch; }
+.hero-ctas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+.hero-meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 22px; font-size: var(--text-small); color: var(--ink-3); }
+.hero-meta span { display: flex; align-items: center; gap: 5px; }
+
+/* hero collage — real component renders, hand-set with tokens */
+.collage { display: flex; flex-direction: column; gap: 12px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-card); padding: 14px;
+}
+.chat-bubble { display: flex; gap: 9px; }
+.chat-avatar {
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent-tint); color: var(--accent);
+  font-size: var(--text-tiny); font-weight: 500;
+}
+.chat-text { font-size: var(--text-caption); color: var(--ink-2); }
+.chat-text b { color: var(--ink); font-weight: 600; }
+.tool-chips { display: flex; gap: 6px; margin-top: 9px; flex-wrap: wrap; }
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 22px; padding: 0 8px; border-radius: var(--radius-chip);
+  font-size: var(--text-tiny); font-weight: 500;
+  background: var(--field); color: var(--ink-2); border: 1px solid var(--line);
+}
+.chip.green { background: var(--green-tint); color: var(--green); border-color: transparent; }
+.chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.demo-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.switch { position: relative; width: 40px; height: 24px; border-radius: 999px; background: var(--accent); flex-shrink: 0; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--canvas); border: 1px solid var(--line); transform: translateX(16px); }
+.field {
+  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 150px;
+  height: 36px; padding: 0 12px; background: var(--field);
+  border: 1px solid var(--line); border-radius: var(--radius-control);
+  font-size: var(--text-body); color: var(--ink-3);
+}
+.progress { flex: 1; min-width: 120px; height: 6px; border-radius: 999px; background: var(--inset); overflow: hidden; }
+.progress i { display: block; height: 100%; width: 64%; border-radius: 999px; background: var(--accent); }
+
+/* ── Sections ──────────────────────────────────────────── */
+section { padding: 56px 0; border-top: 1px solid var(--line); }
+.kicker { font-size: var(--text-micro); font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-3); }
+h2 { font-size: var(--text-display); font-weight: 600; letter-spacing: -0.01em; margin: 6px 0 8px; text-wrap: balance; }
+.section-sub { color: var(--ink-2); max-width: 60ch; }
+
+.principles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 28px; }
+.principle { padding: 16px; }
+.principle .p-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: var(--radius-control); margin-bottom: 12px;
+}
+.tone-accent { background: var(--accent-tint); color: var(--accent); }
+.tone-green { background: var(--green-tint); color: var(--green); }
+.tone-orange { background: var(--orange-tint); color: var(--orange); }
+.principle h3 { font-size: var(--text-lead); font-weight: 600; margin-bottom: 5px; }
+.principle p { font-size: var(--text-caption); color: var(--ink-2); }
+
+/* component inventory */
+.inventory { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 26px; }
+.inv-chip {
+  display: inline-flex; align-items: center; height: 28px; padding: 0 11px;
+  border-radius: var(--radius-chip); border: 1px solid var(--line);
+  background: var(--surface); font-size: var(--text-small); font-weight: 500; color: var(--ink-2);
+  transition: background-color 150ms, color 150ms, border-color 150ms;
+}
+.inv-chip:hover { background: var(--hover); color: var(--ink); }
+.inv-chip.ai { background: var(--accent-tint); color: var(--accent); border-color: transparent; }
+
+/* quick start */
+.code {
+  margin-top: 24px; border: 1px solid var(--line); border-radius: var(--radius-md);
+  background: var(--sidebar); overflow-x: auto;
+}
+.code-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); font-size: var(--text-small); color: var(--ink-3); }
+.code pre { padding: 14px 16px; font-family: var(--font-mono); font-size: var(--text-small); line-height: 1.7; color: var(--ink-2); }
+.code .c { color: var(--ink-3); }
+.code .k { color: var(--accent); }
+
+/* stats + footer */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 28px; }
+.stat { padding: 16px; text-align: center; }
+.stat .v { font-size: var(--text-display-lg); font-weight: 600; letter-spacing: -0.01em; color: var(--accent); font-variant-numeric: tabular-nums; }
+.stat .k { font-size: var(--text-small); color: var(--ink-3); margin-top: 2px; }
+footer.site {
+  border-top: 1px solid var(--line); padding: 28px 0 40px;
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+  font-size: var(--text-caption); color: var(--ink-3);
+}
+footer.site .links { margin-left: auto; display: flex; gap: 14px; }
+footer.site a { color: var(--ink-2); }
+footer.site a:hover { color: var(--ink); }
+
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 32px; }
+  .principles { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  h1 { font-size: var(--text-display-lg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  html { scroll-behavior: auto; }
+}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap site-row">
+    <a class="brand" href="#">
+      <span class="brand-mark corner-smooth">F</span>
+      Formic
+    </a>
+    <nav class="site-nav" aria-label="Site">
+      <a href="#principles">Principles</a>
+      <a href="#components">Components</a>
+      <a href="#start">Quick start</a>
+      <a href="./preview.html">Gallery</a>
+    </nav>
+    <button class="icon-btn corner-smooth" id="theme-toggle" aria-label="Toggle dark mode">
+      <svg id="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"/></svg>
+      <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M8 12a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/></svg>
+    </button>
+    <a class="btn btn-md btn-secondary corner-smooth" href="https://github.com/eyosiyasketema1/formic-ai-design-system">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"/></svg>
+      GitHub
+    </a>
+  </div>
+</header>
+
+<main>
+  <!-- ══ Hero ══ -->
+  <div class="wrap hero">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow corner-smooth">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/></svg>
+          Open source · React + Tailwind v4
+        </span>
+        <h1>The design system for AI product interfaces</h1>
+        <p class="lede">
+          Formic is a token-driven component library for the interfaces AI products actually need —
+          chat threads, prompt bars, streaming text, agent traces, approval cards — and the whole
+          app shell around them. Flat elevation, one easing, WCAG AA in every mode.
+        </p>
+        <div class="hero-ctas">
+          <a class="btn btn-accent corner-smooth" href="https://github.com/eyosiyasketema1/formic-ai-design-system">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"/></svg>
+            View on GitHub
+          </a>
+          <a class="btn btn-secondary corner-smooth" href="./preview.html">Open the live gallery</a>
+        </div>
+        <div class="hero-meta">
+          <span>40+ components</span>
+          <span>·</span>
+          <span>5 palettes × light/dark</span>
+          <span>·</span>
+          <span>Two dependencies: React, Tabler icons</span>
+        </div>
+      </div>
+
+      <!-- component collage, set in Formic itself -->
+      <div class="collage" aria-hidden="true">
+        <div class="card corner-smooth">
+          <div class="chat-bubble">
+            <span class="chat-avatar">AI</span>
+            <div>
+              <div class="chat-text"><b>Assistant</b> · thinking through 3 sources…</div>
+              <div class="tool-chips">
+                <span class="chip"><span class="dot" style="background: var(--accent);"></span>web_search</span>
+                <span class="chip"><span class="dot" style="background: var(--orange);"></span>read_docs</span>
+                <span class="chip green">✓ summarize</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card corner-smooth demo-row">
+          <a class="btn btn-md btn-accent corner-smooth" href="./preview.html">Accent</a>
+          <a class="btn btn-md btn-secondary corner-smooth" href="./preview.html">Secondary</a>
+          <span class="switch" role="presentation"></span>
+          <span class="chip green"><span class="dot"></span>Active</span>
+        </div>
+        <div class="card corner-smooth demo-row">
+          <span class="field corner-smooth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg>
+            Ask anything…
+          </span>
+          <span class="progress"><i></i></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Principles ══ -->
+  <section id="principles">
+    <div class="wrap">
+      <div class="kicker">Principles</div>
+      <h2>Opinionated where it matters</h2>
+      <p class="section-sub">Fifteen non-negotiable rules keep every component on the same grid — enforced by an automated QA gate, not by hoping.</p>
+      <div class="principles">
+        <div class="card principle corner-smooth">
+          <span class="p-icon tone-accent corner-smooth"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l-8 4l8 4l8 -4l-8 -4"/><path d="M4 12l8 4l8 -4"/><path d="M4 16l8 4l8 -4"/></svg></span>
+          <h3>Tokens only</h3>
+          <p>No hardcoded colors, sizes, radii, shadows, or easings — everything reads CSS variables, so themes and palettes come for free.</p>
+        </div>
+        <div class="card principle corner-smooth">
+          <span class="p-icon tone-green corner-smooth"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/></svg></span>
+          <h3>WCAG AA, everywhere</h3>
+          <p>Every text and UI pair is contrast-checked across light, dark, and all five palettes — automatically, on every change.</p>
+        </div>
+        <div class="card principle corner-smooth">
+          <span class="p-icon tone-orange corner-smooth"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12"/><path d="M4 12h16"/></svg></span>
+          <h3>Flat elevation</h3>
+          <p>No drop shadows — hairline borders carry depth. Fills are flat, corners are squircles, and one easing moves everything.</p>
+        </div>
+        <div class="card principle corner-smooth">
+          <span class="p-icon tone-accent corner-smooth"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l3 0"/><path d="M14 20l7 0"/><path d="M6.9 15l6.9 0"/><path d="M10.2 6.3l5.8 13.7"/><path d="M5 20l6 -16l2 0l7 16"/></svg></span>
+          <h3>One type ramp</h3>
+          <p>Twelve integer steps on a 14px base, set in Urbanist. Medium is the working weight; semibold is the ceiling.</p>
+        </div>
+        <div class="card principle corner-smooth">
+          <span class="p-icon tone-green corner-smooth"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/></svg></span>
+          <h3>Light by default</h3>
+          <p>Every surface renders light unless the app explicitly opts into dark. Components never branch on theme — they only read tokens.</p>
+        </div>
+        <div class="card principle corner-smooth">
+          <span class="p-icon tone-orange corner-smooth"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2l4 -4"/><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"/></svg></span>
+          <h3>A QA gate, not a wiki</h3>
+          <p>One script checks forbidden patterns, contrast, token drift, and compilation. Work is not done while it fails.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Components ══ -->
+  <section id="components">
+    <div class="wrap">
+      <div class="kicker">Components</div>
+      <h2>Built for AI products, not adapted to them</h2>
+      <p class="section-sub">The AI-specific surface is first-class — highlighted below — and the everyday controls around it match to the pixel.</p>
+      <div class="inventory">
+        <a class="inv-chip ai corner-smooth" href="./preview.html">ChatThread</a>
+        <a class="inv-chip ai corner-smooth" href="./preview.html">PromptBar</a>
+        <a class="inv-chip ai corner-smooth" href="./preview.html">StreamingText</a>
+        <a class="inv-chip ai corner-smooth" href="./preview.html">ThinkingState</a>
+        <a class="inv-chip ai corner-smooth" href="./preview.html">ToolChips</a>
+        <a class="inv-chip ai corner-smooth" href="./preview.html">ApprovalCard</a>
+        <a class="inv-chip ai corner-smooth" href="./preview.html">TaskRows</a>
+        <a class="inv-chip ai corner-smooth" href="./preview.html">Markdown</a>
+        <a class="inv-chip ai corner-smooth" href="./preview.html">CodeBlock</a>
+        <a class="inv-chip ai corner-smooth" href="./preview.html">SelectionActions</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Button</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Input</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Select</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Calendar</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">DateRangePicker</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Modal</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Drawer</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Toast</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">DropdownMenu</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Tabs</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Steps</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Breadcrumbs</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">SidebarNav</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">RecordsTable</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">FilterTable</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Timeline</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Accordion</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Skeleton</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">Avatar</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">FileDropzone</a>
+        <a class="inv-chip corner-smooth" href="./preview.html">+ 10 more in the gallery</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Quick start ══ -->
+  <section id="start">
+    <div class="wrap">
+      <div class="kicker">Quick start</div>
+      <h2>Copy in, compose, ship</h2>
+      <p class="section-sub">Formic is vendored, not installed — copy <code>styles/</code> and the components you need, import one CSS stack, and compose. Two peer dependencies.</p>
+      <div class="code corner-smooth">
+        <div class="code-head">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7l5 5l-5 5"/><path d="M12 19l7 0"/></svg>
+          globals.css · Tailwind v4
+        </div>
+        <pre><span class="k">@import</span> "tailwindcss";
+<span class="k">@import</span> "./tokens.css";          <span class="c">/* source of truth */</span>
+<span class="k">@import</span> "./themes.css";          <span class="c">/* 5 palettes, optional */</span>
+<span class="k">@import</span> "./tailwind-theme.css";  <span class="c">/* → text-ink, bg-hover, … */</span></pre>
+      </div>
+      <div class="code corner-smooth">
+        <div class="code-head">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7l5 5l-5 5"/><path d="M12 19l7 0"/></svg>
+          App.tsx
+        </div>
+        <pre><span class="k">import</span> ChatThread <span class="k">from</span> "./components/ChatThread";
+<span class="k">import</span> PromptBar <span class="k">from</span> "./components/PromptBar";
+
+<span class="k">export default function</span> Chat() {
+  <span class="k">return</span> (
+    &lt;&gt;
+      &lt;ChatThread messages={messages} /&gt;
+      &lt;PromptBar onSend={send} /&gt;
+    &lt;/&gt;
+  );
+}</pre>
+      </div>
+
+      <div class="stats">
+        <div class="card stat corner-smooth"><div class="v">40+</div><div class="k">Components</div></div>
+        <div class="card stat corner-smooth"><div class="v">10</div><div class="k">Themes (5 palettes × 2 modes)</div></div>
+        <div class="card stat corner-smooth"><div class="v">AA</div><div class="k">Contrast, machine-verified</div></div>
+        <div class="card stat corner-smooth"><div class="v">1</div><div class="k">Easing curve</div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+    <span class="brand" style="font-size: var(--text-caption);">
+      <span class="brand-mark corner-smooth" style="width: 22px; height: 22px; font-size: var(--text-micro);">F</span>
+      Formic AI Design System
+    </span>
+    <div class="links">
+      <a href="https://github.com/eyosiyasketema1/formic-ai-design-system">GitHub</a>
+      <a href="./preview.html">Live gallery</a>
+      <a href="https://github.com/eyosiyasketema1/ai-persona">Built with it: AI Persona</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var btn = document.getElementById("theme-toggle");
+  var moon = document.getElementById("icon-moon");
+  var sun = document.getElementById("icon-sun");
+  function paint() {
+    var dark = root.getAttribute("data-theme") === "dark";
+    moon.style.display = dark ? "none" : "block";
+    sun.style.display = dark ? "block" : "none";
+  }
+  btn.addEventListener("click", function () {
+    root.setAttribute("data-theme", root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+    paint();
+  });
+  paint();
+})();
+</script>
+</body>
+</html>
