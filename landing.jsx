@@ -2448,34 +2448,10 @@ function BentoCard({ label, span = "sp3", children }) {
 
 /* Bento grid on a 6-column base — asymmetric tiles sized to each
    component's natural shape. Everything visible; no overflow. */
-function ButtonVariants() {
-  return (
-    <div className="flex h-full flex-col justify-center gap-2">
-      <div className="flex flex-wrap gap-2">
-        <Button variant="accent" size="sm">Accent</Button>
-        <Button variant="primary" size="sm">Primary</Button>
-        <Button variant="secondary" size="sm">Secondary</Button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm">Outline</Button>
-        <Button variant="ghost" size="sm">Ghost</Button>
-        <Button variant="destructive" size="sm">Delete</Button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="accent-soft" size="sm">Accent soft</Button>
-        <Button variant="success" size="sm">Success</Button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" size="sm" loading>Saving</Button>
-        <Button variant="secondary" size="sm" disabled>Disabled</Button>
-      </div>
-    </div>
-  );
-}
-
 function Bento() {
   return (
     <div className="bento">
+      {/* three rows on the six column base */}
       <BentoCard label="ApprovalCard · answer it" span="sp2"><ApprovalCard /></BentoCard>
       <BentoCard label="TaskRows · agent progress" span="sp2"><TaskRows /></BentoCard>
       <BentoCard label="LoadingState · three variants" span="sp2">
@@ -2485,11 +2461,10 @@ function Bento() {
           <LoadingState label="Thinking" variant="Dots" />
         </div>
       </BentoCard>
-      <BentoCard label="Button · the main variants" span="sp2"><ButtonVariants /></BentoCard>
       <BentoCard label="SelectionActions · inline rewrite" span="sp4"><SelectionActions /></BentoCard>
-      <BentoCard label="ChatComposer · tabs and replies" span="sp3"><ChatComposer /></BentoCard>
+      <BentoCard label="ChatComposer · tabs and replies" span="sp2"><ChatComposer /></BentoCard>
       <BentoCard label="PromptBar · a working chat" span="sp3"><ChatDemo /></BentoCard>
-      <BentoCard label="StreamingText · citations and follow ups" span="center"><StreamingText /></BentoCard>
+      <BentoCard label="StreamingText · citations and follow ups" span="sp3"><StreamingText /></BentoCard>
     </div>
   );
 }
