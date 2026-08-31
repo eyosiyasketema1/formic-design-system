@@ -1728,31 +1728,31 @@ function AccentPicker() {
   );
 }
 
-function RailCard({ label, wide = false, children }) {
+function BentoCard({ label, span = "sp3", children }) {
   return (
-    <div className={`rail-card${wide ? " wide" : ""}`}>
-      <div className="rail-label">{label}</div>
-      {children}
+    <div className={`bento-card ${span}`}>
+      <div className="bento-label">{label}</div>
+      <div className="bento-body">{children}</div>
     </div>
   );
 }
 
-/* One horizontal rail: the components sit side by side and the row
-   scrolls sideways — overflow is a scroll, never a squeeze. */
-function Rail() {
+/* Bento grid on a 6-column base — asymmetric tiles sized to each
+   component's natural shape. Everything visible; no overflow. */
+function Bento() {
   return (
-    <div className="rail">
-      <RailCard label="ApprovalCard · answer it"><ApprovalCard /></RailCard>
-      <RailCard label="TaskRows · agent progress"><TaskRows /></RailCard>
-      <RailCard label="SelectionActions · inline rewrite" wide><SelectionActions /></RailCard>
-      <RailCard label="PromptBar · type a prompt" wide><PromptBar /></RailCard>
-      <RailCard label="LoadingState · three variants">
-        <div className="flex flex-col justify-center gap-5 py-2">
+    <div className="bento">
+      <BentoCard label="ApprovalCard · answer it" span="sp3"><ApprovalCard /></BentoCard>
+      <BentoCard label="TaskRows · agent progress" span="sp3"><TaskRows /></BentoCard>
+      <BentoCard label="SelectionActions · inline rewrite" span="sp4"><SelectionActions /></BentoCard>
+      <BentoCard label="LoadingState · three variants" span="sp2">
+        <div className="flex h-full flex-col justify-center gap-5 py-2">
           <LoadingState label="Indexing sources" variant="Orbit" />
           <LoadingState label="Churning" variant="Drive" />
           <LoadingState label="Thinking" variant="Dots" />
         </div>
-      </RailCard>
+      </BentoCard>
+      <BentoCard label="PromptBar · type a prompt" span="sp6"><PromptBar /></BentoCard>
     </div>
   );
 }
@@ -1763,5 +1763,5 @@ function mount(id, element) {
 }
 if (typeof document !== "undefined") {
   mount("accent-picker", <AccentPicker />);
-  mount("rail", <Rail />);
+  mount("rail", <Bento />);
 }

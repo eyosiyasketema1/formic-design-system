@@ -630,28 +630,35 @@ header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in sr
 .hero .lede { font-size: var(--text-lead); color: var(--ink-2); max-width: 52ch; margin: 0 auto; }
 .hero-ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 26px 0 22px; }
 .hero-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-bottom: 26px; font-size: var(--text-small); color: var(--ink-3); }
-/* live component rail — scrolls sideways, card-to-card snapping */
+/* live component bento — asymmetric tiles, everything visible, no scroll */
 .rail-wrap { padding: 4px 0 64px; }
 .rail-head { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 14px; text-align: left; }
 .rail-head h2 { font-size: var(--text-heading); font-weight: 600; margin-top: 4px; color: var(--ink); }
-.rail-hint { margin-left: auto; display: flex; align-items: center; gap: 5px; font-size: var(--text-small); color: var(--ink-3); white-space: nowrap; }
-.rail {
-  display: flex; gap: 14px; align-items: stretch; text-align: left;
-  overflow-x: auto; overscroll-behavior-x: contain;
-  scroll-snap-type: x proximity; scroll-padding-left: 24px;
-  padding: 4px 24px 14px; margin: 0 -24px;
+.bento {
+  display: grid; gap: 14px; text-align: left;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-auto-flow: dense;
 }
-.rail::-webkit-scrollbar { height: 8px; }
-.rail::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; }
-.rail::-webkit-scrollbar-track { background: transparent; }
-.rail-card {
-  flex: 0 0 auto; width: 400px; max-width: 86vw;
-  scroll-snap-align: start; display: flex; flex-direction: column;
+.bento-card {
+  min-width: 0; display: flex; flex-direction: column;
   border: 1px solid var(--line); border-radius: var(--radius-card);
   background: var(--surface); padding: 16px; corner-shape: squircle;
 }
-.rail-card.wide { width: 560px; }
-.rail-label { font-size: var(--text-micro); font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px; }
+/* span presets — 6-column base */
+.bento-card.sp2 { grid-column: span 2; }
+.bento-card.sp3 { grid-column: span 3; }
+.bento-card.sp4 { grid-column: span 4; }
+.bento-card.sp6 { grid-column: span 6; }
+.bento-label { font-size: var(--text-micro); font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px; }
+.bento-body { min-width: 0; flex: 1; }
+@media (max-width: 1000px) {
+  .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bento-card.sp2, .bento-card.sp3, .bento-card.sp4, .bento-card.sp6 { grid-column: span 2; }
+}
+@media (max-width: 640px) {
+  .bento { grid-template-columns: 1fr; }
+  .bento-card.sp2, .bento-card.sp3, .bento-card.sp4, .bento-card.sp6 { grid-column: span 1; }
+}
 .landing-section { padding: 64px 0; }
 .landing-section.band { background: var(--sidebar); }
 .kicker { font-size: var(--text-micro); font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-3); }
@@ -743,10 +750,6 @@ footer.site a:hover { color: var(--ink); }
         <div class="kicker">Live components</div>
         <h2>Everything here is real — go ahead, touch it</h2>
       </div>
-      <span class="rail-hint">
-        Scroll for more
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14 0"/><path d="M13 18l6 -6"/><path d="M13 6l6 6"/></svg>
-      </span>
     </div>
     <div id="rail" aria-label="Live Formic components"></div>
   </div>
