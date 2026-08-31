@@ -721,6 +721,13 @@ main, header.site, footer.site { position: relative; z-index: 1; }
 .ai-note-head svg { color: var(--accent); }
 .ai-note p { margin-top: 6px; max-width: 62ch; font-size: var(--text-caption); color: var(--ink-2); }
 .ai-note .lcode { margin-top: 14px; background: var(--canvas); }
+.ai-ways { display: grid; gap: 14px; margin-top: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ai-way { min-width: 0; border: 1px solid var(--line); border-radius: var(--radius-md); padding: 14px; background: var(--canvas); corner-shape: squircle; }
+.ai-way-title { font-size: var(--text-body); font-weight: 600; color: var(--ink); }
+.ai-way p { margin: 4px 0 10px; font-size: var(--text-small); color: var(--ink-3); }
+.ai-way .lcode { margin-top: 0; background: var(--surface); }
+.ai-way .lcode pre { font-size: var(--text-micro); }
+@media (max-width: 900px) { .ai-ways { grid-template-columns: 1fr; } }
 .ai-note-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font-size: var(--text-caption); }
 .ai-note-links a { color: var(--accent); text-decoration: none; }
 .ai-note-links a:hover { text-decoration: underline; }
@@ -864,16 +871,39 @@ npm install react react-dom @tabler/icons-react</pre>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/></svg>
           Build with your AI tool
         </div>
-        <p>The repo ships an installable skill so Claude, Cursor, or any coding agent follows the token rules, the type ramp, and the component patterns for you.</p>
-        <div class="lcode">
-          <div class="lcode-head">Terminal · install the skill for Claude</div>
-          <pre>git clone https://github.com/eyosiyasketema1/formic-design-system.git
-mkdir -p ~/.claude/skills/formic-design-system
-cp formic-design-system/skill/SKILL.md ~/.claude/skills/formic-design-system/</pre>
+        <p>The repo ships an installable skill and a rules file, so your agent follows the token rules, the type ramp, and the component patterns without being told twice.</p>
+        <div class="ai-ways">
+          <div class="ai-way">
+            <div class="ai-way-title">Claude desktop or claude.ai</div>
+            <p>Download the skill file and open it in a chat, then click Save skill.</p>
+            <a class="lbtn lbtn-md lbtn-accent" href="./skill/formic-design-system.skill" download>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 11l5 5l5 -5"/><path d="M12 4l0 12"/></svg>
+              Download the skill
+            </a>
+          </div>
+          <div class="ai-way">
+            <div class="ai-way-title">Claude Code</div>
+            <p>Drop SKILL.md into your skills folder and it loads automatically.</p>
+            <div class="lcode">
+              <div class="lcode-head">Terminal</div>
+              <pre>mkdir -p ~/.claude/skills/formic-design-system
+curl -o ~/.claude/skills/formic-design-system/SKILL.md \
+  https://raw.githubusercontent.com/eyosiyasketema1/formic-design-system/main/skill/SKILL.md</pre>
+            </div>
+          </div>
+          <div class="ai-way">
+            <div class="ai-way-title">Cursor, Copilot, any other agent</div>
+            <p>These read a rules file instead. Keep AGENTS.md at your project root, or paste it into your tool's rules setting.</p>
+            <div class="lcode">
+              <div class="lcode-head">Terminal</div>
+              <pre>curl -o AGENTS.md \
+  https://raw.githubusercontent.com/eyosiyasketema1/formic-design-system/main/AGENTS.md</pre>
+            </div>
+          </div>
         </div>
         <div class="ai-note-links">
           <a href="https://github.com/eyosiyasketema1/formic-design-system/blob/main/skill/SKILL.md">Read SKILL.md</a>
-          <a href="https://github.com/eyosiyasketema1/formic-design-system/blob/main/AGENTS.md">AGENTS.md for other agents</a>
+          <a href="https://github.com/eyosiyasketema1/formic-design-system/blob/main/AGENTS.md">Read AGENTS.md</a>
         </div>
       </div>
 

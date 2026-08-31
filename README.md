@@ -110,12 +110,14 @@ Open the [gallery](https://eyosiyasketema1.github.io/formic-design-system/previe
 
 The repo ships a ready-made skill in [`skill/SKILL.md`](skill/SKILL.md), and agent instructions in [`AGENTS.md`](AGENTS.md).
 
-**Claude Code / Cowork:** copy the skill into your skills folder so it loads automatically.
+**Claude desktop or claude.ai:** download [`skill/formic-design-system.skill`](skill/formic-design-system.skill), drop it into a chat, and click **Save skill**.
+
+**Claude Code:** put `SKILL.md` in your skills folder and it loads automatically.
 
 ```bash
-git clone https://github.com/eyosiyasketema1/formic-design-system.git
 mkdir -p ~/.claude/skills/formic-design-system
-cp formic-design-system/skill/SKILL.md ~/.claude/skills/formic-design-system/
+curl -o ~/.claude/skills/formic-design-system/SKILL.md \
+  https://raw.githubusercontent.com/eyosiyasketema1/formic-design-system/main/skill/SKILL.md
 ```
 
 **Cursor, Copilot, or any coding agent:** keep `AGENTS.md` at your project root, or paste this prompt:
@@ -139,7 +141,7 @@ It checks forbidden patterns, WCAG contrast for every mode and palette, token dr
 ```
 styles/          tokens.css (source of truth), themes.css, tailwind-theme.css, sidebar.css, records.css
 components/      React components + primitives.tsx, hooks.ts, theme.ts
-skill/           SKILL.md, the installable AI skill
+skill/           SKILL.md and formic-design-system.skill, the installable AI skill
 scripts/         qa_check.py, the QA gate
 preview.html     standalone gallery, opens in any browser with no build
 index.html       the landing page (GitHub Pages)
