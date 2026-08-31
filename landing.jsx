@@ -2176,6 +2176,7 @@ const ACCENT_PRESETS = [
   { hex: "#7c3aed", swatch: "#7c3aed", label: "Violet" },
   { hex: "#b91c1c", swatch: "#b91c1c", label: "Crimson" },
   { hex: "#a34a08", swatch: "#a34a08", label: "Amber" },
+  { hex: "#ffffff", swatch: "#ffffff", label: "Mono" },
 ];
 
 function AccentPicker() {

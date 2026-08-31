@@ -659,7 +659,8 @@ main, header.site, footer.site { position: relative; z-index: 1; }
 }
 /* proximity glow: --glow (0 to 1) rises as the cursor nears a card,
    --mx / --my place the light. The ring is masked to the border. */
-.bento-card::after {
+.bento-card::after,
+.principle-card::after {
   content: ""; position: absolute; inset: -1px; z-index: 2;
   border-radius: inherit; pointer-events: none; padding: 1px;
   background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%),
@@ -672,7 +673,8 @@ main, header.site, footer.site { position: relative; z-index: 1; }
   transition: opacity 200ms linear;
 }
 /* barely-there inner light, only when the cursor is right on the card */
-.bento-card::before {
+.bento-card::before,
+.principle-card::before {
   content: ""; position: absolute; inset: 0; z-index: 0;
   border-radius: inherit; pointer-events: none;
   background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%),
@@ -680,9 +682,10 @@ main, header.site, footer.site { position: relative; z-index: 1; }
   opacity: calc(max(var(--glow, 0) - 0.55, 0) * 2.2);
   transition: opacity 200ms linear;
 }
-.bento-card > * { position: relative; z-index: 1; }
+.bento-card > *, .principle-card > * { position: relative; z-index: 1; }
 @media (prefers-reduced-motion: reduce) {
-  .bento-card::before, .bento-card::after { display: none; }
+  .bento-card::before, .bento-card::after,
+  .principle-card::before, .principle-card::after { display: none; }
 }
 /* span presets — 6-column base */
 .bento-card.sp2 { grid-column: span 2; }
@@ -705,6 +708,7 @@ main, header.site, footer.site { position: relative; z-index: 1; }
 }
 .principle-deck { position: relative; }
 .principle-card {
+  position: relative;
   border: 1px solid var(--line); border-radius: var(--radius-card);
   background: var(--surface); padding: 16px; corner-shape: squircle;
   display: flex; flex-direction: column; cursor: pointer;
@@ -739,7 +743,7 @@ main, header.site, footer.site { position: relative; z-index: 1; }
 .inv-chip { display: inline-flex; align-items: center; height: 28px; padding: 0 11px; border-radius: var(--radius-chip); border: 1px solid var(--line); background: var(--surface); font-size: var(--text-small); font-weight: 500; color: var(--ink-2); text-decoration: none; transition: background-color 150ms, color 150ms; corner-shape: squircle; }
 .inv-chip:hover { background: var(--hover); color: var(--ink); }
 .inv-chip.ai { background: var(--accent-tint); color: var(--accent); border-color: transparent; }
-.lcode { margin-top: 24px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); overflow-x: auto; }
+.lcode { margin-top: 24px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); overflow: hidden; }
 .landing-section.band .lcode { background: var(--surface); }
 .lcode-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); font-size: var(--text-small); color: var(--ink-3); }
 .lcode-head { position: relative; }
@@ -752,7 +756,7 @@ main, header.site, footer.site { position: relative; z-index: 1; }
 }
 .copy-btn:hover { background: var(--hover-2); color: var(--ink); }
 .copy-btn.is-done { color: var(--green); }
-.lcode pre { padding: 14px 16px; font-family: var(--font-mono); font-size: var(--text-small); line-height: 1.7; color: var(--ink-2); }
+.lcode pre { padding: 14px 16px; font-family: var(--font-mono); font-size: var(--text-small); line-height: 1.7; color: var(--ink-2); overflow-x: auto; }
 .lcode .c { color: var(--ink-3); } .lcode .k { color: var(--accent); }
 .ai-note { margin-top: 24px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); padding: 18px; corner-shape: squircle; }
 .landing-section.band .ai-note { background: var(--surface); }
@@ -1003,7 +1007,7 @@ curl -o ~/.claude/skills/formic-design-system/SKILL.md \
 
   function paintGlow() {
     glowFrame = null;
-    var cards = document.querySelectorAll(".bento-card");
+    var cards = document.querySelectorAll(".bento-card, .principle-card");
     if (!lastPointer) {
       cards.forEach(function (card) { card.style.setProperty("--glow", "0"); });
       return;
