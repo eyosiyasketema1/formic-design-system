@@ -1728,28 +1728,31 @@ function AccentPicker() {
   );
 }
 
-function HeroSide() {
+function RailCard({ label, wide = false, children }) {
   return (
-    <div className="flex w-full flex-col gap-3.5">
-      <ApprovalCard />
-      <div className="rounded-card border border-line bg-surface p-4">
-        <LoadingState label="Indexing sources" variant="Orbit" />
-      </div>
+    <div className={`rail-card${wide ? " wide" : ""}`}>
+      <div className="rail-label">{label}</div>
+      {children}
     </div>
   );
 }
 
-function Playground() {
+/* One horizontal rail: the components sit side by side and the row
+   scrolls sideways — overflow is a scroll, never a squeeze. */
+function Rail() {
   return (
-    <div>
-      <div className="grid items-start gap-3.5 lg:grid-cols-2">
-        <div className="rounded-card border border-line bg-surface p-4"><TaskRows /></div>
-        <div className="rounded-card border border-line bg-surface p-4"><SelectionActions /></div>
-      </div>
-      <div className="mt-3.5"><PromptBar /></div>
-      <p className="mt-4 text-center text-small text-ink-3">
-        Everything above is live — answer the approval, watch the tasks run, keep the rewrite, type a prompt.
-      </p>
+    <div className="rail">
+      <RailCard label="ApprovalCard · answer it"><ApprovalCard /></RailCard>
+      <RailCard label="TaskRows · agent progress"><TaskRows /></RailCard>
+      <RailCard label="SelectionActions · inline rewrite" wide><SelectionActions /></RailCard>
+      <RailCard label="PromptBar · type a prompt" wide><PromptBar /></RailCard>
+      <RailCard label="LoadingState · three variants">
+        <div className="flex flex-col justify-center gap-5 py-2">
+          <LoadingState label="Indexing sources" variant="Orbit" />
+          <LoadingState label="Churning" variant="Drive" />
+          <LoadingState label="Thinking" variant="Dots" />
+        </div>
+      </RailCard>
     </div>
   );
 }
@@ -1760,6 +1763,5 @@ function mount(id, element) {
 }
 if (typeof document !== "undefined") {
   mount("accent-picker", <AccentPicker />);
-  mount("hero-demo", <HeroSide />);
-  mount("playground", <Playground />);
+  mount("rail", <Rail />);
 }
