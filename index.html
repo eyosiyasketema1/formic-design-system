@@ -607,7 +607,8 @@ tfoot .records-sticky-cell { z-index: 5; }
 .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
 header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--canvas) 88%, transparent); backdrop-filter: blur(8px); }
 .site-row { display: flex; align-items: center; gap: 10px; height: 56px; }
-.brand { display: flex; align-items: center; gap: 9px; font-size: var(--text-lead); font-weight: 600; color: var(--ink); text-decoration: none; }
+.brand { display: flex; align-items: center; gap: 9px; font-size: var(--text-lead); font-weight: 600; color: var(--ink); text-decoration: none; white-space: nowrap; }
+@media (max-width: 860px) { .brand-rest { display: none; } }
 .logo-img { width: 28px; height: 28px; object-fit: contain; }
 [data-theme="dark"] .logo-img { filter: brightness(0) invert(1); }
 .site-nav { margin-left: auto; display: flex; align-items: center; gap: 2px; }
@@ -713,6 +714,16 @@ main, header.site, footer.site { position: relative; z-index: 1; }
 .lcode { margin-top: 24px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); overflow-x: auto; }
 .landing-section.band .lcode { background: var(--surface); }
 .lcode-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); font-size: var(--text-small); color: var(--ink-3); }
+.lcode-head { position: relative; }
+.copy-btn {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 5px;
+  height: 24px; padding: 0 8px; border: none; background: none; cursor: pointer;
+  border-radius: var(--radius-sm); font: inherit; font-size: var(--text-micro);
+  font-weight: 500; color: var(--ink-3);
+  transition: background-color 150ms, color 150ms;
+}
+.copy-btn:hover { background: var(--hover-2); color: var(--ink); }
+.copy-btn.is-done { color: var(--green); }
 .lcode pre { padding: 14px 16px; font-family: var(--font-mono); font-size: var(--text-small); line-height: 1.7; color: var(--ink-2); }
 .lcode .c { color: var(--ink-3); } .lcode .k { color: var(--accent); }
 .ai-note { margin-top: 24px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); padding: 18px; corner-shape: squircle; }
@@ -753,7 +764,7 @@ footer.site a:hover { color: var(--ink); }
   <div class="wrap site-row">
     <a class="brand" href="#">
       <img class="logo-img" src="./assets/formic-logomark.png" alt="Formic logomark" width="28" height="28" />
-      Formic
+      <span>Formic<span class="brand-rest"> AI Design System</span></span>
     </a>
     <nav class="site-nav" aria-label="Site">
       <a href="#principles">Principles</a>
@@ -938,16 +949,61 @@ curl -o ~/.claude/skills/formic-design-system/SKILL.md \
   var btn = document.getElementById("theme-toggle");
   var moon = document.getElementById("icon-moon");
   var sun = document.getElementById("icon-sun");
+
+  /* the gallery reads the same key, so the two pages stay in sync */
+  var stored;
+  try { stored = localStorage.getItem("ds-theme"); } catch (e) { stored = null; }
+  if (stored === "light" || stored === "dark") root.setAttribute("data-theme", stored);
+
   function paint() {
     var dark = root.getAttribute("data-theme") === "dark";
     moon.style.display = dark ? "none" : "block";
     sun.style.display = dark ? "block" : "none";
   }
   btn.addEventListener("click", function () {
-    root.setAttribute("data-theme", root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("ds-theme", next); } catch (e) {}
     paint();
   });
   paint();
+
+  /* ═══ 3. copy button on every code block ═══ */
+  var COPY = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></svg>';
+  var DONE = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10" /></svg>';
+
+  document.querySelectorAll(".lcode").forEach(function (block) {
+    var head = block.querySelector(".lcode-head");
+    var pre = block.querySelector("pre");
+    if (!head || !pre) return;
+    var button = document.createElement("button");
+    button.type = "button";
+    button.className = "copy-btn";
+    button.setAttribute("aria-label", "Copy to clipboard");
+    button.innerHTML = COPY + "<span>Copy</span>";
+    button.addEventListener("click", function () {
+      var text = pre.innerText;
+      var done = function () {
+        button.innerHTML = DONE + "<span>Copied</span>";
+        button.classList.add("is-done");
+        window.setTimeout(function () {
+          button.innerHTML = COPY + "<span>Copy</span>";
+          button.classList.remove("is-done");
+        }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () {});
+      } else {
+        var area = document.createElement("textarea");
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        try { document.execCommand("copy"); done(); } catch (e) {}
+        document.body.removeChild(area);
+      }
+    });
+    head.appendChild(button);
+  });
 })();
 </script>
 <script type="text/babel" data-presets="react" src="./landing.jsx"></script>
