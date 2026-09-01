@@ -608,7 +608,29 @@ tfoot .records-sticky-cell { z-index: 5; }
 
 /* ── Landing page layout (index.html only) ─────────────── */
 .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
-header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--canvas) 88%, transparent); backdrop-filter: blur(8px); }
+/* sticky, and clear until content actually passes behind it — the glass
+   fades in on scroll rather than sitting there from the start */
+header.site {
+  position: sticky; top: 0; z-index: 40;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition:
+    background-color 260ms var(--ease-out-quint),
+    backdrop-filter 260ms var(--ease-out-quint),
+    border-color 260ms var(--ease-out-quint);
+}
+header.site[data-scrolled="true"],
+header.site[data-nav-open="true"] {
+  background: color-mix(in srgb, var(--canvas) 72%, transparent);
+  backdrop-filter: blur(14px) saturate(1.6);
+  -webkit-backdrop-filter: blur(14px) saturate(1.6);
+  border-bottom-color: var(--line);
+}
+/* no backdrop-filter support: fall back to a near-opaque canvas */
+@supports not (backdrop-filter: blur(1px)) {
+  header.site[data-scrolled="true"],
+  header.site[data-nav-open="true"] { background: color-mix(in srgb, var(--canvas) 96%, transparent); }
+}
 .site-row { display: flex; align-items: center; gap: 10px; height: 56px; }
 .brand { display: flex; align-items: center; gap: 9px; font-size: var(--text-lead); font-weight: 600; color: var(--ink); text-decoration: none; white-space: nowrap; }
 @media (max-width: 860px) { .brand-rest { display: none; } }
@@ -618,7 +640,6 @@ header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in sr
 .site-nav { display: flex; align-items: center; gap: 2px; }
 .site-nav a { padding: 6px 10px; border-radius: var(--radius-control); font-size: var(--text-caption); color: var(--ink-2); text-decoration: none; transition: background-color 150ms, color 150ms; }
 .site-nav a:hover { background: var(--hover-2); color: var(--ink); }
-.nav-toggle { display: none; }
 .lbtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: var(--radius-control); font-size: var(--text-lead); font-weight: 500; line-height: 1; text-decoration: none; transition: opacity 150ms, background-color 150ms, transform 150ms; corner-shape: squircle; }
 .lbtn:active { transform: scale(0.98); }
 .lbtn-md { height: 36px; padding: 0 14px; font-size: var(--text-body); }
@@ -628,6 +649,8 @@ header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in sr
 .lbtn-secondary:hover { background: var(--hover); }
 .licon-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-control); color: var(--ink-3); background: none; border: none; cursor: pointer; transition: background-color 150ms, color 150ms; }
 .licon-btn:hover { background: var(--hover-2); color: var(--ink); }
+/* must come after .licon-btn — equal specificity, so source order decides */
+.nav-toggle { display: none; }
 /* sections separate by rhythm and soft bands — no rule lines */
 /* animated flowing paths behind the whole page (tokens + one keyframe) */
 /* the paths take a tint of the accent, so the picker themes them too;
@@ -641,7 +664,9 @@ header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in sr
 .hero-bg svg { width: 100%; height: 100%; }
 .hero-bg .bgp { stroke-dasharray: 760 420; animation-name: path-drift; animation-timing-function: linear; animation-iteration-count: infinite; }
 @keyframes path-drift { from { stroke-dashoffset: 1180; } to { stroke-dashoffset: 0; } }
-main, header.site, footer.site { position: relative; z-index: 1; }
+/* header is excluded here on purpose — it owns position:sticky and a higher
+   layer above, and listing it again would reset both */
+main, footer.site { position: relative; z-index: 1; }
 @media (prefers-reduced-motion: reduce) { .hero-bg .bgp { animation: none; } }
 .hero { padding: 64px 0 56px; text-align: center; }
 .hero-copy { max-width: 900px; margin: 0 auto; }
@@ -817,8 +842,15 @@ footer.site a:hover { color: var(--ink); }
   .site-menu {
     position: absolute; top: 100%; left: 0; right: 0;
     display: none; padding: 8px 24px 14px;
-    background: var(--canvas);
+    /* the header glass is translucent; the panel carries its own blur so
+       the links stay readable over whatever is scrolling underneath */
+    background: color-mix(in srgb, var(--canvas) 92%, transparent);
+    backdrop-filter: blur(14px) saturate(1.6);
+    -webkit-backdrop-filter: blur(14px) saturate(1.6);
     border-bottom: 1px solid var(--line);
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .site-menu { background: var(--canvas); }
   }
   header.site[data-nav-open="true"] .site-menu {
     display: block;
@@ -1073,6 +1105,17 @@ curl -o ~/.claude/skills/formic-design-system/SKILL.md \
   window.matchMedia("(min-width: 781px)").addEventListener("change", function (e) {
     if (e.matches) setOpen(false);
   });
+
+  /* glass fades in once anything has scrolled behind the bar */
+  var ticking = false;
+  function sync() {
+    header.setAttribute("data-scrolled", window.scrollY > 4 ? "true" : "false");
+    ticking = false;
+  }
+  window.addEventListener("scroll", function () {
+    if (!ticking) { ticking = true; requestAnimationFrame(sync); }
+  }, { passive: true });
+  sync();
 })();
 
 (function () {
