@@ -17,7 +17,9 @@ export type Answer = {
   selected: string[];
   custom?: string;
 };
-const DEFAULT_QUESTIONS: Question[] = [
+/* Shared with ApprovalFlow so the two siblings can't drift apart
+ * (extraction rule 2: never leave two copies alive). */
+export const DEFAULT_QUESTIONS: Question[] = [
   {
     q: "How many flavors should we launch?",
     type: "radio",

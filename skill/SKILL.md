@@ -63,7 +63,7 @@ git clone https://github.com/eyosiyasketema1/formic-design-system.git
 **Forms:** `Field`, `Input`, `Textarea`, `Select`, `Switch`, `Slider`, `OTPInput`, `FileDropzone`, `DatePicker`, `DateRangePicker`, `Calendar`.
 **Overlays:** `Modal`, `Drawer`, `Toast`, `DropdownMenu`, `Popover`, `Tooltip`.
 **Feedback:** `Alert`, `Progress`, `Skeleton`, `LoadingState`, `ThinkingState`, `TaskRows`, `ToolChips`.
-**Conversation:** `ChatThread`, `StreamingText`, `Markdown`, `CodeBlock`, `SelectionActions`, `PromptBar`, `ChatComposer`, `ApprovalCard`, `RecommendationCard`, `ContextCards`.
+**Conversation:** `ChatThread`, `StreamingText`, `Markdown`, `CodeBlock`, `SelectionActions`, `PromptBar`, `ChatComposer`, `ApprovalCard`, `ApprovalFlow`, `RecommendationCard`, `ContextCards`.
 **Dashboard:** `StatCard`, `MetricRow`, `Delta`, `BarChart`, `LineChart`, `DonutChart`, `Sparkline`, `ChartLegend`.
 **Data:** `RecordsTable`, `FilterTable`, `DiffTable`.
 **Structure:** `Accordion`, `Steps`, `Timeline`.
@@ -72,6 +72,8 @@ git clone https://github.com/eyosiyasketema1/formic-design-system.git
 All components ship demo content as prop defaults (`DEFAULT_*`); always pass real data via props in apps. Variant props are typed unions.
 
 ## Composition guidance
+
+Human-in-the-loop: `ApprovalCard` for a short, directly-controlled approval; `ApprovalFlow` when the run needs several questions in sequence (sliding stack, rolling counter, auto-advance on single choice).
 
 A chat app is `SidebarNav` (rail) + `ChatThread` for the conversation (embed `Markdown`, `CodeBlock`, `ToolChips`, `ApprovalCard` as assistant message children via `MessageBubble`) + `PromptBar` pinned at the bottom + `ToastProvider` at the root. Streaming replies use the `StreamText` primitive or `StreamingText`. Agent progress uses `ThinkingState` or `TaskRows`. File input uses `FileDropzone` or PromptBar attachments.
 
