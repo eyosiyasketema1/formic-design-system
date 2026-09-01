@@ -7617,6 +7617,19 @@ function FoundationsSections() {
     </>
   );
 }
+/* the gallery is a leaf page — this is the way back to the landing site */
+function BackToSite({ className = "" }) {
+  return (
+    <a
+      href="./index.html"
+      className={`corner-smooth inline-flex h-7 items-center gap-1 rounded-control px-2 text-caption text-ink-3 transition-colors duration-150 hover:bg-hover hover:text-ink ${className}`}
+    >
+      <Icon name="chevron-left" size={14} strokeWidth={2} />
+      Back to website
+    </a>
+  );
+}
+
 function App() {
   const [thinkKey, setThinkKey] = useState(0);
   const [theme, setTheme] = useTheme();
@@ -7628,6 +7641,7 @@ function App() {
       {/* docs rail — hidden on narrow viewports (mobile keeps the header nav-free) */}
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <div className="mb-6 px-2">
+          <BackToSite className="-ml-2 mb-2" />
           <h1 className="text-title font-semibold tracking-tight text-ink">Formic AI Design System</h1>
           <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 43 components</p>
         </div>
@@ -7661,6 +7675,8 @@ function App() {
         <div className="mx-auto max-w-5xl">
           <header className="mb-10 flex flex-wrap items-start justify-between gap-4">
             <div>
+              {/* the rail is hidden below lg, so mobile needs its own way back */}
+              <BackToSite className="-ml-2 mb-1 lg:hidden" />
               <h1 className="text-display font-semibold tracking-tight text-ink lg:hidden">Formic AI Design System</h1>
               <p className="mt-1 max-w-2xl text-body text-ink-2">
                 Token-driven React components for AI product interfaces. Everything reads styles/tokens.css — one easing, one icon set, both themes and all five palettes for free.
