@@ -88,7 +88,7 @@ Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (d
 
 ## Components
 
-**Conversation:** ChatThread, MessageBubble, StreamingText, PromptBar, ChatComposer, Markdown, CodeBlock, SelectionActions, ApprovalCard, RecommendationCard, ContextCards, ChatApp
+**Conversation:** ChatThread, MessageBubble, StreamingText, PromptBar, ChatComposer, Markdown, CodeBlock, SelectionActions, ApprovalCard, ApprovalFlow, RecommendationCard, ContextCards, ChatApp
 
 **Feedback and agents:** ThinkingState, TaskRows, ToolChips, LoadingState, Progress, Skeleton, Alert, Toast
 
