@@ -1,0 +1,57 @@
+name: Bug report
+description: A component misbehaves, breaks at a viewport, or fails a rule
+labels: ["bug"]
+body:
+  - type: input
+    id: component
+    attributes:
+      label: Component
+      description: Which one? Say "landing page" or "gallery" if it's the site itself.
+      placeholder: DateRangePicker
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens, and what you expected
+      placeholder: |
+        The panel keeps a fixed width, so there's dead space to the right of the grid.
+        I expected it to size to its content.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: A gallery link or a screenshot beats a paragraph.
+      placeholder: |
+        1. Open preview.html
+        2. Scroll to DateRangePicker
+        3. Open the panel
+
+  - type: input
+    id: env
+    attributes:
+      label: Browser and viewport width
+      placeholder: Chrome 140, 390px
+    validations:
+      required: true
+
+  - type: dropdown
+    id: theme
+    attributes:
+      label: Theme
+      options:
+        - Light
+        - Dark
+        - Both
+    validations:
+      required: true
+
+  - type: input
+    id: palette
+    attributes:
+      label: Palette
+      placeholder: paper (default), sage, twilight, clay, ocean

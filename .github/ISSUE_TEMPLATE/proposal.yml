@@ -1,0 +1,48 @@
+name: Component or change proposal
+description: A new component, or a change to tokens, the type ramp, or the rules
+labels: ["proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Tokens, the type ramp, control metrics, and the rules in `CLAUDE.md` are
+        the system's spine, so changes there start as a discussion rather than a
+        PR. New components built from the existing primitives can go straight to
+        a PR if you'd rather — this is for when you want to check the direction
+        first.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation, not the solution you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What are you proposing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: existing
+    attributes:
+      label: What did you try with the existing primitives?
+      description: >
+        Formic composes from `components/primitives.tsx`. If something there
+        nearly works, say what falls short — that's often the better fix.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Does this touch the spine?
+      options:
+        - label: Design tokens (colors, type ramp, radii, spacing, easing)
+        - label: Control metrics (the 24/32/36/40 height scale)
+        - label: The rules in CLAUDE.md
+        - label: A new dependency
+        - label: None of these

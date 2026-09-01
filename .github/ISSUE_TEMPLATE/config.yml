@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Live gallery
+    url: https://formicai.dev/preview.html
+    about: Every component running, with theme, palette and accent switching. Worth a look before filing.
+  - name: Contributing guide
+    url: https://github.com/eyosiyasketema1/formic-design-system/blob/main/CONTRIBUTING.md
+    about: What gets merged, what's maintainer-decided, and how to pass the QA gate.

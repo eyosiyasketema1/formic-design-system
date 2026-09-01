@@ -128,13 +128,17 @@ curl -o ~/.claude/skills/formic-design-system/SKILL.md \
 
 ## Contributing
 
-`CLAUDE.md` holds the non-negotiable design rules and the mandatory QA workflow for anyone (human or agent) changing this repo. Before committing:
+Contributions are welcome. **[CONTRIBUTING.md](CONTRIBUTING.md)** covers what gets merged, what's a maintainer decision, and how to pass review on the first try. `CLAUDE.md` holds the design rules themselves; `AGENTS.md` is the condensed version for AI coding tools.
+
+Bugs, questions, and proposals all go through [issues](https://github.com/eyosiyasketema1/formic-design-system/issues).
+
+Before opening a PR:
 
 ```bash
 python3 scripts/qa_check.py
 ```
 
-It checks forbidden patterns, WCAG contrast for every mode and palette, token drift between `styles/` and `preview.html`, and that components compile. Work is not done while it fails.
+It checks forbidden patterns, WCAG contrast for every mode and palette, token drift between `styles/` and `preview.html`, and that components compile. The same gate runs in CI on every pull request, so work is not done while it fails.
 
 ## Repo map
 
@@ -142,10 +146,12 @@ It checks forbidden patterns, WCAG contrast for every mode and palette, token dr
 styles/          tokens.css (source of truth), themes.css, tailwind-theme.css, sidebar.css, records.css
 components/      React components + primitives.tsx, hooks.ts, theme.ts
 skill/           SKILL.md and formic-design-system.skill, the installable AI skill
-scripts/         qa_check.py, the QA gate
+scripts/         qa_check.py (the QA gate) and check_sri.py
+.github/         CI workflow, PR template, issue forms
 preview.html     standalone gallery, opens in any browser with no build
-index.html       the landing page (GitHub Pages)
-CLAUDE.md        working rules for contributors
+index.html       the landing page
+CONTRIBUTING.md  how to contribute
+CLAUDE.md        the design rules and QA workflow
 AGENTS.md        instructions for AI tools consuming the system
 ```
 
