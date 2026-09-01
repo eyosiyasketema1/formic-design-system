@@ -607,33 +607,60 @@ tfoot .records-sticky-cell { z-index: 5; }
 }
 
 /* ── Landing page layout (index.html only) ─────────────── */
-.wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
-/* sticky, and clear until content actually passes behind it — the glass
-   fades in on scroll rather than sitting there from the start */
-header.site {
-  position: sticky; top: 0; z-index: 40;
-  background: transparent;
-  border-bottom: 1px solid transparent;
-  transition:
-    background-color 260ms var(--ease-out-quint),
-    backdrop-filter 260ms var(--ease-out-quint),
-    border-color 260ms var(--ease-out-quint);
+/* One gutter drives every section, the hero and the mobile menu alike, so
+   nothing can drift out of alignment at any width. */
+:root { --gutter: 24px; }
+@media (max-width: 1024px) { :root { --gutter: 32px; } }   /* tablet gets more air, not less */
+@media (max-width: 820px)  { :root { --gutter: 28px; } }
+@media (max-width: 640px)  { :root { --gutter: 20px; } }
+@media (max-width: 400px)  { :root { --gutter: 16px; } }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 var(--gutter); }
+/* sticky, and clear until content actually passes behind it */
+header.site { position: sticky; top: 0; z-index: 40; background: transparent; }
+
+/* Progressive blur: three stacked backdrop layers, each blurrier than the
+   last and masked to reach less far down. Where they overlap at the top the
+   blur compounds, so it ramps from heavy at the bar to nothing below it —
+   a gradient of blur, not one flat sheet with a hard edge. */
+.header-blur {
+  position: absolute; left: 0; right: 0; top: 0; height: 190%;
+  pointer-events: none; z-index: -1; opacity: 0;
+  transition: opacity 300ms var(--ease-out-quint);
 }
-header.site[data-scrolled="true"],
-header.site[data-nav-open="true"] {
-  background: color-mix(in srgb, var(--canvas) 72%, transparent);
-  backdrop-filter: blur(14px) saturate(1.6);
-  -webkit-backdrop-filter: blur(14px) saturate(1.6);
-  border-bottom-color: var(--line);
+header.site[data-scrolled="true"] .header-blur,
+header.site[data-nav-open="true"] .header-blur { opacity: 1; }
+.header-blur > span { position: absolute; inset: 0; display: block; }
+.header-blur > span:nth-child(1) {
+  backdrop-filter: blur(1px); -webkit-backdrop-filter: blur(1px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 72%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 72%);
 }
-/* no backdrop-filter support: fall back to a near-opaque canvas */
-@supports not (backdrop-filter: blur(1px)) {
-  header.site[data-scrolled="true"],
-  header.site[data-nav-open="true"] { background: color-mix(in srgb, var(--canvas) 96%, transparent); }
+.header-blur > span:nth-child(2) {
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 24%, transparent 52%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 24%, transparent 52%);
+}
+.header-blur > span:nth-child(3) {
+  backdrop-filter: blur(12px) saturate(1.5); -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 34%);
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 34%);
+}
+/* the tint rides the same fade, so copy stays legible without a hard rule */
+.header-blur::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(to bottom,
+    color-mix(in srgb, var(--canvas) 76%, transparent) 0%,
+    color-mix(in srgb, var(--canvas) 46%, transparent) 38%,
+    transparent 78%);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  header.site[data-scrolled="true"], header.site[data-nav-open="true"] {
+    background: color-mix(in srgb, var(--canvas) 96%, transparent);
+  }
 }
 .site-row { display: flex; align-items: center; gap: 10px; height: 56px; }
 .brand { display: flex; align-items: center; gap: 9px; font-size: var(--text-lead); font-weight: 600; color: var(--ink); text-decoration: none; white-space: nowrap; }
-@media (max-width: 860px) { .brand-rest { display: none; } }
+@media (max-width: 820px) { .brand-rest { display: none; } }
 .logo-img { width: 28px; height: 28px; object-fit: contain; }
 [data-theme="dark"] .logo-img { filter: brightness(0) invert(1); }
 .site-menu { margin-left: auto; }
@@ -674,8 +701,8 @@ main, footer.site { position: relative; z-index: 1; }
 .hero h1 { font-size: var(--text-display-lg); font-weight: 600; letter-spacing: -0.02em; line-height: 1.22; margin: 20px 0 26px; color: var(--ink); }
 .hero-lines span { display: block; white-space: nowrap; }
 .hero-lines span + span { color: var(--ink-2); }
-@media (min-width: 960px) { .hero h1 { font-size: var(--text-display-xl); line-height: 1.14; } }
-@media (max-width: 560px) { .hero h1 { font-size: var(--text-display); } .hero-lines span { white-space: normal; } }
+@media (min-width: 1025px) { .hero h1 { font-size: var(--text-display-xl); line-height: 1.14; } }
+@media (max-width: 640px) { .hero h1 { font-size: var(--text-display); } }
 .hero .lede { font-size: var(--text-lead); color: var(--ink-2); max-width: 52ch; margin: 0 auto; }
 .hero-ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 26px 0 22px; }
 .hero-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-bottom: 26px; font-size: var(--text-small); color: var(--ink-3); }
@@ -742,7 +769,7 @@ main, footer.site { position: relative; z-index: 1; }
 .chat-scroll { max-height: 260px; overflow-y: auto; padding-right: 4px; }
 .chat-scroll::-webkit-scrollbar { width: 6px; }
 .chat-scroll::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; }
-@media (max-width: 1000px) {
+@media (max-width: 1024px) {
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bento-card.sp2, .bento-card.sp3, .bento-card.sp4, .bento-card.sp6, .bento-card.center { grid-column: span 2; }
 }
@@ -814,7 +841,7 @@ main, footer.site { position: relative; z-index: 1; }
 .ai-way p { margin: 4px 0 10px; font-size: var(--text-small); color: var(--ink-3); }
 .ai-way .lcode { margin-top: 0; background: var(--surface); }
 .ai-way .lcode pre { font-size: var(--text-micro); }
-@media (max-width: 900px) { .ai-ways { grid-template-columns: 1fr; } }
+@media (max-width: 820px) { .ai-ways { grid-template-columns: 1fr; } }
 .ai-note-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font-size: var(--text-caption); }
 .ai-note-links a { color: var(--accent); text-decoration: none; }
 .ai-note-links a:hover { text-decoration: underline; }
@@ -827,30 +854,26 @@ footer.site .frow { display: flex; flex-wrap: wrap; gap: 12px; align-items: cent
 footer.site .links { margin-left: auto; display: flex; gap: 14px; }
 footer.site a { color: var(--ink-2); text-decoration: none; }
 footer.site a:hover { color: var(--ink); }
-@media (max-width: 920px) {
+@media (max-width: 820px) {
   .principles { grid-template-columns: 1fr; }
   .lstats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero h1 { font-size: var(--text-display-lg); }
 }
 
 /* ── Mobile: the header collapses to a disclosure menu ── */
-@media (max-width: 780px) {
+@media (max-width: 820px) {
   /* the panel leaves the flow, so the button cluster takes over the auto margin */
   .nav-toggle { display: flex; margin-left: auto; }
   .nav-gh { width: 36px; padding: 0; }       /* icon only, keeps the 36px control height */
   .gh-label { display: none; }
   .site-menu {
     position: absolute; top: 100%; left: 0; right: 0;
-    display: none; padding: 8px 24px 14px;
-    /* the header glass is translucent; the panel carries its own blur so
-       the links stay readable over whatever is scrolling underneath */
-    background: color-mix(in srgb, var(--canvas) 92%, transparent);
-    backdrop-filter: blur(14px) saturate(1.6);
-    -webkit-backdrop-filter: blur(14px) saturate(1.6);
+    display: none; padding: 8px var(--gutter) 14px;
+    /* Solid, not glass. A backdrop-filter here would sample the header's
+       already-filtered layer rather than the page, so it reads as a weak
+       tint no matter how high the radius goes. */
+    background: var(--canvas);
     border-bottom: 1px solid var(--line);
-  }
-  @supports not (backdrop-filter: blur(1px)) {
-    .site-menu { background: var(--canvas); }
   }
   header.site[data-nav-open="true"] .site-menu {
     display: block;
@@ -861,16 +884,23 @@ footer.site a:hover { color: var(--ink); }
 }
 @keyframes nav-drop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 
-/* ── Mobile: tighten the page rhythm and stack the CTAs ── */
+/* ── Tablet: vertical rhythm comes in, gutters handled by --gutter ── */
+@media (max-width: 820px) {
+  .hero { padding: 48px 0 44px; }
+  .landing-section { padding: 52px 0; }
+  .rail-wrap { padding-bottom: 52px; }
+  /* nowrap held the hero lines rigid and pushed them past the gutter here */
+  .hero-lines span { white-space: normal; }
+}
+
+/* ── Mobile: tighten the rhythm and stack the CTAs ── */
 @media (max-width: 640px) {
-  .wrap { padding: 0 18px; }
   .hero { padding: 40px 0 36px; }
   .landing-section { padding: 44px 0; }
   .rail-wrap { padding-bottom: 44px; }
   .hero-ctas { flex-direction: column; align-items: stretch; gap: 8px; }
   .hero-ctas .lbtn { width: 100%; }
   .site-row { height: 52px; }
-  .site-menu { padding-left: 18px; padding-right: 18px; }  /* stays flush with .wrap */
   footer.site .links { margin-left: 0; row-gap: 8px; flex-wrap: wrap; }
 }
 </style>
@@ -878,6 +908,7 @@ footer.site a:hover { color: var(--ink); }
 <body>
 
 <header class="site">
+  <div class="header-blur" aria-hidden="true"><span></span><span></span><span></span></div>
   <div class="wrap site-row">
     <a class="brand" href="#">
       <img class="logo-img" src="./assets/formic-logomark.png" alt="Formic logomark" width="28" height="28" />
@@ -1102,7 +1133,7 @@ curl -o ~/.claude/skills/formic-design-system/SKILL.md \
       toggle.focus();
     }
   });
-  window.matchMedia("(min-width: 781px)").addEventListener("change", function (e) {
+  window.matchMedia("(min-width: 821px)").addEventListener("change", function (e) {
     if (e.matches) setOpen(false);
   });
 
