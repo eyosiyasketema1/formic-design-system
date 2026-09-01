@@ -4,6 +4,15 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Formic AI Design System</title>
+<script>
+  /* Apply the stored theme before first paint. The toggle's own sync runs at
+     the bottom of the page, which is far too late — a light-mode visitor
+     would get a full dark render first. Same ds-theme key as the gallery. */
+  try {
+    var _t = localStorage.getItem("ds-theme");
+    if (_t === "light" || _t === "dark") document.documentElement.setAttribute("data-theme", _t);
+  } catch (e) {}
+</script>
 <meta name="description" content="A token-driven React + Tailwind v4 design system for AI product interfaces. 40+ components, WCAG AA in every mode, and a live hero you can play with." />
 <meta property="og:title" content="Formic AI Design System" />
 <meta property="og:description" content="Token-driven React + Tailwind components for AI product interfaces: chat threads, prompt bars, agent traces, and the whole app shell around them." />
@@ -911,8 +920,72 @@ footer.site a:hover { color: var(--ink); }
   footer.site .links { margin-left: 0; row-gap: 8px; flex-wrap: wrap; }
 }
 </style>
+<style>
+  /* Boot styling — plain CSS, applied the moment the page parses.
+     Everything else on this page, tokens included, lives in the
+     type="text/tailwindcss" block above, which the browser treats as inert
+     text until the Tailwind browser build compiles it. Until that lands
+     there is no styling whatsoever and the page paints as raw text.
+
+     This page is mostly static markup rather than a single React root, so
+     the gate sits on <body> via visibility — the one inherited hiding
+     mechanism a child (#boot) can opt back out of. */
+  :root { --boot-bg: #131312; --boot-fg: #7a7a75; --boot-line: #2a2a28; }
+  html[data-theme="light"] { --boot-bg: #ffffff; --boot-fg: #8a8a85; --boot-line: #e6e6e3; }
+  html { background: var(--boot-bg); }
+
+  /* The 0s-duration animations at 9s are pure-CSS deadlines: if the script
+     below throws or never runs, the page still appears instead of staying
+     blank forever, which would be worse than the bug being fixed. */
+  body { visibility: hidden; animation: boot-reveal 0s linear 9s forwards; }
+  #boot { visibility: visible; animation: boot-dismiss 0s linear 9s forwards; }
+  @keyframes boot-reveal  { to { visibility: visible; } }
+  @keyframes boot-dismiss { to { opacity: 0; visibility: hidden; } }
+
+  html.tw-ready body { visibility: visible; animation: none; }
+  html.tw-ready #boot { display: none; }
+
+  #boot {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px;
+    background: var(--boot-bg); color: var(--boot-fg);
+    font: 500 13px/1 Urbanist, ui-sans-serif, system-ui, sans-serif;
+  }
+  #boot i {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid var(--boot-line); border-top-color: var(--boot-fg);
+    animation: boot-spin 620ms linear infinite;
+  }
+  @keyframes boot-spin { to { transform: rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    #boot i { animation: none; }   /* the 9s deadlines stay — they are a safety net */
+  }
+</style>
 </head>
 <body>
+<div id="boot" aria-hidden="true"><i></i>Loading…</div>
+<script>
+  /* Reveal once the tokens resolve. Probing a custom property beats probing
+     a utility class: the tokens are declared inside the tailwindcss block
+     itself, so --ink reads empty until it compiles, regardless of which
+     utilities Tailwind decided to generate for this particular page.
+     Gives up at 8s so a CDN failure degrades to unstyled, never to blank. */
+  (function () {
+    var html = document.documentElement, start = Date.now(), done = false;
+    function reveal() {
+      if (done) return;
+      done = true;
+      html.classList.add("tw-ready");
+    }
+    (function poll() {
+      var v = getComputedStyle(html).getPropertyValue("--ink").trim();
+      if (v || Date.now() - start > 8000) return reveal();
+      requestAnimationFrame(poll);
+    })();
+  })();
+</script>
 
 <header class="site">
   <div class="header-blur" aria-hidden="true"><span></span><span></span><span></span></div>
