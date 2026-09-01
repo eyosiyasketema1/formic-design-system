@@ -1,0 +1,16 @@
+version: 2
+
+# There is nothing to update in package.json — it declares peer dependencies
+# only, with no lockfile and nothing installed. The actions pinned in the QA
+# workflow are the one thing here that genuinely goes stale, so that is all
+# this watches. Monthly, because a design system does not need weekly churn.
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "CI"
+    labels:
+      - "dependencies"
+    open-pull-requests-limit: 3
