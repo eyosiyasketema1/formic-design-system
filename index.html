@@ -614,9 +614,11 @@ header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in sr
 @media (max-width: 860px) { .brand-rest { display: none; } }
 .logo-img { width: 28px; height: 28px; object-fit: contain; }
 [data-theme="dark"] .logo-img { filter: brightness(0) invert(1); }
-.site-nav { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+.site-menu { margin-left: auto; }
+.site-nav { display: flex; align-items: center; gap: 2px; }
 .site-nav a { padding: 6px 10px; border-radius: var(--radius-control); font-size: var(--text-caption); color: var(--ink-2); text-decoration: none; transition: background-color 150ms, color 150ms; }
 .site-nav a:hover { background: var(--hover-2); color: var(--ink); }
+.nav-toggle { display: none; }
 .lbtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: var(--radius-control); font-size: var(--text-lead); font-weight: 500; line-height: 1; text-decoration: none; transition: opacity 150ms, background-color 150ms, transform 150ms; corner-shape: squircle; }
 .lbtn:active { transform: scale(0.98); }
 .lbtn-md { height: 36px; padding: 0 14px; font-size: var(--text-body); }
@@ -631,7 +633,7 @@ header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in sr
 /* the paths take a tint of the accent, so the picker themes them too;
    blended with ink so the accent still belongs to the CTA */
 .hero-bg {
-  position: fixed; inset: 0; width: 100vw; height: 100vh;
+  position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh;
   pointer-events: none; z-index: 0; opacity: 0.18;
   color: color-mix(in srgb, var(--accent) 60%, var(--ink));
   transition: color 300ms var(--ease-out-quint);
@@ -802,6 +804,40 @@ footer.site a:hover { color: var(--ink); }
   .lstats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero h1 { font-size: var(--text-display-lg); }
 }
+
+/* ── Mobile: the header collapses to a disclosure menu ── */
+@media (max-width: 780px) {
+  /* the panel leaves the flow, so the button cluster takes over the auto margin */
+  .nav-toggle { display: flex; margin-left: auto; }
+  .nav-gh { width: 36px; padding: 0; }       /* icon only, keeps the 36px control height */
+  .gh-label { display: none; }
+  .site-menu {
+    position: absolute; top: 100%; left: 0; right: 0;
+    display: none; padding: 8px 24px 14px;
+    background: var(--canvas);
+    border-bottom: 1px solid var(--line);
+  }
+  header.site[data-nav-open="true"] .site-menu {
+    display: block;
+    animation: nav-drop 200ms var(--ease-out-quint) both;
+  }
+  .site-menu .site-nav { flex-direction: column; align-items: stretch; gap: 2px; }
+  .site-menu .site-nav a { padding: 11px 12px; font-size: var(--text-body); }
+}
+@keyframes nav-drop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+/* ── Mobile: tighten the page rhythm and stack the CTAs ── */
+@media (max-width: 640px) {
+  .wrap { padding: 0 18px; }
+  .hero { padding: 40px 0 36px; }
+  .landing-section { padding: 44px 0; }
+  .rail-wrap { padding-bottom: 44px; }
+  .hero-ctas { flex-direction: column; align-items: stretch; gap: 8px; }
+  .hero-ctas .lbtn { width: 100%; }
+  .site-row { height: 52px; }
+  .site-menu { padding-left: 18px; padding-right: 18px; }  /* stays flush with .wrap */
+  footer.site .links { margin-left: 0; row-gap: 8px; flex-wrap: wrap; }
+}
 </style>
 </head>
 <body>
@@ -812,17 +848,23 @@ footer.site a:hover { color: var(--ink); }
       <img class="logo-img" src="./assets/formic-logomark.png" alt="Formic logomark" width="28" height="28" />
       <span>Formic<span class="brand-rest"> AI Design System</span></span>
     </a>
-    <nav class="site-nav" aria-label="Site">
-      <a href="#principles">Principles</a>
-      <a href="#components">Components</a>
-      <a href="#start">Quick start</a>
-      <a href="./preview.html">Gallery</a>
-    </nav>
+    <div class="site-menu" id="site-menu">
+      <nav class="site-nav" aria-label="Site">
+        <a href="#principles">Principles</a>
+        <a href="#components">Components</a>
+        <a href="#start">Quick start</a>
+        <a href="./preview.html">Gallery</a>
+      </nav>
+    </div>
+    <button class="licon-btn nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" style="corner-shape: squircle;">
+      <svg id="icon-menu" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <svg id="icon-close" width="17" height="17" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-12 12M6 6l12 12"/></svg>
+    </button>
     <button class="licon-btn" id="theme-toggle" aria-label="Toggle dark mode" style="corner-shape: squircle;">
       <svg id="icon-moon" width="16" style="display:none" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"/></svg>
       <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/></svg>
     </button>
-    <a class="lbtn lbtn-md lbtn-secondary" href="https://github.com/eyosiyasketema1/formic-design-system"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"/></svg> GitHub</a>
+    <a class="lbtn lbtn-md lbtn-secondary nav-gh" href="https://github.com/eyosiyasketema1/formic-design-system" aria-label="GitHub"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"/></svg><span class="gh-label">GitHub</span></a>
   </div>
 </header>
 
@@ -990,6 +1032,46 @@ curl -o ~/.claude/skills/formic-design-system/SKILL.md \
 </footer>
 
 <script>
+/* mobile header disclosure — closes on selection, Escape, outside click,
+   and whenever the viewport grows back past the breakpoint */
+(function () {
+  var header = document.querySelector("header.site");
+  var toggle = document.getElementById("nav-toggle");
+  var menu = document.getElementById("site-menu");
+  var burger = document.getElementById("icon-menu");
+  var close = document.getElementById("icon-close");
+  if (!header || !toggle || !menu) return;
+
+  function setOpen(open) {
+    header.setAttribute("data-nav-open", open ? "true" : "false");
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Menu");
+    burger.style.display = open ? "none" : "";
+    close.style.display = open ? "" : "none";
+  }
+  setOpen(false);
+
+  toggle.addEventListener("click", function (e) {
+    e.stopPropagation();
+    setOpen(header.getAttribute("data-nav-open") !== "true");
+  });
+  menu.addEventListener("click", function (e) {
+    if (e.target.closest("a")) setOpen(false);
+  });
+  document.addEventListener("click", function (e) {
+    if (!header.contains(e.target)) setOpen(false);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && header.getAttribute("data-nav-open") === "true") {
+      setOpen(false);
+      toggle.focus();
+    }
+  });
+  window.matchMedia("(min-width: 781px)").addEventListener("change", function (e) {
+    if (e.matches) setOpen(false);
+  });
+})();
+
 (function () {
   var root = document.documentElement;
   var btn = document.getElementById("theme-toggle");
