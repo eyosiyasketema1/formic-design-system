@@ -665,17 +665,13 @@ tfoot .records-sticky-cell { z-index: 5; }
       done = true;
       html.classList.add("tw-ready");
     }
-    function compiled() {
-      var probe = document.createElement("div");
-      probe.className = "bg-surface";
-      probe.style.cssText = "position:absolute;visibility:hidden;pointer-events:none";
-      document.body.appendChild(probe);
-      var bg = getComputedStyle(probe).backgroundColor;
-      probe.remove();
-      return bg && bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent";
-    }
+    /* Probing a custom property beats probing a utility class: the tokens
+       are declared inside the tailwindcss block itself, so --ink reads
+       empty until it compiles, regardless of which utilities Tailwind
+       decided to generate. Same probe as index.html. */
     (function poll() {
-      if (compiled() || Date.now() - start > 8000) return reveal();
+      var v = getComputedStyle(html).getPropertyValue("--ink").trim();
+      if (v || Date.now() - start > 8000) return reveal();
       requestAnimationFrame(poll);
     })();
   })();
