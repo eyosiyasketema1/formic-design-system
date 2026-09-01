@@ -58,6 +58,22 @@
   --accent-tint: color-mix(in srgb, var(--accent) 10%, var(--surface)); /* palette-aware */
   --orange-tint: color-mix(in srgb, var(--orange) 12%, var(--surface));
 
+  /* Categorical chart ramp — for telling series apart, NOT for meaning.
+     Never use --green/--red here: those signal success and danger, and a
+     chart that colours its second series green implies something it doesn't.
+     chart-1 is the accent, so the primary series follows the brand and the
+     accent picker. 2-5 are fixed hues that hold up in every palette.
+     All verified >= 3:1 (non-text UI) against the lightest surface of any
+     palette. Hue is the only thing separating them, so never rely on colour
+     alone — charts must also label their series. */
+  --chart-1: var(--accent);
+  --chart-2: #0f766e;   /* teal   */
+  --chart-3: #6d28d9;   /* violet */
+  --chart-4: #a16207;   /* amber  */
+  --chart-5: #be185d;   /* pink   */
+  /* Track/rest colour behind bars, rings and gridlines */
+  --chart-track: color-mix(in srgb, var(--ink) 14%, var(--surface));
+
   /* Status base hues — pills/dots derive bg+text via color-mix,
      same verified formula as .records-tag (50% into ink ≥ 4.5:1) */
   --status-todo: oklch(0.75 0.14 60);
@@ -113,6 +129,14 @@
   --sidebar: #181817;
   --green-tint: #16281c;
   --red-tint: #2e1a19;
+
+  /* Chart ramp, dark. Same hues lifted into the light end of the scale so
+     they read against a dark surface — verified >= 3:1 on the darkest
+     surface of any palette. chart-1 keeps following the accent. */
+  --chart-2: #5eead4;
+  --chart-3: #c4b5fd;
+  --chart-4: #fcd34d;
+  --chart-5: #f9a8d4;
   --tooltip-bg: #2c2c2b;
   --tooltip-muted: #9c9a95;
   --shadow-btn: 0 0 0 1px rgba(255, 255, 255, 0.09);

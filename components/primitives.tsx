@@ -6,7 +6,7 @@ import {
   IconChevronDown, IconChevronLeft, IconChevronRight, IconClock, IconDots, IconFileText, IconHome,
   IconCopy, IconInfoCircle, IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion, IconMicrophone,
   IconMoodSmile, IconPaperclip, IconPencil, IconPlus, IconRefresh, IconScissors,
-  IconBell, IconEye, IconLayoutGrid, IconMoon, IconSun, IconTrash, IconSearch, IconSettings, IconSparkles, IconStack2, IconTypography,
+  IconBell, IconEye, IconLayoutGrid, IconMinus, IconMoon, IconSun, IconTrash, IconSearch, IconSettings, IconSparkles, IconStack2, IconTypography,
   IconUpload, IconUserPlus, IconWorld, IconX, type Icon as TablerIcon,
 } from "@tabler/icons-react";
 import { useStream } from "./hooks";
@@ -66,7 +66,7 @@ export type IconName =
   | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar"
   | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right"
   | "copy" | "circle-check" | "alert" | "info" | "chevron-left" | "upload" | "calendar"
-  | "bell" | "moon" | "sun" | "eye" | "trash" | "grid";
+  | "bell" | "moon" | "sun" | "eye" | "trash" | "grid" | "minus";
 const ICONS: Record<IconName, TablerIcon> = {
   chevron: IconChevronDown,
   bell: IconBell,
@@ -75,6 +75,7 @@ const ICONS: Record<IconName, TablerIcon> = {
   sun: IconSun,
   eye: IconEye,
   trash: IconTrash,
+  minus: IconMinus,
   check: IconCheck,
   close: IconX,
   search: IconSearch,
@@ -567,6 +568,14 @@ export function Avatar({
 }
 
 /* ── Tooltip ───────────────────────────────────────────── */
+/* The chip surface is shared with the chart tooltips in charts.tsx —
+ * extracted on second use so the two can never drift apart. */
+export const TOOLTIP_CHIP = "rounded-chip px-2 py-1 text-tiny font-medium whitespace-nowrap";
+export const TOOLTIP_CHIP_STYLE: CSSProperties = {
+  background: "var(--tooltip-bg)",
+  color: "var(--tooltip-fg)",
+};
+
 /* Hover / focus label on the tooltip tokens. Wraps its child;
  * the child gains aria-describedby while the tip is visible. */
 export function Tooltip({
@@ -639,14 +648,13 @@ export function Tooltip({
           <span
             id={id}
             role="tooltip"
-            className="pointer-events-none fixed z-50 rounded-chip px-2 py-1 text-tiny font-medium whitespace-nowrap"
+            className={`pointer-events-none fixed z-50 ${TOOLTIP_CHIP}`}
             style={{
               left: position.x,
               top: position.top,
               bottom: position.bottom,
               transform: "translateX(-50%)",
-              background: "var(--tooltip-bg)",
-              color: "var(--tooltip-fg)",
+              ...TOOLTIP_CHIP_STYLE,
               animation: "pop-in 150ms var(--ease-out-quint) both",
             }}
           >

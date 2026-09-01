@@ -43,6 +43,17 @@
   --red-tint: #fdecec;
   --accent-tint: color-mix(in srgb, var(--accent) 10%, var(--surface));
   --orange-tint: color-mix(in srgb, var(--orange) 12%, var(--surface));
+
+  /* Categorical chart ramp — mirrors styles/tokens.css (rule 9).
+     For telling series apart, never for meaning: --green/--red stay
+     reserved for success and danger. chart-1 is the accent so the primary
+     series follows the brand and the accent picker. */
+  --chart-1: var(--accent);
+  --chart-2: #0f766e;   /* teal   */
+  --chart-3: #6d28d9;   /* violet */
+  --chart-4: #a16207;   /* amber  */
+  --chart-5: #be185d;   /* pink   */
+  --chart-track: color-mix(in srgb, var(--ink) 14%, var(--surface));
   --status-todo: oklch(0.75 0.14 60);
   --status-progress: oklch(0.68 0.11 215);
   --status-done: oklch(0.66 0.14 160);
@@ -68,6 +79,12 @@
   --canvas: #131312; --surface: #1c1c1b; --field: #232322; --sidebar: #181817;
   --green-tint: #16281c;
   --red-tint: #2e1a19;
+
+  /* Chart ramp, dark — same hues lifted to read on a dark surface. */
+  --chart-2: #5eead4;
+  --chart-3: #c4b5fd;
+  --chart-4: #fcd34d;
+  --chart-5: #f9a8d4;
   --tooltip-bg: #2c2c2b; --tooltip-muted: #9c9a95;
   --shadow-btn: 0 0 0 1px rgba(255,255,255,0.09);
   --shadow-card: 0 0 0 1px var(--line);
@@ -94,6 +111,12 @@
   --color-red-tint: var(--red-tint);
   --color-accent-tint: var(--accent-tint);
   --color-orange-tint: var(--orange-tint);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-track: var(--chart-track);
   --radius-sm: var(--radius-sm);
   --radius-chip: var(--radius-chip);
   --radius-control: var(--radius-control);
@@ -689,6 +712,7 @@ const ICON_PATHS = {  /* authentic Tabler outline path data (@tabler/icons, MIT)
   chevron: <path d="M6 9l6 6l6 -6" />,
   bell: (<><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" /><path d="M9 17v1a3 3 0 0 0 6 0v-1" /></>),
   grid: (<><path d="M4 6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M14 6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M4 16a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M14 16a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /></>),
+  minus: <path d="M5 12l14 0" />,
   moon: <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />,
   sun: (<><path d="M8 12a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" /></>),
   eye: (<><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></>),
@@ -888,6 +912,10 @@ function Avatar({ name, src, size = "md", tone, className = "" }) {
     </span>
   );
 }
+/* The chip surface is shared with the chart tooltips below —
+   extracted on second use so the two can never drift apart. */
+const TOOLTIP_CHIP = "rounded-chip px-2 py-1 text-tiny font-medium whitespace-nowrap";
+const TOOLTIP_CHIP_STYLE = { background: "var(--tooltip-bg)", color: "var(--tooltip-fg)" };
 function Tooltip({ label, delay = 250, children }) {
   const id = useId();
   const anchorRef = useRef(null);
@@ -914,8 +942,8 @@ function Tooltip({ label, delay = 250, children }) {
     <>
       <span ref={anchorRef} className="inline-flex" onMouseEnter={schedule} onMouseLeave={hide} onFocus={show} onBlur={hide}>{child}</span>
       {position && ReactDOM.createPortal(
-        <span id={id} role="tooltip" className="pointer-events-none fixed z-50 rounded-chip px-2 py-1 text-tiny font-medium whitespace-nowrap"
-          style={{ left: position.x, top: position.top, bottom: position.bottom, transform: "translateX(-50%)", background: "var(--tooltip-bg)", color: "var(--tooltip-fg)", animation: "pop-in 150ms var(--ease-out-quint) both" }}>
+        <span id={id} role="tooltip" className={`pointer-events-none fixed z-50 ${TOOLTIP_CHIP}`}
+          style={{ left: position.x, top: position.top, bottom: position.bottom, transform: "translateX(-50%)", ...TOOLTIP_CHIP_STYLE, animation: "pop-in 150ms var(--ease-out-quint) both" }}>
           {label}
         </span>, document.body)}
     </>
@@ -7102,6 +7130,275 @@ function ChatApp({
 }
 
 /* ═══════════ Gallery ═══════════ */
+/* ═══════════ Charts (mirrors components/charts.tsx) ═══════════ */
+/* Bars and rings are CSS/SVG from tokens — no chart library. Bars are
+   HTML because a scaled SVG scales its text too, which would break the
+   type ramp; the line chart pairs a stretched viewBox with
+   vector-effect="non-scaling-stroke" so the stroke stays 2px at any width. */
+const SERIES_BG = { 1: "bg-chart-1", 2: "bg-chart-2", 3: "bg-chart-3", 4: "bg-chart-4", 5: "bg-chart-5" };
+const SERIES_STROKE = { 1: "stroke-chart-1", 2: "stroke-chart-2", 3: "stroke-chart-3", 4: "stroke-chart-4", 5: "stroke-chart-5" };
+const SERIES_TEXT = { 1: "text-chart-1", 2: "text-chart-2", 3: "text-chart-3", 4: "text-chart-4", 5: "text-chart-5" };
+const toneOf = (color, index) => color ?? (index % 5) + 1;
+/* Every interactive mark is at least this wide/tall (rule 15). */
+const HIT = 24;
+const CHART_TRIM = (n) => String(Math.round(n * 10) / 10);
+function compact(n) {
+  if (!Number.isFinite(n)) return "—";
+  const abs = Math.abs(n);
+  if (abs >= 1000000) return `${CHART_TRIM(n / 1000000)}M`;
+  if (abs >= 1000) return `${CHART_TRIM(n / 1000)}K`;
+  return `${CHART_TRIM(n)}`;
+}
+function niceMax(v) {
+  if (!Number.isFinite(v) || v <= 0) return 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  return Math.ceil(v / (mag / 2)) * (mag / 2);
+}
+function useTip() {
+  const [tip, setTip] = useState(null);
+  return { tip, show: (x, y, node) => setTip({ x, y, node }), hide: () => setTip(null) };
+}
+function ChartTip({ tip }) {
+  if (!tip) return null;
+  return (
+    <div aria-hidden="true"
+      className={`pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full ${TOOLTIP_CHIP}`}
+      style={{ left: tip.x, top: tip.y - 8, ...TOOLTIP_CHIP_STYLE }}>
+      {tip.node}
+    </div>
+  );
+}
+function ChartLegend({ series }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
+      {series.map((s, i) => (
+        <span key={`${s.name}-${i}`} className="flex items-center gap-1.5 text-tiny text-ink-2">
+          <span className={`size-2 shrink-0 rounded-full ${SERIES_BG[toneOf(s.color, i)]}`} />
+          {s.name}
+        </span>
+      ))}
+    </div>
+  );
+}
+const CHART_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"];
+const BAR_SERIES_DEFAULT = [{ name: "Transactions", values: [38, 52, 32, 12, 35, 28, 33, 25] }];
+function BarChart({ labels = CHART_MONTHS, series = BAR_SERIES_DEFAULT, variant = "grouped", highlight, height = 168, showValues = true, className = "" }) {
+  const { tip, show, hide } = useTip();
+  const boxRef = useRef(null);
+  const stacked = variant === "stacked";
+  const columnPeak = labels.map((_, i) =>
+    stacked
+      ? series.reduce((n, s) => n + (s.values[i] ?? 0), 0)
+      : Math.max(0, ...series.map((s) => s.values[i] ?? 0)));
+  const max = niceMax(Math.max(0, ...columnPeak));
+  /* A headline number only means something when it represents the whole
+     column — grouped multi-series has no such number. */
+  const labelValues = showValues && (stacked || series.length === 1);
+  const onEnter = (event, node) => {
+    const box = boxRef.current?.getBoundingClientRect();
+    const bar = event.currentTarget.getBoundingClientRect();
+    if (!box) return;
+    show(bar.left - box.left + bar.width / 2, bar.top - box.top, node);
+  };
+  return (
+    <div className={`w-full max-w-160 ${className}`}>
+      {series.length > 1 && <div className="mb-3"><ChartLegend series={series} /></div>}
+      <div ref={boxRef} className="relative overflow-x-auto" onMouseLeave={hide}>
+        <div className="flex items-end gap-1.5" style={{ height }}>
+          {labels.map((label, i) => (
+            <div key={`${label}-${i}`} className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1"
+              style={{ minWidth: stacked ? HIT : series.length * HIT }}>
+              {labelValues && <span className="text-center text-tiny font-medium text-ink tabular-nums">{compact(columnPeak[i])}</span>}
+              {/* column-reverse makes the BOTTOM main-start, so a stack anchors
+                  with justify-start; justify-center would float it. */}
+              <div className={`flex h-full gap-0.5 ${stacked ? "flex-col-reverse items-center justify-start" : "items-end justify-center"}`}>
+                {series.map((s, si) => {
+                  const value = s.values[i] ?? 0;
+                  const tone = toneOf(s.color, si);
+                  const dimmed = highlight !== undefined && highlight !== i;
+                  const text = `${s.name} · ${value.toLocaleString()}`;
+                  return (
+                    <button key={`${s.name}-${si}`} type="button"
+                      aria-label={`${s.name}, ${label}: ${value.toLocaleString()}`}
+                      onMouseEnter={(e) => onEnter(e, text)}
+                      onFocus={(e) => onEnter(e, text)}
+                      onBlur={hide}
+                      className={`w-full rounded-sm transition-opacity duration-150 hover:opacity-80 ${SERIES_BG[tone]} ${dimmed ? "opacity-25" : ""}`}
+                      style={{ height: `${(value / max) * 100}%` }} />
+                  );
+                })}
+              </div>
+              <span className="truncate text-center text-tiny text-ink-3">{label}</span>
+            </div>
+          ))}
+        </div>
+        <ChartTip tip={tip} />
+      </div>
+    </div>
+  );
+}
+const LINE_SERIES_DEFAULT = [{ name: "Profit", values: [18, 26, 21, 34, 29, 41, 38, 52] }];
+function LineChart({ labels = CHART_MONTHS, series = LINE_SERIES_DEFAULT, area = true, points = true, height = 150, className = "" }) {
+  const gradientId = useId();
+  const { tip, show, hide } = useTip();
+  const boxRef = useRef(null);
+  const W = 100, H = 40;
+  const max = niceMax(Math.max(0, ...series.flatMap((s) => s.values)));
+  const slots = Math.max(labels.length, ...series.map((s) => s.values.length), 1);
+  const step = slots > 1 ? W / (slots - 1) : W;
+  const onPoint = (event, node) => {
+    const box = boxRef.current?.getBoundingClientRect();
+    const dot = event.currentTarget.getBoundingClientRect();
+    if (!box) return;
+    show(dot.left - box.left + dot.width / 2, dot.top - box.top, node);
+  };
+  return (
+    <div className={`w-full max-w-160 ${className}`}>
+      {series.length > 1 && <div className="mb-3"><ChartLegend series={series} /></div>}
+      <div ref={boxRef} className="relative" onMouseLeave={hide}>
+        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ height }} className="w-full overflow-visible"
+          role="img" aria-label={series.map((s) => `${s.name}: ${s.values.map((v) => v.toLocaleString()).join(", ")}`).join(". ")}>
+          {[0, 0.5, 1].map((t) => (
+            <line key={t} x1="0" x2={W} y1={H * t} y2={H * t} className="stroke-chart-track" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+          ))}
+          {series.map((s, si) => {
+            const tone = toneOf(s.color, si);
+            const d = s.values.map((v, i) => `${i ? "L" : "M"}${i * step} ${H - (v / max) * H}`).join(" ");
+            return (
+              /* The colour class goes on the <g>, not the path: a gradient stop
+                 resolves currentColor from its OWN inherited colour. */
+              <g key={`${s.name}-${si}`} className={SERIES_TEXT[tone]}>
+                {area && (
+                  <>
+                    <defs>
+                      <linearGradient id={`${gradientId}-${si}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="currentColor" stopOpacity="0.22" />
+                        <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={`${d} L${(s.values.length - 1) * step} ${H} L0 ${H} Z`} fill={`url(#${gradientId}-${si})`} />
+                  </>
+                )}
+                <path d={d} fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" className={SERIES_STROKE[tone]} />
+              </g>
+            );
+          })}
+        </svg>
+        {points && series.map((s, si) => {
+          const tone = toneOf(s.color, si);
+          return s.values.map((v, i) => (
+            <button key={`${s.name}-${si}-${i}`} type="button"
+              aria-label={`${s.name}, ${labels[i] ?? i + 1}: ${v.toLocaleString()}`}
+              onMouseEnter={(e) => onPoint(e, `${s.name} · ${v.toLocaleString()}`)}
+              onFocus={(e) => onPoint(e, `${s.name} · ${v.toLocaleString()}`)}
+              onBlur={hide}
+              className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full"
+              style={{ width: HIT, height: HIT, left: `${(i / Math.max(slots - 1, 1)) * 100}%`, top: `${(1 - v / max) * height}px` }}>
+              <span className={`size-2.5 rounded-full border-2 border-surface transition-transform duration-150 ${SERIES_BG[tone]}`} />
+            </button>
+          ));
+        })}
+        <ChartTip tip={tip} />
+      </div>
+      <div className="mt-2 flex justify-between">
+        {labels.map((l, i) => <span key={`${l}-${i}`} className="min-w-0 truncate text-tiny text-ink-3">{l}</span>)}
+      </div>
+    </div>
+  );
+}
+function DonutChart({ value = 500, max = 720, label = "Visitors", color = 4, size = 116, className = "" }) {
+  const pct = Math.max(0, Math.min(1, max === 0 ? 0 : value / max));
+  const r = 42, C = 2 * Math.PI * r;
+  return (
+    <div className={`relative shrink-0 ${className}`} style={{ width: size, height: size, maxWidth: "100%" }} role="img"
+      aria-label={`${label}: ${value.toLocaleString()} of ${max.toLocaleString()}, ${Math.round(pct * 100)}%`}>
+      <svg viewBox="0 0 100 100" className="size-full -rotate-90">
+        <circle cx="50" cy="50" r={r} fill="none" strokeWidth="11" className="stroke-chart-track" />
+        <circle cx="50" cy="50" r={r} fill="none" strokeWidth="11" strokeLinecap="round" className={SERIES_STROKE[color]}
+          strokeDasharray={`${pct * C} ${C}`} style={{ transition: "stroke-dasharray 520ms var(--ease-out-quint)" }} />
+      </svg>
+      <span className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+        <span className="text-title font-semibold text-ink tabular-nums">{compact(value)}</span>
+        <span className="text-tiny text-ink-3">{label}</span>
+      </span>
+    </div>
+  );
+}
+function Sparkline({ values = [4, 7, 5, 9, 8, 12, 10, 15], color = 1, area = true, className = "" }) {
+  const gradientId = useId();
+  const W = 100, H = 28;
+  /* One point is not a trend — drawing it fills a wedge that isn't there. */
+  if (values.length < 2) return null;
+  const max = Math.max(...values), min = Math.min(...values);
+  const span = max - min || 1;
+  const step = W / (values.length - 1);
+  const d = values.map((v, i) => `${i ? "L" : "M"}${i * step} ${H - ((v - min) / span) * H}`).join(" ");
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true" className={`h-8 w-full ${SERIES_TEXT[color]} ${className}`}>
+      {area && (
+        <>
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="currentColor" stopOpacity="0.24" />
+              <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={`${d} L${W} ${H} L0 ${H} Z`} fill={`url(#${gradientId})`} />
+        </>
+      )}
+      <path d={d} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+/* ═══════════ StatCard / MetricRow (mirrors components/StatCard.tsx) ═══════════ */
+/* Direction is explicit, not inferred from the sign — "down" is good for
+   churn and cost, and only the caller knows which. */
+const DELTA_TONES = { up: "bg-green-tint text-green", down: "bg-red-tint text-red", flat: "bg-inset text-ink-2" };
+const DELTA_ICONS = { up: "arrow-up", down: "arrow-up", flat: "minus" };
+const STAT_ICON_TINTS = {
+  1: "bg-accent-tint text-chart-1", 2: "bg-inset text-chart-2", 3: "bg-inset text-chart-3",
+  4: "bg-orange-tint text-chart-4", 5: "bg-inset text-chart-5",
+};
+function Delta({ tone = "up", children }) {
+  return (
+    <span className={`corner-smooth inline-flex h-5.5 shrink-0 items-center gap-0.5 rounded-chip px-1.5 text-tiny font-medium tabular-nums ${DELTA_TONES[tone]}`}>
+      <Icon name={DELTA_ICONS[tone]} size={12} strokeWidth={2} className={tone === "down" ? "rotate-180" : ""} />
+      {children}
+    </span>
+  );
+}
+function StatCard({ label = "Total profit", value = 88500, display, caption, delta, deltaTone = "up", icon, iconTone = 1, trend, trendTone = 1, className = "" }) {
+  return (
+    <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${className}`}>
+      {icon && (
+        <span className={`corner-smooth flex size-9 items-center justify-center rounded-control ${STAT_ICON_TINTS[iconTone]}`}>
+          <Icon name={icon} size={17} strokeWidth={2} />
+        </span>
+      )}
+      <div className="min-w-0">
+        <div className="truncate text-caption font-medium text-ink">{label}</div>
+        {caption && <div className="mt-0.5 truncate text-small text-ink-3">{caption}</div>}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-display font-semibold text-ink tabular-nums">{display ?? compact(value)}</span>
+        {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+      </div>
+      {trend && trend.length > 1 && <Sparkline values={trend} color={trendTone} />}
+    </Card>
+  );
+}
+function MetricRow({ icon, label, value, delta, deltaTone = "up" }) {
+  return (
+    <div className="flex w-full items-center gap-2.5 border-t border-line py-2.5 first:border-t-0">
+      {icon && <Icon name={icon} size={15} strokeWidth={2} className="shrink-0 text-ink-3" />}
+      <span className="min-w-0 flex-1 truncate text-caption text-ink-2">{label}</span>
+      <span className="shrink-0 text-caption font-medium text-ink tabular-nums">{value}</span>
+      {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+    </div>
+  );
+}
+
 function Section({ id, title, note, children }) {
   return (
     <section id={id} className="mb-12 scroll-mt-8">
@@ -7567,6 +7864,10 @@ const DOC_NAV = [
     { id: "promptbar", title: "PromptBar" },
     { id: "chatcomposer", title: "ChatComposer" },
   ]},
+  { label: "Dashboard", items: [
+    { id: "statcard", title: "StatCard & MetricRow" },
+    { id: "charts", title: "Charts" },
+  ]},
   { label: "Data", items: [
     { id: "recordstable", title: "RecordsTable" },
     { id: "filtertable", title: "FilterTable" },
@@ -7902,6 +8203,56 @@ function App() {
             <GalleryCard label="Field-wrapped" wide><DatePickerDemo /></GalleryCard>
             <GalleryCard label="Standalone Calendar"><Calendar defaultValue={new Date()} /></GalleryCard>
             <GalleryCard label="Range mode"><Calendar mode="range" defaultRange={{ from: new Date(new Date().getFullYear(), new Date().getMonth(), 8), to: new Date(new Date().getFullYear(), new Date().getMonth(), 14) }} /></GalleryCard>
+          </Section>
+          <Section id="statcard" title="StatCard & MetricRow" note="The tiles a dashboard is mostly made of. Delta direction is an explicit prop, never inferred from the sign — down is good for churn and cost, and only the caller knows which.">
+            <GalleryCard label="Stat tiles" full>
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+                <StatCard label="Total profit" display="$88.5k" caption="All time" delta="-18%" deltaTone="down" trend={[9, 7, 8, 5, 6, 4, 5, 3]} trendTone={5} />
+                <StatCard label="Total income" caption="Last week" display="$4,673" delta="+25.2%" icon="chart" iconTone={2} trend={[3, 6, 4, 9, 7, 11, 10, 14]} trendTone={2} />
+                <StatCard label="Total expense" caption="Last month" display="$1.28K" delta="-12.2%" deltaTone="down" icon="layers" iconTone={4} />
+                <StatCard label="Sessions" value={124000} caption="Last week" delta="0.0%" deltaTone="flat" />
+              </div>
+            </GalleryCard>
+            <GalleryCard label="MetricRow breakdown" wide>
+              <div className="flex flex-col">
+                <MetricRow icon="globe" label="Online store" value="$20k" delta="+12.6%" />
+                <MetricRow icon="home" label="Offline store" value="$20k" delta="-4.2%" deltaTone="down" />
+                <MetricRow icon="layers" label="Wholesale" value="$8.4k" delta="0.0%" deltaTone="flat" />
+              </div>
+            </GalleryCard>
+          </Section>
+          <Section id="charts" title="Charts" note="No chart library — bars are HTML (a scaled SVG scales its text and breaks the type ramp), lines are SVG with non-scaling strokes. Series use the categorical chart ramp, never the semantic green/red, and anything multi-series gets a legend because hue alone fails for colour-blind readers. Hover or tab to a bar or point for its value.">
+            <GalleryCard label="BarChart · single series, highlighted" full>
+              <BarChart highlight={1} />
+            </GalleryCard>
+            <GalleryCard label="BarChart · stacked, three series" full>
+              <BarChart variant="stacked" labels={["Q1", "Q2", "Q3", "Q4"]} series={[
+                { name: "Direct", values: [18, 24, 20, 29] },
+                { name: "Referral", color: 3, values: [11, 9, 15, 12] },
+                { name: "Organic", color: 5, values: [7, 13, 9, 16] },
+              ]} />
+            </GalleryCard>
+            <GalleryCard label="LineChart · area fill" full>
+              <LineChart />
+            </GalleryCard>
+            <GalleryCard label="LineChart · two series" full>
+              <LineChart labels={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]} series={[
+                { name: "This week", values: [12, 19, 15, 27, 22, 31, 28] },
+                { name: "Last week", color: 2, values: [9, 14, 18, 16, 24, 21, 25] },
+              ]} />
+            </GalleryCard>
+            <GalleryCard label="DonutChart">
+              <div className="flex items-center gap-5">
+                <DonutChart />
+                <DonutChart value={318} max={400} label="Uptime" color={2} size={96} />
+              </div>
+            </GalleryCard>
+            <GalleryCard label="Sparkline" wide>
+              <div className="flex w-full max-w-80 flex-col gap-3">
+                <Sparkline />
+                <Sparkline values={[14, 9, 11, 6, 8, 4, 5, 2]} color={5} />
+              </div>
+            </GalleryCard>
           </Section>
           <Section id="accordion" title="Accordion" note="Stacked disclosure rows on Disclosure — single-open by default, closed content inert, house easing throughout.">
             <GalleryCard label="Single open" wide><Accordion defaultOpen={["restock"]} /></GalleryCard>

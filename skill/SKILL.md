@@ -50,6 +50,7 @@ git clone https://github.com/eyosiyasketema1/formic-design-system.git
 - **Light by default.** Dark is opt in via `<html data-theme="dark">`; there is no OS auto-detect. Palettes are `data-palette` overrides. Components never branch on theme, they only read tokens.
 - **Contrast:** WCAG AA everywhere (text >= 4.5:1, non-text >= 3:1) across both modes and all 5 palettes.
 - **Icons:** Tabler only, through the shared `Icon` wrapper: `<Icon name="check" size={14} strokeWidth={2} />`. To add an icon, map a Tabler component into `ICONS` in `primitives.tsx`. Never inline SVG icon paths, never add a second icon package.
+- **Charts** use the categorical ramp `--chart-1..5` (chart-1 is the accent, so the primary series follows the brand). Never colour a series with `--green`/`--red`: those mean success and danger. No chart library — bars are HTML, lines are SVG with `vector-effect="non-scaling-stroke"`. Multi-series charts always ship a legend, because hue alone fails for colour-blind readers.
 - **App rails** sit on `--sidebar` with a `border-line` edge. Nav active state is a flat `bg-hover-2` fill with ink copy and ink icon: no border, no accent recolor.
 - **Responsive:** component roots are fluid (`w-full` plus a `max-w-*` cap); wide content scrolls in its own `overflow-x-auto`; text truncates with `min-w-0 truncate`; touch targets >= 24px.
 
@@ -63,6 +64,7 @@ git clone https://github.com/eyosiyasketema1/formic-design-system.git
 **Overlays:** `Modal`, `Drawer`, `Toast`, `DropdownMenu`, `Popover`, `Tooltip`.
 **Feedback:** `Alert`, `Progress`, `Skeleton`, `LoadingState`, `ThinkingState`, `TaskRows`, `ToolChips`.
 **Conversation:** `ChatThread`, `StreamingText`, `Markdown`, `CodeBlock`, `SelectionActions`, `PromptBar`, `ChatComposer`, `ApprovalCard`, `RecommendationCard`, `ContextCards`.
+**Dashboard:** `StatCard`, `MetricRow`, `Delta`, `BarChart`, `LineChart`, `DonutChart`, `Sparkline`, `ChartLegend`.
 **Data:** `RecordsTable`, `FilterTable`, `DiffTable`.
 **Structure:** `Accordion`, `Steps`, `Timeline`.
 **Navigation:** `Tabs`, `Pagination`, `Breadcrumbs`, `Menubar`, `SidebarNav`, `SearchList`.

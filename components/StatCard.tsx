@@ -1,0 +1,120 @@
+"use client";
+import type { ReactNode } from "react";
+import { Card, Icon, type IconName } from "./primitives";
+import { Sparkline, compact, type ChartColor } from "./charts";
+/* ─────────────────────────────────────────────────────────
+ * STAT CARD / METRIC ROW
+ * The small tiles a dashboard is mostly made of: a label, one
+ * number that matters, and how it moved. Everything past the
+ * value is optional, so the same component covers a bare KPI
+ * and a tile with an icon, a caption and a trend line.
+ * ───────────────────────────────────────────────────────── */
+
+/* Direction is explicit rather than inferred from the sign, because
+ * "down" is good for churn and cost. The caller knows; we don't. */
+export type DeltaTone = "up" | "down" | "flat";
+const DELTA_TONES: Record<DeltaTone, string> = {
+  up: "bg-green-tint text-green",
+  down: "bg-red-tint text-red",
+  flat: "bg-inset text-ink-2",
+};
+const DELTA_ICONS: Record<DeltaTone, IconName> = {
+  up: "arrow-up",
+  down: "arrow-up",     // rotated below — one glyph, two directions
+  flat: "minus",
+};
+
+export function Delta({ tone = "up", children }: { tone?: DeltaTone; children: ReactNode }) {
+  return (
+    <span
+      className={`corner-smooth inline-flex h-5.5 shrink-0 items-center gap-0.5 rounded-chip px-1.5 text-tiny font-medium tabular-nums ${DELTA_TONES[tone]}`}
+    >
+      <Icon
+        name={DELTA_ICONS[tone]}
+        size={12}
+        strokeWidth={2}
+        className={tone === "down" ? "rotate-180" : ""}
+      />
+      {children}
+    </span>
+  );
+}
+
+const STAT_ICON_TINTS: Record<ChartColor, string> = {
+  1: "bg-accent-tint text-chart-1", 2: "bg-inset text-chart-2", 3: "bg-inset text-chart-3",
+  4: "bg-orange-tint text-chart-4", 5: "bg-inset text-chart-5",
+};
+
+export function StatCard({
+  label = "Total profit",
+  value = 88_500,
+  /** pass a string to control formatting yourself, e.g. "$88.5k" */
+  display,
+  caption,
+  delta,
+  deltaTone = "up",
+  icon,
+  iconTone = 1,
+  trend,
+  trendTone = 1,
+  className = "",
+}: {
+  label?: string;
+  value?: number;
+  display?: string;
+  caption?: string;
+  delta?: string;
+  deltaTone?: DeltaTone;
+  icon?: IconName;
+  iconTone?: ChartColor;
+  trend?: number[];
+  trendTone?: ChartColor;
+  className?: string;
+}) {
+  return (
+    <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${className}`}>
+      {icon && (
+        <span className={`corner-smooth flex size-9 items-center justify-center rounded-control ${STAT_ICON_TINTS[iconTone]}`}>
+          <Icon name={icon} size={17} strokeWidth={2} />
+        </span>
+      )}
+      <div className="min-w-0">
+        <div className="truncate text-caption font-medium text-ink">{label}</div>
+        {caption && <div className="mt-0.5 truncate text-small text-ink-3">{caption}</div>}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-display font-semibold text-ink tabular-nums">
+          {display ?? compact(value)}
+        </span>
+        {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+      </div>
+      {trend && trend.length > 1 && <Sparkline values={trend} color={trendTone} />}
+    </Card>
+  );
+}
+
+/* ── MetricRow ─────────────────────────────────────────── */
+/* A line item inside a card — the breakdown under a headline
+ * number, as in "Online store $20k +12.6%". */
+export function MetricRow({
+  icon,
+  label,
+  value,
+  delta,
+  deltaTone = "up",
+}: {
+  icon?: IconName;
+  label: string;
+  value: string;
+  delta?: string;
+  deltaTone?: DeltaTone;
+}) {
+  return (
+    <div className="flex w-full items-center gap-2.5 border-t border-line py-2.5 first:border-t-0">
+      {icon && <Icon name={icon} size={15} strokeWidth={2} className="shrink-0 text-ink-3" />}
+      <span className="min-w-0 flex-1 truncate text-caption text-ink-2">{label}</span>
+      <span className="shrink-0 text-caption font-medium text-ink tabular-nums">{value}</span>
+      {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+    </div>
+  );
+}

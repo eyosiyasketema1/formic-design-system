@@ -4,7 +4,7 @@ A token-driven React + Tailwind v4 design system for AI product interfaces: chat
 
 **[Live site](https://formicai.dev/)** · **[Component gallery](https://formicai.dev/preview.html)**
 
-- 40+ components, 5 palettes x light/dark
+- 50+ components, 5 palettes x light/dark
 - Tokens only: no hardcoded colors, sizes, radii, shadows, or easings
 - WCAG AA verified by script across every mode and palette
 - Flat elevation (hairline borders, no drop shadows), one easing curve
@@ -95,6 +95,8 @@ Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (d
 **Forms:** Field, Input, Textarea, Select, Switch, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar
 
 **Overlays:** Modal, Drawer, DropdownMenu, Popover, Tooltip
+
+**Dashboard:** StatCard, MetricRow, Delta, BarChart, LineChart, DonutChart, Sparkline, ChartLegend
 
 **Data and structure:** RecordsTable, FilterTable, DiffTable, Accordion, Steps, Timeline
 
