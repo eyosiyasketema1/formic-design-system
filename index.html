@@ -769,13 +769,20 @@ main, footer.site { position: relative; z-index: 1; }
 .chat-scroll { max-height: 260px; overflow-y: auto; padding-right: 4px; }
 .chat-scroll::-webkit-scrollbar { width: 6px; }
 .chat-scroll::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; }
+/* Tablet: two tiles per row. The narrow spans must drop to ONE column here —
+   leaving them at span 2 makes every tile eat a full row, which strands each
+   component against the left edge of an over-wide card. */
 @media (max-width: 1024px) {
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .bento-card.sp2, .bento-card.sp3, .bento-card.sp4, .bento-card.sp6, .bento-card.center { grid-column: span 2; }
+  .bento-card.sp2, .bento-card.sp3 { grid-column: span 1; }
+  .bento-card.sp4, .bento-card.sp6, .bento-card.center { grid-column: span 2; }
+  /* odd count, so the last tile widens to close the row instead of leaving a hole */
+  .bento-card:last-child { grid-column: span 2; }
 }
 @media (max-width: 640px) {
   .bento { grid-template-columns: 1fr; }
-  .bento-card.sp2, .bento-card.sp3, .bento-card.sp4, .bento-card.sp6, .bento-card.center { grid-column: span 1; }
+  .bento-card.sp2, .bento-card.sp3, .bento-card.sp4, .bento-card.sp6,
+  .bento-card.center, .bento-card:last-child { grid-column: span 1; }
 }
 .principle-deck { position: relative; }
 .principle-card {
