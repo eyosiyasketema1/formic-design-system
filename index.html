@@ -675,6 +675,9 @@ main, header.site, footer.site { position: relative; z-index: 1; }
 .principle-card::after {
   content: ""; position: absolute; inset: -1px; z-index: 2;
   border-radius: inherit; pointer-events: none; padding: 1px;
+  /* corner-shape does not inherit — without this the ring draws a plain
+     rounded rect over a squircle card and the curves separate */
+  corner-shape: squircle;
   background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%),
     color-mix(in srgb, var(--accent) 70%, transparent), transparent 62%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -688,7 +691,7 @@ main, header.site, footer.site { position: relative; z-index: 1; }
 .bento-card::before,
 .principle-card::before {
   content: ""; position: absolute; inset: 0; z-index: 0;
-  border-radius: inherit; pointer-events: none;
+  border-radius: inherit; pointer-events: none; corner-shape: squircle;
   background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%),
     color-mix(in srgb, var(--accent) 6%, transparent), transparent 70%);
   opacity: calc(max(var(--glow, 0) - 0.55, 0) * 2.2);
