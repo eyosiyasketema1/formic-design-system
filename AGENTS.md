@@ -10,7 +10,7 @@ Use the components in `components/` as they are. If a pattern is missing, build 
 
 ## The rules that matter most
 
-1. **Tokens only.** No hardcoded colors, font sizes, radii, shadows, or easings. Use the generated utilities: `text-ink`, `text-ink-2`, `text-ink-3`, `bg-canvas`, `bg-surface`, `bg-field`, `bg-hover`, `bg-hover-2`, `bg-inset`, `bg-sidebar`, `border-line`, `border-line-strong`, `text-accent`, `text-green`, `text-red`, `text-orange`, and the `*-tint` backgrounds. If a value has no token, add the token first.
+1. **Tokens only.** No hardcoded colors, font sizes, radii, shadows, or easings. Use the generated utilities: `text-ink`, `text-ink-2`, `text-ink-3`, `bg-canvas`, `bg-surface`, `bg-field`, `bg-hover`, `bg-hover-2`, `bg-inset`, `bg-sidebar`, `border-line`, `border-line-strong`, `text-accent`, `text-green`, `text-red`, `text-orange`, the `*-tint` backgrounds, and the categorical chart ramp `chart-1..5` plus `chart-track` (for data series only — never colour a series with green or red, those carry meaning). If a value has no token, add the token first.
 2. **Type scale.** A 14px base integer ramp: `text-nano` 8, `text-micro` 10, `text-tiny` 11, `text-small` 12, `text-caption` 13, `text-body` 14, `text-lead` 16, `text-title` 18, `text-heading` 20, `text-display` 24, `text-display-lg` 32, `text-display-xl` 48. Never `text-[Npx]`.
 3. **Weights and tracking.** `font-medium` is the default, `font-semibold` is the maximum, `font-bold` is never used. Only `tracking-wide` and `tracking-tight`, never an arbitrary value.
 4. **Radii.** `rounded-sm` 6, `rounded-chip` 7, `rounded-control` 8, `rounded-md` 10, `rounded-card` 14, `rounded-capsule` 22.

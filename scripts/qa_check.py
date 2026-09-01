@@ -102,6 +102,16 @@ PAIRS = [  # (fg var | literal, bg var, minimum, label)
     ("--accent", "--surface", 4.5, "code keywords on cards"),
     ("--orange", "--surface", 4.5, "code numbers on cards"),
     ("--canvas", "--ink", 4.5, "canvas text on ink fills (primary buttons, active page)"),
+    # Chart series are non-text UI (rule 5): 3:1 against the card they sit on.
+    # chart-1 is var(--accent) so it is covered by the accent pairs above.
+    ("--chart-2", "--surface", 3.0, "chart series 2 on cards"),
+    ("--chart-3", "--surface", 3.0, "chart series 3 on cards"),
+    ("--chart-4", "--surface", 3.0, "chart series 4 on cards"),
+    ("--chart-5", "--surface", 3.0, "chart series 5 on cards"),
+    ("--chart-2", "--canvas", 3.0, "chart series 2 on canvas"),
+    ("--chart-3", "--canvas", 3.0, "chart series 3 on canvas"),
+    ("--chart-4", "--canvas", 3.0, "chart series 4 on canvas"),
+    ("--chart-5", "--canvas", 3.0, "chart series 5 on canvas"),
 ]
 # sanity: the parser must actually find the base palette, or every light-mode
 # check silently becomes a no-op (this happened once — never again)
@@ -119,9 +129,19 @@ for label, vars_ in palette_sets():
 
 # ── 3. Token drift: styles/ vs preview.html ─────────────────
 preview = (ROOT / "preview.html").read_text()
+# Scope the search to preview's light :root block. Searching the whole file
+# takes the FIRST hex match, which would silently compare a dark value
+# against a light one for any token whose dark definition is authored first.
+_m_light = re.search(r":root\s*\{(.*?)\n\}", preview, re.S)
+preview_light = _m_light.group(1) if _m_light else preview
 for var, val in base_light.items():
-    m = re.search(rf"{re.escape(var)}\s*:\s*(#[0-9a-fA-F]{{6}})", preview)
-    if m and m.group(1).lower() != val.lower():
+    m = re.search(rf"{re.escape(var)}\s*:\s*(#[0-9a-fA-F]{{6}})", preview_light)
+    if not m:
+        # Previously this was `if m and ...`, so a token added to tokens.css
+        # and never mirrored slipped through silently — the exact drift rule 9
+        # exists to prevent. Missing is now a failure, not a skip.
+        fails.append(f"drift: {var} exists in tokens.css but is missing from preview.html (rule 9)")
+    elif m.group(1).lower() != val.lower():
         fails.append(f"drift: {var} is {val} in tokens.css but {m.group(1)} in preview.html")
 
 # ── 3a1c. Type scale drift: tokens.css ↔ preview px values ──
