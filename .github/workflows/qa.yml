@@ -35,7 +35,7 @@ jobs:
       # qa_check.py shells out to esbuild to prove every component compiles.
       # Without Node that step degrades to a warning and stops being a gate.
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
 
