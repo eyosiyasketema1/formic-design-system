@@ -2392,9 +2392,16 @@ function ChatDemo() {
   ]);
   const [replyIndex, setReplyIndex] = useState(0);
   const endRef = useRef(null);
+  const mounted = useRef(false);
 
+  /* Keep the thread pinned to the newest message, but never move the page:
+     this effect also runs on mount, and scrollIntoView walks up to the
+     window, which was dragging the whole site down to the bento on load.
+     Scroll the chat container itself instead. */
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+    if (!mounted.current) { mounted.current = true; return; }
+    const box = endRef.current?.closest(".chat-scroll");
+    if (box) box.scrollTop = box.scrollHeight;
   }, [messages]);
 
   const handleSend = (text) => {
