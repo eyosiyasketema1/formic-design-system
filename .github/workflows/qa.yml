@@ -1,0 +1,49 @@
+name: QA
+
+# The design rules in CLAUDE.md are only real if something enforces them on
+# work that did not come from a maintainer. This runs the same gate a
+# contributor is asked to run locally, on every PR including forks.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Read-only token. Fork PRs get no secrets and cannot write to the repo.
+permissions:
+  contents: read
+
+# A new push supersedes the run still going for the same branch.
+concurrency:
+  group: qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qa:
+    name: Design system gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # qa_check.py shells out to esbuild to prove every component compiles.
+      # Without Node that step degrades to a warning and stops being a gate.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run the QA gate
+        run: python3 scripts/qa_check.py
+
+      # Cheap belt-and-braces: a wrong or stale SRI hash blocks the script
+      # outright and white-screens the live site, and it fails silently in
+      # review because the HTML still looks correct.
+      - name: Verify Subresource Integrity hashes
+        run: python3 scripts/check_sri.py
