@@ -4,6 +4,14 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Formic AI Design System — Preview</title>
+<script>
+  /* Apply the stored theme before first paint. useTheme sets this later from
+     React, which is far too late — dark users would get a white flash. */
+  try {
+    var _t = localStorage.getItem("ds-theme");
+    document.documentElement.dataset.theme = _t === "dark" ? "dark" : "light";
+  } catch (e) { document.documentElement.dataset.theme = "light"; }
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" integrity="sha512-QVs8Lo43F9lSuBykadDb0oSXDL/BbZ588urWVCRwSIoewQv/Ewg1f84mK3U790bZ0FfhFa1YSQUmIhG+pIRKeg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" integrity="sha512-6a1107rTlA4gYpgHAqbwLAtxmWipBdJFcq8y5S/aTge3Bp+VAklABm2LO+Kg51vOWR9JMZq1Ovjl5tpluNpTeQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.4/babel.min.js" integrity="sha512-hX7KzoYtNHhNJsz8TAHyddcegokOwhmYiFWCDHqFkcoNVsYwCziO+NISSRlNKpfOYaqyQxm2+MTCJqSaHssJTA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -597,9 +605,81 @@ tfoot .records-sticky-cell { z-index: 5; }
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 </style>
+<style>
+  /* Boot styling — plain CSS, so it applies the instant the page parses.
+     Every token on this page lives in the type="text/tailwindcss" block
+     above, which the browser treats as inert text until the Tailwind
+     browser build compiles it. Until that lands there is no styling at
+     all, not even a background. This page also hands Babel 336KB of
+     inline JSX to compile synchronously, which stalls the main thread
+     long enough for the fully-rendered but completely unstyled gallery
+     to be painted as raw text. So: hold the app back until the utilities
+     genuinely resolve, and show a spinner meanwhile. */
+  :root { --boot-bg: #ffffff; --boot-fg: #8a8a85; --boot-line: #e6e6e3; }
+  html[data-theme="dark"] { --boot-bg: #131312; --boot-fg: #7a7a75; --boot-line: #2a2a28; }
+  html { background: var(--boot-bg); }
+
+  /* Hidden until ready — but the reveal must never depend solely on JS.
+     This animation is a pure-CSS deadline: if the script below throws or
+     never runs, the content still appears at 9s instead of leaving a
+     permanently blank page, which would be worse than the bug it fixes. */
+  #root { opacity: 0; animation: boot-failsafe 0s linear 9s forwards; }
+  @keyframes boot-failsafe { to { opacity: 1; } }
+  html.tw-ready #root { opacity: 1; animation: none; transition: opacity 160ms ease-out; }
+
+  #boot {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px;
+    background: var(--boot-bg); color: var(--boot-fg);
+    font: 500 13px/1 Urbanist, ui-sans-serif, system-ui, sans-serif;
+  }
+  #boot i {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid var(--boot-line); border-top-color: var(--boot-fg);
+    animation: boot-spin 620ms linear infinite;
+  }
+  @keyframes boot-spin { to { transform: rotate(360deg); } }
+  html.tw-ready #boot { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    #boot i { animation: none; }
+    html.tw-ready #root { transition: none; }
+    /* the failsafe is a deadline, not decoration — it must survive here */
+    #root { animation: boot-failsafe 0s linear 9s forwards; }
+  }
+</style>
 </head>
 <body>
+<div id="boot" aria-hidden="true"><i></i>Loading the gallery…</div>
 <div id="root"></div>
+<script>
+  /* Reveal only once Tailwind has actually compiled. Probe a real utility
+     rather than trusting a timer — the compile finishes whenever it
+     finishes. Gives up after 8s so a CDN failure degrades to unstyled
+     content instead of a spinner that never stops. */
+  (function () {
+    var html = document.documentElement, start = Date.now(), done = false;
+    function reveal() {
+      if (done) return;
+      done = true;
+      html.classList.add("tw-ready");
+    }
+    function compiled() {
+      var probe = document.createElement("div");
+      probe.className = "bg-surface";
+      probe.style.cssText = "position:absolute;visibility:hidden;pointer-events:none";
+      document.body.appendChild(probe);
+      var bg = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return bg && bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent";
+    }
+    (function poll() {
+      if (compiled() || Date.now() - start > 8000) return reveal();
+      requestAnimationFrame(poll);
+    })();
+  })();
+</script>
 <script type="text/babel" data-presets="react">
 const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useId, cloneElement, isValidElement, createContext, useContext, Fragment } = React;
 
