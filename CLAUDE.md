@@ -40,7 +40,7 @@ After every piece of work, look for extractable pieces and extract them:
    ```
    It checks forbidden patterns, WCAG contrast for every mode × palette, tokens↔preview drift, and that components compile. Work is not done while it fails.
 2. **For any non-trivial change** (new component, token changes, refactor): launch a QA subagent to independently review the work against this file and `QA-REPORT.md` standards before presenting it as finished. The QA agent should verify claims with actual greps/counts, not trust the work summary — including rule 12: check the component's width behavior (fluid root, scroll containers, truncation) and its gallery wrapper.
-3. Commit with a descriptive message after QA passes. Never commit failing QA.
+3. Commit on a topic branch with a descriptive message after QA passes, and open a PR — see **Git** below. Never commit failing QA, and never try to push straight to `main`; it is protected and the push will be rejected.
 
 ## Repo map
 
@@ -54,4 +54,30 @@ After every piece of work, look for extractable pieces and extract them:
 
 ## Git
 
-Commit after each completed unit of work (`git add -A && git commit`). If a stale `.git/*.lock` blocks the commit, delete the lock files and retry.
+**`main` is protected — direct pushes are rejected.** Every change goes through a pull request, including a one-line fix, including the maintainer's own work. Do not attempt `git push origin main`; it will fail.
+
+The loop, once per unit of work:
+
+```bash
+git checkout main && git pull          # never branch off a stale main
+git checkout -b <topic>                # e.g. fix/calendar-width
+# ...make the change...
+python3 scripts/qa_check.py            # must pass before you push
+git add -A && git commit -m "Scope: what changed"
+git push -u origin <topic>
+# open the PR, wait for "Design system gate" to go green, merge, delete branch
+git checkout main && git pull && git branch -d <topic>
+```
+
+Running `qa_check.py` locally is not optional politeness — CI runs the identical gate and the PR cannot merge until it passes, so a local run just saves you a round trip.
+
+If a stale `.git/*.lock` blocks a commit, delete the lock files and retry.
+
+### What CI enforces
+
+`.github/workflows/qa.yml` runs on every PR and every push to `main`:
+
+1. `python3 scripts/qa_check.py` — forbidden patterns, WCAG contrast across all modes × palettes, token drift, component compile
+2. `python3 scripts/check_sri.py` — every external `<script>` on `index.html` and `preview.html` must carry a correct `integrity` hash, `crossorigin`, and an exactly pinned version. Change a CDN URL and you must update its hash, or the live site white-screens.
+
+Vercel also builds a preview deployment per PR. `main` deploys to https://formicai.dev on merge, so anything that lands is live immediately — review the preview before merging.
