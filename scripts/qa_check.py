@@ -144,6 +144,17 @@ for var, val in base_light.items():
     elif m.group(1).lower() != val.lower():
         fails.append(f"drift: {var} is {val} in tokens.css but {m.group(1)} in preview.html")
 
+# ── 3a1b2. Landing page drift: index.html carries a THIRD token copy ──
+# It mirrors only what the landing page uses, so a missing token is fine;
+# a token it defines with a different value is not. This is how the dark
+# accent shipped blue on the landing page while the system had moved on.
+_index_src = (ROOT / "index.html").read_text()
+_index_blocks = parse_blocks(_index_src)
+for _sel, _truth in ((":root", base_light), (':root[data-theme="dark"]', tokens.get(':root[data-theme="dark"]', {}))):
+    for var, val in _index_blocks.get(_sel, {}).items():
+        if var in _truth and _truth[var].lower() != val.lower():
+            fails.append(f"drift: index.html {_sel} has {var}: {val} but tokens.css says {_truth[var]}")
+
 # ── 3a1c. Type scale drift: tokens.css ↔ preview px values ──
 _scale_src = dict(re.findall(r"(--text-[\w-]+):\s*([\d.]+px)", (ROOT / "styles" / "tokens.css").read_text()))
 _scale_pv = dict(re.findall(r"(--text-[\w-]+):\s*([\d.]+px)", (ROOT / "preview.html").read_text()))

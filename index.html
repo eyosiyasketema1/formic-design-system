@@ -41,6 +41,8 @@
   --hover-2: #ececec;
   --inset: #e9e9e9;
   --accent: #3b5bdb;
+  --chart-1: var(--accent); --chart-2: #0f766e; --chart-3: #6d28d9; --chart-4: #a16207; --chart-5: #be185d;
+  --chart-track: color-mix(in srgb, var(--ink) 14%, var(--surface));
   --orange: #a34a08;
   --green: #15803d;
   --red: #b91c1c;
@@ -74,7 +76,8 @@
     --scrim: rgba(0, 0, 0, 0.55); --ink-2: #b0aeaa; --ink-3: #8d8b86;
   --line: #2a2a29; --line-strong: #3f3e3c;
   --hover: #232322; --hover-2: #292928; --inset: #232322;
-  --accent: #7c96ff; --orange: #e08514; --green: #22c55e; --red: #f87171;
+  --accent: #a5e12a; --orange: #e08514; --green: #22c55e; --red: #f87171;
+  --chart-1: var(--accent); --chart-2: #29a3e0; --chart-3: #9d3be3; --chart-4: #e0a329; --chart-5: #e02985;
   --canvas: #131312; --surface: #1c1c1b; --field: #232322; --sidebar: #181817;
   --green-tint: #16281c;
   --red-tint: #2e1a19;
@@ -171,6 +174,21 @@
 .primitive-slider::-moz-range-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--slider-fill, 0%), var(--inset) var(--slider-fill, 0%)); box-shadow: 0 0 0 1px var(--line); }
 .primitive-slider::-moz-range-thumb { width: 13px; height: 13px; border: none; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn); }
 input[type="range"].primitive-slider:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Colour-picker hue strip — the same thumb as .primitive-slider, on a
+   taller track whose background is the spectrum (set inline: it is the
+   control's data, not styling). Native range, so keyboard is free. */
+.color-picker-hue { appearance: none; width: 100%; height: 12px; border-radius: 999px; box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
+.color-picker-hue::-webkit-slider-runnable-track { height: 12px; border-radius: 999px; background: transparent; }
+.color-picker-hue::-webkit-slider-thumb {
+  appearance: none; width: 16px; height: 16px; margin-top: -2px; border-radius: 50%;
+  background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn);
+}
+.color-picker-hue::-moz-range-track { height: 12px; border-radius: 999px; background: transparent; }
+.color-picker-hue::-moz-range-thumb {
+  width: 13px; height: 13px; border: none; border-radius: 50%;
+  background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn);
+}
+input[type="range"].color-picker-hue:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .shadow-hairline { box-shadow: 0 0 0 1px var(--line); }
 @keyframes progress-slide { from { transform: translateX(-110%); } to { transform: translateX(440%); } }
 @keyframes drawer-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
@@ -240,6 +258,10 @@ a:hover .animated-underline, .animated-underline:hover { background-size: 100% 1
   --canvas:#101516; --surface:#191f21; --field:#1f2628;
   --accent:#45a5c4;
 }
+/* Elements focused by script for screen-reader position (page headings,
+   the active step) carry tabindex="-1", so Tab can never reach them — a
+   ring there is never a keyboard affordance, only noise on click. */
+[tabindex="-1"]:focus-visible { outline: none; }
 input:focus-visible, textarea:focus-visible { outline: none; }
 :root { color-scheme: light dark; }
 :root[data-theme="light"] { color-scheme: light; }

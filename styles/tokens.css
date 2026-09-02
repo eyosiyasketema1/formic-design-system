@@ -190,6 +190,10 @@ body { font-family: var(--font-sans); background: var(--canvas); color: var(--in
   border-radius: 4px;
 }
 
+/* Elements focused by script for screen-reader position (page headings,
+   the active step) carry tabindex="-1", so Tab can never reach them — a
+   ring there is never a keyboard affordance, only noise on click. */
+[tabindex="-1"]:focus-visible { outline: none; }
 /* Text inputs render inside a styled field wrapper that shows focus
    itself (focus-within border + soft ring) — the inner input must not
    double-ring with the hard outline above. */
