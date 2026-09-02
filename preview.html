@@ -10,6 +10,12 @@
   try {
     var _t = localStorage.getItem("ds-theme");
     document.documentElement.dataset.theme = _t === "dark" ? "dark" : "light";
+    /* radius and size are applied here too, so a stored choice doesn't
+       render one frame at default before React takes over */
+    for (const [k, key] of [["radius", "ds-radius"], ["size", "ds-size"]]) {
+      const v = localStorage.getItem(key);
+      if (v && v !== "default") document.documentElement.dataset[k] = v;
+    }
   } catch (e) { document.documentElement.dataset.theme = "light"; }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" integrity="sha512-QVs8Lo43F9lSuBykadDb0oSXDL/BbZ588urWVCRwSIoewQv/Ewg1f84mK3U790bZ0FfhFa1YSQUmIhG+pIRKeg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -257,6 +263,38 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 :root { color-scheme: light dark; }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] { color-scheme: dark; }
+/* ── Global radius scale ───────────────────────────────── */
+/* One knob for the whole system's corner language. Explicit token
+   overrides per level rather than a calc() multiplier, so every value
+   stays a real number you can read — the same mechanism palettes use. */
+:root[data-radius="sharp"] {
+  --radius-sm: 0px; --radius-chip: 0px; --radius-control: 0px;
+  --radius-md: 0px; --radius-card: 0px; --radius-capsule: 0px;
+}
+:root[data-radius="rounded"] {
+  --radius-sm: 8px; --radius-chip: 10px; --radius-control: 12px;
+  --radius-md: 14px; --radius-card: 18px; --radius-capsule: 26px;
+}
+:root[data-radius="full"] {
+  --radius-sm: 10px; --radius-chip: 999px; --radius-control: 999px;
+  --radius-md: 14px; --radius-card: 20px; --radius-capsule: 999px;
+}
+
+/* ── Global size (density) scale ───────────────────────── */
+/* Tailwind v4 derives every spacing and sizing utility from --spacing
+   (0.25rem at root), so overriding that one value rescales all control
+   heights, padding and gaps together — which is why rule 11 still holds
+   at any density: a md button and a md input scale by the same factor.
+
+   Type is deliberately NOT scaled: the ramp is fixed px by rule 2, so
+   density changes without text becoming unreadable.
+
+   The scale only goes UP on purpose. The xs control is exactly 24px,
+   which is rule 15's touch-target floor, so any "compact" level would
+   put the whole system in violation of its own rule. */
+:root[data-size="comfortable"] { --spacing: 0.28rem; }
+:root[data-size="spacious"] { --spacing: 0.3125rem; }
+
 body { background: var(--canvas); color: var(--ink); font-family: "Urbanist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; transition: background-color 250ms ease, color 250ms ease; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 /* ─────────────────────────────────────────────────────────
@@ -7746,23 +7784,8 @@ function MetricRow({ icon, label, value, delta, deltaTone = "up" }) {
   );
 }
 
-function Section({ id, title, note, children }) {
-  return (
-    <section id={id} className="mb-12 scroll-mt-8">
-      <h2 className="text-title font-semibold text-ink">{title}</h2>
-      {note && <p className="mt-0.5 max-w-xl text-caption text-ink-3">{note}</p>}
-      <div className="mt-4 flex flex-wrap gap-6">{children}</div>
-    </section>
-  );
-}
-function GalleryCard({ label, wide, full, children }) {
-  return (
-    <Card className={`p-5 ${full ? "w-full" : wide ? "w-full max-w-105" : ""}`}>
-      <p className="mb-3 font-mono text-micro tracking-wide text-ink-3 uppercase">{label}</p>
-      {children}
-    </Card>
-  );
-}
+
+
 function BreadcrumbsDemo() {
   const toast = useToast();
   const go = (key) => toast({ title: `Navigate: ${key}` });
@@ -8091,174 +8114,10 @@ function useAccent() {
   }, [accent]);
   return [accent, setAccentState];
 }
-function ThemeControls({ theme, setTheme, palette, setPalette, accent, onAccent }) {
-  return (
-    <div className="flex shrink-0 items-center gap-2">
-      <div className="flex items-center gap-1 rounded-control bg-surface p-1.5 shadow-btn">
-        {PALETTES.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            title={p.label}
-            aria-label={`${p.label} theme`}
-            aria-pressed={palette === p.id}
-            onClick={() => setPalette(p.id)}
-            className="flex size-5 items-center justify-center rounded-full transition-transform duration-150 hover:scale-110"
-            style={{
-              background: p.swatch,
-              boxShadow: palette === p.id
-                ? "0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink)"
-                : "inset 0 0 0 1px rgba(0,0,0,0.15)",
-            }}
-          />
-        ))}
-      </div>
-      <label
-        title="Custom accent"
-        className="relative flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-control bg-surface shadow-btn transition-transform duration-150 hover:scale-105 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent"
-      >
-        <span
-          aria-hidden
-          className="size-4 rounded-full"
-          style={{ background: accent || "conic-gradient(#e5484d, #e5a50a, #46a758, #0e7490, #6e56cf, #e5484d)", boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.15)" }}
-        />
-        <input
-          type="color"
-          aria-label="Custom accent color"
-          value={accent || "#3b5bdb"}
-          onChange={(event) => onAccent(event.target.value)}
-          className="absolute inset-0 size-full cursor-pointer opacity-0"
-        />
-      </label>
-      {accent && (
-        <button
-          type="button"
-          aria-label="Reset custom accent"
-          onClick={() => onAccent("")}
-          className="flex size-8 shrink-0 items-center justify-center rounded-control bg-surface text-ink-3 shadow-btn transition-colors duration-150 hover:bg-hover hover:text-ink"
-        >
-          <Icon name="close" size={13} strokeWidth={2.2} />
-        </button>
-      )}
-      <button
-        type="button"
-        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        className="flex size-8 shrink-0 items-center justify-center rounded-control bg-surface text-ink-2 shadow-btn transition-colors duration-150 hover:bg-hover hover:text-ink"
-      >
-        {theme === "dark" ? (
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-          </svg>
-        ) : (
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-        )}
-      </button>
-    </div>
-  );
-}
+
 /* ── docs navigation — grouped like a design-system site ── */
-const DOC_NAV = [
-  { label: "Foundations", items: [
-    { id: "colors", title: "Colors" },
-    { id: "typography", title: "Typography" },
-    { id: "shape-motion", title: "Shape & motion" },
-  ]},
-  { label: "Primitives", items: [
-    { id: "primitives", title: "Primitives" },
-  ]},
-  { label: "Controls", items: [
-    { id: "button", title: "Button" },
-  ]},
-  { label: "Forms", items: [
-    { id: "input", title: "Field & Input" },
-    { id: "select", title: "Select" },
-    { id: "switch", title: "Switch" },
-    { id: "filedropzone", title: "FileDropzone" },
-    { id: "slider-otp", title: "Slider & OTP" },
-    { id: "datepicker", title: "DatePicker" },
-  ]},
-  { label: "Structure", items: [
-    { id: "accordion", title: "Accordion" },
-    { id: "steps", title: "Steps" },
-    { id: "timeline", title: "Timeline" },
-  ]},
-  { label: "Overlays", items: [
-    { id: "modal", title: "Modal" },
-    { id: "toast", title: "Toast" },
-    { id: "dropdownmenu", title: "DropdownMenu" },
-    { id: "drawer", title: "Drawer" },
-  ]},
-  { label: "Feedback", items: [
-    { id: "alert", title: "Alert" },
-    { id: "skeleton", title: "Skeleton" },
-    { id: "loadingstate", title: "LoadingState" },
-    { id: "thinkingstate", title: "ThinkingState" },
-    { id: "taskrows", title: "TaskRows" },
-    { id: "toolchips", title: "ToolChips" },
-  ]},
-  { label: "Conversation", items: [
-    { id: "chatapp", title: "ChatApp" },
-    { id: "chatthread", title: "ChatThread" },
-    { id: "streamingtext", title: "StreamingText" },
-    { id: "codeblock", title: "CodeBlock" },
-    { id: "markdown", title: "Markdown" },
-    { id: "selectionactions", title: "SelectionActions" },
-    { id: "approvalcard", title: "ApprovalCard" },
-    { id: "approvalflow", title: "ApprovalFlow" },
-    { id: "promptbar", title: "PromptBar" },
-    { id: "chatcomposer", title: "ChatComposer" },
-  ]},
-  { label: "Dashboard", items: [
-    { id: "statcard", title: "StatCard & MetricRow" },
-    { id: "charts", title: "Charts" },
-  ]},
-  { label: "Data", items: [
-    { id: "recordstable", title: "RecordsTable" },
-    { id: "filtertable", title: "FilterTable" },
-    { id: "difftable", title: "DiffTable" },
-    { id: "contextcards", title: "ContextCards" },
-    { id: "recommendationcard", title: "RecommendationCard" },
-  ]},
-  { label: "Navigation", items: [
-    { id: "tabs", title: "Tabs" },
-    { id: "pagination", title: "Pagination" },
-    { id: "breadcrumbs", title: "Breadcrumbs" },
-    { id: "menubar", title: "Menubar" },
-    { id: "sidebarnav", title: "SidebarNav" },
-    { id: "searchlist", title: "SearchList" },
-  ]},
-];
-function useScrollSpy(ids) {
-  const [active, setActive] = useState(ids[0]);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]) setActive(visible[0].target.id);
-      },
-      { rootMargin: "-8% 0px -72% 0px" },
-    );
-    ids.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return active;
-}
-function jumpTo(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
-}
+
+
 /* ── Foundations ─────────────────────────────────────────── */
 const DOC_COLORS = [
   "canvas", "surface", "field", "inset", "hover", "hover-2",
@@ -8278,70 +8137,7 @@ const DOC_RADII = [
   ["rounded-sm", "6px"], ["rounded-chip", "7px"], ["rounded-control", "8px"],
   ["rounded-md", "10px"], ["rounded-card", "14px"], ["rounded-capsule", "22px"],
 ];
-function FoundationsSections() {
-  const [motionKey, setMotionKey] = useState(0);
-  return (
-    <>
-      <Section id="colors" title="Colors" note="The token palette. Every value lives in styles/tokens.css and re-resolves live — switch theme or palette to watch the whole page follow.">
-        <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {DOC_COLORS.map((name) => (
-            <div key={name} className="overflow-hidden rounded-md bg-surface shadow-hairline">
-              <div className="h-10 w-full border-b border-line" style={{ background: `var(--${name})` }} />
-              <p className="px-2 py-1.5 font-mono text-micro text-ink-2">--{name}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
-      <Section id="typography" title="Typography" note="Urbanist (variable, 300–800). One standard ramp — 14px base, integer steps, 10 to 48 — plus the true weight ramp. text-nano (8px) stays reserved for mini-badge letters.">
-        <Card className="w-full max-w-105 p-5">
-          <div className="flex flex-col gap-2.5">
-            {DOC_TYPE.map(([step, px]) => (
-              <div key={step} className="flex items-baseline justify-between gap-4">
-                <span className={`text-${step} min-w-0 truncate text-ink`}>The quick brown fox</span>
-                <span className="shrink-0 font-mono text-micro text-ink-3">text-{step} · {px}</span>
-              </div>
-            ))}
-            <div className="my-1 h-px bg-line" />
-            {DOC_WEIGHTS.map(([cls, label]) => (
-              <div key={cls} className="flex items-baseline justify-between gap-4">
-                <span className={`${cls} min-w-0 truncate text-lead text-ink`}>The quick brown fox</span>
-                <span className="shrink-0 font-mono text-micro text-ink-3">{label}</span>
-              </div>
-            ))}
-            <p className="text-small text-ink-3">Urbanist is a variable font — every weight above is real, no synthesis.</p>
-          </div>
-        </Card>
-      </Section>
-      <Section id="shape-motion" title="Shape & motion" note="Six radii; one easing — var(--ease-out-quint) — drives every entrance and transition. Replay to see the house motion.">
-        <Card className="w-full max-w-105 p-5">
-          <div className="flex flex-wrap items-end gap-4">
-            {DOC_RADII.map(([cls, px]) => (
-              <div key={cls} className="flex flex-col items-center gap-1.5">
-                <div className={`size-12 bg-inset shadow-hairline ${cls}`} />
-                <span className="font-mono text-micro text-ink-3">{px}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-5 flex items-center gap-3 border-t border-line pt-4">
-            <button
-              type="button"
-              onClick={() => setMotionKey((k) => k + 1)}
-              className="rounded-control bg-surface px-3 py-1.5 text-caption font-medium text-ink shadow-btn transition-colors duration-150 hover:bg-hover"
-            >
-              ↻ Replay
-            </button>
-            <div key={motionKey} className="flex items-center gap-2">
-              {[0, 1, 2, 3].map((i) => (
-                <span key={i} className="size-3 rounded-full bg-accent" style={popIn(i, { duration: 350, stagger: 110 })} />
-              ))}
-              <span className="text-tiny text-ink-3" style={fadeUp(4, { duration: 350, stagger: 110 })}>ease-out-quint</span>
-            </div>
-          </div>
-        </Card>
-      </Section>
-    </>
-  );
-}
+
 /* the gallery is a leaf page — this is the way back to the landing site */
 function BackToSite({ className = "" }) {
   return (
@@ -8355,394 +8151,1260 @@ function BackToSite({ className = "" }) {
   );
 }
 
-function App() {
+
+/* ═══════════ Pages — one per component, extracted from the old scroll ═══════════ */
+
+function Page_colors() {
+  return (
+    <>
+  <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+    {DOC_COLORS.map((name) => (
+      <div key={name} className="overflow-hidden rounded-md bg-surface shadow-hairline">
+        <div className="h-10 w-full border-b border-line" style={{ background: `var(--${name})` }} />
+        <p className="px-2 py-1.5 font-mono text-micro text-ink-2">--{name}</p>
+      </div>
+    ))}
+  </div>
+    </>
+  );
+}
+
+function Page_typography() {
+  return (
+    <>
+  <Card className="w-full max-w-105 p-5">
+    <div className="flex flex-col gap-2.5">
+      {DOC_TYPE.map(([step, px]) => (
+        <div key={step} className="flex items-baseline justify-between gap-4">
+          <span className={`text-${step} min-w-0 truncate text-ink`}>The quick brown fox</span>
+          <span className="shrink-0 font-mono text-micro text-ink-3">text-{step} · {px}</span>
+        </div>
+      ))}
+      <div className="my-1 h-px bg-line" />
+      {DOC_WEIGHTS.map(([cls, label]) => (
+        <div key={cls} className="flex items-baseline justify-between gap-4">
+          <span className={`${cls} min-w-0 truncate text-lead text-ink`}>The quick brown fox</span>
+          <span className="shrink-0 font-mono text-micro text-ink-3">{label}</span>
+        </div>
+      ))}
+      <p className="text-small text-ink-3">Urbanist is a variable font — every weight above is real, no synthesis.</p>
+    </div>
+  </Card>
+    </>
+  );
+}
+
+function Page_shape_motion() {
+  const [motionKey, setMotionKey] = useState(0);
+  return (
+    <>
+  <Card className="w-full max-w-105 p-5">
+    <div className="flex flex-wrap items-end gap-4">
+      {DOC_RADII.map(([cls, px]) => (
+        <div key={cls} className="flex flex-col items-center gap-1.5">
+          <div className={`size-12 bg-inset shadow-hairline ${cls}`} />
+          <span className="font-mono text-micro text-ink-3">{px}</span>
+        </div>
+      ))}
+    </div>
+    <div className="mt-5 flex items-center gap-3 border-t border-line pt-4">
+      <button
+        type="button"
+        onClick={() => setMotionKey((k) => k + 1)}
+        className="rounded-control bg-surface px-3 py-1.5 text-caption font-medium text-ink shadow-btn transition-colors duration-150 hover:bg-hover"
+      >
+        ↻ Replay
+      </button>
+      <div key={motionKey} className="flex items-center gap-2">
+        {[0, 1, 2, 3].map((i) => (
+          <span key={i} className="size-3 rounded-full bg-accent" style={popIn(i, { duration: 350, stagger: 110 })} />
+        ))}
+        <span className="text-tiny text-ink-3" style={fadeUp(4, { duration: 350, stagger: 110 })}>ease-out-quint</span>
+      </div>
+    </div>
+  </Card>
+    </>
+  );
+}
+
+function Page_primitives() {
+  return (
+    <>
+      <GalleryCard label="Primitives" wide>
+        <div className="flex flex-wrap items-center gap-3">
+          <ShimmerLabel>Shimmering</ShimmerLabel>
+          <Spinner className="text-ink-2" />
+          <span className="text-body text-ink">caret<StreamCaret /></span>
+          <Chip tone="field" mono>field chip</Chip>
+          <Chip tone="surface" mono>surface chip</Chip>
+          <Chip tone="inset" mono>inset chip</Chip>
+          <DiffStat add={74} del={41} />
+          <IconButton label="Close" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="close" /></IconButton>
+          <IconButton label="Search" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="search" /></IconButton>
+          <SendButton enabled />
+          <SendButton enabled={false} />
+          <span className="flex flex-wrap items-center gap-1 text-ink-3">
+            <Icon name="chevron" /><Icon name="check" /><Icon name="retry" /><Icon name="arrow-up" /><Icon name="plus" /><Icon name="clock" /><Icon name="ellipsis" /><Icon name="mic" /><Icon name="file" /><Icon name="clip" /><Icon name="chart" /><Icon name="layers" /><Icon name="globe" /><Icon name="lines" /><Icon name="external" /><Icon name="edit" /><Icon name="home" /><Icon name="gear" /><Icon name="user-add" /><Icon name="sign-out" /><Icon name="sidebar" /><Icon name="message-question" /><Icon name="sparkles" /><Icon name="scissors" /><Icon name="mood-smile" /><Icon name="typography" /><Icon name="chevron-right" /><Icon name="chevron-left" /><Icon name="copy" /><Icon name="circle-check" /><Icon name="alert" /><Icon name="info" />
+          </span>
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Badges · controls" wide>
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge tone="green">Completed</Badge>
+          <Badge tone="red">Failed</Badge>
+          <Badge tone="neutral">Queued</Badge>
+          <RadioCheck type="radio" on={true} />
+          <RadioCheck type="radio" on={false} />
+          <RadioCheck type="check" on={true} />
+          <RadioCheck type="check" on={false} />
+          <AvatarStack srcs={[SOURCE_IMAGES.scoop, SOURCE_IMAGES.trends, SOURCE_IMAGES.market]} />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Avatar · Tooltip" wide>
+    <div className="flex flex-wrap items-center gap-3">
+      <Avatar name="Samson Usmael" size="lg" />
+      <Avatar name="Maple Orbit" />
+      <Avatar name="Aurora Scoops" size="sm" />
+      <Avatar name="Kumo Creamery" src={SOURCE_IMAGES.scoop} />
+      <Separator vertical className="h-5" />
+      <Tooltip label="Copy code"><IconButton label="Copy code" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="copy" /></IconButton></Tooltip>
+      <Tooltip label="Runs the batch restock flow"><Button variant="secondary" size="sm">Hover me</Button></Tooltip>
+    </div>
+  </GalleryCard>
+  <GalleryCard label="Progress · Separator" wide>
+    <div className="flex w-full flex-col gap-3">
+      <Progress value={64} label="Batch progress" />
+      <Progress value={100} tone="green" label="Complete" />
+      <Progress indeterminate label="Syncing suppliers" />
+      <Separator />
+      <span className="text-small text-ink-3">Separator above — the one divider, horizontal or vertical.</span>
+    </div>
+  </GalleryCard>
+  <GalleryCard label="StreamText" wide>
+        <p className="text-body leading-relaxed text-ink" aria-live="polite">
+          <StreamText text="Words resolve out of blur one at a time — the shared useStream hook also drives StreamingText and SelectionActions." intervalMs={70} />
+        </p>
+      </GalleryCard>
+      <GalleryCard label="GlideMenu">
+        <GlideMenu className="flex w-44 flex-col gap-px">
+          {["Sprinkles 5", "Vanilla 1", "Freezer Burn 0.4"].map((item) => (
+            <button key={item} data-menu-row type="button" className="relative z-10 flex h-8 w-full items-center rounded-control px-2 text-left text-body text-ink">
+              {item}
+            </button>
+          ))}
+        </GlideMenu>
+      </GalleryCard>
+    </>
+  );
+}
+
+function Page_button() {
+  return (
+    <>
+      <GalleryCard label="Variants × sizes" full><ButtonDemo /></GalleryCard>
+      <GalleryCard label="States × variants" full><ButtonStatesDemo /></GalleryCard>
+      <GalleryCard label="Shapes × sizes" full><ButtonShapesDemo /></GalleryCard>
+      <GalleryCard label="Icons · width · link · loading" full><ButtonExtrasDemo /></GalleryCard>
+    </>
+  );
+}
+
+function Page_input() {
+  return (
+    <>
+      <GalleryCard label="Default" wide>
+        <div className="flex flex-col gap-4">
+          <Field label="Flavor name" hint="Shown on the menu board.">
+            <Input placeholder="e.g. Roasted pistachio" />
+          </Field>
+          <Field label="Search suppliers">
+            <Input leadingIcon="search" placeholder="Search…" size="sm" />
+          </Field>
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Error · textarea" wide>
+        <div className="flex flex-col gap-4">
+          <Field label="Batch size" required error="Must be between 1 and 12.">
+            <Input defaultValue="40" inputMode="numeric" />
+          </Field>
+          <Field label="Tasting notes" hint="Optional — appears on the flavor page.">
+            <Textarea placeholder="Buttery, lightly salted…" />
+          </Field>
+        </div>
+      </GalleryCard>
+    </>
+  );
+}
+
+function Page_select() {
+  return (
+    <>
+      <GalleryCard label="In a Field" wide>
+        <Field label="Base flavor" hint="Used for the weekend special.">
+          <Select defaultValue="pistachio" />
+        </Field>
+      </GalleryCard>
+      <GalleryCard label="Placeholder · small · error" wide>
+        <div className="flex flex-col gap-4">
+          <Select size="sm" placeholder="Pick a supplier…" options={[
+            { value: "aurora", label: "Aurora Scoops" },
+            { value: "kumo", label: "Kumo Creamery" },
+            { value: "maple", label: "Maple Orbit" },
+          ]} />
+          <Field label="Category" required error="Pick a category before saving.">
+            <Select placeholder="Choose…" options={[
+              { value: "classic", label: "Classic" },
+              { value: "retro", label: "Retro" },
+              { value: "seasonal", label: "Seasonal" },
+            ]} />
+          </Field>
+        </div>
+      </GalleryCard>
+    </>
+  );
+}
+
+function Page_switch() {
+  return (
+    <>
+      <GalleryCard label="Field · sizes · disabled" wide><SwitchDemo /></GalleryCard>
+    </>
+  );
+}
+
+function Page_filedropzone() {
+  return (
+    <>
+      <GalleryCard label="Images · 5 MB cap" wide>
+        <FileDropzone accept="image/*,.pdf" maxSize={5242880} hint="Images or PDF · up to 5 MB"
+          defaultFiles={[
+            { id: "demo-1", name: "flavor-board-photo.jpg", size: 482304, type: "image/jpeg" },
+            { id: "demo-2", name: "supplier-price-list.pdf", size: 1284523, type: "application/pdf" },
+          ]} />
+      </GalleryCard>
+      <GalleryCard label="Single file" wide>
+        <FileDropzone multiple={false} label="Drop the batch sheet" hint="One file replaces the last" />
+      </GalleryCard>
+    </>
+  );
+}
+
+function Page_slider_otp() {
+  return (
+    <>
+      <GalleryCard label="Field-wrapped" wide><SliderOtpDemo /></GalleryCard>
+    </>
+  );
+}
+
+function Page_datepicker() {
+  return (
+    <>
+      <GalleryCard label="Field-wrapped" wide><DatePickerDemo /></GalleryCard>
+      <GalleryCard label="Standalone Calendar"><Calendar defaultValue={new Date()} /></GalleryCard>
+      <GalleryCard label="Range mode"><Calendar mode="range" defaultRange={{ from: new Date(new Date().getFullYear(), new Date().getMonth(), 8), to: new Date(new Date().getFullYear(), new Date().getMonth(), 14) }} /></GalleryCard>
+    </>
+  );
+}
+
+function Page_accordion() {
+  return (
+    <>
+      <GalleryCard label="Single open" wide><Accordion defaultOpen={["restock"]} /></GalleryCard>
+    </>
+  );
+}
+
+function Page_steps() {
+  return (
+    <>
+      <GalleryCard label="Interactive" wide><StepsTimelineDemo /></GalleryCard>
+      <GalleryCard label="Vertical"><Steps vertical current={2} /></GalleryCard>
+    </>
+  );
+}
+
+function Page_timeline() {
+  return (
+    <>
+      <GalleryCard label="Batch history" wide><Timeline /></GalleryCard>
+    </>
+  );
+}
+
+function Page_modal() {
+  return (
+    <>
+      <GalleryCard label="Form · confirm" wide><ModalDemo /></GalleryCard>
+    </>
+  );
+}
+
+function Page_toast() {
+  return (
+    <>
+      <GalleryCard label="Tones · action" wide><ToastDemo /></GalleryCard>
+    </>
+  );
+}
+
+function Page_dropdownmenu() {
+  return (
+    <>
+      <GalleryCard label="Button · icon trigger" wide><DropdownMenuDemo /></GalleryCard>
+    </>
+  );
+}
+
+function Page_drawer() {
+  return (
+    <>
+      <GalleryCard label="Right · left" wide><DrawerDemo /></GalleryCard>
+    </>
+  );
+}
+
+function Page_alert() {
+  return (
+    <>
+      <GalleryCard label="Tones · dismissible" wide><AlertDemo /></GalleryCard>
+    </>
+  );
+}
+
+function Page_skeleton() {
+  return (
+    <>
+      <GalleryCard label="Card placeholder" wide>
+        <div className="flex items-start gap-3">
+          <Skeleton className="size-9 shrink-0 rounded-full" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <Skeleton className="h-3.5 w-2/5" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-4/5" />
+            <div className="mt-1 flex gap-2">
+              <Skeleton className="h-6 w-20 rounded-full" />
+              <Skeleton className="h-6 w-24 rounded-full" />
+            </div>
+          </div>
+        </div>
+      </GalleryCard>
+    </>
+  );
+}
+
+function Page_loadingstate() {
+  return (
+    <>
+      <GalleryCard label="Drive"><LoadingState variant="Drive" /></GalleryCard>
+      <GalleryCard label="Dots"><LoadingState variant="Dots" /></GalleryCard>
+      <GalleryCard label="Orbit"><LoadingState variant="Orbit" /></GalleryCard>
+    </>
+  );
+}
+
+function Page_thinkingstate() {
   const [thinkKey, setThinkKey] = useState(0);
+  return (
+    <>
+      <div className="w-full">
+        <button type="button" onClick={() => setThinkKey((k) => k + 1)}
+          className="mb-4 rounded-control bg-surface px-3 py-1.5 text-caption font-medium text-ink shadow-btn transition-colors duration-150 hover:bg-hover">
+          ↻ Replay all
+        </button>
+        <div className="grid gap-6 md:grid-cols-2">
+          <GalleryCard label="Steps"><ThinkingState key={`s${thinkKey}`} variant="Steps" /></GalleryCard>
+          <GalleryCard label="Reasoning"><ThinkingState key={`r${thinkKey}`} variant="Reasoning" /></GalleryCard>
+          <GalleryCard label="Search"><ThinkingState key={`w${thinkKey}`} variant="Search" /></GalleryCard>
+          <GalleryCard label="Coding"><ThinkingState key={`c${thinkKey}`} variant="Coding" /></GalleryCard>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function Page_taskrows() {
+  return (
+    <>
+      <GalleryCard label="Capsules" wide><TaskRows variant="Capsules" /></GalleryCard>
+      <GalleryCard label="List" wide><TaskRows variant="List" /></GalleryCard>
+    </>
+  );
+}
+
+function Page_toolchips() {
+  return (
+    <>
+      <GalleryCard label="Default"><ToolChips /></GalleryCard>
+    </>
+  );
+}
+
+function Page_chatapp() {
+  return (
+    <>
+      <div className="w-full"><ChatApp /></div>
+    </>
+  );
+}
+
+function Page_chatthread() {
+  return (
+    <>
+      <GalleryCard label="Default" wide><ChatThread /></GalleryCard>
+    </>
+  );
+}
+
+function Page_streamingtext() {
+  return (
+    <>
+      <GalleryCard label="Default" wide><StreamingText /></GalleryCard>
+    </>
+  );
+}
+
+function Page_codeblock() {
+  return (
+    <>
+      <GalleryCard label="TypeScript" wide><CodeBlock /></GalleryCard>
+      <GalleryCard label="Python · line numbers" wide><CodeBlock language="py" lineNumbers filename="restock.py" code={'def restock(flavor, batches=2):\n    # churn overnight so it sets by open\n    job = schedule(flavor, batches, at="05:30")\n    log(f"queued {flavor} x{batches}", job.id)\n    return job'} /></GalleryCard>
+    </>
+  );
+}
+
+function Page_markdown() {
+  return (
+    <>
+      <GalleryCard label="Kitchen sink" wide><Markdown /></GalleryCard>
+    </>
+  );
+}
+
+function Page_selectionactions() {
+  return (
+    <>
+      <GalleryCard label="Default" wide><SelectionActions /></GalleryCard>
+    </>
+  );
+}
+
+function Page_approvalcard() {
+  return (
+    <>
+      <GalleryCard label="Default"><ApprovalCard /></GalleryCard>
+    </>
+  );
+}
+
+function Page_approvalflow() {
+  return (
+    <>
+      <GalleryCard label="Three questions · radio, check, radio" wide><ApprovalFlow /></GalleryCard>
+      <GalleryCard label="Single question" wide>
+        <ApprovalFlow questions={[{ q: "Ship the pistachio batch tonight?", type: "radio", options: ["Ship it", "Hold for QA", "Split the batch"] }]} labels={{ send: "Approve" }} />
+      </GalleryCard>
+    </>
+  );
+}
+
+function Page_promptbar() {
+  return (
+    <>
+      <GalleryCard label="Rounded" wide><PromptBar variant="Rounded" /></GalleryCard>
+      <GalleryCard label="Pill" wide><PromptBar variant="Pill" /></GalleryCard>
+    </>
+  );
+}
+
+function Page_chatcomposer() {
+  return (
+    <>
+      <GalleryCard label="Default" wide><ChatComposer /></GalleryCard>
+    </>
+  );
+}
+
+function Page_statcard() {
+  return (
+    <>
+      <GalleryCard label="Stat tiles" full>
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Total profit" display="$88.5k" caption="All time" delta="-18%" deltaTone="down" trend={[9, 7, 8, 5, 6, 4, 5, 3]} trendTone={5} />
+          <StatCard label="Total income" caption="Last week" display="$4,673" delta="+25.2%" icon="chart" iconTone={2} trend={[3, 6, 4, 9, 7, 11, 10, 14]} trendTone={2} />
+          <StatCard label="Total expense" caption="Last month" display="$1.28K" delta="-12.2%" deltaTone="down" icon="layers" iconTone={4} />
+          <StatCard label="Sessions" value={124000} caption="Last week" delta="0.0%" deltaTone="flat" />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="MetricRow breakdown" wide>
+        <div className="flex flex-col">
+          <MetricRow icon="globe" label="Online store" value="$20k" delta="+12.6%" />
+          <MetricRow icon="home" label="Offline store" value="$20k" delta="-4.2%" deltaTone="down" />
+          <MetricRow icon="layers" label="Wholesale" value="$8.4k" delta="0.0%" deltaTone="flat" />
+        </div>
+      </GalleryCard>
+    </>
+  );
+}
+
+function Page_charts() {
+  return (
+    <>
+      <GalleryCard label="BarChart · single series, highlighted" full>
+        <BarChart highlight={1} />
+      </GalleryCard>
+      <GalleryCard label="BarChart · stacked, three series" full>
+        <BarChart variant="stacked" labels={["Q1", "Q2", "Q3", "Q4"]} series={[
+          { name: "Direct", values: [18, 24, 20, 29] },
+          { name: "Referral", color: 3, values: [11, 9, 15, 12] },
+          { name: "Organic", color: 5, values: [7, 13, 9, 16] },
+        ]} />
+      </GalleryCard>
+      <GalleryCard label="LineChart · area fill" full>
+        <LineChart />
+      </GalleryCard>
+      <GalleryCard label="LineChart · two series" full>
+        <LineChart labels={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]} series={[
+          { name: "This week", values: [12, 19, 15, 27, 22, 31, 28] },
+          { name: "Last week", color: 2, values: [9, 14, 18, 16, 24, 21, 25] },
+        ]} />
+      </GalleryCard>
+      <GalleryCard label="DonutChart">
+        <div className="flex items-center gap-5">
+          <DonutChart />
+          <DonutChart value={318} max={400} label="Uptime" color={2} size={96} />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Sparkline" wide>
+        <div className="flex w-full max-w-80 flex-col gap-3">
+          <Sparkline />
+          <Sparkline values={[14, 9, 11, 6, 8, 4, 5, 2]} color={5} />
+        </div>
+      </GalleryCard>
+    </>
+  );
+}
+
+function Page_recordstable() {
+  return (
+    <>
+      <div className="w-full"><RecordsTable /></div>
+    </>
+  );
+}
+
+function Page_filtertable() {
+  return (
+    <>
+      <GalleryCard label="Default" wide><FilterTable /></GalleryCard>
+    </>
+  );
+}
+
+function Page_difftable() {
+  return (
+    <>
+      <GalleryCard label="Default" wide><DiffTable /></GalleryCard>
+    </>
+  );
+}
+
+function Page_contextcards() {
+  return (
+    <>
+      <GalleryCard label="Default" wide><ContextCards /></GalleryCard>
+    </>
+  );
+}
+
+function Page_recommendationcard() {
+  return (
+    <>
+      <GalleryCard label="Default" wide><RecommendationCard /></GalleryCard>
+    </>
+  );
+}
+
+function Page_tabs() {
+  return (
+    <>
+      <GalleryCard label="Default" wide><Tabs /></GalleryCard>
+    </>
+  );
+}
+
+function Page_pagination() {
+  return (
+    <>
+      <GalleryCard label="Twelve pages" wide><Pagination defaultPage={5} /></GalleryCard>
+      <GalleryCard label="Few pages" wide><Pagination pageCount={4} /></GalleryCard>
+    </>
+  );
+}
+
+function Page_breadcrumbs() {
+  return (
+    <>
+      <GalleryCard label="Collapsed · short" wide><BreadcrumbsDemo /></GalleryCard>
+    </>
+  );
+}
+
+function Page_menubar() {
+  return (
+    <>
+      <GalleryCard label="Default" wide><MenubarDemo /></GalleryCard>
+    </>
+  );
+}
+
+function Page_sidebarnav() {
+  return (
+    <>
+      <div className="flex"><SidebarNav /></div>
+    </>
+  );
+}
+
+function Page_searchlist() {
+  return (
+    <>
+      <GalleryCard label="Default" wide><SearchList /></GalleryCard>
+    </>
+  );
+}
+
+function Page_badge() {
+  return (
+    <>
+      <Section id="badge" title="Tones" note="Three tones only. Green and red carry meaning, so a badge is never decorative colour.">
+        <GalleryCard label="Tones" wide>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone="green">Completed</Badge>
+            <Badge tone="red">Failed</Badge>
+            <Badge tone="neutral">Queued</Badge>
+          </div>
+        </GalleryCard>
+        <GalleryCard label="Free sizing" wide>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone="green" free className="h-7 px-2.5 text-caption">Larger, caller-sized</Badge>
+            <Badge tone="neutral" free className="h-4.5 px-1.5 text-micro">tiny</Badge>
+          </div>
+        </GalleryCard>
+      </Section>
+    </>
+  );
+}
+function Page_chip() {
+  return (
+    <>
+      <Section id="chip" title="Tones and sizes" note="Inline chips for file names, tool calls and tags. Monospace for anything that is code.">
+        <GalleryCard label="Tones" wide>
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip tone="field">field</Chip>
+            <Chip tone="surface">surface</Chip>
+            <Chip tone="inset">inset</Chip>
+            <Chip tone="field" mono>ChurnSchedule.tsx</Chip>
+          </div>
+        </GalleryCard>
+        <GalleryCard label="Sizes" wide>
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip size="xs" mono>xs</Chip>
+            <Chip size="sm" mono>sm</Chip>
+            <Chip size="md" mono>md</Chip>
+          </div>
+        </GalleryCard>
+      </Section>
+    </>
+  );
+}
+function Page_progress() {
+  return (
+    <>
+      <Section id="progress" title="Determinate and indeterminate" note="A flat track on the accent. Indeterminate slides when the end is unknown, and respects reduced motion.">
+        <GalleryCard label="Values" wide>
+          <div className="flex w-full max-w-80 flex-col gap-4">
+            <Progress value={24} label="Indexing" />
+            <Progress value={62} label="Churning" tone="green" />
+            <Progress value={100} label="Done" tone="green" />
+          </div>
+        </GalleryCard>
+        <GalleryCard label="Indeterminate" wide>
+          <div className="w-full max-w-80"><Progress indeterminate label="Waiting on the model" /></div>
+        </GalleryCard>
+      </Section>
+    </>
+  );
+}
+function Page_avatar() {
+  return (
+    <>
+      <Section id="avatar" title="Sizes and tones" note="Initials from the name, four tones on the tint scale. Pass src for a photo; it keeps the same ring.">
+        <GalleryCard label="Sizes" wide>
+          <div className="flex flex-wrap items-center gap-3">
+            <Avatar name="Amina Tesfaye" size="sm" />
+            <Avatar name="Amina Tesfaye" size="md" />
+            <Avatar name="Amina Tesfaye" size="lg" />
+            <Avatar name="Amina Tesfaye" size="xl" />
+          </div>
+        </GalleryCard>
+        <GalleryCard label="Tones" wide>
+          <div className="flex flex-wrap items-center gap-3">
+            <Avatar name="Amina Tesfaye" size="lg" tone={0} />
+            <Avatar name="Yonas Tadesse" size="lg" tone={1} />
+            <Avatar name="Liya Girma" size="lg" tone={2} />
+            <Avatar name="Dawit Bekele" size="lg" tone={3} />
+          </div>
+        </GalleryCard>
+        <GalleryCard label="Stack"><AvatarStack srcs={[SOURCE_IMAGES.scoop, SOURCE_IMAGES.trends, SOURCE_IMAGES.market]} /></GalleryCard>
+      </Section>
+    </>
+  );
+}
+
+const PAGES = [
+  { id: "colors", group: "Foundations", title: "Colors", note: "The token palette. Every value lives in styles/tokens.css and re-resolves live \u2014 switch theme or palette to watch the whole page follow.", file: "styles/tokens.css", Component: Page_colors },
+  { id: "typography", group: "Foundations", title: "Typography", note: "Urbanist (variable, 300\u2013800). One standard ramp \u2014 14px base, integer steps, 10 to 48 \u2014 plus the true weight ramp. text-nano (8px) stays reserved for mini-badge letters.", file: "styles/tokens.css", Component: Page_typography },
+  { id: "shape-motion", group: "Foundations", title: "Shape & motion", note: "Six radii; one easing \u2014 var(--ease-out-quint) \u2014 drives every entrance and transition. Replay to see the house motion.", file: "styles/tokens.css", Component: Page_shape_motion },
+  { id: "primitives", group: "Primitives", title: "Primitives", note: "The atoms everything below composes: Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Switch, Popover + timing hooks (useSequence, useElapsed, useStream).", file: "components/primitives.tsx", Component: Page_primitives },
+  { id: "badge", group: "Primitives", title: "Badge", note: "A status pill. Three tones, because green and red carry meaning.", file: "components/primitives.tsx", Component: Page_badge },
+  { id: "chip", group: "Primitives", title: "Chip", note: "Inline chips for file names, tool calls and tags.", file: "components/primitives.tsx", Component: Page_chip },
+  { id: "progress", group: "Primitives", title: "Progress", note: "A flat progress track on the accent, determinate or indeterminate.", file: "components/primitives.tsx", Component: Page_progress },
+  { id: "avatar", group: "Primitives", title: "Avatar", note: "Initials or a photo, four sizes, four tones, and a stack.", file: "components/primitives.tsx", Component: Page_avatar },
+  { id: "button", group: "Controls", title: "Button", note: "The complete matrix \u2014 every variant at every size, every state, both shapes, icons, width, links, and live loading. Rows generate from the component's own maps, so this page can never drift from the code.", file: "components/Button.tsx", Component: Page_button },
+  { id: "input", group: "Forms", title: "Field & Input", note: "The form trio \u2014 Field owns label / hint / error and wires aria onto its control; Input and Textarea share the system's quiet field focus (border shift, no ring).", file: "components/Input.tsx", Component: Page_input },
+  { id: "select", group: "Forms", title: "Select", note: "Combobox on the quiet field style \u2014 the listbox portals over the page, matches the trigger's width, and is fully keyboard-driven (arrows, Home/End, Enter, Escape).", file: "components/Select.tsx", Component: Page_select },
+  { id: "switch", group: "Forms", title: "Switch", note: "The system toggle, promoted from RecordsTable's private switch \u2014 role=switch, two sizes, Field-compatible. RecordsTable now consumes the same primitive.", file: "components/primitives.tsx", Component: Page_switch },
+  { id: "filedropzone", group: "Forms", title: "FileDropzone", note: "Drag files onto the zone or click to browse \u2014 accept / size validation announces rejections, accepted files become chips with remove. Try dropping anything.", file: "components/FileDropzone.tsx", Component: Page_filedropzone },
+  { id: "slider-otp", group: "Forms", title: "Slider & OTP", note: "Two more Field-ready controls \u2014 Slider is a native range drawn with tokens (platform keyboard and touch for free); OTPInput distributes typing, paste, and one-time-code autofill across quiet field cells.", file: "components/Slider.tsx components/OTPInput.tsx", Component: Page_slider_otp },
+  { id: "datepicker", group: "Forms", title: "DatePicker", note: "A dependency-free month grid on the APG date pattern \u2014 arrows move by day, PageUp/Down by month, Home/End across the week. mode=range picks a span with a live preview band; DatePicker and DateRangePicker drop it behind the quiet field trigger.", file: "components/DatePicker.tsx components/DateRangePicker.tsx components/Calendar.tsx", Component: Page_datepicker },
+  { id: "accordion", group: "Structure", title: "Accordion", note: "Stacked disclosure rows on Disclosure \u2014 single-open by default, closed content inert, house easing throughout.", file: "components/Accordion.tsx", Component: Page_accordion },
+  { id: "steps", group: "Structure", title: "Steps", note: "Wizard progress \u2014 completed circles fill ink, the current step rings accent with aria-current, completed steps are clickable to go back.", file: "components/Steps.tsx", Component: Page_steps },
+  { id: "timeline", group: "Structure", title: "Timeline", note: "Event history on a rail \u2014 toned dots, monospaced times, staggered entrance.", file: "components/Timeline.tsx", Component: Page_timeline },
+  { id: "modal", group: "Overlays", title: "Modal", note: "Portal dialog on the system scrim \u2014 focus trapped and restored, page scroll locked, Escape / backdrop dismiss. Footer takes the system Buttons.", file: "components/Modal.tsx", Component: Page_modal },
+  { id: "toast", group: "Overlays", title: "Toast", note: "App notifications from anywhere via useToast() \u2014 bottom-right stack, auto-dismiss (hover pauses), success / error tones, optional action. Errors announce assertively.", file: "components/Toast.tsx", Component: Page_toast },
+  { id: "dropdownmenu", group: "Overlays", title: "DropdownMenu", note: "The standard action menu \u2014 wrap any trigger; keyboard-driven via aria-activedescendant, dividers, disabled and destructive items. Selecting fires a toast here.", file: "components/DropdownMenu.tsx", Component: Page_dropdownmenu },
+  { id: "drawer", group: "Overlays", title: "Drawer", note: "Side panel on the same machinery as Modal (shared useModalLayer: trap, restore, layered Escape, scroll lock) \u2014 slides from either edge, full height, footer actions.", file: "components/Drawer.tsx", Component: Page_drawer },
+  { id: "alert", group: "Feedback", title: "Alert", note: "Inline callouts on the system tints \u2014 five tones, optional dismiss. Copy stays ink so every palette keeps AA contrast.", file: "components/Alert.tsx", Component: Page_alert },
+  { id: "skeleton", group: "Feedback", title: "Skeleton", note: "Loading placeholders \u2014 one primitive, shaped entirely by className. Compose avatars, lines, and cards from it.", file: "components/primitives.tsx", Component: Page_skeleton },
+  { id: "loadingstate", group: "Feedback", title: "LoadingState", note: "Pixel-grid loader with shimmer label and elapsed timer.", file: "components/LoadingState.tsx", Component: Page_loadingstate },
+  { id: "thinkingstate", group: "Feedback", title: "ThinkingState", note: "Expandable agent trace. Runs once on load \u2014 replay to see the sequence again.", file: "components/ThinkingState.tsx", Component: Page_thinkingstate },
+  { id: "taskrows", group: "Feedback", title: "TaskRows", note: "Agent tasks as expandable rows \u2014 a scripted status run plays once (spin \u2192 failed \u2192 completed).", file: "components/TaskRows.tsx", Component: Page_taskrows },
+  { id: "toolchips", group: "Feedback", title: "ToolChips", note: "Agent run as compact rows. Click rows to expand; hover the file chips for diff previews.", file: "components/ToolChips.tsx", Component: Page_toolchips },
+  { id: "chatapp", group: "Conversation", title: "ChatApp", note: "The whole system composed into one surface \u2014 SidebarNav rail, a thread of MessageBubbles embedding Markdown and CodeBlock, PromptBar below. Send a message: it thinks, then streams the reply. Built by the formic-design-system skill following its own recipe.", file: "components/ChatApp.tsx", Component: Page_chatapp },
+  { id: "chatthread", group: "Conversation", title: "ChatThread", note: "A conversation column \u2014 user bubbles right, assistant replies flat. The final reply streams in once; embed StreamingText, ToolChips, or ApprovalCard as message children in a real thread.", file: "components/ChatThread.tsx", Component: Page_chatthread },
+  { id: "streamingtext", group: "Conversation", title: "StreamingText", note: "Words resolve out of blur; citations, sources, and follow-ups appear when done. Loops.", file: "components/StreamingText.tsx", Component: Page_streamingtext },
+  { id: "codeblock", group: "Conversation", title: "CodeBlock", note: "AI code output \u2014 dependency-free syntax highlighting on theme tokens, copy action, optional line numbers. Block comments spanning lines stay plain (accepted).", file: "components/CodeBlock.tsx", Component: Page_codeblock },
+  { id: "markdown", group: "Conversation", title: "Markdown", note: "Dependency-free renderer for AI output \u2014 headings, emphasis, safe links, nested lists, quotes, tables that scroll in place, and fenced code through CodeBlock. javascript: URLs are dropped.", file: "components/Markdown.tsx", Component: Page_markdown },
+  { id: "selectionactions", group: "Conversation", title: "SelectionActions", note: "Contextual AI bar beneath selected text \u2014 quick actions, free-text edit instructions, streamed rewrite with keep / discard.", file: "components/SelectionActions.tsx", Component: Page_selectionactions },
+  { id: "approvalcard", group: "Conversation", title: "ApprovalCard", note: "Human-in-the-loop questions \u2014 fully interactive, try answering.", file: "components/ApprovalCard.tsx", Component: Page_approvalcard },
+  { id: "approvalflow", group: "Conversation", title: "ApprovalFlow", note: "The stepper sibling of ApprovalCard, for a run that needs several questions in sequence. The stack slides vertically and the card's height animates to fit, so it never jumps; the counter rolls like an odometer. Single-choice answers auto-advance, multi-select waits for Continue, and every question takes a free-text answer.", file: "components/ApprovalFlow.tsx", Component: Page_approvalflow },
+  { id: "promptbar", group: "Conversation", title: "PromptBar", note: "Full composer: @ sources, / commands, model picker (pick Sprinkles 5 for the rainbow), dictation. Self-running demo hands over on interaction.", file: "components/PromptBar.tsx", Component: Page_promptbar },
+  { id: "chatcomposer", group: "Conversation", title: "ChatComposer", note: "Interactive chat panel \u2014 type a prompt and send to trigger the reply sequence.", file: "components/ChatComposer.tsx", Component: Page_chatcomposer },
+  { id: "statcard", group: "Dashboard", title: "StatCard & MetricRow", note: "The tiles a dashboard is mostly made of. Delta direction is an explicit prop, never inferred from the sign \u2014 down is good for churn and cost, and only the caller knows which.", file: "components/StatCard.tsx", Component: Page_statcard },
+  { id: "charts", group: "Dashboard", title: "Charts", note: "No chart library \u2014 bars are HTML (a scaled SVG scales its text and breaks the type ramp), lines are SVG with non-scaling strokes. Series use the categorical chart ramp, never the semantic green/red, and anything multi-series gets a legend because hue alone fails for colour-blind readers. Hover or tab to a bar or point for its value.", file: "components/charts.tsx", Component: Page_charts },
+  { id: "recordstable", group: "Data", title: "RecordsTable", note: "AI spreadsheet grid \u2014 click headers for property config, + to add an AI column, then Go calculate. Drag column edges to resize.", file: "components/RecordsTable.tsx", Component: Page_recordstable },
+  { id: "filtertable", group: "Data", title: "FilterTable", note: "Status chips directly filter the table \u2014 rows collapse and expand as you switch.", file: "components/FilterTable.tsx", Component: Page_filtertable },
+  { id: "difftable", group: "Data", title: "DiffTable", note: "Proposed edit as a diff \u2014 click changed rows to include/exclude each edit, then apply.", file: "components/DiffTable.tsx", Component: Page_difftable },
+  { id: "contextcards", group: "Data", title: "ContextCards", note: "Retrieved chunks with source chips \u2014 file-type badges link back to the original document.", file: "components/ContextCards.tsx", Component: Page_contextcards },
+  { id: "recommendationcard", group: "Data", title: "RecommendationCard", note: "Ranked recommendation with an alternatives drawer \u2014 pick an option to promote it, then accept.", file: "components/RecommendationCard.tsx", Component: Page_recommendationcard },
+  { id: "tabs", group: "Navigation", title: "Tabs", note: "APG tablist \u2014 arrow keys with automatic activation, Home/End, and an underline that slides with the house easing. The list scrolls on narrow viewports.", file: "components/Tabs.tsx", Component: Page_tabs },
+  { id: "pagination", group: "Navigation", title: "Pagination", note: "Numbered pages with sibling windows and gap ellipses \u2014 first and last stay reachable, active page carries aria-current, edges disable prev / next.", file: "components/Pagination.tsx", Component: Page_pagination },
+  { id: "breadcrumbs", group: "Navigation", title: "Breadcrumbs", note: "Path trail \u2014 long trails collapse their middle into a DropdownMenu, the current page carries aria-current, labels truncate instead of breaking the row. Navigating fires a toast here.", file: "components/Breadcrumbs.tsx", Component: Page_breadcrumbs },
+  { id: "menubar", group: "Navigation", title: "Menubar", note: "A bar of action menus, each a DropdownMenu \u2014 dividers, disabled and destructive items included. Selections fire toasts here.", file: "components/Menubar.tsx", Component: Page_menubar },
+  { id: "sidebarnav", group: "Navigation", title: "SidebarNav", note: "Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.", file: "components/SidebarNav.tsx", Component: Page_sidebarnav },
+  { id: "searchlist", group: "Navigation", title: "SearchList", note: "Command search with live filtering \u2014 type to filter, gibberish for the empty state.", file: "components/SearchList.tsx", Component: Page_searchlist }
+];
+const PAGE_INDEX = Object.fromEntries(PAGES.map((p, i) => [p.id, i]));
+
+/* ═══════════ Global knobs: radius + size (mirror the data-* token scales) ═══════════ */
+function useRootAttr(key, storageKey, fallback) {
+  const [value, setValue] = useState(() => { try { return localStorage.getItem(storageKey) || fallback; } catch { return fallback; } });
+  useEffect(() => {
+    if (value === fallback) delete document.documentElement.dataset[key];
+    else document.documentElement.dataset[key] = value;
+    try { value === fallback ? localStorage.removeItem(storageKey) : localStorage.setItem(storageKey, value); } catch {}
+  }, [value]);
+  return [value, setValue];
+}
+function useRadius() { return useRootAttr("radius", "ds-radius", "default"); }
+function useSize() { return useRootAttr("size", "ds-size", "default"); }
+
+/* ═══════════ Routing: #/button — legacy #button anchors still resolve ═══════════ */
+function readRoute() {
+  const raw = (location.hash || "").replace(/^#\/?/, "");
+  return PAGE_INDEX[raw] !== undefined ? raw : PAGES[0].id;
+}
+function useRoute() {
+  const [route, setRoute] = useState(readRoute);
+  useEffect(() => {
+    const onHash = () => {
+      const next = readRoute();
+      // normalise old-style #button to #/button so the address bar is canonical
+      if (location.hash && !location.hash.startsWith("#/") && PAGE_INDEX[location.hash.slice(1)] !== undefined) {
+        history.replaceState(null, "", `#/${location.hash.slice(1)}`);
+      }
+      setRoute(next);
+      window.scrollTo({ top: 0 });
+      const title = PAGES[PAGE_INDEX[next]]?.title;
+      if (title) document.title = `${title} · Formic AI Design System`;
+      /* Focus follows the navigation, so keyboard and screen-reader users
+         land on the new page's heading instead of staying on the rail link. */
+      requestAnimationFrame(() => document.getElementById("page-title")?.focus({ preventScroll: true }));
+    };
+    window.addEventListener("hashchange", onHash);
+    onHash();
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  return route;
+}
+
+/* ═══════════ Playground engine ═══════════ */
+/* A schema is a list of controls; the engine keeps one state object and
+   hands it to `render` as props. Kept deliberately small: select, text,
+   number, toggle. Anything a knob can't express stays in the demos. */
+function usePlayground(schema, resetKey) {
+  const initial = Object.fromEntries(schema.map((c) => [c.key, c.value]));
+  const [store, setStore] = useState({ key: resetKey, values: initial });
+  /* Derive-from-props reset: when the page changes, swap state DURING this
+     render rather than in an effect. An effect reset leaves one committed
+     frame where the previous page's values reach the new component — a
+     chip's tone:"field" landing on Alert throws, and with no error
+     boundary that is a white screen. React re-renders before commit here. */
+  let values = store.values;
+  if (store.key !== resetKey) {
+    values = initial;
+    setStore({ key: resetKey, values: initial });
+  }
+  const set = (key, value) => setStore((st) => ({ key: st.key, values: { ...st.values, [key]: value } }));
+  const reset = () => setStore({ key: resetKey, values: initial });
+  return [values, set, reset];
+}
+function ControlRow({ label, children }) {
+  return (
+    <div className="flex min-h-8 items-center justify-between gap-3">
+      <span className="text-caption text-ink-2">{label}</span>
+      <div className="flex min-w-0 items-center justify-end">{children}</div>
+    </div>
+  );
+}
+function RailSelect({ value, options, onChange, ariaLabel }) {
+  return (
+    <div className="relative">
+      <select aria-label={ariaLabel} value={value} onChange={(e) => onChange(e.target.value)}
+        className="corner-smooth h-7 cursor-pointer appearance-none rounded-control bg-transparent pr-6 pl-2 text-caption font-medium text-ink outline-none hover:bg-hover">
+        {options.map((o) => <option key={o} value={o}>{o}</option>)}
+      </select>
+      <span className="pointer-events-none absolute top-1/2 right-1.5 -translate-y-1/2 text-ink-3"><Icon name="chevron" size={13} strokeWidth={2} /></span>
+    </div>
+  );
+}
+function PlaygroundControls({ schema, state, set }) {
+  return (
+    <div className="flex flex-col gap-1">
+      {schema.map((c) => {
+        if (c.heading) return <p key={c.heading} className="mt-3 mb-1 text-caption font-semibold text-ink first:mt-0">{c.heading}</p>;
+        if (c.type === "select") return (
+          <ControlRow key={c.key} label={c.label}>
+            <RailSelect ariaLabel={c.label} value={String(state[c.key])} options={c.options.map(String)} onChange={(v) => set(c.key, typeof c.value === "number" ? Number(v) : v)} />
+          </ControlRow>
+        );
+        if (c.type === "toggle") return (
+          <ControlRow key={c.key} label={c.label}>
+            <Switch on={!!state[c.key]} onToggle={() => set(c.key, !state[c.key])} size="sm" label={c.label} />
+          </ControlRow>
+        );
+        if (c.type === "number") return (
+          <ControlRow key={c.key} label={c.label}>
+            <span className="corner-smooth rounded-control bg-field transition-colors duration-150 focus-within:bg-hover-2">
+              <input type="number" aria-label={c.label} value={state[c.key]} min={c.min} max={c.max} step={c.step ?? 1}
+                onChange={(e) => set(c.key, Number(e.target.value))}
+                className="h-7 w-20 bg-transparent px-2 text-right text-caption text-ink tabular-nums outline-none" />
+            </span>
+          </ControlRow>
+        );
+        return (
+          <ControlRow key={c.key} label={c.label}>
+            <span className="corner-smooth rounded-control bg-field transition-colors duration-150 focus-within:bg-hover-2">
+              <input type="text" aria-label={c.label} value={state[c.key]} onChange={(e) => set(c.key, e.target.value)}
+                className="h-7 w-32 bg-transparent px-2 text-right text-caption text-ink outline-none" />
+            </span>
+          </ControlRow>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ═══════════ Playground schemas — the first set ═══════════ */
+const PLAYGROUNDS = {
+  button: {
+    schema: [
+      { key: "variant", label: "Variant", type: "select", value: "accent", options: ["primary", "secondary", "outline", "ghost", "link", "destructive", "destructive-soft", "accent", "accent-soft", "success"] },
+      { key: "size", label: "Size", type: "select", value: "md", options: ["xs", "sm", "md", "lg"] },
+      { key: "shape", label: "Shape", type: "select", value: "square", options: ["square", "pill"] },
+      { key: "label", label: "Label", type: "text", value: "Get started" },
+      { key: "icon", label: "Leading icon", type: "toggle", value: false },
+      { key: "iconEnd", label: "Trailing icon", type: "toggle", value: false },
+      { heading: "State" },
+      { key: "loading", label: "Loading", type: "toggle", value: false },
+      { key: "disabled", label: "Disabled", type: "toggle", value: false },
+      { key: "fullWidth", label: "Full width", type: "toggle", value: false },
+    ],
+    render: (p) => (
+      <Button variant={p.variant} size={p.size} shape={p.shape} loading={p.loading} disabled={p.disabled} fullWidth={p.fullWidth}
+        icon={p.icon ? <Icon name="sparkles" size={14} strokeWidth={2} /> : undefined}
+        iconEnd={p.iconEnd ? <Icon name="chevron-right" size={14} strokeWidth={2} /> : undefined}>
+        {p.label}
+      </Button>
+    ),
+  },
+  badge: {
+    schema: [
+      { key: "tone", label: "Tone", type: "select", value: "green", options: ["green", "red", "neutral"] },
+      { key: "label", label: "Label", type: "text", value: "Completed" },
+    ],
+    render: (p) => <Badge tone={p.tone}>{p.label}</Badge>,
+  },
+  chip: {
+    schema: [
+      { key: "tone", label: "Tone", type: "select", value: "field", options: ["field", "surface", "inset"] },
+      { key: "size", label: "Size", type: "select", value: "sm", options: ["xs", "sm", "md"] },
+      { key: "mono", label: "Monospace", type: "toggle", value: false },
+      { key: "label", label: "Label", type: "text", value: "ChurnSchedule.tsx" },
+    ],
+    render: (p) => <Chip tone={p.tone} size={p.size} mono={p.mono}>{p.label}</Chip>,
+  },
+  switch: {
+    schema: [
+      { key: "on", label: "On", type: "toggle", value: true },
+      { key: "size", label: "Size", type: "select", value: "md", options: ["sm", "md"] },
+      { key: "label", label: "Label", type: "text", value: "Notifications" },
+      { key: "disabled", label: "Disabled", type: "toggle", value: false },
+    ],
+    render: (p, set) => <Switch on={p.on} onToggle={() => set("on", !p.on)} size={p.size} label={p.label} disabled={p.disabled} />,
+  },
+  alert: {
+    schema: [
+      { key: "tone", label: "Tone", type: "select", value: "info", options: ["neutral", "info", "success", "warning", "error"] },
+      { key: "title", label: "Title", type: "text", value: "Batch scheduled" },
+      { key: "body", label: "Body", type: "text", value: "Pistachio churns first at 6:00pm." },
+      { key: "dismiss", label: "Dismissible", type: "toggle", value: true },
+    ],
+    render: (p) => <Alert tone={p.tone} title={p.title} onDismiss={p.dismiss ? () => {} : undefined}>{p.body}</Alert>,
+  },
+  input: {
+    schema: [
+      { key: "label", label: "Label", type: "text", value: "Flavor name" },
+      { key: "placeholder", label: "Placeholder", type: "text", value: "e.g. Pistachio" },
+      { key: "size", label: "Size", type: "select", value: "md", options: ["sm", "md", "lg"] },
+      { key: "hint", label: "Hint", type: "text", value: "Shown on the menu board." },
+      { heading: "State" },
+      { key: "invalid", label: "Invalid", type: "toggle", value: false },
+      { key: "disabled", label: "Disabled", type: "toggle", value: false },
+      { key: "required", label: "Required", type: "toggle", value: false },
+    ],
+    render: (p) => (
+      <div className="w-full max-w-80">
+        <Field label={p.label} hint={p.invalid ? undefined : p.hint} error={p.invalid ? "That name is already on the board." : undefined} required={p.required}>
+          <Input size={p.size} placeholder={p.placeholder} invalid={p.invalid} disabled={p.disabled} />
+        </Field>
+      </div>
+    ),
+  },
+  select: {
+    schema: [
+      { key: "size", label: "Size", type: "select", value: "md", options: ["sm", "md", "lg"] },
+      { key: "placeholder", label: "Placeholder", type: "text", value: "Pick a base…" },
+      { key: "invalid", label: "Invalid", type: "toggle", value: false },
+      { key: "disabled", label: "Disabled", type: "toggle", value: false },
+    ],
+    render: (p) => <div className="w-full max-w-80"><Select size={p.size} placeholder={p.placeholder} invalid={p.invalid} disabled={p.disabled} /></div>,
+  },
+  progress: {
+    schema: [
+      { key: "value", label: "Value", type: "number", value: 62, min: 0, max: 100 },
+      { key: "tone", label: "Tone", type: "select", value: "accent", options: ["accent", "green"] },
+      { key: "label", label: "Label", type: "text", value: "Churning" },
+      { key: "indeterminate", label: "Indeterminate", type: "toggle", value: false },
+    ],
+    render: (p) => <div className="w-full max-w-80"><Progress value={p.value} tone={p.tone} label={p.label} indeterminate={p.indeterminate} /></div>,
+  },
+  loadingstate: {
+    schema: [
+      { key: "variant", label: "Variant", type: "select", value: "Drive", options: ["Drive", "Dots", "Orbit"] },
+      { key: "label", label: "Label", type: "text", value: "Indexing sources" },
+    ],
+    render: (p) => <LoadingState variant={p.variant} label={p.label} />,
+  },
+  avatar: {
+    schema: [
+      { key: "name", label: "Name", type: "text", value: "Amina Tesfaye" },
+      { key: "size", label: "Size", type: "select", value: "lg", options: ["sm", "md", "lg", "xl"] },
+      { key: "tone", label: "Tone", type: "select", value: 0, options: [0, 1, 2, 3] },
+    ],
+    render: (p) => <Avatar name={p.name} size={p.size} tone={p.tone} />,
+  },
+  statcard: {
+    schema: [
+      { key: "label", label: "Label", type: "text", value: "Total income" },
+      { key: "display", label: "Value", type: "text", value: "$4,673" },
+      { key: "caption", label: "Caption", type: "text", value: "Last week" },
+      { key: "delta", label: "Delta", type: "text", value: "+25.2%" },
+      { key: "deltaTone", label: "Direction", type: "select", value: "up", options: ["up", "down", "flat"] },
+      { key: "icon", label: "Icon", type: "toggle", value: true },
+      { key: "iconTone", label: "Icon tone", type: "select", value: 2, options: [1, 2, 3, 4, 5] },
+      { key: "trend", label: "Sparkline", type: "toggle", value: true },
+    ],
+    render: (p) => (
+      <StatCard label={p.label} display={p.display} caption={p.caption} delta={p.delta} deltaTone={p.deltaTone}
+        icon={p.icon ? "chart" : undefined} iconTone={p.iconTone} trend={p.trend ? [3, 6, 4, 9, 7, 11, 10, 14] : undefined} trendTone={p.iconTone} />
+    ),
+  },
+  charts: {
+    schema: [
+      { key: "chart", label: "Chart", type: "select", value: "Bar", options: ["Bar", "Line", "Donut"] },
+      { heading: "Bar" },
+      { key: "variant", label: "Variant", type: "select", value: "grouped", options: ["grouped", "stacked"] },
+      { key: "series", label: "Series", type: "select", value: 1, options: [1, 2, 3] },
+      { key: "highlight", label: "Highlight Feb", type: "toggle", value: true },
+      { key: "showValues", label: "Values", type: "toggle", value: true },
+      { heading: "Line" },
+      { key: "area", label: "Area fill", type: "toggle", value: true },
+      { key: "points", label: "Points", type: "toggle", value: true },
+      { heading: "Donut" },
+      { key: "value", label: "Value", type: "number", value: 500, min: 0, max: 720 },
+      { key: "color", label: "Colour", type: "select", value: 4, options: [1, 2, 3, 4, 5] },
+    ],
+    render: (p) => {
+      const S = [
+        { name: "Direct", values: [38, 52, 32, 12, 35, 28, 33, 25] },
+        { name: "Referral", color: 3, values: [11, 9, 15, 12, 18, 14, 9, 16] },
+        { name: "Organic", color: 5, values: [7, 13, 9, 16, 11, 19, 14, 10] },
+      ].slice(0, p.series);
+      if (p.chart === "Line") return <LineChart series={S} area={p.area} points={p.points} />;
+      if (p.chart === "Donut") return <DonutChart value={p.value} max={720} color={p.color} />;
+      return <BarChart series={S} variant={p.variant} highlight={p.highlight ? 1 : undefined} showValues={p.showValues} />;
+    },
+  },
+  approvalflow: {
+    schema: [
+      { key: "questions", label: "Questions", type: "select", value: 3, options: [1, 2, 3] },
+      { key: "send", label: "Send label", type: "text", value: "Send" },
+      { key: "skip", label: "Skip label", type: "text", value: "Skip" },
+      { key: "resettable", label: "Start over", type: "toggle", value: true },
+    ],
+    render: (p) => <ApprovalFlow key={p.questions} questions={QUESTIONS.slice(0, p.questions)} labels={{ send: p.send, skip: p.skip }} resettable={p.resettable} />,
+  },
+};
+
+/* ═══════════ The docs shell ═══════════ */
+const RADII = ["default", "sharp", "rounded", "full"];
+const SIZES = ["default", "comfortable", "spacious"];
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+function MakeThemYours({ theme, setTheme, palette, setPalette, accent, setAccent, radius, setRadius, size, setSize }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <ControlRow label="Theme">
+        <RailSelect ariaLabel="Theme" value={cap(theme)} options={["Light", "Dark"]} onChange={(v) => setTheme(v.toLowerCase())} />
+      </ControlRow>
+      <ControlRow label="Palette">
+        <RailSelect ariaLabel="Palette" value={cap(palette)} options={PALETTES.map((p) => p.label)} onChange={(v) => setPalette(PALETTES.find((p) => p.label === v).id)} />
+      </ControlRow>
+      <ControlRow label="Accent">
+        <div className="flex items-center gap-1.5">
+          {accent && (
+            <button type="button" aria-label="Reset custom accent" onClick={() => setAccent("")}
+              className="flex size-6 items-center justify-center rounded-sm text-ink-3 transition-colors duration-150 hover:bg-hover hover:text-ink">
+              <Icon name="close" size={12} strokeWidth={2.2} />
+            </button>
+          )}
+          <label title="Custom accent" className="relative flex h-7 cursor-pointer items-center gap-2 rounded-control px-2 text-caption font-medium text-ink hover:bg-hover">
+            <span aria-hidden className="size-3.5 rounded-full" style={{ background: accent || "var(--accent)", boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.15)" }} />
+            {accent ? accent.toUpperCase() : "Palette"}
+            <input type="color" aria-label="Custom accent color" value={accent || "#3b5bdb"} onChange={(e) => setAccent(e.target.value)} className="absolute inset-0 size-full cursor-pointer opacity-0" />
+          </label>
+        </div>
+      </ControlRow>
+      <ControlRow label="Radius">
+        <RailSelect ariaLabel="Radius" value={cap(radius)} options={RADII.map(cap)} onChange={(v) => setRadius(v.toLowerCase())} />
+      </ControlRow>
+      <ControlRow label="Size">
+        <RailSelect ariaLabel="Size" value={cap(size)} options={SIZES.map(cap)} onChange={(v) => setSize(v.toLowerCase())} />
+      </ControlRow>
+    </div>
+  );
+}
+
+function RailPanel({ title, action, children }) {
+  return (
+    <section className="rounded-card bg-surface p-4 shadow-card">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="text-body font-semibold text-ink">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Section({ id, title, note, children }) {
+  return (
+    <section id={id} className="mb-8">
+      <h2 className="text-title font-semibold text-ink">{title}</h2>
+      {note && <p className="mt-0.5 max-w-xl text-caption text-ink-3">{note}</p>}
+      <div className="mt-4 flex flex-wrap gap-6">{children}</div>
+    </section>
+  );
+}
+function GalleryCard({ label, wide, full, children }) {
+  return (
+    <Card className={`p-5 ${full ? "w-full" : wide ? "w-full max-w-105" : ""}`}>
+      <p className="mb-3 font-mono text-micro tracking-wide text-ink-3 uppercase">{label}</p>
+      {children}
+    </Card>
+  );
+}
+
+function DocsPage({ page, index, pg, state, set }) {
+  const prev = PAGES[index - 1], next = PAGES[index + 1];
+  const RAW = "https://raw.githubusercontent.com/eyosiyasketema1/formic-design-system/main";
+  const files = page.file.split(" ");
+  const install = files.map((f) => `curl --create-dirs -o src/${f} ${RAW}/${f}`).join(" && ");
+  const [copied, setCopied] = useState(false);
+  const copy = () => { try { navigator.clipboard.writeText(install); setCopied(true); setTimeout(() => setCopied(false), 1400); } catch {} };
+  const PageBody = page.Component;
+  return (
+    <div className="flex min-w-0 gap-8">
+      <div className="min-w-0 flex-1">
+        <header className="mb-8 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 id="page-title" tabIndex={-1} className="text-display font-semibold tracking-tight text-ink outline-none">{page.title}</h1>
+            {page.note && <p className="mt-1.5 max-w-2xl text-body text-ink-2">{page.note}</p>}
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <IconButton label={prev ? `Previous: ${prev.title}` : "Previous"} onClick={() => prev && (location.hash = `#/${prev.id}`)} disabled={!prev} className="text-ink-3 hover:bg-hover hover:text-ink disabled:opacity-35">
+              <Icon name="chevron-left" size={16} strokeWidth={2} />
+            </IconButton>
+            <IconButton label={next ? `Next: ${next.title}` : "Next"} onClick={() => next && (location.hash = `#/${next.id}`)} disabled={!next} className="text-ink-3 hover:bg-hover hover:text-ink disabled:opacity-35">
+              <Icon name="chevron-right" size={16} strokeWidth={2} />
+            </IconButton>
+          </div>
+        </header>
+
+        <section className="mb-8">
+          <h2 className="text-title font-semibold text-ink">Installation</h2>
+          <div className="mt-3 flex items-center gap-2 rounded-control bg-field px-3 py-2">
+            <code className="min-w-0 flex-1 truncate font-mono text-small text-ink">{install}</code>
+            <IconButton label={copied ? "Copied" : "Copy install command"} onClick={copy} className="text-ink-3 hover:bg-hover hover:text-ink">
+              <Icon name={copied ? "check" : "copy"} size={14} strokeWidth={2} />
+            </IconButton>
+          </div>
+          <p className="mt-2 text-caption text-ink-3">Formic is vendored: copy the file in and own it. Tokens come from <code className="font-mono">styles/tokens.css</code>.</p>
+        </section>
+
+        {pg && (
+          <section className="mb-8">
+            <h2 className="text-title font-semibold text-ink">Playground</h2>
+            <div className="mt-3 flex min-h-56 items-center justify-center rounded-card bg-surface p-8 shadow-card">
+              {pg.render(state, set)}
+            </div>
+          </section>
+        )}
+
+        <PageBody />
+      </div>
+    </div>
+  );
+}
+
+function RailPanels({ page, pg, knobs, pgState, pgSet, pgReset }) {
+  return (
+    <>
+      <RailPanel title="Make them yours"><MakeThemYours {...knobs} /></RailPanel>
+      {pg && (
+        <RailPanel title="Playground" action={
+          <button type="button" onClick={pgReset} className="text-small font-medium text-ink-3 transition-colors duration-150 hover:text-ink">Reset</button>
+        }>
+          <p className="mb-2 text-caption font-semibold text-ink">{page.title}</p>
+          <PlaygroundControls schema={pg.schema} state={pgState} set={pgSet} />
+        </RailPanel>
+      )}
+    </>
+  );
+}
+
+function App() {
   const [theme, setTheme] = useTheme();
   const [palette, setPalette] = usePalette();
   const [accent, setAccentState] = useAccent();
-  const active = useScrollSpy(DOC_NAV.flatMap((group) => group.items.map((item) => item.id)));
+  const [radius, setRadius] = useRadius();
+  const [size, setSize] = useSize();
+  const route = useRoute();
+  const index = PAGE_INDEX[route] ?? 0;
+  const page = PAGES[index];
+  const pg = PLAYGROUNDS[page.id];
+  const [pgState, pgSet, pgReset] = usePlayground(pg ? pg.schema : [], page.id);
+  const groups = [];
+  for (const p of PAGES) {
+    let g = groups.find((x) => x.label === p.group);
+    if (!g) groups.push((g = { label: p.group, items: [] }));
+    g.items.push(p);
+  }
+  const knobs = { theme, setTheme, palette, setPalette, accent, setAccent: setAccentState, radius, setRadius, size, setSize };
   return (
     <div className="flex min-h-screen">
-      {/* docs rail — hidden on narrow viewports (mobile keeps the header nav-free) */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line px-3 py-6 lg:flex">
-        <div className="mb-6 px-2">
+      {/* left rail */}
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line bg-sidebar px-3 py-6 lg:flex">
+        <div className="mb-5 px-2">
           <BackToSite className="-ml-2 mb-2" />
-          <h1 className="text-title font-semibold tracking-tight text-ink">Formic AI Design System</h1>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · 43 components</p>
+          <p className="text-title font-semibold tracking-tight text-ink">Formic AI Design System</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · {PAGES.length} pages</p>
         </div>
-        <nav className="flex flex-col">
-          {DOC_NAV.map((group) => (
-            <div key={group.label} className="mb-4">
-              <p className="mb-1 px-2 font-mono text-micro tracking-wide text-ink-3 uppercase">{group.label}</p>
+        <nav className="flex flex-col" aria-label="Components">
+          {groups.map((g) => (
+            <div key={g.label} className="mb-4">
+              <p className="mb-1 flex items-baseline gap-1.5 px-2 font-mono text-micro tracking-wide text-ink-3 uppercase">
+                {g.label} <span>{g.items.length}</span>
+              </p>
               <div className="flex flex-col gap-px">
-                {group.items.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    aria-current={active === item.id ? "location" : undefined}
-                    onClick={() => jumpTo(item.id)}
-                    className={`rounded-control px-2 py-1 text-left text-caption transition-colors duration-150 hover:bg-hover ${
-                      active === item.id ? "bg-hover-2 font-medium text-ink" : "text-ink-2"
-                    }`}
-                  >
-                    {item.title}
-                  </button>
+                {g.items.map((p) => (
+                  <a key={p.id} href={`#/${p.id}`} aria-current={route === p.id ? "page" : undefined}
+                    className={`corner-smooth rounded-control px-2 py-1 text-caption transition-colors duration-150 hover:bg-hover ${route === p.id ? "bg-hover-2 font-medium text-ink" : "text-ink-2"}`}>
+                    {p.title}
+                  </a>
                 ))}
               </div>
             </div>
           ))}
         </nav>
-        <div className="mt-auto px-2 pt-4">
-          <ThemeControls theme={theme} setTheme={setTheme} palette={palette} setPalette={setPalette} accent={accent} onAccent={setAccentState} />
-        </div>
       </aside>
+
+      {/* centre */}
       <main className="min-w-0 flex-1 px-6 py-8 lg:px-10">
         <div className="mx-auto max-w-5xl">
-          <header className="mb-10 flex flex-wrap items-start justify-between gap-4">
-            <div>
-              {/* the rail is hidden below lg, so mobile needs its own way back */}
-              <BackToSite className="-ml-2 mb-1 lg:hidden" />
-              <h1 className="text-display font-semibold tracking-tight text-ink lg:hidden">Formic AI Design System</h1>
-              <p className="mt-1 max-w-2xl text-body text-ink-2">
-                Token-driven React components for AI product interfaces. Everything reads styles/tokens.css — one easing, one icon set, both themes and all five palettes for free.
-              </p>
+          <div className="mb-6 lg:hidden">
+            <BackToSite className="-ml-2 mb-2" />
+            <div className="rounded-control bg-surface shadow-btn">
+              <RailSelect ariaLabel="Go to component" value={page.title} options={PAGES.map((p) => p.title)} onChange={(t) => { const p = PAGES.find((x) => x.title === t); if (p) location.hash = `#/${p.id}`; }} />
             </div>
-            <div className="lg:hidden">
-              <ThemeControls theme={theme} setTheme={setTheme} palette={palette} setPalette={setPalette} accent={accent} onAccent={setAccentState} />
-            </div>
-          </header>
-          <FoundationsSections />
-          <Section id="primitives" title="Primitives" note="The atoms everything below composes: Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Switch, Popover + timing hooks (useSequence, useElapsed, useStream).">
-            <GalleryCard label="Primitives" wide>
-              <div className="flex flex-wrap items-center gap-3">
-                <ShimmerLabel>Shimmering</ShimmerLabel>
-                <Spinner className="text-ink-2" />
-                <span className="text-body text-ink">caret<StreamCaret /></span>
-                <Chip tone="field" mono>field chip</Chip>
-                <Chip tone="surface" mono>surface chip</Chip>
-                <Chip tone="inset" mono>inset chip</Chip>
-                <DiffStat add={74} del={41} />
-                <IconButton label="Close" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="close" /></IconButton>
-                <IconButton label="Search" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="search" /></IconButton>
-                <SendButton enabled />
-                <SendButton enabled={false} />
-                <span className="flex flex-wrap items-center gap-1 text-ink-3">
-                  <Icon name="chevron" /><Icon name="check" /><Icon name="retry" /><Icon name="arrow-up" /><Icon name="plus" /><Icon name="clock" /><Icon name="ellipsis" /><Icon name="mic" /><Icon name="file" /><Icon name="clip" /><Icon name="chart" /><Icon name="layers" /><Icon name="globe" /><Icon name="lines" /><Icon name="external" /><Icon name="edit" /><Icon name="home" /><Icon name="gear" /><Icon name="user-add" /><Icon name="sign-out" /><Icon name="sidebar" /><Icon name="message-question" /><Icon name="sparkles" /><Icon name="scissors" /><Icon name="mood-smile" /><Icon name="typography" /><Icon name="chevron-right" /><Icon name="chevron-left" /><Icon name="copy" /><Icon name="circle-check" /><Icon name="alert" /><Icon name="info" />
-                </span>
-              </div>
-            </GalleryCard>
-            <GalleryCard label="Badges · controls" wide>
-              <div className="flex flex-wrap items-center gap-3">
-                <Badge tone="green">Completed</Badge>
-                <Badge tone="red">Failed</Badge>
-                <Badge tone="neutral">Queued</Badge>
-                <RadioCheck type="radio" on={true} />
-                <RadioCheck type="radio" on={false} />
-                <RadioCheck type="check" on={true} />
-                <RadioCheck type="check" on={false} />
-                <AvatarStack srcs={[SOURCE_IMAGES.scoop, SOURCE_IMAGES.trends, SOURCE_IMAGES.market]} />
-              </div>
-            </GalleryCard>
-            <GalleryCard label="Avatar · Tooltip" wide>
-          <div className="flex flex-wrap items-center gap-3">
-            <Avatar name="Samson Usmael" size="lg" />
-            <Avatar name="Maple Orbit" />
-            <Avatar name="Aurora Scoops" size="sm" />
-            <Avatar name="Kumo Creamery" src={SOURCE_IMAGES.scoop} />
-            <Separator vertical className="h-5" />
-            <Tooltip label="Copy code"><IconButton label="Copy code" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="copy" /></IconButton></Tooltip>
-            <Tooltip label="Runs the batch restock flow"><Button variant="secondary" size="sm">Hover me</Button></Tooltip>
           </div>
-        </GalleryCard>
-        <GalleryCard label="Progress · Separator" wide>
-          <div className="flex w-full flex-col gap-3">
-            <Progress value={64} label="Batch progress" />
-            <Progress value={100} tone="green" label="Complete" />
-            <Progress indeterminate label="Syncing suppliers" />
-            <Separator />
-            <span className="text-small text-ink-3">Separator above — the one divider, horizontal or vertical.</span>
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:hidden">
+            <RailPanels page={page} pg={pg} knobs={knobs} pgState={pgState} pgSet={pgSet} pgReset={pgReset} />
           </div>
-        </GalleryCard>
-        <GalleryCard label="StreamText" wide>
-              <p className="text-body leading-relaxed text-ink" aria-live="polite">
-                <StreamText text="Words resolve out of blur one at a time — the shared useStream hook also drives StreamingText and SelectionActions." intervalMs={70} />
-              </p>
-            </GalleryCard>
-            <GalleryCard label="GlideMenu">
-              <GlideMenu className="flex w-44 flex-col gap-px">
-                {["Sprinkles 5", "Vanilla 1", "Freezer Burn 0.4"].map((item) => (
-                  <button key={item} data-menu-row type="button" className="relative z-10 flex h-8 w-full items-center rounded-control px-2 text-left text-body text-ink">
-                    {item}
-                  </button>
-                ))}
-              </GlideMenu>
-            </GalleryCard>
-          </Section>
-          <Section id="button" title="Button" note="The complete matrix — every variant at every size, every state, both shapes, icons, width, links, and live loading. Rows generate from the component's own maps, so this page can never drift from the code.">
-            <GalleryCard label="Variants × sizes" full><ButtonDemo /></GalleryCard>
-            <GalleryCard label="States × variants" full><ButtonStatesDemo /></GalleryCard>
-            <GalleryCard label="Shapes × sizes" full><ButtonShapesDemo /></GalleryCard>
-            <GalleryCard label="Icons · width · link · loading" full><ButtonExtrasDemo /></GalleryCard>
-          </Section>
-          <Section id="input" title="Field & Input" note="The form trio — Field owns label / hint / error and wires aria onto its control; Input and Textarea share the system's quiet field focus (border shift, no ring).">
-            <GalleryCard label="Default" wide>
-              <div className="flex flex-col gap-4">
-                <Field label="Flavor name" hint="Shown on the menu board.">
-                  <Input placeholder="e.g. Roasted pistachio" />
-                </Field>
-                <Field label="Search suppliers">
-                  <Input leadingIcon="search" placeholder="Search…" size="sm" />
-                </Field>
-              </div>
-            </GalleryCard>
-            <GalleryCard label="Error · textarea" wide>
-              <div className="flex flex-col gap-4">
-                <Field label="Batch size" required error="Must be between 1 and 12.">
-                  <Input defaultValue="40" inputMode="numeric" />
-                </Field>
-                <Field label="Tasting notes" hint="Optional — appears on the flavor page.">
-                  <Textarea placeholder="Buttery, lightly salted…" />
-                </Field>
-              </div>
-            </GalleryCard>
-          </Section>
-          <Section id="select" title="Select" note="Combobox on the quiet field style — the listbox portals over the page, matches the trigger's width, and is fully keyboard-driven (arrows, Home/End, Enter, Escape).">
-            <GalleryCard label="In a Field" wide>
-              <Field label="Base flavor" hint="Used for the weekend special.">
-                <Select defaultValue="pistachio" />
-              </Field>
-            </GalleryCard>
-            <GalleryCard label="Placeholder · small · error" wide>
-              <div className="flex flex-col gap-4">
-                <Select size="sm" placeholder="Pick a supplier…" options={[
-                  { value: "aurora", label: "Aurora Scoops" },
-                  { value: "kumo", label: "Kumo Creamery" },
-                  { value: "maple", label: "Maple Orbit" },
-                ]} />
-                <Field label="Category" required error="Pick a category before saving.">
-                  <Select placeholder="Choose…" options={[
-                    { value: "classic", label: "Classic" },
-                    { value: "retro", label: "Retro" },
-                    { value: "seasonal", label: "Seasonal" },
-                  ]} />
-                </Field>
-              </div>
-            </GalleryCard>
-          </Section>
-          <Section id="switch" title="Switch" note="The system toggle, promoted from RecordsTable's private switch — role=switch, two sizes, Field-compatible. RecordsTable now consumes the same primitive.">
-            <GalleryCard label="Field · sizes · disabled" wide><SwitchDemo /></GalleryCard>
-          </Section>
-          <Section id="filedropzone" title="FileDropzone" note="Drag files onto the zone or click to browse — accept / size validation announces rejections, accepted files become chips with remove. Try dropping anything.">
-            <GalleryCard label="Images · 5 MB cap" wide>
-              <FileDropzone accept="image/*,.pdf" maxSize={5242880} hint="Images or PDF · up to 5 MB"
-                defaultFiles={[
-                  { id: "demo-1", name: "flavor-board-photo.jpg", size: 482304, type: "image/jpeg" },
-                  { id: "demo-2", name: "supplier-price-list.pdf", size: 1284523, type: "application/pdf" },
-                ]} />
-            </GalleryCard>
-            <GalleryCard label="Single file" wide>
-              <FileDropzone multiple={false} label="Drop the batch sheet" hint="One file replaces the last" />
-            </GalleryCard>
-          </Section>
-          <Section id="slider-otp" title="Slider & OTP" note="Two more Field-ready controls — Slider is a native range drawn with tokens (platform keyboard and touch for free); OTPInput distributes typing, paste, and one-time-code autofill across quiet field cells.">
-            <GalleryCard label="Field-wrapped" wide><SliderOtpDemo /></GalleryCard>
-          </Section>
-          <Section id="datepicker" title="DatePicker & Calendar" note="A dependency-free month grid on the APG date pattern — arrows move by day, PageUp/Down by month, Home/End across the week. mode=range picks a span with a live preview band; DatePicker and DateRangePicker drop it behind the quiet field trigger.">
-            <GalleryCard label="Field-wrapped" wide><DatePickerDemo /></GalleryCard>
-            <GalleryCard label="Standalone Calendar"><Calendar defaultValue={new Date()} /></GalleryCard>
-            <GalleryCard label="Range mode"><Calendar mode="range" defaultRange={{ from: new Date(new Date().getFullYear(), new Date().getMonth(), 8), to: new Date(new Date().getFullYear(), new Date().getMonth(), 14) }} /></GalleryCard>
-          </Section>
-          <Section id="statcard" title="StatCard & MetricRow" note="The tiles a dashboard is mostly made of. Delta direction is an explicit prop, never inferred from the sign — down is good for churn and cost, and only the caller knows which.">
-            <GalleryCard label="Stat tiles" full>
-              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard label="Total profit" display="$88.5k" caption="All time" delta="-18%" deltaTone="down" trend={[9, 7, 8, 5, 6, 4, 5, 3]} trendTone={5} />
-                <StatCard label="Total income" caption="Last week" display="$4,673" delta="+25.2%" icon="chart" iconTone={2} trend={[3, 6, 4, 9, 7, 11, 10, 14]} trendTone={2} />
-                <StatCard label="Total expense" caption="Last month" display="$1.28K" delta="-12.2%" deltaTone="down" icon="layers" iconTone={4} />
-                <StatCard label="Sessions" value={124000} caption="Last week" delta="0.0%" deltaTone="flat" />
-              </div>
-            </GalleryCard>
-            <GalleryCard label="MetricRow breakdown" wide>
-              <div className="flex flex-col">
-                <MetricRow icon="globe" label="Online store" value="$20k" delta="+12.6%" />
-                <MetricRow icon="home" label="Offline store" value="$20k" delta="-4.2%" deltaTone="down" />
-                <MetricRow icon="layers" label="Wholesale" value="$8.4k" delta="0.0%" deltaTone="flat" />
-              </div>
-            </GalleryCard>
-          </Section>
-          <Section id="charts" title="Charts" note="No chart library — bars are HTML (a scaled SVG scales its text and breaks the type ramp), lines are SVG with non-scaling strokes. Series use the categorical chart ramp, never the semantic green/red, and anything multi-series gets a legend because hue alone fails for colour-blind readers. Hover or tab to a bar or point for its value.">
-            <GalleryCard label="BarChart · single series, highlighted" full>
-              <BarChart highlight={1} />
-            </GalleryCard>
-            <GalleryCard label="BarChart · stacked, three series" full>
-              <BarChart variant="stacked" labels={["Q1", "Q2", "Q3", "Q4"]} series={[
-                { name: "Direct", values: [18, 24, 20, 29] },
-                { name: "Referral", color: 3, values: [11, 9, 15, 12] },
-                { name: "Organic", color: 5, values: [7, 13, 9, 16] },
-              ]} />
-            </GalleryCard>
-            <GalleryCard label="LineChart · area fill" full>
-              <LineChart />
-            </GalleryCard>
-            <GalleryCard label="LineChart · two series" full>
-              <LineChart labels={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]} series={[
-                { name: "This week", values: [12, 19, 15, 27, 22, 31, 28] },
-                { name: "Last week", color: 2, values: [9, 14, 18, 16, 24, 21, 25] },
-              ]} />
-            </GalleryCard>
-            <GalleryCard label="DonutChart">
-              <div className="flex items-center gap-5">
-                <DonutChart />
-                <DonutChart value={318} max={400} label="Uptime" color={2} size={96} />
-              </div>
-            </GalleryCard>
-            <GalleryCard label="Sparkline" wide>
-              <div className="flex w-full max-w-80 flex-col gap-3">
-                <Sparkline />
-                <Sparkline values={[14, 9, 11, 6, 8, 4, 5, 2]} color={5} />
-              </div>
-            </GalleryCard>
-          </Section>
-          <Section id="accordion" title="Accordion" note="Stacked disclosure rows on Disclosure — single-open by default, closed content inert, house easing throughout.">
-            <GalleryCard label="Single open" wide><Accordion defaultOpen={["restock"]} /></GalleryCard>
-          </Section>
-          <Section id="steps" title="Steps" note="Wizard progress — completed circles fill ink, the current step rings accent with aria-current, completed steps are clickable to go back.">
-            <GalleryCard label="Interactive" wide><StepsTimelineDemo /></GalleryCard>
-            <GalleryCard label="Vertical"><Steps vertical current={2} /></GalleryCard>
-          </Section>
-          <Section id="timeline" title="Timeline" note="Event history on a rail — toned dots, monospaced times, staggered entrance.">
-            <GalleryCard label="Batch history" wide><Timeline /></GalleryCard>
-          </Section>
-          <Section id="modal" title="Modal" note="Portal dialog on the system scrim — focus trapped and restored, page scroll locked, Escape / backdrop dismiss. Footer takes the system Buttons.">
-            <GalleryCard label="Form · confirm" wide><ModalDemo /></GalleryCard>
-          </Section>
-          <Section id="drawer" title="Drawer" note="Side panel on the same machinery as Modal (shared useModalLayer: trap, restore, layered Escape, scroll lock) — slides from either edge, full height, footer actions.">
-            <GalleryCard label="Right · left" wide><DrawerDemo /></GalleryCard>
-          </Section>
-          <Section id="toast" title="Toast" note="App notifications from anywhere via useToast() — bottom-right stack, auto-dismiss (hover pauses), success / error tones, optional action. Errors announce assertively.">
-            <GalleryCard label="Tones · action" wide><ToastDemo /></GalleryCard>
-          </Section>
-          <Section id="dropdownmenu" title="DropdownMenu" note="The standard action menu — wrap any trigger; keyboard-driven via aria-activedescendant, dividers, disabled and destructive items. Selecting fires a toast here.">
-            <GalleryCard label="Button · icon trigger" wide><DropdownMenuDemo /></GalleryCard>
-          </Section>
-          <Section id="alert" title="Alert" note="Inline callouts on the system tints — five tones, optional dismiss. Copy stays ink so every palette keeps AA contrast.">
-            <GalleryCard label="Tones · dismissible" wide><AlertDemo /></GalleryCard>
-          </Section>
-          <Section id="skeleton" title="Skeleton" note="Loading placeholders — one primitive, shaped entirely by className. Compose avatars, lines, and cards from it.">
-            <GalleryCard label="Card placeholder" wide>
-              <div className="flex items-start gap-3">
-                <Skeleton className="size-9 shrink-0 rounded-full" />
-                <div className="flex min-w-0 flex-1 flex-col gap-2">
-                  <Skeleton className="h-3.5 w-2/5" />
-                  <Skeleton className="h-3 w-full" />
-                  <Skeleton className="h-3 w-4/5" />
-                  <div className="mt-1 flex gap-2">
-                    <Skeleton className="h-6 w-20 rounded-full" />
-                    <Skeleton className="h-6 w-24 rounded-full" />
-                  </div>
-                </div>
-              </div>
-            </GalleryCard>
-          </Section>
-          <Section id="loadingstate" title="LoadingState" note="Pixel-grid loader with shimmer label and elapsed timer.">
-            <GalleryCard label="Drive"><LoadingState variant="Drive" /></GalleryCard>
-            <GalleryCard label="Dots"><LoadingState variant="Dots" /></GalleryCard>
-            <GalleryCard label="Orbit"><LoadingState variant="Orbit" /></GalleryCard>
-          </Section>
-          <Section id="thinkingstate" title="ThinkingState" note="Expandable agent trace. Runs once on load — replay to see the sequence again.">
-            <div className="w-full">
-              <button type="button" onClick={() => setThinkKey((k) => k + 1)}
-                className="mb-4 rounded-control bg-surface px-3 py-1.5 text-caption font-medium text-ink shadow-btn transition-colors duration-150 hover:bg-hover">
-                ↻ Replay all
-              </button>
-              <div className="grid gap-6 md:grid-cols-2">
-                <GalleryCard label="Steps"><ThinkingState key={`s${thinkKey}`} variant="Steps" /></GalleryCard>
-                <GalleryCard label="Reasoning"><ThinkingState key={`r${thinkKey}`} variant="Reasoning" /></GalleryCard>
-                <GalleryCard label="Search"><ThinkingState key={`w${thinkKey}`} variant="Search" /></GalleryCard>
-                <GalleryCard label="Coding"><ThinkingState key={`c${thinkKey}`} variant="Coding" /></GalleryCard>
-              </div>
-            </div>
-          </Section>
-          <Section id="taskrows" title="TaskRows" note="Agent tasks as expandable rows — a scripted status run plays once (spin → failed → completed).">
-            <GalleryCard label="Capsules" wide><TaskRows variant="Capsules" /></GalleryCard>
-            <GalleryCard label="List" wide><TaskRows variant="List" /></GalleryCard>
-          </Section>
-          <Section id="toolchips" title="ToolChips" note="Agent run as compact rows. Click rows to expand; hover the file chips for diff previews.">
-            <GalleryCard label="Default"><ToolChips /></GalleryCard>
-          </Section>
-          <Section id="chatapp" title="ChatApp" note="The whole system composed into one surface — SidebarNav rail, a thread of MessageBubbles embedding Markdown and CodeBlock, PromptBar below. Send a message: it thinks, then streams the reply. Built by the formic-design-system skill following its own recipe.">
-            <div className="w-full"><ChatApp /></div>
-          </Section>
-          <Section id="chatthread" title="ChatThread" note="A conversation column — user bubbles right, assistant replies flat. The final reply streams in once; embed StreamingText, ToolChips, or ApprovalCard as message children in a real thread.">
-            <GalleryCard label="Default" wide><ChatThread /></GalleryCard>
-          </Section>
-          <Section id="streamingtext" title="StreamingText" note="Words resolve out of blur; citations, sources, and follow-ups appear when done. Loops.">
-            <GalleryCard label="Default" wide><StreamingText /></GalleryCard>
-          </Section>
-          <Section id="codeblock" title="CodeBlock" note="AI code output — dependency-free syntax highlighting on theme tokens, copy action, optional line numbers. Block comments spanning lines stay plain (accepted).">
-            <GalleryCard label="TypeScript" wide><CodeBlock /></GalleryCard>
-            <GalleryCard label="Python · line numbers" wide><CodeBlock language="py" lineNumbers filename="restock.py" code={'def restock(flavor, batches=2):\n    # churn overnight so it sets by open\n    job = schedule(flavor, batches, at="05:30")\n    log(f"queued {flavor} x{batches}", job.id)\n    return job'} /></GalleryCard>
-          </Section>
-          <Section id="markdown" title="Markdown" note="Dependency-free renderer for AI output — headings, emphasis, safe links, nested lists, quotes, tables that scroll in place, and fenced code through CodeBlock. javascript: URLs are dropped.">
-            <GalleryCard label="Kitchen sink" wide><Markdown /></GalleryCard>
-          </Section>
-          <Section id="selectionactions" title="SelectionActions" note="Contextual AI bar beneath selected text — quick actions, free-text edit instructions, streamed rewrite with keep / discard.">
-            <GalleryCard label="Default" wide><SelectionActions /></GalleryCard>
-          </Section>
-          <Section id="approvalcard" title="ApprovalCard" note="Human-in-the-loop questions — fully interactive, try answering.">
-            <GalleryCard label="Default"><ApprovalCard /></GalleryCard>
-          </Section>
-          <Section id="approvalflow" title="ApprovalFlow" note="The stepper sibling of ApprovalCard, for a run that needs several questions in sequence. The stack slides vertically and the card's height animates to fit, so it never jumps; the counter rolls like an odometer. Single-choice answers auto-advance, multi-select waits for Continue, and every question takes a free-text answer.">
-            <GalleryCard label="Three questions · radio, check, radio" wide><ApprovalFlow /></GalleryCard>
-            <GalleryCard label="Single question" wide>
-              <ApprovalFlow questions={[{ q: "Ship the pistachio batch tonight?", type: "radio", options: ["Ship it", "Hold for QA", "Split the batch"] }]} labels={{ send: "Approve" }} />
-            </GalleryCard>
-          </Section>
-          <Section id="promptbar" title="PromptBar" note="Full composer: @ sources, / commands, model picker (pick Sprinkles 5 for the rainbow), dictation. Self-running demo hands over on interaction.">
-            <GalleryCard label="Rounded" wide><PromptBar variant="Rounded" /></GalleryCard>
-            <GalleryCard label="Pill" wide><PromptBar variant="Pill" /></GalleryCard>
-          </Section>
-          <Section id="chatcomposer" title="ChatComposer" note="Interactive chat panel — type a prompt and send to trigger the reply sequence.">
-            <GalleryCard label="Default" wide><ChatComposer /></GalleryCard>
-          </Section>
-          <Section id="recordstable" title="RecordsTable" note="AI spreadsheet grid — click headers for property config, + to add an AI column, then Go calculate. Drag column edges to resize.">
-            <div className="w-full"><RecordsTable /></div>
-          </Section>
-          <Section id="filtertable" title="FilterTable" note="Status chips directly filter the table — rows collapse and expand as you switch.">
-            <GalleryCard label="Default" wide><FilterTable /></GalleryCard>
-          </Section>
-          <Section id="difftable" title="DiffTable" note="Proposed edit as a diff — click changed rows to include/exclude each edit, then apply.">
-            <GalleryCard label="Default" wide><DiffTable /></GalleryCard>
-          </Section>
-          <Section id="contextcards" title="ContextCards" note="Retrieved chunks with source chips — file-type badges link back to the original document.">
-            <GalleryCard label="Default" wide><ContextCards /></GalleryCard>
-          </Section>
-          <Section id="recommendationcard" title="RecommendationCard" note="Ranked recommendation with an alternatives drawer — pick an option to promote it, then accept.">
-            <GalleryCard label="Default" wide><RecommendationCard /></GalleryCard>
-          </Section>
-          <Section id="tabs" title="Tabs" note="APG tablist — arrow keys with automatic activation, Home/End, and an underline that slides with the house easing. The list scrolls on narrow viewports.">
-            <GalleryCard label="Default" wide><Tabs /></GalleryCard>
-          </Section>
-          <Section id="pagination" title="Pagination" note="Numbered pages with sibling windows and gap ellipses — first and last stay reachable, active page carries aria-current, edges disable prev / next.">
-            <GalleryCard label="Twelve pages" wide><Pagination defaultPage={5} /></GalleryCard>
-            <GalleryCard label="Few pages" wide><Pagination pageCount={4} /></GalleryCard>
-          </Section>
-          <Section id="breadcrumbs" title="Breadcrumbs" note="Path trail — long trails collapse their middle into a DropdownMenu, the current page carries aria-current, labels truncate instead of breaking the row. Navigating fires a toast here.">
-            <GalleryCard label="Collapsed · short" wide><BreadcrumbsDemo /></GalleryCard>
-          </Section>
-          <Section id="menubar" title="Menubar" note="A bar of action menus, each a DropdownMenu — dividers, disabled and destructive items included. Selections fire toasts here.">
-            <GalleryCard label="Default" wide><MenubarDemo /></GalleryCard>
-          </Section>
-          <Section id="sidebarnav" title="SidebarNav" note="Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.">
-            <div className="flex"><SidebarNav /></div>
-          </Section>
-          <Section id="searchlist" title="SearchList" note="Command search with live filtering — type to filter, gibberish for the empty state.">
-            <GalleryCard label="Default" wide><SearchList /></GalleryCard>
-          </Section>
+          <DocsPage key={page.id} page={page} index={index} pg={pg} state={pgState} set={pgSet} />
         </div>
       </main>
+
+      {/* right rail — below xl the same panels render inside the page instead */}
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-4 overflow-y-auto px-4 py-6 xl:flex">
+        <RailPanels page={page} pg={pg} knobs={knobs} pgState={pgState} pgSet={pgSet} pgReset={pgReset} />
+      </aside>
     </div>
   );
 }
+
 ReactDOM.createRoot(document.getElementById("root")).render(<ToastProvider><App /></ToastProvider>);
 </script>
 </body>

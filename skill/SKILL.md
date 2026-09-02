@@ -47,6 +47,7 @@ git clone https://github.com/eyosiyasketema1/formic-design-system.git
 - **No drop shadows.** Elevation is hairline borders; the `--shadow-*` tokens are 1px rings or `none`.
 - **Control metrics:** heights 24/32/36/40 (xs/sm/md/lg) shared by buttons and fields; padding is about height/3; labels use `leading-none` plus `.optical-text`; corners use `.corner-smooth`. Flat fills, no inner sheens.
 - **Accent carries the primary action.** One accent CTA per view, one destructive action per view.
+- **Global scales:** `data-radius` (sharp / rounded / full) and `data-size` (comfortable / spacious) are token overrides like palettes. Components never read them.
 - **Light by default.** Dark is opt in via `<html data-theme="dark">`; there is no OS auto-detect. Palettes are `data-palette` overrides. Components never branch on theme, they only read tokens.
 - **Contrast:** WCAG AA everywhere (text >= 4.5:1, non-text >= 3:1) across both modes and all 5 palettes.
 - **Icons:** Tabler only, through the shared `Icon` wrapper: `<Icon name="check" size={14} strokeWidth={2} />`. To add an icon, map a Tabler component into `ICONS` in `primitives.tsx`. Never inline SVG icon paths, never add a second icon package.

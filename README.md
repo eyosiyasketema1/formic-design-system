@@ -82,7 +82,7 @@ Light is the default everywhere. Dark is opt in:
 <html data-theme="dark">
 ```
 
-Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (default is paper). For a runtime brand color, call `setAccent("#7c3aed")` from `components/theme.ts`, which derives AA-passing light and dark variants; `setAccent(null)` reverts.
+Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (default is paper). Two more global scales work the same way: `data-radius="sharp | rounded | full"` and `data-size="comfortable | spacious"`. For a runtime brand color, call `setAccent("#7c3aed")` from `components/theme.ts`, which derives AA-passing light and dark variants; `setAccent(null)` reverts.
 
 ---
 
@@ -104,7 +104,7 @@ Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (d
 
 **Primitives** (`components/primitives.tsx`): Icon, Spinner, StreamText, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, Badge, IconButton, SendButton, Switch, Disclosure, GlideMenu, Card, Popover, AvatarStack
 
-Open the [gallery](https://formicai.dev/preview.html) to see them all running, and switch theme, palette, and accent live.
+Open the [gallery](https://formicai.dev/preview.html): one page per component with a live playground, and global controls for theme, palette, accent, radius and size. Deep-link any component as `preview.html#/button`.
 
 ---
 
