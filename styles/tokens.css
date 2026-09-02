@@ -145,6 +145,38 @@
   --shadow-field: none;
 }
 
+/* ── Global radius scale ───────────────────────────────── */
+/* One knob for the whole system's corner language. Explicit token
+   overrides per level rather than a calc() multiplier, so every value
+   stays a real number you can read — the same mechanism palettes use. */
+:root[data-radius="sharp"] {
+  --radius-sm: 0px; --radius-chip: 0px; --radius-control: 0px;
+  --radius-md: 0px; --radius-card: 0px; --radius-capsule: 0px;
+}
+:root[data-radius="rounded"] {
+  --radius-sm: 8px; --radius-chip: 10px; --radius-control: 12px;
+  --radius-md: 14px; --radius-card: 18px; --radius-capsule: 26px;
+}
+:root[data-radius="full"] {
+  --radius-sm: 10px; --radius-chip: 999px; --radius-control: 999px;
+  --radius-md: 14px; --radius-card: 20px; --radius-capsule: 999px;
+}
+
+/* ── Global size (density) scale ───────────────────────── */
+/* Tailwind v4 derives every spacing and sizing utility from --spacing
+   (0.25rem at root), so overriding that one value rescales all control
+   heights, padding and gaps together — which is why rule 11 still holds
+   at any density: a md button and a md input scale by the same factor.
+
+   Type is deliberately NOT scaled: the ramp is fixed px by rule 2, so
+   density changes without text becoming unreadable.
+
+   The scale only goes UP on purpose. The xs control is exactly 24px,
+   which is rule 15's touch-target floor, so any "compact" level would
+   put the whole system in violation of its own rule. */
+:root[data-size="comfortable"] { --spacing: 0.28rem; }
+:root[data-size="spacious"] { --spacing: 0.3125rem; }
+
 /* ── Base ──────────────────────────────────────────────── */
 body { font-family: var(--font-sans); background: var(--canvas); color: var(--ink); }
 

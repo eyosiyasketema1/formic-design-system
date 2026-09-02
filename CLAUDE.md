@@ -23,6 +23,8 @@ Rules for any AI agent (or human) working in this repo. These exist because past
 
 16. **Chart colour is categorical, not semantic.** Data series use `--chart-1..5` (`chart-1` is the accent, so the primary series follows the brand and the accent picker) plus `--chart-track` for rests and gridlines. Never colour a series with `--green`/`--red` — those mean success and danger, and a second series in green implies something it doesn't. Hue is the only thing separating the ramp, which fails for colour-blind readers, so any multi-series chart must also carry a legend and every value must be reachable as text (label, tooltip or `aria-label`). No chart library: bars are HTML (a scaled SVG scales its text and breaks the type ramp), lines are SVG with `vector-effect="non-scaling-stroke"`.
 
+17. **Two global scales, both token overrides.** `data-radius` (`sharp` / default / `rounded` / `full`) rewrites the `--radius-*` tokens; `data-size` (default / `comfortable` / `spacious`) overrides Tailwind's `--spacing`, which rescales every control height, padding and gap together — so rule 11 still holds at any density. The size scale deliberately never goes below default: the `xs` control is exactly 24px, which is rule 15's touch floor. Type is never scaled by either (rule 2). Components must not read these attributes; they only read tokens, and both scales come for free.
+
 ## Extraction rule
 
 After every piece of work, look for extractable pieces and extract them:
