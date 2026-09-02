@@ -385,8 +385,10 @@ export type SwitchSize = "sm" | "md";
 /* sm is the dense-popover size (sanctioned sub-24px exception —
  * RecordsTable precedent); md, the default, meets the 24px floor */
 const SWITCH_SIZES: Record<SwitchSize, { track: string; thumb: string; travel: number }> = {
-  sm: { track: "h-4.5 w-7.5", thumb: "size-3.5", travel: 12 },
-  md: { track: "h-6 w-10", thumb: "size-5", travel: 16 },
+  /* travel is in spacing units, not px: the track is w-7.5 / w-10 and scales
+     with --spacing under data-size, so a px travel would strand the thumb */
+  sm: { track: "h-4.5 w-7.5", thumb: "size-3.5", travel: 3 },
+  md: { track: "h-6 w-10", thumb: "size-5", travel: 4 },
 };
 export function Switch({
   on,
@@ -425,7 +427,7 @@ export function Switch({
       <span
         className={`absolute top-0.5 left-0.5 rounded-full bg-canvas shadow-btn transition-transform duration-150 ${spec.thumb}`}
         style={{
-          transform: on ? `translateX(${spec.travel}px)` : "translateX(0)",
+          transform: on ? `translateX(calc(var(--spacing) * ${spec.travel}))` : "translateX(0)",
           transitionTimingFunction: "var(--ease-out-quint)",
         }}
       />
