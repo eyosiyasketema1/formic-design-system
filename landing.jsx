@@ -2169,13 +2169,19 @@ function ChatComposer({ tabs = CC_TABS, placeholder = "Prompt or tag a flavor wi
 }
 
 /* ══ Landing page app — accent picker + live hero mounts ══ */
+/* Every preset shares Lime green's properties — saturation 75%, lightness
+   52% — with hues spread >= 40° apart, so the row reads as one family. The
+   accent engine fits each seed to AA per mode, so vivid seeds are correct
+   here: light mode darkens them, dark mode keeps them. Lime is the default
+   (hex "" = the token), and the swatch shows the dark value because the
+   landing page is dark-first. */
 const ACCENT_PRESETS = [
-  { hex: "", swatch: "#3b5bdb", label: "Formic blue (default)" },
-  { hex: "#0e7490", swatch: "#0e7490", label: "Ocean" },
-  { hex: "#15803d", swatch: "#15803d", label: "Forest" },
-  { hex: "#7c3aed", swatch: "#7c3aed", label: "Violet" },
-  { hex: "#b91c1c", swatch: "#b91c1c", label: "Crimson" },
-  { hex: "#a34a08", swatch: "#a34a08", label: "Amber" },
+  { hex: "", swatch: "#a5e12a", label: "Lime green (default)" },
+  { hex: "#e0a329", swatch: "#e0a329", label: "Amber" },
+  { hex: "#29e0c2", swatch: "#29e0c2", label: "Teal" },
+  { hex: "#2985e0", swatch: "#2985e0", label: "Azure" },
+  { hex: "#9429e0", swatch: "#9429e0", label: "Violet" },
+  { hex: "#e02985", swatch: "#e02985", label: "Magenta" },
   { hex: "#ffffff", swatch: "#ffffff", label: "Mono" },
 ];
 

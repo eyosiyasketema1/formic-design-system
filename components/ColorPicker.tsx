@@ -48,7 +48,9 @@ export function hsvToHex({ h, s, v }: Hsv): string {
 
 const isHex = (s: string) => /^#[0-9a-f]{6}$/i.test(s);
 
-const DEFAULT_SWATCHES = ["#1a1a1a", "#ffffff", "#e5484d", "#f5f5f5", "#e5e5e5", "#cfcfcf", "#3b5bdb", "#a5e12a"];
+/* The accent family: Lime green's saturation and lightness at spread hues.
+   Same set as the landing page's "Pick an accent" row. */
+const DEFAULT_SWATCHES = ["#a5e12a", "#e0a329", "#29e0c2", "#2985e0", "#9429e0", "#e02985", "#1a1a1a", "#ffffff"];
 
 export default function ColorPicker({
   value = "#3b5bdb",
