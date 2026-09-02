@@ -9,7 +9,7 @@
      React, which is far too late — dark users would get a white flash. */
   try {
     var _t = localStorage.getItem("ds-theme");
-    document.documentElement.dataset.theme = _t === "dark" ? "dark" : "light";
+    document.documentElement.dataset.theme = _t === "light" ? "light" : "dark";
     /* radius and size are applied here too, so a stored choice doesn't
        render one frame at default before React takes over */
     for (const [k, key] of [["radius", "ds-radius"], ["size", "ds-size"]]) {
@@ -274,6 +274,10 @@ a:hover .animated-underline, .animated-underline:hover { background-size: 100% 1
   --canvas:#101516; --surface:#191f21; --field:#1f2628;
   --accent:#45a5c4;
 }
+/* Elements focused by script for screen-reader position (page headings,
+   the active step) carry tabindex="-1", so Tab can never reach them — a
+   ring there is never a keyboard affordance, only noise on click. */
+[tabindex="-1"]:focus-visible { outline: none; }
 input:focus-visible, textarea:focus-visible { outline: none; }
 :root { color-scheme: light dark; }
 :root[data-theme="light"] { color-scheme: light; }
@@ -8004,7 +8008,7 @@ function useTheme() {
   const [theme, setTheme] = useState(() => {
     const stored = localStorage.getItem("ds-theme");
     if (stored === "light" || stored === "dark") return stored;
-    return "light"; // light is the default — dark is opt-in only
+    return "dark"; // the showcase is dark-first, matching the landing page
   });
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -9622,7 +9626,7 @@ function App() {
         <div className="mb-5 px-2">
           <BackToSite className="-ml-2 mb-2" />
           <p className="text-title font-semibold tracking-tight text-ink">Formic AI Design System</p>
-          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · {PAGES.length} pages</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · {PAGES.filter((p) => p.group !== "Foundations").length} components</p>
         </div>
         <nav className="flex flex-col" aria-label="Components">
           {groups.map((g) => (
