@@ -81,16 +81,16 @@
     --scrim: rgba(0, 0, 0, 0.55); --ink-2: #b0aeaa; --ink-3: #8d8b86;
   --line: #2a2a29; --line-strong: #3f3e3c;
   --hover: #232322; --hover-2: #292928; --inset: #232322;
-  --accent: #7c96ff; --orange: #e08514; --green: #22c55e; --red: #f87171;
+  --accent: #a5e12a;      /* lime — the dark-mode brand accent (Turumba decision 2026-09) */ --orange: #e08514; --green: #22c55e; --red: #f87171;
   --canvas: #131312; --surface: #1c1c1b; --field: #232322; --sidebar: #181817;
   --green-tint: #16281c;
   --red-tint: #2e1a19;
 
-  /* Chart ramp, dark — same hues lifted to read on a dark surface. */
-  --chart-2: #5eead4;
-  --chart-3: #c4b5fd;
-  --chart-4: #fcd34d;
-  --chart-5: #f9a8d4;
+  /* Chart ramp, dark — the accent's saturation and lightness, hues spread. */
+  --chart-2: #29a3e0;   /* azure   — hue 200 */
+  --chart-3: #9d3be3;   /* violet  — hue 275, lifted to clear 3:1 */
+  --chart-4: #e0a329;   /* amber   — hue 40  */
+  --chart-5: #e02985;   /* magenta — hue 330 */
   --tooltip-bg: #2c2c2b; --tooltip-muted: #9c9a95;
   --shadow-btn: 0 0 0 1px rgba(255,255,255,0.09);
   --shadow-card: 0 0 0 1px var(--line);
@@ -190,6 +190,21 @@
 .primitive-slider::-moz-range-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--slider-fill, 0%), var(--inset) var(--slider-fill, 0%)); box-shadow: 0 0 0 1px var(--line); }
 .primitive-slider::-moz-range-thumb { width: 13px; height: 13px; border: none; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn); }
 input[type="range"].primitive-slider:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Colour-picker hue strip — the same thumb as .primitive-slider, on a
+   taller track whose background is the spectrum (set inline: it is the
+   control's data, not styling). Native range, so keyboard is free. */
+.color-picker-hue { appearance: none; width: 100%; height: 12px; border-radius: 999px; box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
+.color-picker-hue::-webkit-slider-runnable-track { height: 12px; border-radius: 999px; background: transparent; }
+.color-picker-hue::-webkit-slider-thumb {
+  appearance: none; width: 16px; height: 16px; margin-top: -2px; border-radius: 50%;
+  background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn);
+}
+.color-picker-hue::-moz-range-track { height: 12px; border-radius: 999px; background: transparent; }
+.color-picker-hue::-moz-range-thumb {
+  width: 13px; height: 13px; border: none; border-radius: 50%;
+  background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn);
+}
+input[type="range"].color-picker-hue:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .shadow-hairline { box-shadow: 0 0 0 1px var(--line); }
 @keyframes progress-slide { from { transform: translateX(-110%); } to { transform: translateX(440%); } }
 @keyframes drawer-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
@@ -8158,6 +8173,194 @@ function BackToSite({ className = "" }) {
 }
 
 
+/* ═══════════ ColorPicker (mirrors components/ColorPicker.tsx) ═══════════ */
+/* Figma-style picker, no dependencies. The square and hue gradients are the
+   control's data, so they are the one place literal colours are legitimate. */
+const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+function hexToHsv(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return { h: 0, s: 0, v: 0 };
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  let h = 0;
+  if (d) {
+    if (max === r) h = (g - b) / d % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h = (h * 60 + 360) % 360;
+  }
+  return { h, s: max ? d / max : 0, v: max };
+}
+function hsvToHex({ h, s, v }) {
+  const c = v * s, x = c * (1 - Math.abs(h / 60 % 2 - 1)), m = v - c;
+  const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+  const to = (n) => Math.round((n + m) * 255).toString(16).padStart(2, "0");
+  return `#${to(r)}${to(g)}${to(b)}`;
+}
+const isHex = (s) => /^#[0-9a-f]{6}$/i.test(s);
+const DEFAULT_SWATCHES = ["#1a1a1a", "#ffffff", "#e5484d", "#f5f5f5", "#e5e5e5", "#cfcfcf", "#3b5bdb", "#a5e12a"];
+function ColorPicker({
+  value = "#3b5bdb",
+  onChange,
+  swatches = DEFAULT_SWATCHES,
+  className = ""
+}) {
+  const id = useId();
+  const [hsv, setHsv] = useState(() => hexToHsv(value));
+  const [text, setText] = useState(value.toUpperCase());
+  const squareRef = useRef(null);
+  const lastEmitted = useRef(value.toLowerCase());
+  useEffect(() => {
+    if (value.toLowerCase() !== lastEmitted.current) {
+      setHsv(hexToHsv(value));
+      setText(value.toUpperCase());
+      lastEmitted.current = value.toLowerCase();
+    }
+  }, [value]);
+  const commit = (next) => {
+    setHsv(next);
+    const hex = hsvToHex(next);
+    setText(hex.toUpperCase());
+    lastEmitted.current = hex;
+    onChange?.(hex);
+  };
+  const fromPointer = (event) => {
+    const box = squareRef.current?.getBoundingClientRect();
+    if (!box) return;
+    const s = clamp((event.clientX - box.left) / box.width, 0, 1);
+    const v = clamp(1 - (event.clientY - box.top) / box.height, 0, 1);
+    commit({ ...hsv, s, v });
+  };
+  const onSquareDown = (event) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    squareRef.current?.focus();
+    fromPointer(event);
+  };
+  const onSquareMove = (event) => {
+    if (event.buttons & 1) fromPointer(event);
+  };
+  const onSquareKey = (event) => {
+    const step = event.shiftKey ? 0.1 : 0.02;
+    const map = {
+      ArrowLeft: { s: clamp(hsv.s - step, 0, 1) },
+      ArrowRight: { s: clamp(hsv.s + step, 0, 1) },
+      ArrowUp: { v: clamp(hsv.v + step, 0, 1) },
+      ArrowDown: { v: clamp(hsv.v - step, 0, 1) }
+    };
+    const delta = map[event.key];
+    if (!delta) return;
+    event.preventDefault();
+    commit({ ...hsv, ...delta });
+  };
+  const onTextChange = (raw) => {
+    const next = raw.startsWith("#") ? raw : `#${raw}`;
+    setText(next.toUpperCase());
+    if (isHex(next)) {
+      const parsed = hexToHsv(next);
+      setHsv(parsed);
+      lastEmitted.current = next.toLowerCase();
+      onChange?.(next.toLowerCase());
+    }
+  };
+  const eyedropper = typeof window !== "undefined" && "EyeDropper" in window;
+  const pick = async () => {
+    try {
+      const result = await new window.EyeDropper().open();
+      onTextChange(result.sRGBHex);
+    } catch {
+    }
+  };
+  const hueHex = hsvToHex({ h: hsv.h, s: 1, v: 1 });
+  const current = hsvToHex(hsv);
+  return <div className={`flex w-full max-w-70 flex-col gap-3 ${className}`}>
+      {
+    /* saturation / brightness */
+  }
+      <div
+    ref={squareRef}
+    role="slider"
+    tabIndex={0}
+    aria-label="Saturation and brightness"
+    aria-valuetext={`saturation ${Math.round(hsv.s * 100)} percent, brightness ${Math.round(hsv.v * 100)} percent`}
+    aria-valuenow={Math.round(hsv.v * 100)}
+    aria-valuemin={0}
+    aria-valuemax={100}
+    onPointerDown={onSquareDown}
+    onPointerMove={onSquareMove}
+    onKeyDown={onSquareKey}
+    className="corner-smooth relative aspect-[4/3] w-full cursor-crosshair touch-none overflow-hidden rounded-control"
+    style={{
+      background: `linear-gradient(to top, #000000, transparent), linear-gradient(to right, #ffffff, ${hueHex})`
+    }}
+  >
+        <span
+    aria-hidden
+    className="absolute size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface"
+    style={{ left: `${hsv.s * 100}%`, top: `${(1 - hsv.v) * 100}%`, background: current, boxShadow: "var(--shadow-overlay)" }}
+  />
+      </div>
+
+      {
+    /* hue */
+  }
+      <input
+    type="range"
+    min={0}
+    max={360}
+    step={1}
+    value={Math.round(hsv.h)}
+    aria-label="Hue"
+    onChange={(e) => commit({ ...hsv, h: Number(e.target.value) })}
+    className="color-picker-hue w-full"
+    style={{ background: "linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" }}
+  />
+
+      {
+    /* hex + eyedropper */
+  }
+      <div className="flex items-center gap-2">
+        <span className="corner-smooth flex h-8 min-w-0 flex-1 items-center gap-1.5 rounded-control bg-field px-2.5 transition-colors duration-150 focus-within:bg-hover-2">
+          <span aria-hidden className="size-3.5 shrink-0 rounded-full" style={{ background: current, boxShadow: "var(--shadow-overlay)" }} />
+          <span className="font-mono text-caption text-ink-3">#</span>
+          <input
+    id={`${id}-hex`}
+    aria-label="Hex colour"
+    value={text.replace(/^#/, "")}
+    onChange={(e) => onTextChange(e.target.value)}
+    onBlur={() => {
+      if (!isHex(text)) setText(current.toUpperCase());
+    }}
+    spellCheck={false}
+    maxLength={6}
+    className="min-w-0 flex-1 bg-transparent font-mono text-caption text-ink uppercase outline-none"
+  />
+        </span>
+        {eyedropper && <IconButton label="Pick a colour from the screen" onClick={pick} className="size-8 rounded-control bg-field text-ink-2 hover:bg-hover-2 hover:text-ink">
+            <Icon name="edit" size={14} strokeWidth={2} />
+          </IconButton>}
+      </div>
+
+      {
+    /* swatches */
+  }
+      {swatches.length > 0 && <div className="flex flex-wrap gap-1.5" role="group" aria-label="Swatches">
+          {swatches.map((hex) => {
+    const on = hex.toLowerCase() === current.toLowerCase();
+    return <button
+      key={hex}
+      type="button"
+      aria-label={hex}
+      aria-pressed={on}
+      onClick={() => onTextChange(hex)}
+      className="corner-smooth size-6 rounded-control transition-transform duration-150 hover:scale-110"
+      style={{ background: hex, boxShadow: on ? "0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink)" : "var(--shadow-overlay)" }}
+    />;
+  })}
+        </div>}
+    </div>;
+}
+
 /* ═══════════ Pages — one per component, extracted from the old scroll ═══════════ */
 
 function Page_colors() {
@@ -8868,6 +9071,23 @@ function Page_avatar() {
   );
 }
 
+function Page_colorpicker() {
+  const [hex, setHex] = useState("#a5e12a");
+  return (
+    <>
+      <GalleryCard label="Controlled" wide>
+        <div className="flex flex-col gap-3">
+          <ColorPicker value={hex} onChange={setHex} />
+          <p className="font-mono text-caption text-ink-2">value: {hex}</p>
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Custom swatches" wide>
+        <ColorPicker value="#3b5bdb" swatches={["#3b5bdb", "#a5e12a", "#0f766e", "#6d28d9", "#be185d"]} />
+      </GalleryCard>
+    </>
+  );
+}
+
 const PAGES = [
   { id: "colors", group: "Foundations", title: "Colors", note: "The token palette. Every value lives in styles/tokens.css and re-resolves live \u2014 switch theme or palette to watch the whole page follow.", file: "styles/tokens.css", Component: Page_colors },
   { id: "typography", group: "Foundations", title: "Typography", note: "Urbanist (variable, 300\u2013800). One standard ramp \u2014 14px base, integer steps, 10 to 48 \u2014 plus the true weight ramp. text-nano (8px) stays reserved for mini-badge letters.", file: "styles/tokens.css", Component: Page_typography },
@@ -8881,6 +9101,7 @@ const PAGES = [
   { id: "input", group: "Forms", title: "Field & Input", note: "The form trio \u2014 Field owns label / hint / error and wires aria onto its control; Input and Textarea share the system's quiet field focus (border shift, no ring).", file: "components/Input.tsx", Component: Page_input },
   { id: "select", group: "Forms", title: "Select", note: "Combobox on the quiet field style \u2014 the listbox portals over the page, matches the trigger's width, and is fully keyboard-driven (arrows, Home/End, Enter, Escape).", file: "components/Select.tsx", Component: Page_select },
   { id: "switch", group: "Forms", title: "Switch", note: "The system toggle, promoted from RecordsTable's private switch \u2014 role=switch, two sizes, Field-compatible. RecordsTable now consumes the same primitive.", file: "components/primitives.tsx", Component: Page_switch },
+  { id: "colorpicker", group: "Forms", title: "ColorPicker", note: "A Figma-style picker with no dependencies: saturation and brightness square, hue strip, hex field, eyedropper where the browser has one, and swatches. Hex only, no alpha — it picks brand colours, and a translucent accent would void every contrast guarantee.", file: "components/ColorPicker.tsx", Component: Page_colorpicker },
   { id: "filedropzone", group: "Forms", title: "FileDropzone", note: "Drag files onto the zone or click to browse \u2014 accept / size validation announces rejections, accepted files become chips with remove. Try dropping anything.", file: "components/FileDropzone.tsx", Component: Page_filedropzone },
   { id: "slider-otp", group: "Forms", title: "Slider & OTP", note: "Two more Field-ready controls \u2014 Slider is a native range drawn with tokens (platform keyboard and touch for free); OTPInput distributes typing, paste, and one-time-code autofill across quiet field cells.", file: "components/Slider.tsx components/OTPInput.tsx", Component: Page_slider_otp },
   { id: "datepicker", group: "Forms", title: "DatePicker", note: "A dependency-free month grid on the APG date pattern \u2014 arrows move by day, PageUp/Down by month, Home/End across the week. mode=range picks a span with a live preview band; DatePicker and DateRangePicker drop it behind the quiet field trigger.", file: "components/DatePicker.tsx components/DateRangePicker.tsx components/Calendar.tsx", Component: Page_datepicker },
@@ -9193,6 +9414,13 @@ const PLAYGROUNDS = {
       return <BarChart series={S} variant={p.variant} highlight={p.highlight ? 1 : undefined} showValues={p.showValues} />;
     },
   },
+  colorpicker: {
+    schema: [
+      { key: "value", label: "Value", type: "text", value: "#A5E12A" },
+      { key: "swatches", label: "Swatches", type: "toggle", value: true },
+    ],
+    render: (p, set) => <ColorPicker value={/^#[0-9a-f]{6}$/i.test(p.value) ? p.value : "#a5e12a"} onChange={(hex) => set("value", hex.toUpperCase())} swatches={p.swatches ? undefined : []} />,
+  },
   approvalflow: {
     schema: [
       { key: "questions", label: "Questions", type: "select", value: 3, options: [1, 2, 3] },
@@ -9209,6 +9437,38 @@ const RADII = ["default", "sharp", "rounded", "full"];
 const SIZES = ["default", "comfortable", "spacious"];
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
+/* The rail's accent swatch opens the real ColorPicker in an anchored layer. */
+function AccentControl({ accent, setAccent }) {
+  const layerId = useId();
+  const { open, position, anchorRef, openAt, close } = useAnchoredLayer(layerId);
+  const current = accent || (typeof window !== "undefined" ? getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() : "#3b5bdb");
+  return (
+    <div className="flex items-center gap-1.5">
+      {accent && (
+        <IconButton label="Reset custom accent" onClick={() => setAccent("")} className="text-ink-3 hover:bg-hover hover:text-ink">
+          <Icon name="close" size={12} strokeWidth={2.2} />
+        </IconButton>
+      )}
+      <button
+        ref={anchorRef}
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => (open ? close() : openAt({ estimatedHeight: 320, width: 296, align: "end" }))}
+        className="corner-smooth flex h-7 items-center gap-2 rounded-control px-2 text-caption font-medium text-ink transition-colors duration-150 hover:bg-hover"
+      >
+        <span aria-hidden className="size-3.5 rounded-full" style={{ background: current, boxShadow: "var(--shadow-overlay)" }} />
+        {accent ? accent.toUpperCase() : "Palette"}
+      </button>
+      {open && position && (
+        <Popover id={layerId} role="dialog" x={position.x} top={position.top} bottom={position.bottom} width={296} onClose={close} className="p-3">
+          <ColorPicker value={/^#[0-9a-f]{6}$/i.test(current) ? current : "#3b5bdb"} onChange={setAccent} />
+        </Popover>
+      )}
+    </div>
+  );
+}
+
 function MakeThemYours({ theme, setTheme, palette, setPalette, accent, setAccent, radius, setRadius, size, setSize }) {
   return (
     <div className="flex flex-col gap-1">
@@ -9219,19 +9479,7 @@ function MakeThemYours({ theme, setTheme, palette, setPalette, accent, setAccent
         <RailSelect ariaLabel="Palette" value={cap(palette)} options={PALETTES.map((p) => p.label)} onChange={(v) => setPalette(PALETTES.find((p) => p.label === v).id)} />
       </ControlRow>
       <ControlRow label="Accent">
-        <div className="flex items-center gap-1.5">
-          {accent && (
-            <button type="button" aria-label="Reset custom accent" onClick={() => setAccent("")}
-              className="flex size-6 items-center justify-center rounded-sm text-ink-3 transition-colors duration-150 hover:bg-hover hover:text-ink">
-              <Icon name="close" size={12} strokeWidth={2.2} />
-            </button>
-          )}
-          <label title="Custom accent" className="relative flex h-7 cursor-pointer items-center gap-2 rounded-control px-2 text-caption font-medium text-ink hover:bg-hover">
-            <span aria-hidden className="size-3.5 rounded-full" style={{ background: accent || "var(--accent)", boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.15)" }} />
-            {accent ? accent.toUpperCase() : "Palette"}
-            <input type="color" aria-label="Custom accent color" value={accent || "#3b5bdb"} onChange={(e) => setAccent(e.target.value)} className="absolute inset-0 size-full cursor-pointer opacity-0" />
-          </label>
-        </div>
+        <AccentControl accent={accent} setAccent={setAccent} />
       </ControlRow>
       <ControlRow label="Radius">
         <RailSelect ariaLabel="Radius" value={cap(radius)} options={RADII.map(cap)} onChange={(v) => setRadius(v.toLowerCase())} />
