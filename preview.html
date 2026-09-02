@@ -684,7 +684,7 @@ tfoot .records-sticky-cell { z-index: 5; }
      This animation is a pure-CSS deadline: if the script below throws or
      never runs, the content still appears at 9s instead of leaving a
      permanently blank page, which would be worse than the bug it fixes. */
-  #root { opacity: 0; animation: boot-failsafe 0s linear 9s forwards; }
+  #root { opacity: 0; animation: boot-failsafe 0s linear 13s forwards; }
   @keyframes boot-failsafe { to { opacity: 1; } }
   html.tw-ready #root { opacity: 1; animation: none; transition: opacity 160ms ease-out; }
 
@@ -707,7 +707,7 @@ tfoot .records-sticky-cell { z-index: 5; }
     #boot i { animation: none; }
     html.tw-ready #root { transition: none; }
     /* the failsafe is a deadline, not decoration — it must survive here */
-    #root { animation: boot-failsafe 0s linear 9s forwards; }
+    #root { animation: boot-failsafe 0s linear 13s forwards; }
   }
 </style>
 </head>
@@ -730,9 +730,13 @@ tfoot .records-sticky-cell { z-index: 5; }
        are declared inside the tailwindcss block itself, so --ink reads
        empty until it compiles, regardless of which utilities Tailwind
        decided to generate. Same probe as index.html. */
+    /* Two conditions, not one: the tokens must resolve (Tailwind compiled)
+       AND #root must have children (React mounted). Revealing on the first
+       alone showed a blank page while Babel was still compiling the app. */
     (function poll() {
-      var v = getComputedStyle(html).getPropertyValue("--ink").trim();
-      if (v || Date.now() - start > 8000) return reveal();
+      var styled = getComputedStyle(html).getPropertyValue("--ink").trim();
+      var mounted = (document.getElementById("root") || {}).childElementCount > 0;
+      if ((styled && mounted) || Date.now() - start > 12000) return reveal();
       requestAnimationFrame(poll);
     })();
   })();
@@ -908,8 +912,10 @@ function Skeleton({ className = "h-4 w-full" }) {
   );
 }
 const SWITCH_SIZES = {
-  sm: { track: "h-4.5 w-7.5", thumb: "size-3.5", travel: 12 },
-  md: { track: "h-6 w-10", thumb: "size-5", travel: 16 },
+  /* travel is in spacing units, not px: the track is w-7.5 / w-10 and scales
+     with --spacing under data-size, so a px travel would strand the thumb */
+  sm: { track: "h-4.5 w-7.5", thumb: "size-3.5", travel: 3 },
+  md: { track: "h-6 w-10", thumb: "size-5", travel: 4 },
 };
 function Switch({ on, onToggle, label, size = "md", disabled = false, className = "", id, "aria-describedby": describedBy }) {
   const spec = SWITCH_SIZES[size];
@@ -918,7 +924,7 @@ function Switch({ on, onToggle, label, size = "md", disabled = false, className 
       className={`relative shrink-0 rounded-full transition-colors duration-150 disabled:opacity-60 ${spec.track} ${className}`}
       style={{ background: on ? "var(--accent)" : "var(--line-strong)" }}>
       <span className={`absolute top-0.5 left-0.5 rounded-full bg-canvas shadow-btn transition-transform duration-150 ${spec.thumb}`}
-        style={{ transform: on ? `translateX(${spec.travel}px)` : "translateX(0)", transitionTimingFunction: "var(--ease-out-quint)" }} />
+        style={{ transform: on ? `translateX(calc(var(--spacing) * ${spec.travel}))` : "translateX(0)", transitionTimingFunction: "var(--ease-out-quint)" }} />
     </button>
   );
 }
@@ -9097,7 +9103,7 @@ const PLAYGROUNDS = {
     schema: [
       { key: "label", label: "Label", type: "text", value: "Flavor name" },
       { key: "placeholder", label: "Placeholder", type: "text", value: "e.g. Pistachio" },
-      { key: "size", label: "Size", type: "select", value: "md", options: ["sm", "md", "lg"] },
+      { key: "size", label: "Size", type: "select", value: "md", options: ["sm", "md"] },
       { key: "hint", label: "Hint", type: "text", value: "Shown on the menu board." },
       { heading: "State" },
       { key: "invalid", label: "Invalid", type: "toggle", value: false },
@@ -9114,7 +9120,7 @@ const PLAYGROUNDS = {
   },
   select: {
     schema: [
-      { key: "size", label: "Size", type: "select", value: "md", options: ["sm", "md", "lg"] },
+      { key: "size", label: "Size", type: "select", value: "md", options: ["sm", "md"] },
       { key: "placeholder", label: "Placeholder", type: "text", value: "Pick a base…" },
       { key: "invalid", label: "Invalid", type: "toggle", value: false },
       { key: "disabled", label: "Disabled", type: "toggle", value: false },
@@ -9251,19 +9257,21 @@ function RailPanel({ title, action, children }) {
 
 function Section({ id, title, note, children }) {
   return (
-    <section id={id} className="mb-8">
+    <section id={id} className="mb-2 w-full">
       <h2 className="text-title font-semibold text-ink">{title}</h2>
       {note && <p className="mt-0.5 max-w-xl text-caption text-ink-3">{note}</p>}
       <div className="mt-4 flex flex-wrap gap-6">{children}</div>
     </section>
   );
 }
+/* Not Card: Card is overflow-hidden, and demo surfaces need floating UI
+   (toolbars, popovers, tooltips) to escape the box rather than be clipped. */
 function GalleryCard({ label, wide, full, children }) {
   return (
-    <Card className={`p-5 ${full ? "w-full" : wide ? "w-full max-w-105" : ""}`}>
+    <div className={`rounded-card bg-surface p-5 shadow-card ${full ? "w-full" : wide ? "w-full max-w-105" : ""}`}>
       <p className="mb-3 font-mono text-micro tracking-wide text-ink-3 uppercase">{label}</p>
       {children}
-    </Card>
+    </div>
   );
 }
 
@@ -9313,7 +9321,11 @@ function DocsPage({ page, index, pg, state, set }) {
           </section>
         )}
 
-        <PageBody />
+        {/* the flex-wrap row the old <Section> used to provide: cards size to
+            their content and sit with a gap, instead of stacking full-width */}
+        <div className="flex flex-wrap gap-6">
+          <PageBody />
+        </div>
       </div>
     </div>
   );
