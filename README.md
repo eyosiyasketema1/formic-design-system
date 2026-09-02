@@ -92,7 +92,7 @@ Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (d
 
 **Feedback and agents:** ThinkingState, TaskRows, ToolChips, LoadingState, Progress, Skeleton, Alert, Toast
 
-**Forms:** Field, Input, Textarea, Select, Switch, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar
+**Forms:** Field, Input, Textarea, Select, Switch, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker
 
 **Overlays:** Modal, Drawer, DropdownMenu, Popover, Tooltip
 

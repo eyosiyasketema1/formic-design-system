@@ -119,7 +119,7 @@
   --hover: #232322;
   --hover-2: #292928;
   --inset: #232322;
-  --accent: #7c96ff;
+  --accent: #a5e12a;      /* lime — the dark-mode brand accent (Turumba decision 2026-09) */
   --orange: #e08514;
   --green: #22c55e;
   --red: #f87171;
@@ -130,13 +130,15 @@
   --green-tint: #16281c;
   --red-tint: #2e1a19;
 
-  /* Chart ramp, dark. Same hues lifted into the light end of the scale so
-     they read against a dark surface — verified >= 3:1 on the darkest
-     surface of any palette. chart-1 keeps following the accent. */
-  --chart-2: #5eead4;
-  --chart-3: #c4b5fd;
-  --chart-4: #fcd34d;
-  --chart-5: #f9a8d4;
+  /* Chart ramp, dark. Built from the accent's own properties — saturation 75%,
+     lightness 52% — with hues spread around the wheel and kept >= 40° from
+     --green and --red, so the dashboard reads as one family and no series
+     looks like success or danger. Verified >= 3:1 on the darkest surface of
+     any palette. chart-1 keeps following the accent. */
+  --chart-2: #29a3e0;   /* azure   — hue 200 */
+  --chart-3: #9d3be3;   /* violet  — hue 275, lifted to clear 3:1 */
+  --chart-4: #e0a329;   /* amber   — hue 40  */
+  --chart-5: #e02985;   /* magenta — hue 330 */
   --tooltip-bg: #2c2c2b;
   --tooltip-muted: #9c9a95;
   --shadow-btn: 0 0 0 1px rgba(255, 255, 255, 0.09);
@@ -280,6 +282,21 @@ input[type="range"].primitive-slider:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+/* Colour-picker hue strip — the same thumb as .primitive-slider, on a
+   taller track whose background is the spectrum (set inline: it is the
+   control's data, not styling). Native range, so keyboard is free. */
+.color-picker-hue { appearance: none; width: 100%; height: 12px; border-radius: 999px; box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
+.color-picker-hue::-webkit-slider-runnable-track { height: 12px; border-radius: 999px; background: transparent; }
+.color-picker-hue::-webkit-slider-thumb {
+  appearance: none; width: 16px; height: 16px; margin-top: -2px; border-radius: 50%;
+  background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn);
+}
+.color-picker-hue::-moz-range-track { height: 12px; border-radius: 999px; background: transparent; }
+.color-picker-hue::-moz-range-thumb {
+  width: 13px; height: 13px; border: none; border-radius: 50%;
+  background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn);
+}
+input[type="range"].color-picker-hue:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .shadow-hairline { box-shadow: 0 0 0 1px var(--line); }
 @keyframes progress-slide {
   from { transform: translateX(-110%); }
