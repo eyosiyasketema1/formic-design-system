@@ -14,26 +14,28 @@ A token-driven React + Tailwind v4 design system for AI product interfaces: chat
 
 ## Install
 
-Formic is vendored, not published to npm: you copy the files into your project and own them. Three ways to get them.
+Formic is vendored, not published to npm: you copy the files into your project and own them. The standard location is `src/formic/` (`styles/` + `components/`), which every instruction file and AI rule assumes.
 
-### 1. Clone the repo
+### 1. One command (recommended)
+
+From your project root. Copies the system into `src/formic/` and writes the instruction files AI coding tools read. Re-run to update.
 
 ```bash
-git clone https://github.com/eyosiyasketema1/formic-design-system.git
-cp -r formic-design-system/styles     your-project/src/styles
-cp -r formic-design-system/components your-project/src/components
+curl -fsSL https://formicai.dev/install.sh | bash
 ```
 
-### 2. Copy only what you need (no git history)
+### 2. By hand
 
 ```bash
-npx degit eyosiyasketema1/formic-design-system/styles     your-project/src/styles
-npx degit eyosiyasketema1/formic-design-system/components your-project/src/components
+git clone --depth 1 https://github.com/eyosiyasketema1/formic-design-system.git /tmp/formic
+mkdir -p your-project/src/formic
+cp -r /tmp/formic/styles /tmp/formic/components your-project/src/formic/
+cp /tmp/formic/AGENTS.md your-project/AGENTS.md
 ```
 
 ### 3. Download the ZIP
 
-Green **Code** button on this repo, then **Download ZIP**, and copy `styles/` and `components/` into your project.
+Green **Code** button on this repo, then **Download ZIP**, and copy `styles/` and `components/` into `your-project/src/formic/`.
 
 ### Peer dependencies
 
@@ -51,16 +53,16 @@ Import the stylesheets in this order in your global CSS:
 
 ```css
 @import "tailwindcss";
-@import "./styles/tokens.css";         /* source of truth: tokens, keyframes, primitives */
-@import "./styles/themes.css";         /* optional: the 5 palettes */
-@import "./styles/tailwind-theme.css"; /* generates text-ink, bg-hover, text-body, ... */
+@import "./formic/styles/tokens.css";         /* source of truth: tokens, keyframes, primitives */
+@import "./formic/styles/themes.css";         /* optional: the 5 palettes */
+@import "./formic/styles/tailwind-theme.css"; /* generates text-ink, bg-hover, text-body, ... */
 ```
 
 Then compose:
 
 ```tsx
-import ChatThread from "./components/ChatThread";
-import PromptBar from "./components/PromptBar";
+import ChatThread from "./formic/components/ChatThread";
+import PromptBar from "./formic/components/PromptBar";
 
 export default function Chat() {
   return (
@@ -110,21 +112,31 @@ Open the [gallery](https://formicai.dev/preview.html): one page per component wi
 
 ## Using with AI tools
 
-The repo ships a ready-made skill in [`skill/SKILL.md`](skill/SKILL.md), and agent instructions in [`AGENTS.md`](AGENTS.md).
+A rules file alone is not enough: if the components are not in the project, every agent (Claude Code, Cursor, Copilot, Codex) falls back to generic Tailwind no matter how good the prompt. So the install gives the agent the code and the rules together.
 
-**Claude desktop or claude.ai:** download [`skill/formic-design-system.skill`](skill/formic-design-system.skill), drop it into a chat, and click **Save skill**.
-
-**Claude Code:** put `SKILL.md` in your skills folder and it loads automatically.
+**1. Install into the project you are building** (from its root):
 
 ```bash
-mkdir -p ~/.claude/skills/formic-design-system
-curl -o ~/.claude/skills/formic-design-system/SKILL.md \
-  https://raw.githubusercontent.com/eyosiyasketema1/formic-design-system/main/skill/SKILL.md
+curl -fsSL https://formicai.dev/install.sh | bash
 ```
 
-**Cursor, Copilot, or any coding agent:** keep `AGENTS.md` at your project root, or paste this prompt:
+It copies `styles/` and `components/` into `src/formic/` (pass another folder as the first argument if you prefer) and writes `AGENTS.md`, `.cursor/rules/formic-design-system.mdc`, `.github/copilot-instructions.md`, `.claude/skills/formic-design-system/SKILL.md`, and a Formic section in `CLAUDE.md`. Re-run it to update; it never overwrites your own files. Read [`install.sh`](install.sh) first if you like to know what you are piping into bash.
 
-> Use the Formic AI Design System. Read `styles/tokens.css` for the tokens and follow the component patterns in `components/`. Tokens only: never hardcode colors, font sizes, radii, shadows, or easings. Type scale is a 14px base integer ramp (`text-body`, `text-caption`, `text-title`, ...). `font-medium` is the default weight, `font-semibold` the maximum. Elevation is hairline borders, never drop shadows. One easing: `var(--ease-out-quint)`.
+**2. Wire the CSS** (Tailwind v4, after `@import "tailwindcss"`) and `npm install @tabler/icons-react`:
+
+```css
+@import "./formic/styles/tokens.css";
+@import "./formic/styles/themes.css";          /* optional */
+@import "./formic/styles/tailwind-theme.css";
+```
+
+**3. Restart your tool and name the system in the first prompt:**
+
+> Use Formic (src/formic). Read AGENTS.md first and follow its procedure. Then build …
+
+**4. Check the result.** Formic output imports from `src/formic/components` and uses `text-ink`, `bg-surface`, `text-caption`, `rounded-card`. Generic output has hex colours, `text-sm`, `bg-gray-100`, `shadow-lg`, `font-bold`. If you get the second kind, paste `AGENTS.md` into the chat and ask for a redo.
+
+Per tool: **Claude Code** reads `CLAUDE.md` and the project skill (add the skill globally with `mkdir -p ~/.claude/skills/formic-design-system && curl -o ~/.claude/skills/formic-design-system/SKILL.md https://raw.githubusercontent.com/eyosiyasketema1/formic-design-system/main/skill/SKILL.md`). **Cursor** reads the `.mdc` rule and `AGENTS.md`; use Agent mode. **Copilot** reads `.github/copilot-instructions.md` and `AGENTS.md`. **Codex** and most CLI agents read `AGENTS.md`. **Claude desktop / claude.ai:** download [`skill/formic-design-system.skill`](skill/formic-design-system.skill), drop it into a chat, click **Save skill**.
 
 ---
 
@@ -155,6 +167,7 @@ index.html       the landing page
 CONTRIBUTING.md  how to contribute
 CLAUDE.md        the design rules and QA workflow
 AGENTS.md        instructions for AI tools consuming the system
+install.sh       one-command install into a consuming project (also at formicai.dev/install.sh)
 ```
 
 ## License

@@ -10,7 +10,7 @@
       ]
     },
     {
-      "source": "/(index.html|preview.html|landing.jsx)",
+      "source": "/(index.html|preview.html|landing.jsx|install.sh)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
