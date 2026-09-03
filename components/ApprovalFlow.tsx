@@ -5,6 +5,7 @@ import { Badge, Card, GlideMenu, Icon, IconButton, RadioCheck } from "./primitiv
 /* Types and demo data come from ApprovalCard — same shape, same questions.
  * Keeping a second copy is exactly what the extraction rule forbids. */
 import { DEFAULT_QUESTIONS, type Answer, type Question } from "./ApprovalCard";
+import { useReducedMotion } from "./hooks";
 /* ─────────────────────────────────────────────────────────
  * APPROVAL FLOW (human-in-the-loop, multi-question)
  * The stepper sibling of ApprovalCard. One question at a time,
@@ -123,6 +124,7 @@ export default function ApprovalFlow({
   resettable?: boolean;
 }) {
   const t = { ...DEFAULT_LABELS, ...labels };
+  const reduced = useReducedMotion();
   const [qi, setQi] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number[]>>({});
   const [custom, setCustom] = useState<Record<number, string>>({});
@@ -149,10 +151,9 @@ export default function ApprovalFlow({
   const sync = (withAnim: boolean) => {
     const item = questionRefs.current[qi];
     if (!item) return;
-    const reduce = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     setViewportH(item.offsetHeight);
     setTrackY(item.offsetTop);
-    setAnimate(withAnim && !reduce);
+    setAnimate(withAnim && !reduced);
   };
   useLayoutEffect(() => {
     const withAnim = measured.current;

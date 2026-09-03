@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Icon, SendButton, type IconName } from "./primitives";
+import { useReducedMotion } from "./hooks";
 /* ─────────────────────────────────────────────────────────
  * PROMPT BAR
  * A composer with real controls: attach, @ data sources,
@@ -136,6 +137,7 @@ export default function PromptBar({
   onSend?: (text: string) => void;
 }) {
   const pill = variant === "Pill";
+  const reduced = useReducedMotion();
   const [draft, setDraft] = useState("");
   const [dismissed, setDismissed] = useState(false);
   const [plusOpen, setPlusOpen] = useState(false);
@@ -212,7 +214,7 @@ export default function PromptBar({
   /* Picking the flagship fires a one-shot rainbow sweep across the
    * interior — pure CSS (.rainbow-sweep), remounted per trigger. */
   const celebrate = () => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (reduced) return;
     setSweep((s) => s + 1);
   };
   const selectModel = (next: Model) => {

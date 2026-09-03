@@ -29,7 +29,7 @@ Rules for any AI agent (or human) working in this repo. These exist because past
 
 After every piece of work, look for extractable pieces and extract them:
 
-1. **Compose first.** New components must use existing primitives (`components/primitives.tsx`, `components/hooks.ts`) instead of re-implementing patterns — check there before writing an expander, chip, badge, spinner, icon, popover, stagger animation, or timer.
+1. **Compose first.** New components must use existing primitives (`components/primitives.tsx`, `components/hooks.ts`) instead of re-implementing patterns — check there before writing an expander, chip, badge, spinner, icon, popover, stagger animation, or timer. Read `prefers-reduced-motion` only through `useReducedMotion()` from `hooks.ts` — never call `matchMedia` inside a component.
 2. **Extract on second use.** If a piece of UI or logic appears in a second component (or clearly will), promote it to `primitives.tsx` / `hooks.ts` in the same unit of work, and rewire the existing consumer. Never leave two copies alive.
 3. **Icons come from Tabler** (`@tabler/icons-react`) through the shared `Icon` wrapper in `primitives.tsx` — to add an icon, map a new name to a Tabler component in `ICONS`. Never hand-draw icon paths, never inline `<svg>` icons, never add a second icon package. (Component-specific illustrative/brand SVGs may stay local. `preview.html` keeps a small inline-path renderer so it stays dependency-free — mirror new names there.)
 4. **Mirror every primitive in `preview.html`** (same names, same markup) and showcase it in the gallery's Primitives section.

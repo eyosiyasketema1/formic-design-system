@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import { Icon, inertWhen, SendButton, ShimmerLabel, Spinner, StreamText } from "./primitives";
+import { useReducedMotion } from "./hooks";
 /* ─────────────────────────────────────────────────────────
  * SELECTION ACTIONS
  * A contextual AI bar attached beneath selected text: quick
@@ -57,6 +58,7 @@ export default function SelectionActions({
   onKeep?: (rewrite: string) => void;
   onDiscard?: () => void;
 } = {}) {
+  const reduced = useReducedMotion();
   const [shown, setShown] = useState(false);
   const [mode, setMode] = useState<Mode>("idle");
   const [action, setAction] = useState("Improve");
@@ -143,7 +145,6 @@ export default function SelectionActions({
       !running && lastWidthRef.current
         ? lastWidthRef.current
         : Math.ceil(bar.getBoundingClientRect().width);
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (
       !reduced &&
       previousModeRef.current !== mode &&
