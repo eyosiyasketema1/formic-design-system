@@ -36,7 +36,7 @@
   --hover: #f2f2f2;
   --hover-2: #ececec;
   --inset: #e9e9e9;
-  --accent: #3b5bdb;
+  --accent: #587f0f;      /* lime, fitted to AA on white — the brand accent in light mode */
   --orange: #a34a08;
   --green: #15803d;
   --red: #b91c1c;
@@ -8207,7 +8207,7 @@ const isHex = (s) => /^#[0-9a-f]{6}$/i.test(s);
    Same set as the landing page's "Pick an accent" row. */
 const DEFAULT_SWATCHES = ["#a5e12a", "#e0a329", "#29e0c2", "#2985e0", "#9429e0", "#e02985", "#1a1a1a", "#ffffff"];
 function ColorPicker({
-  value = "#3b5bdb",
+  value = "#a5e12a",
   onChange,
   swatches = DEFAULT_SWATCHES,
   className = ""
@@ -9088,7 +9088,7 @@ function Page_colorpicker() {
         </div>
       </GalleryCard>
       <GalleryCard label="Custom swatches" wide>
-        <ColorPicker value="#3b5bdb" swatches={["#3b5bdb", "#a5e12a", "#0f766e", "#6d28d9", "#be185d"]} />
+        <ColorPicker value="#e0a329" swatches={["#a5e12a", "#e0a329", "#29e0c2", "#9429e0", "#e02985"]} />
       </GalleryCard>
     </>
   );
@@ -9447,7 +9447,7 @@ const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 function AccentControl({ accent, setAccent }) {
   const layerId = useId();
   const { open, position, anchorRef, openAt, close } = useAnchoredLayer(layerId);
-  const current = accent || (typeof window !== "undefined" ? getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() : "#3b5bdb");
+  const current = accent || (typeof window !== "undefined" ? getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()   : "#a5e12a");
   return (
     <div className="flex items-center gap-1.5">
       {accent && (
@@ -9468,7 +9468,7 @@ function AccentControl({ accent, setAccent }) {
       </button>
       {open && position && (
         <Popover id={layerId} role="dialog" x={position.x} top={position.top} bottom={position.bottom} width={296} onClose={close} className="p-3">
-          <ColorPicker value={/^#[0-9a-f]{6}$/i.test(current) ? current : "#3b5bdb"} onChange={setAccent} />
+          <ColorPicker value={/^#[0-9a-f]{6}$/i.test(current) ? current : "#a5e12a"} onChange={setAccent} />
         </Popover>
       )}
     </div>

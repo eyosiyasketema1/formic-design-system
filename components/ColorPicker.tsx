@@ -53,7 +53,7 @@ const isHex = (s: string) => /^#[0-9a-f]{6}$/i.test(s);
 const DEFAULT_SWATCHES = ["#a5e12a", "#e0a329", "#29e0c2", "#2985e0", "#9429e0", "#e02985", "#1a1a1a", "#ffffff"];
 
 export default function ColorPicker({
-  value = "#3b5bdb",
+  value = "#a5e12a",
   onChange,
   swatches = DEFAULT_SWATCHES,
   className = "",
