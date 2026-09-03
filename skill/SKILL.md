@@ -58,14 +58,14 @@ git clone https://github.com/eyosiyasketema1/formic-design-system.git
 ## Component inventory
 
 **Primitives** (`primitives.tsx`): `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Skeleton`, `Avatar`, `Tooltip`, `Progress`, `Separator`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`.
-**Hooks** (`hooks.ts`): `useSequence`, `useElapsed`, `useStream`, `useAnchoredLayer`, `useModalLayer`.
+**Hooks** (`hooks.ts`): `useSequence`, `useElapsed`, `useStream`, `useAnchoredLayer`, `useModalLayer`, `useReducedMotion` (the one way to read `prefers-reduced-motion`; never call `matchMedia` in a component).
 
 **Controls:** `Button` (10 variants x 4 sizes x square/pill).
 **Forms:** `Field`, `Input`, `Textarea`, `Select`, `Switch`, `Slider`, `OTPInput`, `FileDropzone`, `DatePicker`, `DateRangePicker`, `Calendar`, `ColorPicker`.
 **Overlays:** `Modal`, `Drawer`, `Toast`, `DropdownMenu`, `Popover`, `Tooltip`.
 **Feedback:** `Alert`, `Progress`, `Skeleton`, `LoadingState`, `ThinkingState`, `TaskRows`, `ToolChips`.
 **Conversation:** `ChatThread`, `StreamingText`, `Markdown`, `CodeBlock`, `SelectionActions`, `PromptBar`, `ChatComposer`, `ApprovalCard`, `ApprovalFlow`, `RecommendationCard`, `ContextCards`.
-**Dashboard:** `StatCard`, `MetricRow`, `Delta`, `BarChart`, `LineChart`, `DonutChart`, `Sparkline`, `ChartLegend`.
+**Dashboard:** `StatCard`, `MetricRow`, `Delta`, `BarChart`, `LineChart`, `DonutChart`, `Sparkline` (`smooth`, `animate`), `ChartLegend`, `CountUp`, `Gauge`, `BarList` (`charts.tsx`); `PrivacyScope`, `PrivacyToggle`, `Masked` (`Privacy.tsx`) mask figures until the eye is opened. `StatCard`'s `display` and `MetricRow`'s `value` accept a node, so `<CountUp>` and `<Masked>` slot straight in.
 **Data:** `RecordsTable`, `FilterTable`, `DiffTable`.
 **Structure:** `Accordion`, `Steps`, `Timeline`.
 **Navigation:** `Tabs`, `Pagination`, `Breadcrumbs`, `Menubar`, `SidebarNav`, `SearchList`.

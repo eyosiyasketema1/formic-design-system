@@ -6,7 +6,7 @@ import {
   IconChevronDown, IconChevronLeft, IconChevronRight, IconClock, IconDots, IconFileText, IconHome,
   IconCopy, IconInfoCircle, IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion, IconMicrophone,
   IconMoodSmile, IconPaperclip, IconPencil, IconPlus, IconRefresh, IconScissors,
-  IconBell, IconEye, IconLayoutGrid, IconMinus, IconMoon, IconSun, IconTrash, IconSearch, IconSettings, IconSparkles, IconStack2, IconTypography,
+  IconBell, IconEye, IconEyeOff, IconLayoutGrid, IconMinus, IconMoon, IconSun, IconTrash, IconSearch, IconSettings, IconSparkles, IconStack2, IconTypography,
   IconUpload, IconUserPlus, IconWorld, IconX, type Icon as TablerIcon,
 } from "@tabler/icons-react";
 import { useStream } from "./hooks";
@@ -66,7 +66,7 @@ export type IconName =
   | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar"
   | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right"
   | "copy" | "circle-check" | "alert" | "info" | "chevron-left" | "upload" | "calendar"
-  | "bell" | "moon" | "sun" | "eye" | "trash" | "grid" | "minus";
+  | "bell" | "moon" | "sun" | "eye" | "eye-off" | "trash" | "grid" | "minus";
 const ICONS: Record<IconName, TablerIcon> = {
   chevron: IconChevronDown,
   bell: IconBell,
@@ -74,6 +74,7 @@ const ICONS: Record<IconName, TablerIcon> = {
   moon: IconMoon,
   sun: IconSun,
   eye: IconEye,
+  "eye-off": IconEyeOff,
   trash: IconTrash,
   minus: IconMinus,
   check: IconCheck,

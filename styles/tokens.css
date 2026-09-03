@@ -345,6 +345,9 @@ a:hover .animated-underline,
 }
 
 /* Shared: card/overlay entrance */
+/* One-shot line draw for charts: pathLength=1 on the path, then this
+   runs the dash offset from 1 to 0 exactly once. Never loops. */
+@keyframes draw-in { to { stroke-dashoffset: 0; } }
 @keyframes pop-in {
   0%   { opacity: 0; transform: scale(0.95); }
   100% { opacity: 1; transform: scale(1); }

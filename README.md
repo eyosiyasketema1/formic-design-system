@@ -96,7 +96,7 @@ Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (d
 
 **Overlays:** Modal, Drawer, DropdownMenu, Popover, Tooltip
 
-**Dashboard:** StatCard, MetricRow, Delta, BarChart, LineChart, DonutChart, Sparkline, ChartLegend
+**Dashboard:** StatCard, MetricRow, Delta, BarChart, LineChart, DonutChart, Sparkline, ChartLegend, CountUp, Gauge, BarList, PrivacyScope, PrivacyToggle, Masked
 
 **Data and structure:** RecordsTable, FilterTable, DiffTable, Accordion, Steps, Timeline
 

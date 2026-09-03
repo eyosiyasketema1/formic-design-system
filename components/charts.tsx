@@ -1,6 +1,7 @@
 "use client";
-import { useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { TOOLTIP_CHIP, TOOLTIP_CHIP_STYLE } from "./primitives";
+import { useReducedMotion } from "./hooks";
 /* ─────────────────────────────────────────────────────────
  * CHARTS
  * Bars, lines and rings for dashboards. No chart library:
@@ -368,33 +369,52 @@ export function DonutChart({
 
 /* ═══════════ Sparkline ═══════════ */
 /* The mini trend inside a StatCard. Decorative by design: the
- * number beside it carries the meaning, so it is aria-hidden. */
+ * number beside it carries the meaning, so it is aria-hidden.
+ * `smooth` runs a Catmull-Rom curve through the points so weekly
+ * data reads as one calm wave; `animate` draws the line in once. */
+function smoothPath(pts: { x: number; y: number }[]): string {
+  if (pts.length < 2) return "";
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+    d += ` C ${p1.x + (p2.x - p0.x) / 6} ${p1.y + (p2.y - p0.y) / 6}, ${p2.x - (p3.x - p1.x) / 6} ${p2.y - (p3.y - p1.y) / 6}, ${p2.x} ${p2.y}`;
+  }
+  return d;
+}
+
 export function Sparkline({
   values = [4, 7, 5, 9, 8, 12, 10, 15],
   color = 1,
   area = true,
+  smooth = false,
+  animate = false,
   className = "",
 }: {
   values?: number[];
   color?: ChartColor;
   area?: boolean;
+  /** Catmull-Rom curve instead of straight segments */
+  smooth?: boolean;
+  /** one-shot draw-in on mount; collapses to the final frame under reduced motion */
+  animate?: boolean;
   className?: string;
 }) {
   const gradientId = useId();
-  const W = 100, H = 28;
+  const reduced = useReducedMotion();
+  const W = 100, H = 28, PAD = 2;
   /* One point is not a trend — drawing it would fill a wedge across
      the whole box, which reads as a real shape that isn't there. */
   if (values.length < 2) return null;
   const max = Math.max(...values), min = Math.min(...values);
   const span = max - min || 1;
   const step = W / (values.length - 1);
-  const d = values
-    .map((v, i) => `${i ? "L" : "M"}${i * step} ${H - ((v - min) / span) * H}`)
-    .join(" ");
+  const pts = values.map((v, i) => ({ x: i * step, y: PAD + (H - PAD * 2) - ((v - min) / span) * (H - PAD * 2) }));
+  const d = smooth ? smoothPath(pts) : pts.map((p, i) => `${i ? "L" : "M"}${p.x} ${p.y}`).join(" ");
+  const drawing = animate && !reduced;
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true"
-      className={`h-8 w-full ${SERIES_TEXT[color]} ${className}`}
+      className={`h-8 w-full overflow-visible ${SERIES_TEXT[color]} ${className}`}
     >
       {area && (
         <>
@@ -404,13 +424,164 @@ export function Sparkline({
               <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
             </linearGradient>
           </defs>
-          <path d={`${d} L${W} ${H} L0 ${H} Z`} fill={`url(#${gradientId})`} />
+          <path
+            d={`${d} L${W} ${H} L0 ${H} Z`} fill={`url(#${gradientId})`}
+            style={drawing ? { animation: "fade-in 1400ms var(--ease-out-quint) both" } : undefined}
+          />
         </>
       )}
       <path
         d={d} fill="none" stroke="currentColor" strokeWidth="2"
         strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"
+        pathLength={1}
+        strokeDasharray={drawing ? 1 : undefined}
+        strokeDashoffset={drawing ? 1 : undefined}
+        style={drawing ? { animation: "draw-in 1700ms var(--ease-out-quint) forwards" } : undefined}
       />
     </svg>
+  );
+}
+
+/* ═══════════ CountUp ═══════════ */
+/* A big number settles in once, ease-out, then holds. Under reduced
+ * motion it renders the final value immediately. Re-runs if `value`
+ * changes so a live dashboard can tick to a new figure. */
+export function CountUp({
+  value,
+  duration = 1400,
+  format = (n: number) => n.toLocaleString(),
+}: {
+  value: number;
+  duration?: number;
+  /** e.g. (n) => `$${n.toLocaleString()}` */
+  format?: (n: number) => string;
+}) {
+  const reduced = useReducedMotion();
+  const [shown, setShown] = useState(reduced ? value : 0);
+  useEffect(() => {
+    if (reduced || duration <= 0) { setShown(value); return; }
+    const from = shown, t0 = performance.now();
+    let raf = 0;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - t0) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setShown(Math.round(from + (value - from) * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- animate from wherever we are toward the new value
+  }, [value, reduced, duration]);
+  return <span className="tabular-nums">{format(reduced ? value : shown)}</span>;
+}
+
+/* ═══════════ Gauge ═══════════ */
+/* A ticked radial arc, open at the bottom. Ticks light up in sequence
+ * once; the number counts up in the centre. Single-hue: lit ticks are
+ * the accent, the rest the track — it shows one quantity, not series. */
+export function Gauge({
+  percent = 64,
+  label = "of people become clients",
+  ticks = 36,
+  className = "",
+}: {
+  percent?: number;
+  label?: string;
+  ticks?: number;
+  className?: string;
+}) {
+  const reduced = useReducedMotion();
+  const p = Math.max(0, Math.min(100, percent));
+  /* Two ticks is the floor — a lone tick has no arc to sit on. */
+  const n = Math.max(2, Math.round(ticks));
+  const lit = Math.round((p / 100) * n);
+  const START = 150, SWEEP = 240, CX = 110, CY = 96, R1 = 74, R2 = 92;
+  return (
+    <div className={`relative mx-auto w-full max-w-55 ${className}`} role="img" aria-label={`${Math.round(p)} percent ${label}`}>
+      <svg viewBox="0 0 220 150" className="block w-full" aria-hidden="true">
+        {Array.from({ length: n }, (_, i) => {
+          const a = ((START + (i / (n - 1)) * SWEEP) * Math.PI) / 180;
+          const on = i < lit;
+          return (
+            <line
+              key={i}
+              x1={CX + R1 * Math.cos(a)} y1={CY + R1 * Math.sin(a)}
+              x2={CX + R2 * Math.cos(a)} y2={CY + R2 * Math.sin(a)}
+              strokeWidth="4" strokeLinecap="round"
+              className={on ? "stroke-accent" : "stroke-chart-track"}
+              style={on && !reduced ? { animation: `fade-in 300ms var(--ease-out-quint) ${i * 34}ms both` } : undefined}
+            />
+          );
+        })}
+      </svg>
+      <div className="absolute inset-x-0 top-[38%] text-center">
+        <p className="text-display-lg font-semibold text-ink"><CountUp value={Math.round(p)} />%</p>
+        <p className="mt-1 text-small text-ink-3">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════ BarList ═══════════ */
+/* Ranked horizontal bars — "top services", "top clients". One quantity,
+ * not a series, so no rainbow (rule 16): the leader is the accent and the
+ * rest sit in muted ink, both ≥3:1 against the track in every mode (gated
+ * in qa_check.py). Labels live beside the bar, never on it, so a short bar
+ * can't swallow its own name; the value is always text. Bars grow in once,
+ * staggered, and collapse to the final frame under reduced motion. */
+export type BarItem = { label: string; value: number };
+const DEFAULT_BARS: BarItem[] = [
+  { label: "Brand Identity", value: 48 }, { label: "Website", value: 31 },
+  { label: "Company Profile", value: 24 }, { label: "Graphic Design", value: 17 },
+];
+export function BarList({
+  items = DEFAULT_BARS,
+  max,
+  format = (n: number) => n.toLocaleString(),
+  stagger = 90,
+  className = "",
+}: {
+  items?: BarItem[];
+  /** scale ceiling; defaults to the largest value */
+  max?: number;
+  format?: (n: number) => string;
+  /** ms between each bar's entrance */
+  stagger?: number;
+  className?: string;
+}) {
+  const reduced = useReducedMotion();
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (reduced) { setOn(true); return; }
+    const t = setTimeout(() => setOn(true), 30);
+    return () => clearTimeout(t);
+  }, [reduced]);
+  const ceiling = max ?? Math.max(1, ...items.map((i) => i.value));
+  return (
+    <div className={`flex w-full max-w-160 flex-col gap-2.5 ${className}`}>
+      {items.map((item, i) => {
+        const pct = Math.max(2, (item.value / ceiling) * 100);
+        const leader = i === 0;
+        return (
+          <div key={`${item.label}-${i}`} className="flex items-center gap-3">
+            <span className={`w-28 shrink-0 truncate text-caption sm:w-36 ${leader ? "font-medium text-ink" : "text-ink-2"}`} title={item.label}>
+              {item.label}
+            </span>
+            <div className="relative h-2.5 min-w-0 flex-1 overflow-hidden rounded-sm bg-chart-track">
+              {/* scaleX composites on the GPU; animating width relays out every frame */}
+              <div
+                className={`absolute inset-y-0 left-0 origin-left rounded-sm ${leader ? "bg-accent" : "bg-ink-3"}`}
+                style={{
+                  width: `${pct}%`,
+                  transform: on ? "scaleX(1)" : "scaleX(0)",
+                  transition: reduced ? undefined : `transform 1400ms var(--ease-out-quint) ${i * stagger}ms`,
+                }}
+              />
+            </div>
+            <span className="w-14 shrink-0 text-right text-caption font-semibold text-ink tabular-nums">{format(item.value)}</span>
+          </div>
+        );
+      })}
+    </div>
   );
 }

@@ -10,6 +10,8 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from "react"
  *                    flip, close on outside press/scroll/resize
  *   useModalLayer    dialog machinery: focus trap + restore,
  *                    layered Escape, ref-counted scroll lock
+ *   useReducedMotion live prefers-reduced-motion flag for JS-driven
+ *                    motion (count-ups, staggers) that CSS can't gate
  * ───────────────────────────────────────────────────────── */
 
 /** Steps through 0..steps.length-1, waiting steps[i] ms at each stage.
@@ -202,4 +204,22 @@ export function useElapsed() {
   const total = ds / 10;
   if (total < 60) return `${total.toFixed(1)}s`;
   return `${Math.floor(total / 60)}m ${(total % 60).toFixed(1)}s`;
+}
+
+/* ── useReducedMotion ────────────────────────────────────── */
+/* The global CSS rule already collapses every CSS animation under
+ * prefers-reduced-motion. This is for motion driven from JavaScript —
+ * count-ups, staggered reveals, rAF loops — which CSS can't reach.
+ * Live: flips if the user changes the setting mid-session. SSR-safe
+ * (false on the server, corrected before paint on the client). */
+export function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReduced(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return reduced;
 }

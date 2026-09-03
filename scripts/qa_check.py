@@ -112,15 +112,49 @@ PAIRS = [  # (fg var | literal, bg var, minimum, label)
     ("--chart-3", "--canvas", 3.0, "chart series 3 on canvas"),
     ("--chart-4", "--canvas", 3.0, "chart series 4 on canvas"),
     ("--chart-5", "--canvas", 3.0, "chart series 5 on canvas"),
+    ("--accent", "--chart-track", 3.0, "BarList leader / Gauge lit ticks on the track"),
+    ("--ink-3", "--chart-track", 3.0, "BarList rest bars on the track"),
 ]
 # sanity: the parser must actually find the base palette, or every light-mode
 # check silently becomes a no-op (this happened once — never again)
 if len(base_light) < 10:
     fails.append(f"qa_check self-test: base light palette parsed only {len(base_light)} vars — parser broken")
+# Derived tokens are authored as `color-mix(in srgb, var(--a) N%, var(--b))`
+# (accent-tint, chart-track, …). parse_blocks only keeps hex, so those pairs
+# were silently skipped — which is how BarList shipped bars that vanished
+# into their own track. Resolve the mix numerically instead (sRGB, the same
+# space the browser uses for `in srgb`), one level deep, which covers every
+# derived token in the system.
+_MIX_RE = re.compile(r"color-mix\(in srgb,\s*var\((--[\w-]+)\)\s*([\d.]+)%\s*,\s*var\((--[\w-]+)\)\s*\)")
+_mix_defs = {}
+for _blk_src in (ROOT / "styles" / "tokens.css", ROOT / "styles" / "themes.css"):
+    for _sel, _body in re.findall(r"([^{}]+)\{([^{}]*)\}", re.sub(r"/\*.*?\*/", "", _blk_src.read_text(), flags=re.S)):
+        _sel = _sel.strip().splitlines()[-1].strip() if _sel.strip() else ""
+        for _var, _a, _pct, _b in re.findall(r"(--[\w-]+)\s*:\s*" + _MIX_RE.pattern, _body):
+            _mix_defs.setdefault(_sel, {})[_var] = (_a, float(_pct) / 100, _b)
+
+def resolve(var, vars_, sel_chain):
+    """hex for `var` in this mode: a plain token, or a one-level color-mix."""
+    if var in vars_:
+        return vars_[var]
+    for sel in sel_chain:
+        d = _mix_defs.get(sel, {})
+        if var in d:
+            a, pa, b = d[var]
+            A, B = vars_.get(a), vars_.get(b)
+            if not A or not B:
+                return None
+            ra, rb = (int(A[i:i + 2], 16) for i in (1, 3, 5)), (int(B[i:i + 2], 16) for i in (1, 3, 5))
+            return "#%02x%02x%02x" % tuple(round(x * pa + y * (1 - pa)) for x, y in zip(ra, rb))
+    return None
+
 for label, vars_ in palette_sets():
+    _dark = label.endswith("dark")
+    _pal = label.split()[0]
+    _chain = ([f':root[data-palette="{_pal}"][data-theme="dark"]'] if _dark else []) + [f':root[data-palette="{_pal}"]'] + ([':root[data-theme="dark"]'] if _dark else []) + [":root"]
     for fg, bg, mn, what in PAIRS:
-        fgv = fg if fg.startswith("#") else vars_.get(fg)
-        bgv = vars_.get(bg)
+        fgv = fg if fg.startswith("#") else resolve(fg, vars_, _chain)
+        bgv = resolve(bg, vars_, _chain)
         if not fgv or not bgv:
             continue
         r = cr(fgv, bgv)

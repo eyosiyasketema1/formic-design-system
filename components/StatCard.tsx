@@ -57,11 +57,14 @@ export function StatCard({
   iconTone = 1,
   trend,
   trendTone = 1,
+  trendSmooth = false,
+  trendAnimate = false,
   className = "",
 }: {
   label?: string;
   value?: number;
-  display?: string;
+  /** formatted value, or a node such as <CountUp> / <Masked> */
+  display?: ReactNode;
   caption?: string;
   delta?: string;
   deltaTone?: DeltaTone;
@@ -69,6 +72,10 @@ export function StatCard({
   iconTone?: ChartColor;
   trend?: number[];
   trendTone?: ChartColor;
+  /** curve the sparkline (Catmull-Rom) */
+  trendSmooth?: boolean;
+  /** draw the sparkline in once on mount */
+  trendAnimate?: boolean;
   className?: string;
 }) {
   return (
@@ -88,33 +95,42 @@ export function StatCard({
         </span>
         {delta && <Delta tone={deltaTone}>{delta}</Delta>}
       </div>
-      {trend && trend.length > 1 && <Sparkline values={trend} color={trendTone} />}
+      {trend && trend.length > 1 && <Sparkline values={trend} color={trendTone} smooth={trendSmooth} animate={trendAnimate} />}
     </Card>
   );
 }
 
 /* ── MetricRow ─────────────────────────────────────────── */
 /* A line item inside a card — the breakdown under a headline
- * number, as in "Online store $20k +12.6%". */
+ * number, as in "Online store $20k +12.6%". With `detail` it is a
+ * funnel stage: the label in ink, a plain-words line under it, and
+ * the delta on the right — "Booked a call / 41 talked it through". */
 export function MetricRow({
   icon,
   label,
+  detail,
   value,
   delta,
   deltaTone = "up",
 }: {
   icon?: IconName;
   label: string;
-  value: string;
+  /** second line in muted ink, e.g. "96 opened their private link" */
+  detail?: string;
+  /** a string, or a node such as <Masked> */
+  value?: ReactNode;
   delta?: string;
   deltaTone?: DeltaTone;
 }) {
   return (
-    <div className="flex w-full items-center gap-2.5 border-t border-line py-2.5 first:border-t-0">
+    <div className={`flex w-full items-center gap-2.5 border-t border-line first:border-t-0 ${detail ? "py-3" : "py-2.5"}`}>
       {icon && <Icon name={icon} size={15} strokeWidth={2} className="shrink-0 text-ink-3" />}
-      <span className="min-w-0 flex-1 truncate text-caption text-ink-2">{label}</span>
-      <span className="shrink-0 text-caption font-medium text-ink tabular-nums">{value}</span>
-      {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+      <span className="min-w-0 flex-1">
+        <span className={`block truncate text-caption ${detail ? "font-medium text-ink" : "text-ink-2"}`}>{label}</span>
+        {detail && <span className="block truncate text-small text-ink-3">{detail}</span>}
+      </span>
+      {value != null && <span className="shrink-0 text-caption font-medium text-ink tabular-nums">{value}</span>}
+      {delta ? <Delta tone={deltaTone}>{delta}</Delta> : detail ? <span className="text-caption text-ink-3">—</span> : null}
     </div>
   );
 }
