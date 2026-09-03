@@ -1,6 +1,6 @@
 ---
 name: formic-design-system
-description: Use the Formic AI Design System (tokens + React components) whenever building, styling, or extending UI for AI product interfaces. Trigger on "use Formic", "the design system", or any React/Tailwind UI work in a project that vendors Formic.
+description: Use the Formic AI Design System (tokens + React components) for ALL UI work in a project that contains src/formic (or any folder holding Formic's tokens.css and components). Trigger on "use Formic", "the design system", or any React/Tailwind UI request — pages, dashboards, chat surfaces, forms, components — in such a project.
 ---
 
 # Formic AI Design System
@@ -10,32 +10,33 @@ A token-driven React + Tailwind v4 design system for AI product interfaces, by E
 **Source of truth:** https://github.com/eyosiyasketema1/formic-design-system
 **Live gallery:** https://formicai.dev/preview.html
 
-If the repo is not already in the project, clone or copy it in:
-
-```bash
-git clone https://github.com/eyosiyasketema1/formic-design-system.git
-```
-
 ## Two modes: decide first
 
-**A. Consuming Formic in an app** (most common): copy `styles/` plus the needed `components/` files into the project, then compose. Never fork component internals.
+**A. Consuming Formic in an app** (most common): the system is vendored at `src/formic/` (`styles/` + `components/`). Import its components and compose. Never fork component internals.
 
-**B. Extending Formic itself** (working inside the repo): read and obey `CLAUDE.md` at the repo root. It carries the non-negotiable design rules, the extraction rule, and a mandatory QA workflow (`python3 scripts/qa_check.py` must pass, mirror every change into `preview.html`, commit per unit of work).
+**B. Extending Formic itself** (the repo has `scripts/qa_check.py` at its root): read and obey `CLAUDE.md`. It carries the non-negotiable design rules, the extraction rule, and a mandatory QA workflow (`python3 scripts/qa_check.py` must pass, mirror every change into `preview.html`, branch + PR per unit of work).
 
-## Setup (consuming)
+## Procedure (consuming) — follow in order, every time
 
-1. Tailwind v4 project. Import in this order in the global CSS:
+Generic Tailwind is the failure mode: it happens when the agent invents styles instead of importing the system.
 
-```css
-@import "tailwindcss";
-@import "./styles/tokens.css";          /* source of truth: tokens, keyframes, primitive classes */
-@import "./styles/themes.css";          /* optional: 5 palettes */
-@import "./styles/tailwind-theme.css";  /* @theme bridge -> text-ink, bg-hover, text-body, ... */
-```
-
-2. Peer deps: `react >=18`, `react-dom >=18`, `@tabler/icons-react >=3`.
-3. `RecordsTable` also needs `styles/records.css`; `SidebarNav` needs `styles/sidebar.css`.
-4. Wrap the app in `<ToastProvider>` if toasts are used.
+1. **Find Formic.** `ls src/formic/styles/tokens.css src/formic/components/primitives.tsx`. If missing, install before writing any UI:
+   ```bash
+   curl -fsSL https://formicai.dev/install.sh | bash
+   ```
+   That copies `styles/` and `components/` into `src/formic/` and writes `AGENTS.md`, a Cursor rule, Copilot instructions, and this skill into the project.
+2. **Wire the CSS once** (Tailwind v4 global stylesheet, in this order; fix the relative path to `src/formic`):
+   ```css
+   @import "tailwindcss";
+   @import "./formic/styles/tokens.css";          /* source of truth: tokens, keyframes, primitive classes */
+   @import "./formic/styles/themes.css";          /* optional: 5 palettes */
+   @import "./formic/styles/tailwind-theme.css";  /* @theme bridge -> text-ink, bg-hover, text-body, ... */
+   ```
+   Peer deps: `react >=18`, `react-dom >=18`, `@tabler/icons-react >=3`. `RecordsTable` also needs `styles/records.css`; `SidebarNav` needs `styles/sidebar.css`. Wrap the app in `<ToastProvider>` if toasts are used.
+3. **Read before writing.** Open `src/formic/styles/tokens.css` and list `src/formic/components/`. Never write a component that already exists.
+4. **Import, don't re-create.** Buttons, inputs, cards, chips, tables, charts, modals, chat surfaces, dashboard tiles all come from `src/formic/components/`. Pass props; never copy markup into a page or edit a component's internals for a one-off.
+5. **New patterns compose primitives** from `src/formic/components/primitives.tsx` plus token utilities. No raw `<svg>` icons, no second icon package, no chart libraries, no UI kits.
+6. **Self-check before finishing.** Any hit in your output is a bug: hex colours, `text-[Npx]` or Tailwind's `text-sm/lg` family, `font-bold`, `shadow-sm/md/lg`, `cubic-bezier(`, `rounded-lg/xl`, raw palette classes like `bg-gray-100` / `text-blue-600`. Every new UI file imports at least one thing from `src/formic/components`, or it is not Formic.
 
 ## Non-negotiable conventions
 
