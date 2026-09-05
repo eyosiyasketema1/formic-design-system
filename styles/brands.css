@@ -90,3 +90,9 @@
   --brand-netflix: #e50914;
   --brand-disney: #113ccf;
 }
+
+/* BrandLogo dark variants: the component renders both where the brand
+   publishes one; CSS picks, so components never branch on theme. */
+.brand-logo-dark { display: none; }
+[data-theme="dark"] .brand-logo-dark { display: inline; }
+[data-theme="dark"] .brand-logo-light.brand-logo-has-dark { display: none; }

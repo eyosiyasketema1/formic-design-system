@@ -72,13 +72,13 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
 - **Filters are a `FilterBar`** (children = the selects, `search` pinned right, `active` + `onClear`): one row, wrap only on overflow, each control sized to content. Never one filter per row.
 - **Every chart animates in by default** (bars grow, lines reveal, donuts sweep, sparklines draw); reduced motion is honoured automatically. `animate={false}` only for live-updating charts. No custom keyframes, no motion libraries.
 - **Icons match labels:** `iconFor(label)` from `primitives.tsx` (`"Refresh"` → `retry`, `"Export CSV"` → `download`, `"Add user"` → `user-add`); `undefined` means leave the icon off.
-- **Brand marks:** `<BrandIcon name="github" />` from `brand.tsx` (80+ companies and social networks), monochrome by default; `color="brand"` for sign-in buttons and integration directories only. No logo images, no second icon package.
+- **Brand marks:** `<BrandIcon name="github" />` from `brand.tsx` (80+ companies and social networks), monochrome by default; `color="brand"` for a one-colour mark. `<BrandLogo name="google" />` from `brand-logos.tsx` is the real full-colour logo (101 official marks, dark variants automatic) for sign-in buttons and integration directories. Never recolour or stretch a logo. No logo images, no second icon package.
 - **Page density.** `p-6 sm:p-8`, sections `gap-6`.
 
 ## Component inventory
 
 **Primitives** (`primitives.tsx`): `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Skeleton`, `Avatar`, `Tooltip`, `Progress`, `Separator`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Checkbox`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`.
-**Brand** (`brand.tsx`): `FormicMark`, `BrandIcon` (`name`: github, google, apple, slack, notion, figma, linkedin, x, instagram, youtube, stripe, openai, …). **Helper:** `iconFor(label)`.
+**Brand** (`brand.tsx`, `brand-logos.tsx`): `FormicMark`, `BrandLogo` (real logos, `BRAND_LOGO_NAMES`, `brandTitle`), `BrandIcon` (`name`: github, google, apple, slack, notion, figma, linkedin, x, instagram, youtube, stripe, openai, …). **Helper:** `iconFor(label)`.
 **Hooks** (`hooks.ts`): `useSequence`, `useElapsed`, `useStream`, `useAnchoredLayer`, `useModalLayer`, `useReducedMotion` (the one way to read `prefers-reduced-motion`; never call `matchMedia` in a component).
 
 **Controls:** `Button` (10 variants x 4 sizes x square/pill).

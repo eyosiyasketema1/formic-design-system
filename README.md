@@ -110,7 +110,7 @@ Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (d
 
 **Navigation:** Tabs, Pagination, Breadcrumbs, Menubar, AppSidebar, SidebarNav, SearchList
 
-**Brand** (`components/brand.tsx`): FormicMark, BrandIcon (80+ company and social marks)
+**Brand** (`components/brand.tsx`, `components/brand-logos.tsx`): FormicMark, BrandIcon (81 monochrome marks), BrandLogo (101 real full-colour logos)
 
 **Primitives** (`components/primitives.tsx`): Icon, Spinner, StreamText, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, Badge, IconButton, SendButton, Switch, Checkbox, Disclosure, GlideMenu, Card, Popover, AvatarStack
 
