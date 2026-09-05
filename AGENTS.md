@@ -71,7 +71,7 @@ These came from reviewing real agent output. Each one is a tell that a page was 
 6. **Tables fill their container** (`RecordsTable`, `FilterTable`, `DiffTable` are `w-full`), unless the user asks for a fixed width. Wide tables scroll inside their own `overflow-x-auto`, never the page.
 7. **Proximity.** Controls sit next to the thing they act on: filters directly above the list, in one row, sized to their content (`max-w-*`), not stacked full-width; the search input at the row's right end. A comparison's two pickers sit together with "vs" between them, in the panel's `actions`, not in a far corner.
 8. **One grid.** Every panel in a row shares the same gutter (`gap-3.5` inside sections, `gap-6` between sections) and left edge. Numbers align right with `tabular-nums`. Labels align left. Nothing is centred unless it is alone.
-9. **Rails.** A dashboard or admin app gets `AppSidebar` (grouped menu with counts and sub-menus via `children`, `expanded` or `rail` variant, the Formic mark in accent at the top, account row at the bottom); a chat app gets `SidebarNav`. Both fill the shell's height. Never build a sidebar from divs.
+9. **Rails.** A dashboard or admin app gets `AppSidebar` (grouped menu with counts and sub-menus via `children` (or `submenus="none"` for a flat rail), `expanded` or `rail` variant, the Formic mark in accent at the top, account row at the bottom); a chat app gets `SidebarNav`. Both fill the shell's height. Never build a sidebar from divs.
 10. **Empty states and loading** use `LoadingState` / `Skeleton` / `Alert`, never an ad-hoc grey box.
 11. **Density.** A page is `p-6` (`sm:p-8`) with sections `gap-6`. If a section needs more air than that, the content is wrong, not the spacing.
 

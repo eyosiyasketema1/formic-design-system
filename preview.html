@@ -8240,6 +8240,7 @@ function AppSidebar({
   defaultVariant = "expanded",
   onVariantChange,
   collapsible = true,
+  submenus = "nested",
   user = APPSB_USER,
   footer,
   className = "",
@@ -8294,8 +8295,8 @@ function AppSidebar({
      the whole hit area and stays exactly where it was — collapsing never
      shifts the icons. */
   const row = (item) => {
-    const group = Boolean(item.children?.length);
-    const on = item.key === current || item.key === activeParent;
+    const group = submenus === "nested" && Boolean(item.children?.length);
+    const on = item.key === current || (group && item.key === activeParent);
     const expanded = Boolean(openGroups[item.key]);
     const onClick = (event) => {
       if (!group) return pick(item.key);
@@ -9692,6 +9693,12 @@ function Page_appsidebar() {
           <div className="min-w-0 flex-1 bg-canvas" />
         </div>
       </GalleryCard>
+      <GalleryCard label="Flat · submenus=&quot;none&quot;: every item is a page" wide>
+        <div className="flex h-[600px] overflow-hidden rounded-card border border-line">
+          <AppSidebar submenus="none" collapsible={false} active="reports" />
+          <div className="min-w-0 flex-1 bg-canvas" />
+        </div>
+      </GalleryCard>
       <GalleryCard label="Expanded, no account row, nothing selected" wide>
         <div className="flex h-[600px] overflow-hidden rounded-card border border-line">
           <AppSidebar collapsible={false} user={null} active={null} />
@@ -9992,7 +9999,7 @@ const PAGES = [
   { id: "pagination", group: "Navigation", title: "Pagination", note: "Numbered pages with sibling windows and gap ellipses \u2014 first and last stay reachable, active page carries aria-current, edges disable prev / next.", file: "components/Pagination.tsx", Component: Page_pagination },
   { id: "breadcrumbs", group: "Navigation", title: "Breadcrumbs", note: "Path trail \u2014 long trails collapse their middle into a DropdownMenu, the current page carries aria-current, labels truncate instead of breaking the row. Navigating fires a toast here.", file: "components/Breadcrumbs.tsx", Component: Page_breadcrumbs },
   { id: "menubar", group: "Navigation", title: "Menubar", note: "A bar of action menus, each a DropdownMenu \u2014 dividers, disabled and destructive items included. Selections fire toasts here.", file: "components/Menubar.tsx", Component: Page_menubar },
-  { id: "appsidebar", group: "Navigation", title: "AppSidebar", note: "The menu rail for dashboards and admin apps, as opposed to SidebarNav, the chat rail. Grouped navigation with counts and sub-menus, a workspace mark at the top, an account row at the bottom. Two variants on the same --sidebar surface: expanded (240px, icon + label + count, section titles, sub-menus open in place) and rail (56px, icons only, labels as tooltips, sub-menus as a flyout). The collapse and expand control sits in the header in both, and collapsing never moves the icons.", file: "components/AppSidebar.tsx", Component: Page_appsidebar },
+  { id: "appsidebar", group: "Navigation", title: "AppSidebar", note: "The menu rail for dashboards and admin apps, as opposed to SidebarNav, the chat rail. Grouped navigation with counts and sub-menus, a workspace mark at the top, an account row at the bottom. Two variants on the same --sidebar surface: expanded (240px, icon + label + count, section titles, sub-menus open in place) and rail (56px, icons only, labels as tooltips, sub-menus as a flyout). The collapse and expand control sits in the header in both, and collapsing never moves the icons. `submenus=\"none\"` makes it flat: every item is a page.", file: "components/AppSidebar.tsx", Component: Page_appsidebar },
   { id: "sidebarnav", group: "Navigation", title: "SidebarNav", note: "Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.", file: "components/SidebarNav.tsx", Component: Page_sidebarnav },
   { id: "searchlist", group: "Navigation", title: "SearchList", note: "Command search with live filtering \u2014 type to filter, gibberish for the empty state.", file: "components/SearchList.tsx", Component: Page_searchlist }
 ];
@@ -10245,13 +10252,14 @@ const PLAYGROUNDS = {
   appsidebar: {
     schema: [
       { key: "variant", label: "Variant", type: "select", value: "expanded", options: ["expanded", "rail"] },
+      { key: "submenus", label: "Sub-menus", type: "select", value: "nested", options: ["nested", "none"] },
       { key: "collapsible", label: "Collapse control", type: "toggle", value: true },
       { key: "user", label: "Account row", type: "toggle", value: true },
       { key: "active", label: "Active", type: "select", value: "reports-sales", options: ["overview", "reports-sales", "reports-customers", "records", "people", "settings"] },
     ],
     render: (p, set) => (
       <div className="flex h-[560px] w-full overflow-hidden rounded-card border border-line">
-        <AppSidebar variant={p.variant} onVariantChange={(v) => set("variant", v)} collapsible={p.collapsible} user={p.user ? undefined : null} active={p.active} onSelect={(k) => set("active", k)} />
+        <AppSidebar variant={p.variant} onVariantChange={(v) => set("variant", v)} submenus={p.submenus} collapsible={p.collapsible} user={p.user ? undefined : null} active={p.active} onSelect={(k) => set("active", k)} />
         <div className="min-w-0 flex-1 bg-canvas" />
       </div>
     ),
