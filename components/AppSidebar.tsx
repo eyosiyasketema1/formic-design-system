@@ -140,8 +140,11 @@ export default function AppSidebar({
     onSelect?.(key);
   };
 
+  /* Rail rows are fixed 36px squares, centred by their wrapper. They cannot
+     be w-full: the Tooltip's anchor is an inline span, so w-full would fill
+     nothing and the icon would sit at the left edge with a shrunken pill. */
   const rowClass = (on: boolean) =>
-    `relative z-10 flex h-9 w-full items-center rounded-control transition-colors duration-150 ${rail ? "justify-center" : "gap-2.5 px-2.5"} ${on ? "bg-hover-2 text-ink" : "text-ink-2 hover:text-ink"}`;
+    `relative z-10 flex h-9 items-center rounded-control transition-colors duration-150 ${rail ? "w-9 justify-center" : "w-full gap-2.5 px-2.5"} ${on ? "bg-hover-2 text-ink" : "text-ink-2 hover:text-ink"}`;
 
   /* One row, both variants: in the rail the label and count are not
      rendered at all (a tooltip carries the name), so the icon square is
@@ -154,8 +157,11 @@ export default function AppSidebar({
     const onClick = (event: React.MouseEvent<HTMLButtonElement>) => {
       if (!group) return pick(item.key);
       if (!rail) return toggleGroup(item.key);
+      /* Anchor x to the aside's edge, not the 36px button, so the flyout
+         clears the rail instead of overlapping it. */
       const r = event.currentTarget.getBoundingClientRect();
-      setFlyout((f) => (f?.key === item.key ? null : { key: item.key, x: r.right + 6, top: r.top }));
+      const edge = event.currentTarget.closest("aside")?.getBoundingClientRect().right ?? r.right;
+      setFlyout((f) => (f?.key === item.key ? null : { key: item.key, x: edge + 6, top: r.top }));
     };
     const button = (
       <button
@@ -178,7 +184,7 @@ export default function AppSidebar({
       </button>
     );
     const head = rail ? <Tooltip label={item.label}>{button}</Tooltip> : button;
-    if (!group || rail) return <div key={item.key}>{head}</div>;
+    if (!group || rail) return <div key={item.key} className={rail ? "flex justify-center" : ""}>{head}</div>;
     return (
       <div key={item.key}>
         {head}
@@ -250,7 +256,7 @@ export default function AppSidebar({
               <p className="mb-1 px-2.5 text-micro font-medium tracking-wide text-ink-3 uppercase">{section.title}</p>
             )}
             {section.title && rail && si > 0 && <div className="mx-2 mb-2 border-t border-line" />}
-            <GlideMenu className="flex flex-col gap-0.5" highlightClassName="inset-x-0 rounded-control bg-hover">
+            <GlideMenu className="flex flex-col gap-0.5" highlightClassName={rail ? "left-1/2 w-9 -translate-x-1/2 rounded-control bg-hover" : "inset-x-0 rounded-control bg-hover"}>
               {section.items.map(row)}
             </GlideMenu>
           </div>
