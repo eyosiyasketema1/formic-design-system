@@ -1,0 +1,98 @@
+/* ─────────────────────────────────────────────────────────
+ * BRAND COLOURS — one canonical colour per mark, for
+ * <BrandIcon color="brand" />. Marks whose identity is black
+ * (GitHub, Apple, X, Notion, Vercel, OpenAI…) resolve to --ink,
+ * so they stay visible in dark mode; every other value is the
+ * brand's published primary. These are logos, not UI colour:
+ * they are exempt from the contrast rule and must never be
+ * used for anything but the mark itself.
+ * ───────────────────────────────────────────────────────── */
+:root {
+  --brand-github: var(--ink);
+  --brand-google: #4285f4;
+  --brand-apple: var(--ink);
+  --brand-windows: #0078d4;
+  --brand-slack: #4a154b;
+  --brand-notion: var(--ink);
+  --brand-figma: #f24e1e;
+  --brand-linkedin: #0a66c2;
+  --brand-x: var(--ink);
+  --brand-instagram: #e4405f;
+  --brand-facebook: #0866ff;
+  --brand-youtube: #ff0000;
+  --brand-tiktok: var(--ink);
+  --brand-telegram: #26a5e4;
+  --brand-whatsapp: #25d366;
+  --brand-discord: #5865f2;
+  --brand-stripe: #635bff;
+  --brand-paypal: #003087;
+  --brand-spotify: #1db954;
+  --brand-android: #34a853;
+  --brand-chrome: #4285f4;
+  --brand-openai: var(--ink);
+  --brand-vercel: var(--ink);
+  --brand-github-copilot: var(--ink);
+  --brand-gmail: #ea4335;
+  --brand-google-drive: #4285f4;
+  --brand-zoom: #0b5cff;
+  --brand-trello: #0052cc;
+  --brand-asana: #f06a6a;
+  --brand-airtable: #18bfff;
+  --brand-amazon: #ff9900;
+  --brand-meta: #0467df;
+  --brand-pinterest: #bd081c;
+  --brand-reddit: #ff4500;
+  --brand-threads: var(--ink);
+  --brand-snapchat: #fffc00;
+  --brand-twitch: #9146ff;
+  --brand-mastodon: #6364ff;
+  --brand-medium: var(--ink);
+  --brand-behance: #1769ff;
+  --brand-dribbble: #ea4c89;
+  --brand-wordpress: #21759b;
+  --brand-webflow: #146ef5;
+  --brand-framer: #0055ff;
+  --brand-adobe: #ff0000;
+  --brand-sketch: #f7b500;
+  --brand-visa: #1a1f71;
+  --brand-mastercard: #eb001b;
+  --brand-docker: #2496ed;
+  --brand-aws: #ff9900;
+  --brand-azure: #0078d4;
+  --brand-firebase: #dd2c00;
+  --brand-supabase: #3fcf8e;
+  --brand-vue: #4fc08d;
+  --brand-react: #61dafb;
+  --brand-nextjs: var(--ink);
+  --brand-tailwind: #06b6d4;
+  --brand-typescript: #3178c6;
+  --brand-javascript: #f7df1e;
+  --brand-python: #3776ab;
+  --brand-php: #777bb4;
+  --brand-laravel: #ff2d20;
+  --brand-git: #f05032;
+  --brand-gitlab: #fc6d26;
+  --brand-bitbucket: #0052cc;
+  --brand-ubuntu: #e95420;
+  --brand-teams: #6264a7;
+  --brand-office: #d83b01;
+  --brand-onedrive: #0078d4;
+  --brand-google-analytics: #e37400;
+  --brand-google-play: #414141;
+  --brand-samsungpass: #1428a0;
+  --brand-tesla: #cc0000;
+  --brand-uber: var(--ink);
+  --brand-airbnb: #ff5a5f;
+  --brand-booking: #003580;
+  --brand-tripadvisor: #34e0a1;
+  --brand-soundcloud: #ff5500;
+  --brand-vimeo: #1ab7ea;
+  --brand-netflix: #e50914;
+  --brand-disney: #113ccf;
+}
+
+/* BrandLogo dark variants: the component renders both where the brand
+   publishes one; CSS picks, so components never branch on theme. */
+.brand-logo-dark { display: none; }
+[data-theme="dark"] .brand-logo-dark { display: inline; }
+[data-theme="dark"] .brand-logo-light.brand-logo-has-dark { display: none; }

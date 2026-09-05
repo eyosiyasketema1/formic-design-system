@@ -178,7 +178,7 @@ export default function Dashboard() {
               <Button variant="ghost" size="sm" icon={<Icon name={dark ? "sun" : "moon"} />} onClick={toggleTheme}>
                 {dark ? "Light" : "Dark"}
               </Button>
-              <Button variant="outline" size="sm" icon={<Icon name="upload" />}>Export CSV</Button>
+              <Button variant="outline" size="sm" icon={<Icon name="download" />}>Export CSV</Button>
               <Button variant="accent" size="sm" icon={<Icon name="sparkles" />}>Generate report</Button>
             </div>
           </header>
