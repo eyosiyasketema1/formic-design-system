@@ -5,7 +5,8 @@
  * (text-ink, bg-hover, rounded-control, shadow-card,
  * text-body, ease-out-quint, …) from the runtime tokens.
  *
- * In a Tailwind v4 project, import both files:
+ * In a Tailwind v4 project, import in this order:
+ *   @import "./fonts.css";        (first — a later @import is dropped)
  *   @import "tailwindcss";
  *   @import "./tokens.css";
  *   @import "./themes.css";      (optional, for the 5 palettes)

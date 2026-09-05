@@ -20,13 +20,18 @@ A token-driven React + Tailwind v4 design system for AI product interfaces, by E
 
 Generic Tailwind is the failure mode: it happens when the agent invents styles instead of importing the system.
 
-1. **Find Formic.** `ls src/formic/styles/tokens.css src/formic/components/primitives.tsx`. If missing, install before writing any UI:
+1. **Find Formic.** `ls src/formic/styles/tokens.css src/formic/components/primitives.tsx`. If missing, install before writing any UI. In an existing project (from its root):
    ```bash
    curl -fsSL https://formicai.dev/install.sh | bash
    ```
-   That copies `styles/` and `components/` into `src/formic/` and writes `AGENTS.md`, a Cursor rule, Copilot instructions, and this skill into the project.
+   In an empty folder, or when asked to "start a project", scaffold one instead (Vite + React + Tailwind v4 + demo dashboard, dependencies installed, nothing to edit):
+   ```bash
+   curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app
+   ```
+   Both copy `styles/` and `components/` into `src/formic/` and write `AGENTS.md`, a Cursor rule, Copilot instructions, and this skill into the project.
 2. **Wire the CSS once** (Tailwind v4 global stylesheet, in this order; fix the relative path to `src/formic`):
    ```css
+   @import "./formic/styles/fonts.css";          /* first: the Urbanist font */
    @import "tailwindcss";
    @import "./formic/styles/tokens.css";          /* source of truth: tokens, keyframes, primitive classes */
    @import "./formic/styles/themes.css";          /* optional: 5 palettes */

@@ -1,0 +1,13 @@
+/* ─────────────────────────────────────────────────────────
+ * FONTS — Urbanist, the default face (variable, weights 300–800)
+ * Import this FIRST in your global stylesheet, before Tailwind:
+ *   @import "./formic/styles/fonts.css";
+ *   @import "tailwindcss";
+ *   @import "./formic/styles/tokens.css";
+ *   …
+ * A CSS @import is only valid before other rules; anywhere later it is
+ * dropped silently by Lightning CSS / PostCSS and the font never loads.
+ * Self-hosting? Replace this file with your own @font-face rules and keep
+ * the family name "Urbanist" so --font-sans in tokens.css still resolves.
+ * ───────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Urbanist:wght@300..800&display=swap");

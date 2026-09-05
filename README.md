@@ -18,7 +18,14 @@ Formic is vendored, not published to npm: you copy the files into your project a
 
 ### 1. One command (recommended)
 
-From your project root. Copies the system into `src/formic/` and writes the instruction files AI coding tools read. Re-run to update.
+**New project.** Creates a Vite + React + Tailwind v4 app with Formic wired in, a demo dashboard, and the files AI coding tools read. Nothing to edit by hand.
+
+```bash
+curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app
+cd my-app && npm run dev
+```
+
+**Existing project.** From its root: copies the system into `src/formic/` and writes the instruction files. Re-run to update.
 
 ```bash
 curl -fsSL https://formicai.dev/install.sh | bash
@@ -52,6 +59,7 @@ Tailwind v4 is required for the utility bridge. Some components need one extra s
 Import the stylesheets in this order in your global CSS:
 
 ```css
+@import "./formic/styles/fonts.css";          /* first: the Urbanist font */
 @import "tailwindcss";
 @import "./formic/styles/tokens.css";         /* source of truth: tokens, keyframes, primitives */
 @import "./formic/styles/themes.css";         /* optional: the 5 palettes */
@@ -114,7 +122,7 @@ Open the [gallery](https://formicai.dev/preview.html): one page per component wi
 
 A rules file alone is not enough: if the components are not in the project, every agent (Claude Code, Cursor, Copilot, Codex) falls back to generic Tailwind no matter how good the prompt. So the install gives the agent the code and the rules together.
 
-**1. Install into the project you are building** (from its root):
+**1. Get a project with Formic inside.** New: `curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app`. Existing, from its root:
 
 ```bash
 curl -fsSL https://formicai.dev/install.sh | bash
