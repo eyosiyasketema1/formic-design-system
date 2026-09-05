@@ -31,7 +31,7 @@ export default function FilterTable({
   const countFor = (key: "all" | Status) =>
     key === "all" ? rows.length : rows.filter((row) => row.status === key).length;
   return (
-    <div className="w-full max-w-105">
+    <div className="w-full">
       {/* filter chips */}
       <div
         className="-mx-1 mb-1 flex items-center gap-1 overflow-x-auto px-1 py-1"

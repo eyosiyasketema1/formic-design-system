@@ -764,7 +764,7 @@ tfoot .records-sticky-cell { z-index: 5; }
   })();
 </script>
 <script type="text/babel" data-presets="react">
-const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useId, cloneElement, isValidElement, createContext, useContext, Fragment } = React;
+const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useId, cloneElement, isValidElement, createContext, useContext, Children, Fragment } = React;
 
 /* ═══════════ Primitives ═══════════ */
 /* Icons: real projects use @tabler/icons-react through the Icon wrapper in
@@ -1715,7 +1715,11 @@ function Button({
     ${BTN_SIZES[size]} ${BTN_VARIANTS[variant]} ${className}`;
   const content = <>
       {loading ? <Spinner /> : icon && <span aria-hidden className="shrink-0">{icon}</span>}
-      <span className="optical-text">{children}</span>
+      <span className="inline-flex items-center gap-[inherit] whitespace-nowrap">
+        {Children.map(children, (child) =>
+          typeof child === "string" || typeof child === "number" ? <span className="optical-text">{child}</span> : child,
+        )}
+      </span>
       {!loading && iconEnd && <span aria-hidden className="shrink-0">{iconEnd}</span>}
     </>;
   if (href !== void 0 && !disabled) {
@@ -2971,7 +2975,7 @@ function DiffTable({
   const total = removals + additions;
   const showAdded = settled && added !== null;
   const toggleEdit = (key) => setEdits((current) => ({ ...current, [key]: !current[key] }));
-  return <div className="w-full max-w-95">
+  return <div className="w-full">
       <div className="relative overflow-hidden rounded-card bg-surface shadow-card">
         <div className="primitive-card-bar flex items-center justify-between border-b border-line">
           <span className="text-caption font-medium text-ink">{title}</span>
@@ -4013,7 +4017,7 @@ function FilterTable({
 } = {}) {
   const [filter, setFilter] = useState("all");
   const countFor = (key) => key === "all" ? rows.length : rows.filter((row) => row.status === key).length;
-  return <div className="w-full max-w-105">
+  return <div className="w-full">
       {
     /* filter chips */
   }
@@ -7620,18 +7624,38 @@ function niceMax(v) {
 }
 function useTip() {
   const [tip, setTip] = useState(null);
-  return { tip, show: (x, y, node) => setTip({ x, y, node }), hide: () => setTip(null) };
+  return {
+    tip,
+    /** viewport coordinates — pass the mark's bounding rect centre-top */
+    show: (x, y, node) => setTip({ x, y, node }),
+    hide: () => setTip(null),
+  };
 }
+/** the mark's anchor point in viewport space: horizontal centre, top edge */
+function anchorOf(event) {
+  const r = event.currentTarget.getBoundingClientRect();
+  return [r.left + r.width / 2, r.top];
+}
+
 function ChartTip({ tip }) {
-  if (!tip) return null;
-  return (
-    <div aria-hidden="true"
-      className={`pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full ${TOOLTIP_CHIP}`}
-      style={{ left: tip.x, top: tip.y - 8, ...TOOLTIP_CHIP_STYLE }}>
+  if (!tip || typeof document === "undefined") return null;
+  /* Portalled and fixed: charts live inside cards with overflow-hidden and
+     scroll containers with overflow-x-auto (which also clips vertically), so
+     an in-flow tooltip above the tallest bar was cut off. */
+  return ReactDOM.createPortal(
+    <div
+      /* aria-hidden: the value is already on the mark's aria-label,
+         so announcing the tip too would read it twice. */
+      aria-hidden="true"
+      className={`pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full ${TOOLTIP_CHIP}`}
+      style={{ left: tip.x, top: tip.y - 8, ...TOOLTIP_CHIP_STYLE }}
+    >
       {tip.node}
-    </div>
+    </div>,
+    document.body,
   );
 }
+
 function ChartLegend({ series }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
@@ -7646,35 +7670,68 @@ function ChartLegend({ series }) {
 }
 const CHART_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"];
 const BAR_SERIES_DEFAULT = [{ name: "Transactions", values: [38, 52, 32, 12, 35, 28, 33, 25] }];
-function BarChart({ labels = CHART_MONTHS, series = BAR_SERIES_DEFAULT, variant = "grouped", highlight, height = 168, showValues = true, className = "" }) {
+function BarChart({
+  labels = CHART_MONTHS,
+  series = BAR_SERIES_DEFAULT,
+  variant = "grouped",
+  /** index of the column to emphasise; the rest drop to a tint */
+  highlight,
+  height = 168,
+  fill = false,
+  showValues = true,
+  className = "",
+}) {
   const { tip, show, hide } = useTip();
-  const boxRef = useRef(null);
   const stacked = variant === "stacked";
+
+  /* Scale off the tallest thing a column will actually draw: the sum
+   * when stacked, the tallest single bar when grouped. */
   const columnPeak = labels.map((_, i) =>
     stacked
       ? series.reduce((n, s) => n + (s.values[i] ?? 0), 0)
-      : Math.max(0, ...series.map((s) => s.values[i] ?? 0)));
+      : Math.max(0, ...series.map((s) => s.values[i] ?? 0)),
+  );
   const max = niceMax(Math.max(0, ...columnPeak));
-  /* A headline number only means something when it represents the whole
-     column — grouped multi-series has no such number. */
+
+  /* A headline number over the column only means something when it
+   * represents the whole column. Grouped multi-series has no such
+   * number — printing the tallest series would read as the total. */
   const labelValues = showValues && (stacked || series.length === 1);
+
   const onEnter = (event, node) => {
-    const box = boxRef.current?.getBoundingClientRect();
-    const bar = event.currentTarget.getBoundingClientRect();
-    if (!box) return;
-    show(bar.left - box.left + bar.width / 2, bar.top - box.top, node);
+    const [x, y] = anchorOf(event);
+    show(x, y, node);
   };
+
   return (
-    <div className={`w-full max-w-160 ${className}`}>
-      {series.length > 1 && <div className="mb-3"><ChartLegend series={series} /></div>}
-      <div ref={boxRef} className="relative overflow-x-auto" onMouseLeave={hide}>
-        <div className="flex items-end gap-1.5" style={{ height }}>
+    <div className={`flex w-full flex-col ${fill ? "h-full min-h-0" : ""} ${className}`}>
+      {series.length > 1 && <div className="mb-3 shrink-0"><ChartLegend series={series} /></div>}
+      {/* Every bar has to stay a 24px target, so a dense grouped chart
+          scrolls rather than shrinking its bars into unhittable slivers. */}
+      {/* When filling, the plot is absolutely positioned inside a wrapper that
+          only sets a minimum height. In a stretched grid row the wrapper grows
+          (flex-1) and the plot with it; in an auto-height row the wrapper is
+          exactly `height` tall. A plain h-full child would resolve to auto
+          there and the bars would collapse to nothing. */}
+      <div
+        className={`overflow-x-auto ${fill ? "relative min-h-0 flex-1" : ""}`}
+        style={fill ? { minHeight: height } : undefined}
+        onMouseLeave={hide}
+      >
+        <div className={`flex items-end gap-1.5 ${fill ? "absolute inset-0" : ""}`} style={fill ? undefined : { height }}>
           {labels.map((label, i) => (
-            <div key={`${label}-${i}`} className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1"
-              style={{ minWidth: stacked ? HIT : series.length * HIT }}>
-              {labelValues && <span className="text-center text-tiny font-medium text-ink tabular-nums">{compact(columnPeak[i])}</span>}
-              {/* column-reverse makes the BOTTOM main-start, so a stack anchors
-                  with justify-start; justify-center would float it. */}
+            <div
+              key={`${label}-${i}`}
+              className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1"
+              style={{ minWidth: stacked ? HIT : series.length * HIT }}
+            >
+              {labelValues && (
+                <span className="text-center text-tiny font-medium text-ink tabular-nums">
+                  {compact(columnPeak[i])}
+                </span>
+              )}
+              {/* column-reverse makes the BOTTOM the main-start edge, so a
+                  stack anchors with justify-start; justify-center would float it. */}
               <div className={`flex h-full gap-0.5 ${stacked ? "flex-col-reverse items-center justify-start" : "items-end justify-center"}`}>
                 {series.map((s, si) => {
                   const value = s.values[i] ?? 0;
@@ -7682,13 +7739,16 @@ function BarChart({ labels = CHART_MONTHS, series = BAR_SERIES_DEFAULT, variant 
                   const dimmed = highlight !== undefined && highlight !== i;
                   const text = `${s.name} · ${value.toLocaleString()}`;
                   return (
-                    <button key={`${s.name}-${si}`} type="button"
+                    <button
+                      key={`${s.name}-${si}`}
+                      type="button"
                       aria-label={`${s.name}, ${label}: ${value.toLocaleString()}`}
                       onMouseEnter={(e) => onEnter(e, text)}
                       onFocus={(e) => onEnter(e, text)}
                       onBlur={hide}
                       className={`w-full rounded-sm transition-opacity duration-150 hover:opacity-80 ${SERIES_BG[tone]} ${dimmed ? "opacity-25" : ""}`}
-                      style={{ height: `${(value / max) * 100}%` }} />
+                      style={{ height: `${(value / max) * 100}%` }}
+                    />
                   );
                 })}
               </div>
@@ -7702,35 +7762,60 @@ function BarChart({ labels = CHART_MONTHS, series = BAR_SERIES_DEFAULT, variant 
   );
 }
 const LINE_SERIES_DEFAULT = [{ name: "Profit", values: [18, 26, 21, 34, 29, 41, 38, 52] }];
-function LineChart({ labels = CHART_MONTHS, series = LINE_SERIES_DEFAULT, area = true, points = true, height = 150, className = "" }) {
+function LineChart({
+  labels = CHART_MONTHS,
+  series = LINE_SERIES_DEFAULT,
+  area = true,
+  points = true,
+  height = 150,
+  fill = false,
+  className = "",
+}) {
   const gradientId = useId();
   const { tip, show, hide } = useTip();
-  const boxRef = useRef(null);
-  const W = 100, H = 40;
+  const W = 100, H = 40;                      // viewBox units; CSS does the sizing
   const max = niceMax(Math.max(0, ...series.flatMap((s) => s.values)));
   const slots = Math.max(labels.length, ...series.map((s) => s.values.length), 1);
   const step = slots > 1 ? W / (slots - 1) : W;
+
   const onPoint = (event, node) => {
-    const box = boxRef.current?.getBoundingClientRect();
-    const dot = event.currentTarget.getBoundingClientRect();
-    if (!box) return;
-    show(dot.left - box.left + dot.width / 2, dot.top - box.top, node);
+    const [x, y] = anchorOf(event);
+    show(x, y, node);
   };
+
   return (
-    <div className={`w-full max-w-160 ${className}`}>
-      {series.length > 1 && <div className="mb-3"><ChartLegend series={series} /></div>}
-      <div ref={boxRef} className="relative" onMouseLeave={hide}>
-        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ height }} className="w-full overflow-visible"
-          role="img" aria-label={series.map((s) => `${s.name}: ${s.values.map((v) => v.toLocaleString()).join(", ")}`).join(". ")}>
+    <div className={`flex w-full flex-col ${fill ? "h-full min-h-0" : ""} ${className}`}>
+      {series.length > 1 && <div className="mb-3 shrink-0"><ChartLegend series={series} /></div>}
+      {/* Filling: the svg is absolute so its 100×40 viewBox aspect cannot set
+          the height; the wrapper takes the panel's height (flex-1) or, in an
+          auto-height row, exactly `height`. Dots are %-positioned in the same
+          wrapper, so they track whatever height CSS settles on. */}
+      <div
+        className={`relative ${fill ? "min-h-0 flex-1" : ""}`}
+        style={fill ? { minHeight: height } : undefined}
+        onMouseLeave={hide}
+      >
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          preserveAspectRatio="none"
+          style={fill ? undefined : { height }}
+          className={`block w-full overflow-visible ${fill ? "absolute inset-0 h-full" : ""}`}
+          role="img"
+          aria-label={series.map((s) => `${s.name}: ${s.values.map((v) => v.toLocaleString()).join(", ")}`).join(". ")}
+        >
           {[0, 0.5, 1].map((t) => (
-            <line key={t} x1="0" x2={W} y1={H * t} y2={H * t} className="stroke-chart-track" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+            <line
+              key={t} x1="0" x2={W} y1={H * t} y2={H * t}
+              className="stroke-chart-track" strokeWidth="1" vectorEffect="non-scaling-stroke"
+            />
           ))}
           {series.map((s, si) => {
             const tone = toneOf(s.color, si);
             const d = s.values.map((v, i) => `${i ? "L" : "M"}${i * step} ${H - (v / max) * H}`).join(" ");
             return (
-              /* The colour class goes on the <g>, not the path: a gradient stop
-                 resolves currentColor from its OWN inherited colour. */
+              /* The colour class goes on the <g>, not the path: a gradient
+                 stop resolves currentColor from its OWN inherited colour, so
+                 putting it on the sibling path leaves the fill ambient ink. */
               <g key={`${s.name}-${si}`} className={SERIES_TEXT[tone]}>
                 {area && (
                   <>
@@ -7743,29 +7828,48 @@ function LineChart({ labels = CHART_MONTHS, series = LINE_SERIES_DEFAULT, area =
                     <path d={`${d} L${(s.values.length - 1) * step} ${H} L0 ${H} Z`} fill={`url(#${gradientId}-${si})`} />
                   </>
                 )}
-                <path d={d} fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" className={SERIES_STROKE[tone]} />
+                <path
+                  d={d} fill="none" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                  className={SERIES_STROKE[tone]}
+                />
               </g>
             );
           })}
         </svg>
+
+        {/* Dots live in HTML, not SVG: the stretched viewBox would turn
+            circles into ellipses, and they need to be real focus targets.
+            The button is a 24px hit area; the visible dot is the inner span. */}
         {points && series.map((s, si) => {
           const tone = toneOf(s.color, si);
           return s.values.map((v, i) => (
-            <button key={`${s.name}-${si}-${i}`} type="button"
+            <button
+              key={`${s.name}-${si}-${i}`}
+              type="button"
               aria-label={`${s.name}, ${labels[i] ?? i + 1}: ${v.toLocaleString()}`}
               onMouseEnter={(e) => onPoint(e, `${s.name} · ${v.toLocaleString()}`)}
               onFocus={(e) => onPoint(e, `${s.name} · ${v.toLocaleString()}`)}
               onBlur={hide}
               className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full"
-              style={{ width: HIT, height: HIT, left: `${(i / Math.max(slots - 1, 1)) * 100}%`, top: `${(1 - v / max) * height}px` }}>
+              style={{
+                width: HIT, height: HIT,
+                left: `${(i / Math.max(slots - 1, 1)) * 100}%`,
+                /* percent, not px: the plot's height is whatever CSS gave it */
+                top: `${(1 - v / max) * 100}%`,
+              }}
+            >
               <span className={`size-2.5 rounded-full border-2 border-surface transition-transform duration-150 ${SERIES_BG[tone]}`} />
             </button>
           ));
         })}
         <ChartTip tip={tip} />
       </div>
-      <div className="mt-2 flex justify-between">
-        {labels.map((l, i) => <span key={`${l}-${i}`} className="min-w-0 truncate text-tiny text-ink-3">{l}</span>)}
+      <div className="mt-2 flex shrink-0 justify-between">
+        {labels.map((l, i) => (
+          <span key={`${l}-${i}`} className="min-w-0 truncate text-tiny text-ink-3">{l}</span>
+        ))}
       </div>
     </div>
   );
@@ -7917,6 +8021,7 @@ function BarList({
   max,
   format = (n) => n.toLocaleString(),
   stagger = 90,
+  fill = false,
   className = "",
 }) {
   const reduced = useReducedMotion();
@@ -7928,7 +8033,7 @@ function BarList({
   }, [reduced]);
   const ceiling = max ?? Math.max(1, ...items.map((i) => i.value));
   return (
-    <div className={`flex w-full max-w-160 flex-col gap-2.5 ${className}`}>
+    <div className={`flex w-full flex-col gap-2.5 ${fill ? "h-full justify-between" : ""} ${className}`}>
       {items.map((item, i) => {
         const pct = Math.max(2, (item.value / ceiling) * 100);
         const leader = i === 0;
@@ -8060,6 +8165,169 @@ function Masked({ children, placeholder = "•••••" }) {
       <span aria-hidden="true" className="tracking-wide">{placeholder}</span>
       <span className="sr-only">Hidden. Use the eye to reveal.</span>
     </>
+  );
+}
+
+/* ═══════════ Panel (mirrors components/Panel.tsx) ═══════════ */
+function Panel({
+  title,
+  caption,
+  actions,
+  children,
+  padding = "md",
+  className = "",
+  bodyClassName = "",
+}) {
+  const hasHeader = title || caption || actions;
+  return (
+    <Card className={`flex h-full min-w-0 flex-col ${padding === "lg" ? "p-5" : "p-4"} ${className}`}>
+      {hasHeader && (
+        <div className="flex shrink-0 items-start justify-between gap-3">
+          <div className="min-w-0">
+            {title && <h3 className="truncate text-body font-medium text-ink">{title}</h3>}
+            {caption && <p className="mt-0.5 text-caption text-ink-3">{caption}</p>}
+          </div>
+          {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+        </div>
+      )}
+      <div className={`flex min-h-0 flex-1 flex-col ${hasHeader ? "mt-3" : ""} ${bodyClassName}`}>{children}</div>
+    </Card>
+  );
+}
+
+/* ═══════════ AppSidebar (mirrors components/AppSidebar.tsx) ═══════════ */
+const APPSB_WORKSPACE = { name: "Formic Studio", monogram: "F" };
+const APPSB_SECTIONS = [
+  {
+    items: [
+      { key: "overview", label: "Overview", icon: "home" },
+      { key: "reports", label: "Reports", icon: "chart", count: "12" },
+      { key: "records", label: "Records", icon: "file" },
+    ],
+  },
+  {
+    title: "Workspace",
+    items: [
+      { key: "people", label: "People", icon: "user-add", count: "8" },
+      { key: "integrations", label: "Integrations", icon: "layers" },
+      { key: "notifications", label: "Notifications", icon: "bell", count: "3" },
+      { key: "settings", label: "Settings", icon: "gear" },
+    ],
+  },
+];
+const APPSB_USER = { name: "Samson Usmael", detail: "Admin" };
+function AppSidebar({
+  workspace = APPSB_WORKSPACE,
+  sections = APPSB_SECTIONS,
+  active,
+  onSelect,
+  variant,
+  defaultVariant = "expanded",
+  onVariantChange,
+  collapsible = true,
+  user = APPSB_USER,
+  footer,
+  className = "",
+}) {
+  const [own, setOwn] = useState(defaultVariant);
+  const mode = variant ?? own;
+  const rail = mode === "rail";
+  const flip = () => {
+    const next = rail ? "expanded" : "rail";
+    if (variant === undefined) setOwn(next);
+    onVariantChange?.(next);
+  };
+  /* A controlled variant with no handler cannot flip, so the control is
+     not drawn rather than drawn dead. */
+  const canFlip = collapsible && (variant === undefined || Boolean(onVariantChange));
+  const current = active === null ? undefined : (active ?? sections[0]?.items[0]?.key);
+
+  /* One row, both variants: in the rail the label and count are not
+     rendered at all (a tooltip carries the name), so the icon square is
+     the whole hit area and stays exactly where it was — collapsing never
+     shifts the icons. */
+  const row = (item) => {
+    const on = item.key === current;
+    const button = (
+      <button
+        key={item.key}
+        type="button"
+        data-menu-row
+        aria-current={on ? "page" : undefined}
+        aria-label={rail ? item.label : undefined}
+        onClick={() => onSelect?.(item.key)}
+        className={`relative z-10 flex h-9 w-full items-center rounded-control transition-colors duration-150
+          ${rail ? "justify-center" : "gap-2.5 px-2.5"}
+          ${on ? "bg-hover-2 text-ink" : "text-ink-2 hover:text-ink"}`}
+      >
+        <Icon name={item.icon} size={16} strokeWidth={2} className="shrink-0" />
+        {!rail && <span className="min-w-0 flex-1 truncate text-left text-body font-medium">{item.label}</span>}
+        {!rail && item.count && <span className="shrink-0 text-small font-medium text-ink-3 tabular-nums">{item.count}</span>}
+      </button>
+    );
+    return rail ? <Tooltip key={item.key} label={item.label}>{button}</Tooltip> : button;
+  };
+
+  return (
+    <aside
+      aria-label="Primary"
+      data-variant={mode}
+      className={`flex h-full shrink-0 flex-col border-r border-line bg-sidebar transition-[width] duration-300 ${rail ? "w-14" : "w-60"} ${className}`}
+      style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
+    >
+      {/* workspace mark + collapse control share one row */}
+      <div className={`flex h-14 shrink-0 items-center ${rail ? "justify-center" : "gap-2 px-3"}`}>
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-ink text-small font-semibold text-canvas">
+          {workspace.monogram}
+        </span>
+        {!rail && <span className="min-w-0 flex-1 truncate text-body font-semibold text-ink">{workspace.name}</span>}
+        {!rail && canFlip && (
+          <IconButton label="Collapse sidebar" onClick={flip} className="text-ink-3 hover:bg-hover-2 hover:text-ink">
+            <Icon name="sidebar" size={15} strokeWidth={2} />
+          </IconButton>
+        )}
+      </div>
+
+      <nav className={`min-h-0 flex-1 overflow-y-auto ${rail ? "px-2" : "px-2.5"}`}>
+        {sections.map((section, si) => (
+          <div key={section.title ?? si} className={si ? "mt-4" : ""}>
+            {section.title && !rail && (
+              <p className="mb-1 px-2.5 text-micro font-medium tracking-wide text-ink-3 uppercase">{section.title}</p>
+            )}
+            {section.title && rail && si > 0 && <div className="mx-2 mb-2 border-t border-line" />}
+            <GlideMenu className="flex flex-col gap-0.5" highlightClassName="inset-x-0 rounded-control bg-hover">
+              {section.items.map(row)}
+            </GlideMenu>
+          </div>
+        ))}
+      </nav>
+
+      <div className={`mt-auto shrink-0 border-t border-line ${rail ? "flex flex-col items-center gap-1 py-2" : "p-2.5"}`}>
+        {rail && canFlip && (
+          <IconButton label="Expand sidebar" onClick={flip} className="size-9 text-ink-3 hover:bg-hover-2 hover:text-ink">
+            <Icon name="sidebar" size={15} strokeWidth={2} className="rotate-180" />
+          </IconButton>
+        )}
+        {footer !== undefined ? footer : user && (
+          rail ? (
+            <Tooltip label={user.name}>
+              <button type="button" aria-label={user.name} className="flex size-9 items-center justify-center rounded-control hover:bg-hover-2">
+                <Avatar name={user.name} src={user.src} size="sm" />
+              </button>
+            </Tooltip>
+          ) : (
+            <button type="button" className="flex h-10 w-full items-center gap-2.5 rounded-control px-2 text-left hover:bg-hover-2">
+              <Avatar name={user.name} src={user.src} size="sm" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-caption font-medium text-ink">{user.name}</span>
+                {user.detail && <span className="block truncate text-small text-ink-3">{user.detail}</span>}
+              </span>
+              <Icon name="ellipsis" size={14} strokeWidth={2} className="shrink-0 text-ink-3" />
+            </button>
+          )
+        )}
+      </div>
+    </aside>
   );
 }
 
@@ -9240,6 +9508,76 @@ function Page_menubar() {
   );
 }
 
+function Page_panel() {
+  return (
+    <>
+      <GalleryCard label="Two panels, one row: equal height, bodies fill" full>
+        <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-5">
+          <Panel title="Revenue by month" caption="Invoiced, last six months" className="lg:col-span-3" actions={<Button variant="ghost" size="xs">USD</Button>}>
+            <LineChart fill labels={["Apr", "May", "Jun", "Jul", "Aug", "Sep"]} series={[
+              { name: "Current", values: [38, 52, 32, 41, 35, 48] },
+              { name: "Previous", color: 3, values: [30, 41, 28, 36, 31, 39] },
+            ]} />
+          </Panel>
+          <Panel title="Revenue by location" caption="Top purchasing regions" className="lg:col-span-2">
+            <BarList fill format={(n) => `$${n.toLocaleString()}`} items={[
+              { label: "United States", value: 72400 }, { label: "United Kingdom", value: 28900 },
+              { label: "Germany", value: 19400 }, { label: "Canada", value: 15600 }, { label: "Australia", value: 11950 },
+            ]} />
+          </Panel>
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Bar chart filling a panel" full>
+        <div className="h-72">
+          <Panel title="Revenue progression" caption="Grouped monthly sales by category" actions={<Badge tone="neutral">Monthly</Badge>}>
+            <BarChart fill variant="stacked" series={[
+              { name: "Electronics", values: [38, 52, 32, 41, 35, 48, 44, 56] },
+              { name: "Apparel", color: 3, values: [11, 9, 15, 12, 18, 14, 9, 16] },
+              { name: "Home", color: 5, values: [7, 13, 9, 16, 11, 19, 14, 10] },
+            ]} />
+          </Panel>
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Hero padding, no header" wide>
+        <Panel padding="lg">
+          <p className="text-display font-semibold text-ink tabular-nums">$1,437,500</p>
+          <p className="mt-1 text-caption text-ink-3">Invoiced this month</p>
+        </Panel>
+      </GalleryCard>
+    </>
+  );
+}
+
+function Page_appsidebar() {
+  const [active, setActive] = useState("reports");
+  const [variant, setVariant] = useState("expanded");
+  return (
+    <>
+      <GalleryCard label="Expanded and rail, controlled from the app" full>
+        <div className="flex h-[440px] overflow-hidden rounded-card border border-line">
+          <AppSidebar active={active} onSelect={setActive} variant={variant} onVariantChange={setVariant} />
+          <div className="flex min-w-0 flex-1 flex-col gap-3 bg-canvas p-5">
+            <p className="text-body font-medium text-ink">{active}</p>
+            <p className="text-caption text-ink-3">The page for the active item goes here. Collapse with the control in the sidebar header.</p>
+          </div>
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Rail" wide>
+        <div className="flex h-[360px] overflow-hidden rounded-card border border-line">
+          <AppSidebar variant="rail" collapsible={false} active="records" />
+          <div className="min-w-0 flex-1 bg-canvas" />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Expanded, no account row" wide>
+        <div className="flex h-[360px] overflow-hidden rounded-card border border-line">
+          <AppSidebar collapsible={false} user={null} active="people" />
+          <div className="min-w-0 flex-1 bg-canvas" />
+        </div>
+      </GalleryCard>
+    </>
+  );
+}
+
 function Page_sidebarnav() {
   return (
     <>
@@ -9516,6 +9854,7 @@ const PAGES = [
   { id: "approvalflow", group: "Conversation", title: "ApprovalFlow", note: "The stepper sibling of ApprovalCard, for a run that needs several questions in sequence. The stack slides vertically and the card's height animates to fit, so it never jumps; the counter rolls like an odometer. Single-choice answers auto-advance, multi-select waits for Continue, and every question takes a free-text answer.", file: "components/ApprovalFlow.tsx", Component: Page_approvalflow },
   { id: "promptbar", group: "Conversation", title: "PromptBar", note: "Full composer: @ sources, / commands, model picker (pick Sprinkles 5 for the rainbow), dictation. Self-running demo hands over on interaction.", file: "components/PromptBar.tsx", Component: Page_promptbar },
   { id: "chatcomposer", group: "Conversation", title: "ChatComposer", note: "Interactive chat panel \u2014 type a prompt and send to trigger the reply sequence.", file: "components/ChatComposer.tsx", Component: Page_chatcomposer },
+  { id: "panel", group: "Dashboard", title: "Panel", note: "The dashboard card with its anatomy built in: title and caption left, actions right, one baseline, body below. It stretches to its grid cell and its body is a flex column that fills it, so a chart or list with `fill` reaches the bottom edge and two panels in a row end up the same height with nothing empty. Use Card directly only for things that are not a titled section.", file: "components/Panel.tsx", Component: Page_panel },
   { id: "statcard", group: "Dashboard", title: "StatCard & MetricRow", note: "The tiles a dashboard is mostly made of. Delta direction is an explicit prop, never inferred from the sign \u2014 down is good for churn and cost, and only the caller knows which.", file: "components/StatCard.tsx", Component: Page_statcard },
   { id: "charts", group: "Dashboard", title: "Charts", note: "No chart library \u2014 bars are HTML (a scaled SVG scales its text and breaks the type ramp), lines are SVG with non-scaling strokes. Series use the categorical chart ramp, never the semantic green/red, and anything multi-series gets a legend because hue alone fails for colour-blind readers. Hover or tab to a bar or point for its value.", file: "components/charts.tsx", Component: Page_charts },
   { id: "dashboard", group: "Dashboard", title: "Dashboard widgets", note: "The moving parts of a dashboard, composed into one screen: CountUp settles the headline once, a smooth Sparkline draws itself in, the Gauge lights its ticks in sequence, BarList ranks in a single hue because the ranking is the message, MetricRow carries a funnel with a detail line, and PrivacyScope hides the money until the eye opens. Every animation collapses to its final frame under reduced motion.", file: "components/charts.tsx components/StatCard.tsx components/Privacy.tsx", Component: Page_dashboard },
@@ -9529,6 +9868,7 @@ const PAGES = [
   { id: "pagination", group: "Navigation", title: "Pagination", note: "Numbered pages with sibling windows and gap ellipses \u2014 first and last stay reachable, active page carries aria-current, edges disable prev / next.", file: "components/Pagination.tsx", Component: Page_pagination },
   { id: "breadcrumbs", group: "Navigation", title: "Breadcrumbs", note: "Path trail \u2014 long trails collapse their middle into a DropdownMenu, the current page carries aria-current, labels truncate instead of breaking the row. Navigating fires a toast here.", file: "components/Breadcrumbs.tsx", Component: Page_breadcrumbs },
   { id: "menubar", group: "Navigation", title: "Menubar", note: "A bar of action menus, each a DropdownMenu \u2014 dividers, disabled and destructive items included. Selections fire toasts here.", file: "components/Menubar.tsx", Component: Page_menubar },
+  { id: "appsidebar", group: "Navigation", title: "AppSidebar", note: "The menu rail for dashboards and admin apps, as opposed to SidebarNav, the chat rail. Grouped navigation with counts, a workspace mark at the top, an account row at the bottom. Two variants on the same --sidebar surface: expanded (240px, icon + label + count, section titles) and rail (56px, icons only, labels as tooltips). Collapsing never moves the icons.", file: "components/AppSidebar.tsx", Component: Page_appsidebar },
   { id: "sidebarnav", group: "Navigation", title: "SidebarNav", note: "Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.", file: "components/SidebarNav.tsx", Component: Page_sidebarnav },
   { id: "searchlist", group: "Navigation", title: "SearchList", note: "Command search with live filtering \u2014 type to filter, gibberish for the empty state.", file: "components/SearchList.tsx", Component: Page_searchlist }
 ];
@@ -9762,6 +10102,36 @@ const PLAYGROUNDS = {
     ],
     render: (p) => <Avatar name={p.name} size={p.size} tone={p.tone} />,
   },
+  panel: {
+    schema: [
+      { key: "title", label: "Title", type: "text", value: "Revenue by location" },
+      { key: "caption", label: "Caption", type: "text", value: "Top purchasing regions" },
+      { key: "actions", label: "Action", type: "toggle", value: true },
+      { key: "padding", label: "Padding", type: "select", value: "md", options: ["md", "lg"] },
+      { key: "fill", label: "Body fills", type: "toggle", value: true },
+    ],
+    render: (p) => (
+      <div className="h-80 w-full max-w-120">
+        <Panel title={p.title} caption={p.caption} padding={p.padding} actions={p.actions ? <Button variant="ghost" size="xs">USD</Button> : undefined}>
+          <BarList fill={p.fill} items={[{ label: "United States", value: 72 }, { label: "United Kingdom", value: 29 }, { label: "Germany", value: 19 }, { label: "Canada", value: 16 }]} />
+        </Panel>
+      </div>
+    ),
+  },
+  appsidebar: {
+    schema: [
+      { key: "variant", label: "Variant", type: "select", value: "expanded", options: ["expanded", "rail"] },
+      { key: "collapsible", label: "Collapse control", type: "toggle", value: true },
+      { key: "user", label: "Account row", type: "toggle", value: true },
+      { key: "active", label: "Active", type: "select", value: "reports", options: ["overview", "reports", "records", "people", "settings"] },
+    ],
+    render: (p, set) => (
+      <div className="flex h-96 w-full overflow-hidden rounded-card border border-line">
+        <AppSidebar variant={p.variant} onVariantChange={(v) => set("variant", v)} collapsible={p.collapsible} user={p.user ? undefined : null} active={p.active} onSelect={(k) => set("active", k)} />
+        <div className="min-w-0 flex-1 bg-canvas" />
+      </div>
+    ),
+  },
   statcard: {
     schema: [
       { key: "label", label: "Label", type: "text", value: "Total income" },
@@ -9782,6 +10152,7 @@ const PLAYGROUNDS = {
   charts: {
     schema: [
       { key: "chart", label: "Chart", type: "select", value: "Bar", options: ["Bar", "Line", "Donut"] },
+      { key: "fill", label: "Fill a panel", type: "toggle", value: false },
       { heading: "Bar" },
       { key: "variant", label: "Variant", type: "select", value: "grouped", options: ["grouped", "stacked"] },
       { key: "series", label: "Series", type: "select", value: 1, options: [1, 2, 3] },
@@ -9800,9 +10171,10 @@ const PLAYGROUNDS = {
         { name: "Referral", color: 3, values: [11, 9, 15, 12, 18, 14, 9, 16] },
         { name: "Organic", color: 5, values: [7, 13, 9, 16, 11, 19, 14, 10] },
       ].slice(0, p.series);
-      if (p.chart === "Line") return <LineChart series={S} area={p.area} points={p.points} />;
-      if (p.chart === "Donut") return <DonutChart value={p.value} max={720} color={p.color} />;
-      return <BarChart series={S} variant={p.variant} highlight={p.highlight ? 1 : undefined} showValues={p.showValues} />;
+      const chart = p.chart === "Line" ? <LineChart fill={p.fill} series={S} area={p.area} points={p.points} />
+        : p.chart === "Donut" ? <DonutChart value={p.value} max={720} color={p.color} />
+        : <BarChart fill={p.fill} series={S} variant={p.variant} highlight={p.highlight ? 1 : undefined} showValues={p.showValues} />;
+      return p.fill && p.chart !== "Donut" ? <div className="h-80 w-full"><Panel title="Filled panel" caption="The chart takes the body's height">{chart}</Panel></div> : chart;
     },
   },
   dashboard: {

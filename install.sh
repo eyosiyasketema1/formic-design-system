@@ -129,16 +129,33 @@ export default function App() {
 }
 EOF
   cat > "$APP/src/pages/Dashboard.tsx" <<'EOF'
-/* Demo page. Every piece is a Formic component from src/formic — replace the
-   numbers with real data through props, and ask your agent for the next page:
-   "Use Formic (src/formic). Read AGENTS.md first, then build ..." */
+/* Demo page — the reference layout. Every piece is a Formic component from
+   src/formic: an AppSidebar shell, StatCards, and Panels whose bodies fill.
+   Replace the numbers with real data through props, then ask your agent for
+   the next page: "Use Formic (src/formic). Read AGENTS.md first, then build ..." */
 import { useState } from "react";
+import AppSidebar from "../formic/components/AppSidebar";
 import Button from "../formic/components/Button";
+import Panel from "../formic/components/Panel";
 import { StatCard, MetricRow } from "../formic/components/StatCard";
-import { BarChart, BarList } from "../formic/components/charts";
-import { Card, Icon } from "../formic/components/primitives";
+import { BarChart, BarList, LineChart } from "../formic/components/charts";
+import { Icon } from "../formic/components/primitives";
+
+const NAV = [
+  { items: [
+    { key: "overview", label: "Overview", icon: "home" as const },
+    { key: "reports", label: "Reports", icon: "chart" as const, count: "12" },
+    { key: "records", label: "Records", icon: "file" as const },
+  ] },
+  { title: "Workspace", items: [
+    { key: "people", label: "People", icon: "user-add" as const, count: "8" },
+    { key: "settings", label: "Settings", icon: "gear" as const },
+  ] },
+];
+const WEEKS = ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8"];
 
 export default function Dashboard() {
+  const [page, setPage] = useState("overview");
   const [dark, setDark] = useState(true);
   const toggleTheme = () => {
     const next = !dark;
@@ -146,50 +163,66 @@ export default function Dashboard() {
     document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
   };
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6 sm:p-8">
-      <header className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-display font-semibold text-ink">Overview</h1>
-          <p className="mt-0.5 text-caption text-ink-3">Built with Formic. Everything on this page is a component from src/formic.</p>
+    <div className="flex h-dvh">
+      <AppSidebar sections={NAV} active={page} onSelect={setPage} />
+      <main className="min-w-0 flex-1 overflow-y-auto">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6 sm:p-8">
+          <header className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-display font-semibold text-ink">Overview</h1>
+              <p className="mt-0.5 text-caption text-ink-3">Built with Formic. Everything on this page is a component from src/formic.</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button variant="ghost" size="sm" icon={<Icon name={dark ? "sun" : "moon"} />} onClick={toggleTheme}>
+                {dark ? "Light" : "Dark"}
+              </Button>
+              <Button variant="outline" size="sm" icon={<Icon name="upload" />}>Export CSV</Button>
+              <Button variant="accent" size="sm" icon={<Icon name="sparkles" />}>Generate report</Button>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard label="New leads" caption="This month" display="128" delta="+24%" icon="user-add" iconTone="accent" trend={[6, 9, 7, 12, 10, 15, 13, 19]} trendSmooth trendAnimate />
+            <StatCard label="Orders" caption="Won this month" display="34" delta="+8%" icon="circle-check" trend={[2, 3, 3, 5, 4, 6, 5, 7]} trendTone={2} />
+            <StatCard label="Conversion" caption="Lead to client" display="18%" delta="-2%" deltaTone="down" icon="chart" />
+            <StatCard label="People reached" caption="Returning: 9" display="43" delta="0.0%" deltaTone="flat" icon="globe" />
+          </div>
+
+          {/* Two panels, one row: the grid stretches them to the same height
+              and `fill` makes each body reach the bottom edge. */}
+          <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-5">
+            <Panel title="Revenue & sales" caption="Weekly, current vs previous period" className="lg:col-span-3" actions={<Button variant="ghost" size="xs">USD</Button>}>
+              <LineChart fill labels={WEEKS} series={[
+                { name: "Current", values: [38, 52, 44, 61, 55, 72, 66, 84] },
+                { name: "Previous", color: 3, values: [30, 41, 36, 47, 43, 58, 52, 66] },
+              ]} />
+            </Panel>
+            <Panel title="Revenue by location" caption="Top purchasing regions" className="lg:col-span-2">
+              <BarList fill format={(n) => `$${n.toLocaleString()}`} items={[
+                { label: "United States", value: 72400 }, { label: "United Kingdom", value: 28900 },
+                { label: "Germany", value: 19400 }, { label: "Canada", value: 15600 }, { label: "Australia", value: 11950 },
+              ]} />
+            </Panel>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
+            <Panel title="Revenue progression" caption="Grouped monthly sales by category">
+              <BarChart fill variant="stacked" labels={["Jan", "Feb", "Mar", "Apr", "May", "Jun"]} series={[
+                { name: "Electronics", values: [38, 52, 32, 41, 35, 48] },
+                { name: "Apparel", color: 3, values: [11, 9, 15, 12, 18, 14] },
+                { name: "Home", color: 5, values: [7, 13, 9, 16, 11, 19] },
+              ]} />
+            </Panel>
+            <Panel title="Funnel" caption="From first visit to signed" bodyClassName="justify-between">
+              <MetricRow icon="globe" label="Visited" detail="128 opened the site" value="128" delta="+24%" />
+              <MetricRow icon="message-question" label="Enquired" detail="96 opened their private link" value="96" delta="+12%" />
+              <MetricRow icon="file" label="Quoted" detail="51 received a proposal" value="51" />
+              <MetricRow icon="circle-check" label="Won" detail="34 signed" value="34" delta="+8%" />
+            </Panel>
+          </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={toggleTheme}>
-            <Icon name={dark ? "sun" : "moon"} size={14} strokeWidth={2} />
-            {dark ? "Light" : "Dark"}
-          </Button>
-          <Button variant="accent" size="sm">New report</Button>
-        </div>
-      </header>
-
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="New leads" caption="This month" display="128" delta="+24%" icon="user-add" iconTone="accent" trend={[6, 9, 7, 12, 10, 15, 13, 19]} trendSmooth trendAnimate />
-        <StatCard label="Orders" caption="Won this month" display="34" delta="+8%" icon="circle-check" trend={[2, 3, 3, 5, 4, 6, 5, 7]} trendTone={2} />
-        <StatCard label="Conversion" caption="Lead to client" display="18%" delta="-2%" deltaTone="down" icon="chart" />
-        <StatCard label="People reached" caption="Returning: 9" display="43" delta="0.0%" deltaTone="flat" icon="globe" />
-      </div>
-
-      <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-5">
-        <Card className="p-4 lg:col-span-3">
-          <p className="mb-3 text-caption font-medium text-ink">Revenue by month</p>
-          <BarChart labels={["Apr", "May", "Jun", "Jul", "Aug", "Sep"]} series={[{ name: "Invoiced", values: [38, 52, 32, 41, 35, 48] }]} highlight={5} />
-        </Card>
-        <Card className="p-4 lg:col-span-2">
-          <p className="mb-3 text-caption font-medium text-ink">Top services</p>
-          <BarList items={[
-            { label: "Brand identity", value: 48 }, { label: "Website", value: 31 },
-            { label: "Company profile", value: 24 }, { label: "Graphic design", value: 17 },
-          ]} />
-        </Card>
-      </div>
-
-      <Card className="p-4">
-        <p className="mb-1 text-caption font-medium text-ink">Funnel</p>
-        <MetricRow icon="globe" label="Visited" detail="128 opened the site" value="128" delta="+24%" />
-        <MetricRow icon="message-question" label="Enquired" detail="96 opened their private link" value="96" delta="+12%" />
-        <MetricRow icon="file" label="Quoted" detail="51 received a proposal" value="51" />
-        <MetricRow icon="circle-check" label="Won" detail="34 signed" value="34" delta="+8%" />
-      </Card>
-    </main>
+      </main>
+    </div>
   );
 }
 EOF

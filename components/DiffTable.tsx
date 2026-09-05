@@ -81,7 +81,7 @@ export default function DiffTable({
   const showAdded = settled && added !== null;
   const toggleEdit = (key: string) => setEdits((current) => ({ ...current, [key]: !current[key] }));
   return (
-    <div className="w-full max-w-95">
+    <div className="w-full">
       <div className="relative overflow-hidden rounded-card bg-surface shadow-card">
         <div className="primitive-card-bar flex items-center justify-between border-b border-line">
           <span className="text-caption font-medium text-ink">{title}</span>
