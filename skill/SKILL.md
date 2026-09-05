@@ -69,19 +69,24 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
 - **Tables fill their container** unless the user asks for a width; wide ones scroll in their own `overflow-x-auto`.
 - **Rails:** `AppSidebar` (dashboard / admin, `expanded` or `rail`) or `SidebarNav` (chat), inside `<div className="flex h-dvh">…<main className="min-w-0 flex-1 overflow-y-auto">`. Never build a sidebar from divs.
 - **Proximity and alignment.** Filters in one row directly above the list, sized to content, search at the right end; comparison pickers together with "vs" in the panel's `actions`. One grid: `gap-3.5` in sections, `gap-6` between; numbers right with `tabular-nums`; nothing centred unless alone.
+- **Filters are a `FilterBar`** (children = the selects, `search` pinned right, `active` + `onClear`): one row, wrap only on overflow, each control sized to content. Never one filter per row.
+- **Every chart animates in by default** (bars grow, lines reveal, donuts sweep, sparklines draw); reduced motion is honoured automatically. `animate={false}` only for live-updating charts. No custom keyframes, no motion libraries.
+- **Icons match labels:** `iconFor(label)` from `primitives.tsx` (`"Refresh"` → `retry`, `"Export CSV"` → `download`, `"Add user"` → `user-add`); `undefined` means leave the icon off.
+- **Brand marks:** `<BrandIcon name="github" />` from `brand.tsx` (80+ companies and social networks), monochrome like any icon. No logo images, no second icon package.
 - **Page density.** `p-6 sm:p-8`, sections `gap-6`.
 
 ## Component inventory
 
 **Primitives** (`primitives.tsx`): `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Skeleton`, `Avatar`, `Tooltip`, `Progress`, `Separator`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Checkbox`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`.
+**Brand** (`brand.tsx`): `FormicMark`, `BrandIcon` (`name`: github, google, apple, slack, notion, figma, linkedin, x, instagram, youtube, stripe, openai, …). **Helper:** `iconFor(label)`.
 **Hooks** (`hooks.ts`): `useSequence`, `useElapsed`, `useStream`, `useAnchoredLayer`, `useModalLayer`, `useReducedMotion` (the one way to read `prefers-reduced-motion`; never call `matchMedia` in a component).
 
 **Controls:** `Button` (10 variants x 4 sizes x square/pill).
-**Forms:** `Field`, `Input`, `Textarea`, `Select`, `Switch`, `Checkbox`, `Slider`, `OTPInput`, `FileDropzone`, `DatePicker`, `DateRangePicker`, `Calendar`, `ColorPicker`.
+**Forms:** `Field`, `Input`, `Textarea`, `Select`, `Switch`, `Checkbox`, `FilterBar`, `Slider`, `OTPInput`, `FileDropzone`, `DatePicker`, `DateRangePicker`, `Calendar`, `ColorPicker`.
 **Overlays:** `Modal`, `Drawer`, `Toast`, `DropdownMenu`, `Popover`, `Tooltip`.
 **Feedback:** `Alert`, `Progress`, `Skeleton`, `LoadingState`, `ThinkingState`, `TaskRows`, `ToolChips`.
 **Conversation:** `ChatThread`, `StreamingText`, `Markdown`, `CodeBlock`, `SelectionActions`, `PromptBar`, `ChatComposer`, `ApprovalCard`, `ApprovalFlow`, `RecommendationCard`, `ContextCards`.
-**Dashboard:** `Panel` (titled card: `title`, `caption`, `actions`, `padding`), `StatCard` (`iconTone` "neutral" | "accent"), `MetricRow`, `Delta`, `BarChart` / `LineChart` (`fill` to take the panel's height, no width cap), `DonutChart`, `Sparkline` (`smooth`, `animate`), `ChartLegend`, `CountUp`, `Gauge`, `BarList` (`charts.tsx`); `PrivacyScope`, `PrivacyToggle`, `Masked` (`Privacy.tsx`) mask figures until the eye is opened. `StatCard`'s `display` and `MetricRow`'s `value` accept a node, so `<CountUp>` and `<Masked>` slot straight in.
+**Dashboard:** `Panel` (titled card: `title`, `caption`, `actions`, `padding`), `StatCard` (`iconTone` "neutral" | "accent"), `MetricRow`, `Delta`, `BarChart` / `LineChart` (`fill` to take the panel's height, no width cap, `animate` default true), `DonutChart`, `Sparkline` (`smooth`, `animate`), `ChartLegend`, `CountUp`, `Gauge`, `BarList` (`charts.tsx`); `PrivacyScope`, `PrivacyToggle`, `Masked` (`Privacy.tsx`) mask figures until the eye is opened. `StatCard`'s `display` and `MetricRow`'s `value` accept a node, so `<CountUp>` and `<Masked>` slot straight in.
 **Data:** `RecordsTable`, `FilterTable`, `DiffTable`.
 **Structure:** `Accordion`, `Steps`, `Timeline`.
 **Navigation:** `Tabs`, `Pagination`, `Breadcrumbs`, `Menubar`, `AppSidebar` (dashboard rail: `expanded` | `rail`, `sections` with optional `children` sub-menus or `submenus="none"` for flat, `active`, `onSelect`, `user`, `workspace.logo` defaults to the Formic mark in accent), `SidebarNav` (chat rail), `SearchList`.
