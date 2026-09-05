@@ -99,6 +99,23 @@ function ChartTip({ tip }: { tip: Tip }) {
   );
 }
 
+/* ── useEntrance — the one-shot "draw in" every chart shares ──── */
+/* `animate` is on by default (rule: motion is part of the system, not a
+ * garnish one chart gets). It collapses to the final frame under reduced
+ * motion, and `animate={false}` switches it off for a chart that re-renders
+ * often. Returns true once the entrance should be at its resting state. */
+function useEntrance(animate: boolean): { settled: boolean; drawing: boolean } {
+  const reduced = useReducedMotion();
+  const drawing = animate && !reduced;
+  const [settled, setSettled] = useState(!drawing);
+  useEffect(() => {
+    if (!drawing) { setSettled(true); return; }
+    const t = setTimeout(() => setSettled(true), 30);
+    return () => clearTimeout(t);
+  }, [drawing]);
+  return { settled, drawing };
+}
+
 /* ── legend ────────────────────────────────────────────── */
 /* Series are separated by hue alone, which fails for colour-blind
  * readers, so anything with more than one series gets a legend. */
@@ -132,6 +149,7 @@ export function BarChart({
   height = 168,
   fill = false,
   showValues = true,
+  animate = true,
   className = "",
 }: {
   labels?: string[];
@@ -143,9 +161,12 @@ export function BarChart({
   /** stretch to the parent's height — inside a Panel body this fills the card */
   fill?: boolean;
   showValues?: boolean;
+  /** bars grow in from the baseline once, column by column; off for live-updating charts */
+  animate?: boolean;
   className?: string;
 }) {
   const { tip, show, hide } = useTip();
+  const { settled, drawing } = useEntrance(animate);
   const stacked = variant === "stacked";
 
   /* Scale off the tallest thing a column will actually draw: the sum
@@ -210,8 +231,13 @@ export function BarChart({
                       onMouseEnter={(e) => onEnter(e, text)}
                       onFocus={(e) => onEnter(e, text)}
                       onBlur={hide}
-                      className={`w-full rounded-sm transition-opacity duration-150 hover:opacity-80 ${SERIES_BG[tone]} ${dimmed ? "opacity-25" : ""}`}
-                      style={{ height: `${(value / max) * 100}%` }}
+                      className={`w-full origin-bottom rounded-sm transition-opacity duration-150 hover:opacity-80 ${SERIES_BG[tone]} ${dimmed ? "opacity-25" : ""}`}
+                      style={{
+                        height: `${(value / max) * 100}%`,
+                        /* scaleY composites on the GPU; animating height relays out every frame */
+                        transform: settled ? "scaleY(1)" : "scaleY(0)",
+                        transition: drawing ? `transform 900ms var(--ease-out-quint) ${i * 60}ms` : undefined,
+                      }}
                     />
                   );
                 })}
@@ -238,6 +264,7 @@ export function LineChart({
   points = true,
   height = 150,
   fill = false,
+  animate = true,
   className = "",
 }: {
   labels?: string[];
@@ -249,10 +276,13 @@ export function LineChart({
   height?: number;
   /** stretch to the parent's height — inside a Panel body this fills the card */
   fill?: boolean;
+  /** the line reveals left to right once, points follow; off for live-updating charts */
+  animate?: boolean;
   className?: string;
 }) {
   const gradientId = useId();
   const { tip, show, hide } = useTip();
+  const { settled, drawing } = useEntrance(animate);
   const W = 100, H = 40;                      // viewBox units; CSS does the sizing
   const max = niceMax(Math.max(0, ...series.flatMap((s) => s.values)));
   const slots = Math.max(labels.length, ...series.map((s) => s.values.length), 1);
@@ -278,7 +308,7 @@ export function LineChart({
         <svg
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
-          style={fill ? undefined : { height }}
+          style={{ ...(fill ? {} : { height }), ...(drawing ? { animation: "reveal-x 1400ms var(--ease-out-quint) both" } : {}) }}
           className={`block w-full overflow-visible ${fill ? "absolute inset-0 h-full" : ""}`}
           role="img"
           aria-label={series.map((s) => `${s.name}: ${s.values.map((v) => v.toLocaleString()).join(", ")}`).join(". ")}
@@ -334,6 +364,8 @@ export function LineChart({
               onBlur={hide}
               className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full"
               style={{
+                opacity: settled ? 1 : 0,
+                transition: drawing ? `opacity 400ms var(--ease-out-quint) ${900 + i * 40}ms` : undefined,
                 width: HIT, height: HIT,
                 left: `${(i / Math.max(slots - 1, 1)) * 100}%`,
                 /* percent, not px: the plot's height is whatever CSS gave it */
@@ -362,6 +394,7 @@ export function DonutChart({
   label = "Visitors",
   color = 4,
   size = 116,
+  animate = true,
   className = "",
 }: {
   value?: number;
@@ -369,10 +402,14 @@ export function DonutChart({
   label?: string;
   color?: ChartColor;
   size?: number;
+  /** the arc sweeps from zero to its value once; off for live-updating charts */
+  animate?: boolean;
   className?: string;
 }) {
+  const { settled, drawing } = useEntrance(animate);
   const pct = Math.max(0, Math.min(1, max === 0 ? 0 : value / max));
   const r = 42, C = 2 * Math.PI * r;
+  const shown = settled ? pct : 0;
   return (
     <div
       className={`relative shrink-0 ${className}`}
@@ -386,12 +423,12 @@ export function DonutChart({
         <circle
           cx="50" cy="50" r={r} fill="none" strokeWidth="11" strokeLinecap="round"
           className={SERIES_STROKE[color]}
-          strokeDasharray={`${pct * C} ${C}`}
-          style={{ transition: "stroke-dasharray 520ms var(--ease-out-quint)" }}
+          strokeDasharray={`${shown * C} ${C}`}
+          style={{ transition: `stroke-dasharray ${drawing ? 1100 : 520}ms var(--ease-out-quint)` }}
         />
       </svg>
       <span className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-        <span className="text-title font-semibold text-ink tabular-nums">{compact(value)}</span>
+        <span className="text-title font-semibold text-ink tabular-nums">{drawing ? <CountUp value={value} format={compact} duration={1100} /> : compact(value)}</span>
         <span className="text-tiny text-ink-3">{label}</span>
       </span>
     </div>
@@ -418,7 +455,7 @@ export function Sparkline({
   color = 1,
   area = true,
   smooth = false,
-  animate = false,
+  animate = true,
   className = "",
 }: {
   values?: number[];
@@ -511,14 +548,17 @@ export function Gauge({
   percent = 64,
   label = "of people become clients",
   ticks = 36,
+  animate = true,
   className = "",
 }: {
   percent?: number;
   label?: string;
   ticks?: number;
+  /** ticks light in sequence and the number counts up once; off for live-updating gauges */
+  animate?: boolean;
   className?: string;
 }) {
-  const reduced = useReducedMotion();
+  const { drawing } = useEntrance(animate);
   const p = Math.max(0, Math.min(100, percent));
   /* Two ticks is the floor — a lone tick has no arc to sit on. */
   const n = Math.max(2, Math.round(ticks));
@@ -537,13 +577,13 @@ export function Gauge({
               x2={CX + R2 * Math.cos(a)} y2={CY + R2 * Math.sin(a)}
               strokeWidth="4" strokeLinecap="round"
               className={on ? "stroke-accent" : "stroke-chart-track"}
-              style={on && !reduced ? { animation: `fade-in 300ms var(--ease-out-quint) ${i * 34}ms both` } : undefined}
+              style={on && drawing ? { animation: `fade-in 300ms var(--ease-out-quint) ${i * 34}ms both` } : undefined}
             />
           );
         })}
       </svg>
       <div className="absolute inset-x-0 top-[38%] text-center">
-        <p className="text-display-lg font-semibold text-ink"><CountUp value={Math.round(p)} />%</p>
+        <p className="text-display-lg font-semibold text-ink">{drawing ? <CountUp value={Math.round(p)} /> : Math.round(p)}%</p>
         <p className="mt-1 text-small text-ink-3">{label}</p>
       </div>
     </div>
@@ -568,6 +608,7 @@ export function BarList({
   format = (n: number) => n.toLocaleString(),
   stagger = 90,
   fill = false,
+  animate = true,
   className = "",
 }: {
   items?: BarItem[];
@@ -578,15 +619,11 @@ export function BarList({
   stagger?: number;
   /** spread the rows over the parent's height — inside a Panel body this fills the card */
   fill?: boolean;
+  /** bars grow in once, staggered; off for live-updating lists */
+  animate?: boolean;
   className?: string;
 }) {
-  const reduced = useReducedMotion();
-  const [on, setOn] = useState(false);
-  useEffect(() => {
-    if (reduced) { setOn(true); return; }
-    const t = setTimeout(() => setOn(true), 30);
-    return () => clearTimeout(t);
-  }, [reduced]);
+  const { settled: on, drawing } = useEntrance(animate);
   const ceiling = max ?? Math.max(1, ...items.map((i) => i.value));
   return (
     <div className={`flex w-full flex-col gap-2.5 ${fill ? "h-full justify-between" : ""} ${className}`}>
@@ -605,7 +642,7 @@ export function BarList({
                 style={{
                   width: `${pct}%`,
                   transform: on ? "scaleX(1)" : "scaleX(0)",
-                  transition: reduced ? undefined : `transform 1400ms var(--ease-out-quint) ${i * stagger}ms`,
+                  transition: drawing ? `transform 1400ms var(--ease-out-quint) ${i * stagger}ms` : undefined,
                 }}
               />
             </div>

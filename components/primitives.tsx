@@ -2,12 +2,22 @@
 import { cloneElement, isValidElement, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ElementType, type ReactElement, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
-  IconAlertCircle, IconAlignLeft, IconArrowUp, IconArrowUpRight, IconCalendar, IconChartBar, IconCheck, IconCircleCheck,
-  IconChevronDown, IconChevronLeft, IconChevronRight, IconClock, IconDots, IconFileText, IconHome,
-  IconCopy, IconInfoCircle, IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion, IconMicrophone,
-  IconMoodSmile, IconPaperclip, IconPencil, IconPlus, IconRefresh, IconScissors,
-  IconBell, IconEye, IconEyeOff, IconLayoutGrid, IconMinus, IconMoon, IconSun, IconTrash, IconSearch, IconSettings, IconSparkles, IconStack2, IconTypography,
-  IconUpload, IconUserPlus, IconWorld, IconX, type Icon as TablerIcon,
+  IconAlertCircle, IconAlignLeft, IconArrowUp, IconArrowUpRight, IconCalendar, IconChartBar, IconCheck,
+  IconCircleCheck, IconChevronDown, IconChevronLeft, IconChevronRight, IconClock, IconDots, IconFileText,
+  IconHome, IconCopy, IconInfoCircle, IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion,
+  IconMicrophone, IconMoodSmile, IconPaperclip, IconPencil, IconPlus, IconRefresh, IconScissors, IconBell,
+  IconEye, IconEyeOff, IconLayoutGrid, IconMinus, IconMoon, IconSun, IconTrash, IconSearch, IconSettings,
+  IconSparkles, IconStack2, IconTypography, IconUpload, IconUserPlus, IconWorld, IconX,
+  IconAdjustmentsHorizontal, IconAlertTriangle, IconArchive, IconArrowBackUp, IconArrowForwardUp,
+  IconArrowLeft, IconArrowRight, IconArrowsSort, IconBan, IconBattery, IconBolt, IconBookmark, IconBug,
+  IconBuilding, IconChartLine, IconChartPie, IconChecks, IconCircleX, IconClipboard, IconCloud, IconCode,
+  IconCreditCard, IconDatabase, IconDotsVertical, IconDownload, IconFilter, IconFilterOff, IconFlag,
+  IconFolder, IconGift, IconHelpCircle, IconHistory, IconInbox, IconKey, IconLanguage, IconLayoutDashboard,
+  IconLink, IconList, IconLock, IconLogin, IconMail, IconMapPin, IconMaximize, IconMinimize, IconPackage,
+  IconPhone, IconPhoto, IconPin, IconPlayerPause, IconPlayerPlay, IconPrinter, IconQrcode, IconReceipt,
+  IconRefreshAlert, IconRocket, IconSend, IconShare2, IconShield, IconShoppingCart, IconStar, IconSunHigh,
+  IconTable, IconTag, IconTarget, IconTerminal, IconTrophy, IconTruck, IconUser, IconUsers, IconVideo,
+  IconWallet, IconWifi, IconZoomIn, IconZoomOut, type Icon as TablerIcon,
 } from "@tabler/icons-react";
 import { useStream } from "./hooks";
 /* ─────────────────────────────────────────────────────────
@@ -60,14 +70,20 @@ export const inertWhen = (hidden: boolean) => ({
  * ICONS map — never inline <svg>, never a second icon package.
  * The name-based API keeps components decoupled from Tabler. */
 export type IconName =
-  | "chevron" | "check" | "close" | "search" | "retry"
-  | "arrow-up" | "plus" | "clock" | "ellipsis"
-  | "mic" | "file" | "clip" | "chart" | "layers" | "globe"
-  | "lines" | "external"
-  | "edit" | "home" | "gear" | "user-add" | "sign-out" | "sidebar"
-  | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right"
-  | "copy" | "circle-check" | "alert" | "info" | "chevron-left" | "upload" | "calendar"
-  | "bell" | "moon" | "sun" | "eye" | "eye-off" | "trash" | "grid" | "minus";
+   | "chevron" | "bell" | "grid" | "moon" | "sun" | "eye" | "eye-off" | "trash" | "minus" | "check" | "close"
+   | "search" | "retry" | "arrow-up" | "plus" | "clock" | "ellipsis" | "mic" | "file" | "clip" | "chart"
+   | "layers" | "globe" | "lines" | "external" | "edit" | "home" | "gear" | "user-add" | "sign-out"
+   | "sidebar" | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right"
+   | "copy" | "circle-check" | "alert" | "info" | "chevron-left" | "upload" | "calendar" | "download"
+   | "filter" | "share" | "print" | "lock" | "star" | "mail" | "phone" | "map-pin" | "arrow-left"
+   | "arrow-right" | "sort" | "link" | "help" | "warning" | "dots-vertical" | "archive" | "tag" | "user"
+   | "users" | "building" | "credit-card" | "cart" | "package" | "truck" | "receipt" | "wallet" | "chart-line"
+   | "chart-pie" | "database" | "cloud" | "key" | "shield" | "clipboard" | "folder" | "image" | "video"
+   | "play" | "pause" | "zoom-in" | "zoom-out" | "maximize" | "minimize" | "flag" | "bookmark" | "history"
+   | "code" | "terminal" | "bug" | "rocket" | "bolt" | "target" | "trophy" | "gift" | "logout" | "login"
+   | "language" | "filter-off" | "adjustments" | "table" | "list" | "layout" | "dashboard" | "inbox" | "send"
+   | "reply" | "forward" | "attachment" | "pin" | "qr" | "wifi" | "battery" | "sun-high" | "check-all" | "ban"
+   | "circle-x" | "refresh-alert";
 const ICONS: Record<IconName, TablerIcon> = {
   chevron: IconChevronDown,
   bell: IconBell,
@@ -113,7 +129,130 @@ const ICONS: Record<IconName, TablerIcon> = {
   "chevron-left": IconChevronLeft,
   upload: IconUpload,
   calendar: IconCalendar,
+  "download": IconDownload,
+  "filter": IconFilter,
+  "share": IconShare2,
+  "print": IconPrinter,
+  "lock": IconLock,
+  "star": IconStar,
+  "mail": IconMail,
+  "phone": IconPhone,
+  "map-pin": IconMapPin,
+  "arrow-left": IconArrowLeft,
+  "arrow-right": IconArrowRight,
+  "sort": IconArrowsSort,
+  "link": IconLink,
+  "help": IconHelpCircle,
+  "warning": IconAlertTriangle,
+  "dots-vertical": IconDotsVertical,
+  "archive": IconArchive,
+  "tag": IconTag,
+  "user": IconUser,
+  "users": IconUsers,
+  "building": IconBuilding,
+  "credit-card": IconCreditCard,
+  "cart": IconShoppingCart,
+  "package": IconPackage,
+  "truck": IconTruck,
+  "receipt": IconReceipt,
+  "wallet": IconWallet,
+  "chart-line": IconChartLine,
+  "chart-pie": IconChartPie,
+  "database": IconDatabase,
+  "cloud": IconCloud,
+  "key": IconKey,
+  "shield": IconShield,
+  "clipboard": IconClipboard,
+  "folder": IconFolder,
+  "image": IconPhoto,
+  "video": IconVideo,
+  "play": IconPlayerPlay,
+  "pause": IconPlayerPause,
+  "zoom-in": IconZoomIn,
+  "zoom-out": IconZoomOut,
+  "maximize": IconMaximize,
+  "minimize": IconMinimize,
+  "flag": IconFlag,
+  "bookmark": IconBookmark,
+  "history": IconHistory,
+  "code": IconCode,
+  "terminal": IconTerminal,
+  "bug": IconBug,
+  "rocket": IconRocket,
+  "bolt": IconBolt,
+  "target": IconTarget,
+  "trophy": IconTrophy,
+  "gift": IconGift,
+  "logout": IconLogout,
+  "login": IconLogin,
+  "language": IconLanguage,
+  "filter-off": IconFilterOff,
+  "adjustments": IconAdjustmentsHorizontal,
+  "table": IconTable,
+  "list": IconList,
+  "layout": IconLayoutDashboard,
+  "dashboard": IconLayoutDashboard,
+  "inbox": IconInbox,
+  "send": IconSend,
+  "reply": IconArrowBackUp,
+  "forward": IconArrowForwardUp,
+  "attachment": IconPaperclip,
+  "pin": IconPin,
+  "qr": IconQrcode,
+  "wifi": IconWifi,
+  "battery": IconBattery,
+  "sun-high": IconSunHigh,
+  "check-all": IconChecks,
+  "ban": IconBan,
+  "circle-x": IconCircleX,
+  "refresh-alert": IconRefreshAlert,
 };
+/* ── iconFor — the glyph a label is asking for ────────── */
+/* Agents kept pairing "Refresh" with an upload arrow. This resolves a
+ * label to the icon that means the same thing: `iconFor("Refresh data")`
+ * → "retry". First match wins, longest keys first, so "add user" beats
+ * "add". Returns undefined when nothing fits — then leave the icon off
+ * rather than decorate with a random one. */
+/* Two tables: verbs first, so "Remove filter" is a trash can and "Edit
+ * profile" a pencil — the action a button performs outranks the thing it
+ * performs it on. Keys match whole words (so "ai" never fires inside
+ * "Details"); within a table the longest key wins. */
+const ICON_FOR_VERB: [string, IconName][] = ([
+  ["add user", "user-add"], ["invite", "user-add"], ["new user", "user-add"],
+  ["sign out", "sign-out"], ["log out", "sign-out"], ["logout", "sign-out"], ["sign in", "login"], ["log in", "login"], ["login", "login"],
+  ["download", "download"], ["export", "download"], ["upload", "upload"], ["import", "upload"],
+  ["refresh", "retry"], ["reload", "retry"], ["retry", "retry"], ["sync", "retry"], ["regenerate", "retry"],
+  ["generate", "sparkles"], ["summarize", "sparkles"], ["summarise", "sparkles"], ["ai", "sparkles"],
+  ["delete", "trash"], ["remove", "trash"], ["archive", "archive"], ["edit", "edit"], ["rename", "edit"], ["copy", "copy"], ["duplicate", "copy"],
+  ["search", "search"], ["find", "search"], ["filter", "filter"], ["sort", "sort"], ["adjust", "adjustments"], ["tune", "adjustments"],
+  ["share", "share"], ["print", "print"], ["attach", "attachment"], ["pin", "pin"], ["bookmark", "bookmark"], ["flag", "flag"],
+  ["send", "send"], ["reply", "reply"], ["forward", "forward"], ["call", "phone"],
+  ["save", "check"], ["done", "check"], ["confirm", "check"], ["approve", "circle-check"], ["complete", "circle-check"], ["cancel", "close"], ["close", "close"], ["dismiss", "close"], ["reject", "circle-x"], ["block", "ban"],
+  ["add", "plus"], ["create", "plus"], ["new", "plus"], ["schedule", "calendar"],
+  ["play", "play"], ["pause", "pause"], ["zoom in", "zoom-in"], ["zoom out", "zoom-out"], ["expand", "maximize"], ["collapse", "minimize"],
+  ["launch", "rocket"], ["deploy", "rocket"], ["translate", "language"], ["scan", "qr"], ["show", "eye"], ["hide", "eye-off"], ["preview", "eye"],
+  ["back", "arrow-left"], ["previous", "arrow-left"], ["next", "arrow-right"], ["continue", "arrow-right"], ["open", "external"],
+] as [string, IconName][]).sort((a, b) => b[0].length - a[0].length);
+const ICON_FOR_NOUN: [string, IconName][] = ([
+  ["more", "ellipsis"], ["options", "ellipsis"], ["settings", "gear"], ["preferences", "gear"], ["config", "gear"], ["configuration", "gear"],
+  ["date", "calendar"], ["calendar", "calendar"], ["time", "clock"], ["history", "history"], ["recent", "history"],
+  ["dashboard", "dashboard"], ["overview", "home"], ["home", "home"], ["report", "chart"], ["reports", "chart"], ["analytics", "chart-line"], ["trend", "chart-line"], ["trends", "chart-line"], ["breakdown", "chart-pie"],
+  ["table", "table"], ["list", "list"], ["record", "file"], ["records", "file"], ["document", "file"], ["documents", "file"], ["file", "file"], ["files", "file"], ["folder", "folder"], ["image", "image"], ["images", "image"], ["photo", "image"], ["photos", "image"], ["video", "video"], ["videos", "video"],
+  ["people", "users"], ["team", "users"], ["members", "users"], ["customer", "user"], ["customers", "user"], ["profile", "user"], ["account", "user"], ["company", "building"], ["organisation", "building"], ["organization", "building"],
+  ["payment", "credit-card"], ["payments", "credit-card"], ["billing", "credit-card"], ["card", "credit-card"], ["invoice", "receipt"], ["invoices", "receipt"], ["receipt", "receipt"], ["wallet", "wallet"], ["cart", "cart"], ["order", "package"], ["orders", "package"], ["shipping", "truck"], ["delivery", "truck"],
+  ["database", "database"], ["cloud", "cloud"], ["key", "key"], ["password", "key"], ["security", "shield"], ["lock", "lock"], ["privacy", "eye-off"],
+  ["notification", "bell"], ["notifications", "bell"], ["alert", "warning"], ["alerts", "warning"], ["warning", "warning"], ["error", "alert"], ["help", "help"], ["support", "help"], ["info", "info"], ["about", "info"],
+  ["code", "code"], ["terminal", "terminal"], ["bug", "bug"], ["bugs", "bug"], ["goal", "target"], ["goals", "target"], ["target", "target"], ["achievement", "trophy"], ["achievements", "trophy"], ["reward", "gift"], ["rewards", "gift"],
+  ["language", "language"], ["location", "map-pin"], ["address", "map-pin"], ["map", "map-pin"], ["website", "globe"], ["web", "globe"], ["clipboard", "clipboard"], ["link", "link"], ["links", "link"], ["tag", "tag"], ["tags", "tag"], ["label", "tag"], ["labels", "tag"],
+  ["star", "star"], ["favourite", "star"], ["favorite", "star"], ["favourites", "star"], ["favorites", "star"], ["theme", "sun"], ["light", "sun"], ["dark", "moon"], ["mail", "mail"], ["email", "mail"], ["inbox", "inbox"], ["phone", "phone"],
+  ["wifi", "wifi"], ["battery", "battery"], ["layers", "layers"], ["integration", "layers"], ["integrations", "layers"], ["plugin", "layers"], ["plugins", "layers"], ["fullscreen", "maximize"],
+] as [string, IconName][]).sort((a, b) => b[0].length - a[0].length);
+const wordHit = (label: string, key: string) => new RegExp(`(^|[^a-z0-9])${key}([^a-z0-9]|$)`).test(label);
+export function iconFor(label: string): IconName | undefined {
+  const l = label.toLowerCase().trim();
+  return (ICON_FOR_VERB.find(([key]) => wordHit(l, key)) ?? ICON_FOR_NOUN.find(([key]) => wordHit(l, key)))?.[1];
+}
+
 export function Icon({
   name,
   size = 14,

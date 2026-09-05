@@ -76,6 +76,7 @@ export type InputSize = "sm" | "md";
 const INPUT_HEIGHTS: Record<InputSize, string> = { sm: "h-8", md: "h-9" };
 export default function Input({
   size = "md",
+  width = "w-full",
   leadingIcon,
   invalid = false,
   className = "",
@@ -86,6 +87,8 @@ export default function Input({
   leadingIcon?: IconName;
   /** error styling — set automatically by Field when it has an error */
   invalid?: boolean;
+  /** a Tailwind width class; `w-full` for forms, `w-56` and the like as a toolbar search */
+  width?: string;
   className?: string;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, "size">) {
   const innerRef = useRef<HTMLInputElement>(null);
@@ -95,7 +98,7 @@ export default function Input({
     <span
       data-invalid={invalid || undefined}
       onClick={() => innerRef.current?.focus()}
-      className={`primitive-field flex w-full cursor-text items-center gap-2 rounded-control border border-line bg-field px-3 ${INPUT_HEIGHTS[size]} ${className}`}
+      className={`primitive-field flex ${width} cursor-text items-center gap-2 rounded-control border border-line bg-field px-3 ${INPUT_HEIGHTS[size]} ${className}`}
     >
       {leadingIcon && <Icon name={leadingIcon} size={14} strokeWidth={2} className="shrink-0 text-ink-3" />}
       <input

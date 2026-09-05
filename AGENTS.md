@@ -73,7 +73,11 @@ These came from reviewing real agent output. Each one is a tell that a page was 
 8. **One grid.** Every panel in a row shares the same gutter (`gap-3.5` inside sections, `gap-6` between sections) and left edge. Numbers align right with `tabular-nums`. Labels align left. Nothing is centred unless it is alone.
 9. **Rails.** A dashboard or admin app gets `AppSidebar` (grouped menu with counts and sub-menus via `children` (or `submenus="none"` for a flat rail), `expanded` or `rail` variant, the Formic mark in accent at the top, account row at the bottom); a chat app gets `SidebarNav`. Both fill the shell's height. Never build a sidebar from divs.
 10. **Empty states and loading** use `LoadingState` / `Skeleton` / `Alert`, never an ad-hoc grey box.
-11. **Density.** A page is `p-6` (`sm:p-8`) with sections `gap-6`. If a section needs more air than that, the content is wrong, not the spacing.
+11. **Filters are a `FilterBar`.** `<FilterBar search={<Input … />} active={n} onClear={…}>` with the selects as children: they share one row and wrap only when they run out of room, each given a width through its `width` prop (`<Select width="w-40" />`, `<Input width="w-56" />`; the default `w-full` is for forms), search pinned right, Clear only while something is applied. One filter per row, each full width, is wrong.
+12. **Every chart moves in, once.** Bars grow from the baseline, lines reveal left to right, donut arcs sweep, sparklines draw, ranked bars grow. That is the default on every chart and needs no prop. It honours reduced motion by itself. Pass `animate={false}` only on a chart that re-renders with live data. Never add your own keyframes or a motion library to a chart.
+13. **Icons match their label.** Use `iconFor(label)` from `primitives.tsx` for any button, menu item or nav row: `iconFor("Refresh")` → `"retry"`, `iconFor("Export CSV")` → `"download"`, `iconFor("Add user")` → `"user-add"`. If it returns `undefined`, leave the icon off; a decorative random icon is worse than none. Verbs outrank nouns ("Remove filter" is a trash can) and keys match whole words. Reference: refresh/reload/sync → `retry`; export/download → `download`; import/upload → `upload`; add/create/new → `plus`; delete/remove → `trash`; edit/rename → `edit`; save/confirm → `check`; cancel/close → `close`; settings → `gear`; search → `search`; filter → `filter`; share → `share`; print → `print`; schedule/date → `calendar`; sign out → `sign-out`; generate/AI → `sparkles`.
+14. **Brand marks come from `BrandIcon`** (`components/brand.tsx`): `<BrandIcon name="github" />`, `"google"`, `"slack"`, `"notion"`, `"figma"`, `"linkedin"`, `"x"`, `"instagram"`, `"youtube"`, `"stripe"`, `"openai"` and 70 more. Monochrome, coloured like any icon (`text-ink`, `text-ink-2`), never in the brand's own colour. No logo PNGs, no second icon package.
+15. **Density.** A page is `p-6` (`sm:p-8`) with sections `gap-6`. If a section needs more air than that, the content is wrong, not the spacing.
 
 A dashboard row, done right:
 
@@ -106,9 +110,10 @@ A dashboard row, done right:
 
 ## What is in the box
 
+**Brand** (`brand.tsx`): FormicMark, BrandIcon (80+ company and social marks). **Helpers**: iconFor(label).
 **Primitives** (`primitives.tsx`): Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, DiffStat, IconButton, SendButton, Switch, Checkbox, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Popover.
 **Hooks** (`hooks.ts`): useSequence, useElapsed, useStream, useAnchoredLayer, useModalLayer, useReducedMotion.
-**Controls and forms:** Button, Field, Input, Textarea, Select, Switch, Checkbox, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker.
+**Controls and forms:** Button, Field, Input, Textarea, Select, Switch, Checkbox, FilterBar, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker.
 **Overlays:** Modal, Drawer, Toast (`ToastProvider` at the root), DropdownMenu, Popover, Tooltip.
 **Feedback and agents:** Alert, Progress, Skeleton, LoadingState, ThinkingState, TaskRows, ToolChips.
 **Conversation:** ChatThread, MessageBubble, StreamingText, Markdown, CodeBlock, SelectionActions, PromptBar, ChatComposer, ApprovalCard, ApprovalFlow, RecommendationCard, ContextCards, ChatApp.

@@ -27,6 +27,7 @@ export default function Select({
   onChange,
   placeholder = "Select…",
   size = "md",
+  width = "w-full",
   invalid = false,
   disabled = false,
   className = "",
@@ -44,6 +45,8 @@ export default function Select({
   /** error styling — set automatically by Field when it has an error */
   invalid?: boolean;
   disabled?: boolean;
+  /** a Tailwind width class; `w-full` for forms, `w-40` and the like inside a FilterBar or toolbar */
+  width?: string;
   className?: string;
   id?: string;
   "aria-describedby"?: string;
@@ -124,7 +127,7 @@ export default function Select({
         data-invalid={invalid || undefined}
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onKeyDown}
-        className={`primitive-field flex w-full items-center gap-2 rounded-control border border-line bg-field px-3 text-left transition-opacity duration-150 disabled:opacity-60 ${SELECT_HEIGHTS[size]} ${className}`}
+        className={`primitive-field flex ${width} items-center gap-2 rounded-control border border-line bg-field px-3 text-left transition-opacity duration-150 disabled:opacity-60 ${SELECT_HEIGHTS[size]} ${className}`}
       >
         <span className={`min-w-0 flex-1 truncate text-body ${selected ? "text-ink" : "text-ink-3"}`}>
           {selected ? selected.label : placeholder}

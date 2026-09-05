@@ -25,6 +25,10 @@ Rules for any AI agent (or human) working in this repo. These exist because past
 
 17. **Two global scales, both token overrides.** `data-radius` (`sharp` / default / `rounded` / `full`) rewrites the `--radius-*` tokens; `data-size` (default / `comfortable` / `spacious`) overrides Tailwind's `--spacing`, which rescales every control height, padding and gap together — so rule 11 still holds at any density. The size scale deliberately never goes below default: the `xs` control is exactly 24px, which is rule 15's touch floor. Type is never scaled by either (rule 2). Components must not read these attributes; they only read tokens, and both scales come for free.
 
+18. **Charts move in, once, by default.** Every chart's entrance (bars grow from the baseline, lines reveal left to right, arcs sweep, sparklines draw, ranked bars grow) runs through the shared `useEntrance` in `charts.tsx`: on by default, off with `animate={false}`, collapsed to the final frame under reduced motion. Motion is a property of the system, not a garnish one chart gets and the next forgets.
+
+19. **Icons mean what their label says.** `iconFor(label)` in `primitives.tsx` is the source of truth for label→glyph; extend its table rather than picking by eye. Brand marks come from `BrandIcon` in `brand.tsx` (Tabler's brand set, so still one icon package), monochrome, never in the brand's own colour.
+
 ## Extraction rule
 
 After every piece of work, look for extractable pieces and extract them:

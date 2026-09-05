@@ -62,7 +62,7 @@ export function StatCard({
   trend,
   trendTone = 1,
   trendSmooth = false,
-  trendAnimate = false,
+  trendAnimate = true,
   className = "",
 }: {
   label?: string;
@@ -79,7 +79,7 @@ export function StatCard({
   trendTone?: ChartColor;
   /** curve the sparkline (Catmull-Rom) */
   trendSmooth?: boolean;
-  /** draw the sparkline in once on mount */
+  /** reveal the sparkline once on mount (default); false for tiles that re-render often */
   trendAnimate?: boolean;
   className?: string;
 }) {
