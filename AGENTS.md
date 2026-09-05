@@ -73,7 +73,7 @@ These came from reviewing real agent output. Each one is a tell that a page was 
 8. **One grid.** Every panel in a row shares the same gutter (`gap-3.5` inside sections, `gap-6` between sections) and left edge. Numbers align right with `tabular-nums`. Labels align left. Nothing is centred unless it is alone.
 9. **Rails.** A dashboard or admin app gets `AppSidebar` (grouped menu with counts and sub-menus via `children` (or `submenus="none"` for a flat rail), `expanded` or `rail` variant, the Formic mark in accent at the top, account row at the bottom); a chat app gets `SidebarNav`. Both fill the shell's height. Never build a sidebar from divs.
 10. **Empty states and loading** use `LoadingState` / `Skeleton` / `Alert`, never an ad-hoc grey box.
-11. **Filters are a `FilterBar`.** `<FilterBar search={<Input … />} active={n} onClear={…}>` with the selects as children: they share one row and wrap only when they run out of room, each given a width through its `width` prop (`<Select width="w-40" />`, `<Input width="w-56" />`; the default `w-full` is for forms), search pinned right, Clear only while something is applied. One filter per row, each full width, is wrong.
+11. **Filters are a `FilterBar`.** Label (`leading="Filters"`), the selects as children, a compare toggle or view switch in `trailing`, search in `search`: one wrapping row, so when it is full the next control goes to the next line. Never a row with `overflow-hidden` or `whitespace-nowrap` that clips the last control. `<FilterBar search={<Input … />} active={n} onClear={…}>` with the selects as children: they share one row and wrap only when they run out of room, each given a width through its `width` prop (`<Select width="w-40" />`, `<Input width="w-56" />`; the default `w-full` is for forms), search pinned right, Clear only while something is applied. One filter per row, each full width, is wrong.
 12. **Every chart moves in, once.** Bars grow from the baseline, lines reveal left to right, donut arcs sweep, sparklines draw, ranked bars grow. That is the default on every chart and needs no prop. It honours reduced motion by itself. Pass `animate={false}` only on a chart that re-renders with live data. Never add your own keyframes or a motion library to a chart.
 13. **Icons match their label.** Use `iconFor(label)` from `primitives.tsx` for any button, menu item or nav row: `iconFor("Refresh")` → `"retry"`, `iconFor("Export CSV")` → `"download"`, `iconFor("Add user")` → `"user-add"`. If it returns `undefined`, leave the icon off; a decorative random icon is worse than none. Verbs outrank nouns ("Remove filter" is a trash can) and keys match whole words. Reference: refresh/reload/sync → `retry`; export/download → `download`; import/upload → `upload`; add/create/new → `plus`; delete/remove → `trash`; edit/rename → `edit`; save/confirm → `check`; cancel/close → `close`; settings → `gear`; search → `search`; filter → `filter`; share → `share`; print → `print`; schedule/date → `calendar`; sign out → `sign-out`; generate/AI → `sparkles`.
 14. **Brand marks come from `BrandIcon`** (`components/brand.tsx`): `<BrandIcon name="github" />`, `"google"`, `"slack"`, `"notion"`, `"figma"`, `"linkedin"`, `"x"`, `"instagram"`, `"youtube"`, `"stripe"`, `"openai"` and 70 more. Monochrome by default, coloured like any icon (`text-ink`, `text-ink-2`). `color="brand"` gives the mark its published colour; use it only where the logo must be recognised at a glance (sign-in buttons, an integrations directory, connected accounts), never in navigation or status rows. For the real full-colour mark use `<BrandLogo name="google" />` from `components/brand-logos.tsx` (101 official logos via svgl, dark variants automatic): sign-in buttons, integration directories, partner strips. Never recolour or stretch a logo, never put one in a coloured tile. No logo PNGs, no second icon package.
@@ -93,6 +93,16 @@ A dashboard row, done right:
 </div>
 ```
 
+## Brand colour: the one procedure
+
+When the user gives a colour ("make #29E0C2 the accent"), do not write it into `tokens.css`. One hex cannot serve both modes: a bright brand colour is unreadable on white, a deep one vanishes on dark. Run the script that derives both variants and rewrites the tokens:
+
+```bash
+python3 src/formic/scripts/set_accent.py "#29E0C2"
+```
+
+It keeps the hue and saturation, darkens for light mode until the colour holds 4.5:1 on white and on its own tint, lightens for dark mode until it holds 4.5:1 on dark surfaces, writes both `--accent` values, and prints the ratios. `accent-tint` and `chart-1` follow automatically. For a colour chosen at runtime (a theme picker), call `setAccent(hex)` from `components/theme.ts` — the same algorithm. Editing `--accent` by hand is a bug.
+
 ## The rules that matter most
 
 1. **Tokens only.** No hardcoded colors, font sizes, radii, shadows, or easings. Use the generated utilities: `text-ink`, `text-ink-2`, `text-ink-3`, `bg-canvas`, `bg-surface`, `bg-field`, `bg-hover`, `bg-hover-2`, `bg-inset`, `bg-sidebar`, `border-line`, `border-line-strong`, `text-accent`, `text-green`, `text-red`, `text-orange`, the `*-tint` backgrounds, and the categorical chart ramp `chart-1..5` plus `chart-track` (for data series only — never colour a series with green or red, those carry meaning). If a value has no token, add the token first.
@@ -110,7 +120,7 @@ A dashboard row, done right:
 
 ## What is in the box
 
-**Brand** (`brand.tsx`): FormicMark, BrandIcon (80+ company and social marks). **Helpers**: iconFor(label).
+**Brand** (`brand.tsx`): FormicMark, BrandIcon (80+ company and social marks). **Helpers**: iconFor(label); `scripts/set_accent.py` and `setAccent()` for the brand colour.
 **Primitives** (`primitives.tsx`): Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, DiffStat, IconButton, SendButton, Switch, Checkbox, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Popover.
 **Hooks** (`hooks.ts`): useSequence, useElapsed, useStream, useAnchoredLayer, useModalLayer, useReducedMotion.
 **Controls and forms:** Button, Field, Input, Textarea, Select, Switch, Checkbox, FilterBar, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker.

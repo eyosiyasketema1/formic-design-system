@@ -29,6 +29,8 @@ Rules for any AI agent (or human) working in this repo. These exist because past
 
 19. **Icons mean what their label says.** `iconFor(label)` in `primitives.tsx` is the source of truth for label→glyph; extend its table rather than picking by eye. Brand marks come from `BrandIcon` in `brand.tsx` (Tabler's brand set, so still one icon package): monochrome by default; `color="brand"` reads the mark's published colour from `styles/brands.css` (the one place hex is allowed outside tokens, and exempt from the contrast rule because it colours a logo, never UI) — for sign-in buttons and integration directories, not navigation. `BrandLogo` in `brand-logos.tsx` is the real full-colour mark (svgl, official assets, ids namespaced, dark variants switched by CSS in `brands.css`); it is the one place foreign hex and gradients are allowed in a component, because a logo is not UI. Import it on the pages that show logos, not in the shell — the file is ~220KB and is not tree-shaken per brand.
 
+20. **The accent is derived, never typed.** `--accent` has two values (light `:root`, dark block) that must each pass AA for their own surfaces; `scripts/set_accent.py <hex>` and `setAccent()` in `theme.ts` share one algorithm that fits both from any colour the user brings. Writing a hex into either block by hand — or the same hex into both — is a defect the gate will usually catch and the design never survives.
+
 ## Extraction rule
 
 After every piece of work, look for extractable pieces and extract them:
