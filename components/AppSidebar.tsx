@@ -14,6 +14,11 @@ import { FormicMark } from "./brand";
  *   rail       56px, icons only, labels as tooltips,
  *             sub-menus open as a flyout beside the icon
  *
+ * `submenus="none"` makes it flat: every item is a page, a
+ * parent's `children` are ignored, no chevrons, no flyouts —
+ * for apps whose sections live inside the page (tabs) rather
+ * than in the rail.
+ *
  * The collapse / expand control lives in the header in both
  * variants, so it is always in the same place. The app owns the
  * variant through `variant` / `onVariantChange`, or the sidebar
@@ -69,6 +74,7 @@ export default function AppSidebar({
   defaultVariant = "expanded",
   onVariantChange,
   collapsible = true,
+  submenus = "nested",
   user = DEFAULT_USER,
   footer,
   className = "",
@@ -84,6 +90,8 @@ export default function AppSidebar({
   onVariantChange?: (next: AppSidebarVariant) => void;
   /** show the expand / collapse control */
   collapsible?: boolean;
+  /** "nested" (default): groups open in place / as a flyout. "none": flat, children ignored, every item is a page */
+  submenus?: "nested" | "none";
   /** account row at the bottom; pass `null` to omit */
   user?: { name: string; detail?: string; src?: string } | null;
   /** replaces the account row entirely */
@@ -140,8 +148,8 @@ export default function AppSidebar({
      the whole hit area and stays exactly where it was — collapsing never
      shifts the icons. */
   const row = (item: AppSidebarItem) => {
-    const group = Boolean(item.children?.length);
-    const on = item.key === current || item.key === activeParent;
+    const group = submenus === "nested" && Boolean(item.children?.length);
+    const on = item.key === current || (group && item.key === activeParent);
     const expanded = Boolean(openGroups[item.key]);
     const onClick = (event: React.MouseEvent<HTMLButtonElement>) => {
       if (!group) return pick(item.key);
