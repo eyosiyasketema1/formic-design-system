@@ -4,8 +4,10 @@
  * All values WCAG-AA verified by scripts/qa_check.py.
  * ───────────────────────────────────────────────────────── */
 
-/* Default typeface */
-@import url("https://fonts.googleapis.com/css2?family=Urbanist:wght@300..800&display=swap");
+/* Default typeface: Urbanist is loaded by styles/fonts.css, which must be
+ * the FIRST import in the consumer's global stylesheet. CSS only honours
+ * @import before other rules, so it cannot live here — after Tailwind's
+ * rules it would be silently dropped by the build and the font never load. */
 
 :root {
   /* Typography */

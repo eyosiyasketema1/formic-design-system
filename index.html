@@ -891,6 +891,16 @@ main, footer.site { position: relative; z-index: 1; }
 .ai-way-wide { margin-top: 14px; }
 .ai-way-wide .lbtn { margin-top: 4px; }
 @media (max-width: 640px) { .ai-steps li { padding-left: 40px; } .ai-steps li::before { left: 10px; } }
+.qs-tabs { display: inline-flex; gap: 4px; margin-top: 18px; padding: 3px; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface); corner-shape: squircle; }
+.qs-tab { height: 30px; padding: 0 14px; border: none; background: none; border-radius: var(--radius-sm); font: inherit; font-size: var(--text-caption); font-weight: 500; color: var(--ink-2); cursor: pointer; transition: background-color 150ms, color 150ms; }
+.qs-tab:hover { color: var(--ink); }
+.qs-tab.is-active { background: var(--hover-2); color: var(--ink); font-weight: 600; }
+.qs-lead { margin-top: 14px; max-width: 70ch; font-size: var(--text-caption); color: var(--ink-2); }
+.qs-lead code { font-family: var(--font-mono); font-size: var(--text-small); color: var(--ink); background: var(--inset); padding: 1px 5px; border-radius: var(--radius-sm); }
+.qs-lead a { color: var(--accent); text-decoration: none; } .qs-lead a:hover { text-decoration: underline; }
+.ai-dev { margin-top: 10px; }
+.ai-dev summary { cursor: pointer; font-size: var(--text-small); color: var(--ink-3); }
+.ai-dev summary:hover { color: var(--ink); }
 .ai-note-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font-size: var(--text-caption); }
 .ai-note-links a { color: var(--accent); text-decoration: none; }
 .ai-note-links a:hover { text-decoration: underline; }
@@ -1112,25 +1122,39 @@ footer.site a:hover { color: var(--ink); }
   <section class="landing-section band" id="start">
     <div class="wrap">
       <div class="kicker">Quick start</div>
-      <h2>Copy in, compose, ship</h2>
-      <p class="section-sub">Formic is vendored, not installed. One command copies the system into <code>src/formic/</code> and writes the instruction files your AI tools read. Then import one CSS stack and compose. Two peer dependencies: React and Tabler icons.</p>
-      <div class="lcode">
-        <div class="lcode-head">Terminal · from your project root</div>
-        <pre><span class="c"># copies styles/ + components/ into src/formic, writes AGENTS.md and tool rules</span>
-curl -fsSL https://formicai.dev/install.sh | bash
-
-npm install @tabler/icons-react</pre>
+      <h2>One command, no files to edit</h2>
+      <p class="section-sub">Formic is vendored, not installed: the code lands in <code>src/formic/</code> where you and your AI tool can read it. Pick your situation.</p>
+      <div class="qs-tabs" role="tablist" aria-label="Quick start">
+        <button type="button" class="qs-tab is-active" role="tab" aria-selected="true" aria-controls="qs-new" id="qs-tab-new">New project</button>
+        <button type="button" class="qs-tab" role="tab" aria-selected="false" aria-controls="qs-existing" id="qs-tab-existing">Existing project</button>
       </div>
-      <div class="lcode">
-        <div class="lcode-head">globals.css · Tailwind v4</div>
-        <pre><span class="k">@import</span> "tailwindcss";
+      <div id="qs-new" role="tabpanel" aria-labelledby="qs-tab-new">
+        <p class="qs-lead">For designers and developers starting from nothing. Creates a Vite + React + Tailwind app, wires the Formic CSS, drops in a demo dashboard, installs dependencies, and writes the files your AI tool reads. Needs git and Node.</p>
+        <div class="lcode">
+          <div class="lcode-head">Terminal · anywhere</div>
+          <pre>curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app
+cd my-app && npm run dev</pre>
+        </div>
+        <p class="qs-lead">That is the whole setup. The demo dashboard opens in your browser; from here you talk to your AI tool, see <a href="#ai-tools">Build with your AI tool</a> below.</p>
+      </div>
+      <div id="qs-existing" role="tabpanel" aria-labelledby="qs-tab-existing" hidden>
+        <p class="qs-lead">For an app you already have (Tailwind v4). Run from the project root: it copies <code>styles/</code> and <code>components/</code> into <code>src/formic/</code> and writes <code>AGENTS.md</code> plus the per-tool rule files. Re-run any time to update.</p>
+        <div class="lcode">
+          <div class="lcode-head">Terminal · from your project root</div>
+          <pre>curl -fsSL https://formicai.dev/install.sh | bash
+npm install @tabler/icons-react</pre>
+        </div>
+        <div class="lcode">
+          <div class="lcode-head">globals.css · Tailwind v4, in this order</div>
+          <pre><span class="k">@import</span> "./formic/styles/fonts.css";           <span class="c">/* first: Urbanist */</span>
+<span class="k">@import</span> "tailwindcss";
 <span class="k">@import</span> "./formic/styles/tokens.css";          <span class="c">/* source of truth */</span>
 <span class="k">@import</span> "./formic/styles/themes.css";          <span class="c">/* 5 palettes, optional */</span>
 <span class="k">@import</span> "./formic/styles/tailwind-theme.css";  <span class="c">/* → text-ink, bg-hover, … */</span></pre>
-      </div>
-      <div class="lcode">
-        <div class="lcode-head">App.tsx</div>
-        <pre><span class="k">import</span> ChatThread <span class="k">from</span> "./formic/components/ChatThread";
+        </div>
+        <div class="lcode">
+          <div class="lcode-head">Then compose</div>
+          <pre><span class="k">import</span> ChatThread <span class="k">from</span> "./formic/components/ChatThread";
 <span class="k">import</span> PromptBar <span class="k">from</span> "./formic/components/PromptBar";
 
 <span class="k">export default function</span> Chat() {
@@ -1141,6 +1165,7 @@ npm install @tabler/icons-react</pre>
     &lt;/&gt;
   );
 }</pre>
+        </div>
       </div>
 
       <div class="ai-note" id="ai-tools">
@@ -1148,32 +1173,32 @@ npm install @tabler/icons-react</pre>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/></svg>
           Build with your AI tool
         </div>
-        <p>A rules file alone is not enough. If the components are not in your project, every agent falls back to generic Tailwind, however good the prompt. These four steps give Claude Code, Cursor, Copilot and Codex the code and the rules together.</p>
+        <p>A rules file alone is not enough. If the components are not in your project, every agent falls back to generic Tailwind, however good the prompt. These three steps give Claude Code, Cursor, Copilot and Codex the code and the rules together, and none of them asks you to edit a file.</p>
         <ol class="ai-steps">
           <li>
-            <div class="ai-step-title">Install Formic into the project you are building</div>
-            <p>Run this from your project root. It copies <code>styles/</code> and <code>components/</code> into <code>src/formic/</code>, then writes <code>AGENTS.md</code>, a Cursor rule, Copilot instructions, and a Claude Code skill. Re-run it any time to update.</p>
-            <div class="lcode">
-              <div class="lcode-head">Terminal</div>
-              <pre>curl -fsSL https://formicai.dev/install.sh | bash</pre>
-            </div>
+            <div class="ai-step-title">Get a project with Formic inside</div>
+            <p>New project: the one command in Quick start. Existing project: run the installer from its root. Either way you end up with <code>src/formic/</code> plus <code>AGENTS.md</code>, a Cursor rule, Copilot instructions and a Claude Code skill, all written for you.</p>
           </li>
           <li>
-            <div class="ai-step-title">Wire the CSS and the one peer dependency</div>
-            <p>Add the three <code>@import</code> lines from Quick start above to your global stylesheet, after <code>@import "tailwindcss"</code>, and run <code>npm install @tabler/icons-react</code>. Without the bridge, <code>text-ink</code> and <code>bg-surface</code> do not exist and the agent will improvise.</p>
-          </li>
-          <li>
-            <div class="ai-step-title">Open your agent and name the system in the first message</div>
-            <p>Restart the tool once so it picks up the new rule files, then start with a prompt like this. Naming the folder is what makes the agent read the code instead of guessing.</p>
+            <div class="ai-step-title">Open your AI tool in that folder and name the system</div>
+            <p>Start (or restart) Claude Code, Cursor or Copilot inside the project so it picks up the rule files, then begin with this. Naming the folder is what makes the agent read the code instead of guessing.</p>
             <div class="lcode">
-              <div class="lcode-head">Prompt</div>
+              <div class="lcode-head">First prompt</div>
               <pre>Use Formic (src/formic). Read AGENTS.md first and follow its procedure.
-Then build a dashboard page with four StatCards, a BarChart and a MetricRow breakdown.</pre>
+Then build a settings page with a SidebarNav, a form of Field + Input + Switch, and one accent Save button.</pre>
             </div>
           </li>
           <li>
-            <div class="ai-step-title">Check the result before you accept it</div>
-            <p>Formic output imports from <code>src/formic/components</code> and uses <code>text-ink</code>, <code>bg-surface</code>, <code>text-caption</code>, <code>rounded-card</code>. Generic output has hex colours, <code>text-sm</code>, <code>bg-gray-100</code>, <code>shadow-lg</code>, <code>font-bold</code>. If you see the second kind, the agent did not read the rules: paste <code>AGENTS.md</code> into the chat and ask it to redo the work.</p>
+            <div class="ai-step-title">Look at the result</div>
+            <p>Formic looks like the gallery: Urbanist type, hairline borders instead of shadows, one lime call to action, the same tiles and controls. Generic looks like every other Tailwind page: grey boxes, blue buttons, drop shadows, bold headings. If you get the second kind, say <em>"That is not Formic. Read AGENTS.md and redo it with the components in src/formic"</em>.</p>
+            <details class="ai-dev">
+              <summary>For developers: the mechanical check</summary>
+              <div class="lcode">
+                <div class="lcode-head">Terminal · both lines: first shows imports, second prints nothing</div>
+                <pre>grep -rn "formic/components" src --include=*.tsx | grep -v "^src/formic"
+grep -rnE "#[0-9a-fA-F]{6}|text-sm|text-lg|bg-gray|shadow-lg|font-bold" src --include=*.tsx | grep -v "^src/formic"</pre>
+              </div>
+            </details>
           </li>
         </ol>
         <div class="ai-ways">
@@ -1358,6 +1383,18 @@ curl -o ~/.claude/skills/formic-design-system/SKILL.md \
   var COPY = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></svg>';
   var DONE = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10" /></svg>';
 
+  /* Quick start tabs */
+  var qsTabs = document.querySelectorAll(".qs-tab");
+  qsTabs.forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      qsTabs.forEach(function (t) {
+        var on = t === tab;
+        t.classList.toggle("is-active", on);
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+      });
+    });
+  });
   document.querySelectorAll(".lcode").forEach(function (block) {
     var head = block.querySelector(".lcode-head");
     var pre = block.querySelector("pre");

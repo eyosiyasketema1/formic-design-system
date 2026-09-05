@@ -28,6 +28,7 @@ curl -fsSL https://formicai.dev/install.sh | bash
 Then make sure the global CSS imports the token stack (Tailwind v4) and `@tabler/icons-react` is a dependency:
 
 ```css
+@import "./formic/styles/fonts.css";          /* first: the Urbanist font */
 @import "tailwindcss";
 @import "./formic/styles/tokens.css";          /* adjust the relative path to src/formic */
 @import "./formic/styles/themes.css";          /* optional: 5 palettes */
