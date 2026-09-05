@@ -22,7 +22,8 @@ import { useStream } from "./hooks";
  *   DiffStat      "+74 −41" green/red tabular counts
  *   IconButton    24px square hover button
  *   SendButton    round/square send arrow control
- *   Switch        toggle: role=switch, sizes sm/md
+ *   Switch        toggle: role=switch, sizes sm/md — settings only
+ *   Checkbox      labelled check: completion / selection
  *   Disclosure    expand/collapse (grid-rows 0fr→1fr)
  *   GlideMenu     one highlight glides across menu rows
  *   Card          surface container (rounded-card + shadow)
@@ -342,12 +343,13 @@ export function Badge({
 }
 
 /* ── RadioCheck ────────────────────────────────────────── */
-export function RadioCheck({ type, on }: { type: "radio" | "check"; on: boolean }) {
+export function RadioCheck({ type, on, mixed = false }: { type: "radio" | "check"; on: boolean; /** indeterminate check — a parent whose children disagree */ mixed?: boolean }) {
+  const filled = on || (type === "check" && mixed);
   return (
     <span
       className={`flex size-4 shrink-0 items-center justify-center transition-colors duration-200
         ${type === "radio" ? "rounded-full" : "rounded-[5px]"}
-        ${on ? "bg-ink text-canvas" : "shadow-[inset_0_0_0_1.5px_var(--line-strong)] text-transparent"}`}
+        ${filled ? "bg-ink text-canvas" : "shadow-[inset_0_0_0_1.5px_var(--line-strong)] text-transparent"}`}
     >
       {type === "radio" ? (
         <span
@@ -355,9 +357,55 @@ export function RadioCheck({ type, on }: { type: "radio" | "check"; on: boolean 
           style={{ transform: on ? "scale(1)" : "scale(0)" }}
         />
       ) : (
-        <Icon name="check" size={12} strokeWidth={3} />
+        <Icon name={mixed && !on ? "minus" : "check"} size={12} strokeWidth={3} />
       )}
     </span>
+  );
+}
+
+/* ── Checkbox ──────────────────────────────────────────── */
+/* A real, labelled checkbox: RadioCheck for the visual, a button with
+ * role="checkbox" for the semantics, so the shared :focus-visible ring and
+ * keyboard toggling come for free and the whole row is the hit area.
+ * Use it for completion and selection ("done today", "include this row").
+ * A Switch is for a setting that takes effect the moment it flips. Mixing
+ * the two is the most common tell of a page built without reading this. */
+export function Checkbox({
+  checked,
+  onChange,
+  label,
+  description,
+  mixed = false,
+  disabled = false,
+  className = "",
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  label: ReactNode;
+  /** second line in muted ink */
+  description?: ReactNode;
+  /** indeterminate — a parent whose children disagree */
+  mixed?: boolean;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={mixed ? "mixed" : checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`flex min-h-6 items-start gap-2 rounded-sm text-left disabled:opacity-45 ${className}`}
+    >
+      <span className="mt-0.5 flex shrink-0">
+        <RadioCheck type="check" on={checked && !mixed} mixed={mixed} />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-body text-ink">{label}</span>
+        {description && <span className="block text-small text-ink-3">{description}</span>}
+      </span>
+    </button>
   );
 }
 

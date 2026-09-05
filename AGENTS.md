@@ -59,6 +59,20 @@ bg-(gray|slate|zinc|blue|green|red)-  raw Tailwind palette -> tokens only
 
 Also confirm at least one import from `src/formic/components` exists in every new UI file. If none does, the result is not Formic.
 
+## Layout and composition rules (the ones agents break most)
+
+These came from reviewing real agent output. Each one is a tell that a page was assembled, not designed.
+
+1. **Checkbox vs Switch.** A `Switch` is a setting that takes effect the moment it flips (notifications on, dark mode). Anything that records a state or a selection — a habit done today, a task ticked, a row included — is a `Checkbox`. A list of items with switches down the left edge is wrong.
+2. **Icons are furniture, not data.** Card icons are ink on inset (`StatCard` default). At most one tile per view gets `iconTone="accent"`, the one the page leads with. A different colour per card is the signature of machine-made UI. Colour appears in exactly three places: the accent (one primary action, the lead series), green/red (success and danger only), and the chart ramp (data series only).
+3. **Cards fit their content.** Never let a grid stretch a card past what is in it: use `items-start` on card grids, or make the content fill (`flex flex-col` on the card, `flex-1` on the chart). A card whose bottom half is empty is a bug. A chart's `height` is picked to fill its card, not left at the default.
+4. **Card anatomy.** Header row: title (`text-body font-medium text-ink`) and caption (`text-caption text-ink-3`) on the left, controls on the right, on the same baseline. Body below with `mt-3`. Padding `p-4`, or `p-5` for a hero card. Nothing else.
+5. **Proximity.** Controls sit next to the thing they act on: filters directly above the list, in one row, sized to their content (`max-w-*`), not stacked full-width. A comparison's two pickers sit together with "vs" between them, next to the title, not in a far corner.
+6. **One grid.** Every card in a row shares the same gutter (`gap-3.5` inside sections, `gap-6` between sections) and left edge. Numbers align right with `tabular-nums`. Labels align left. Nothing is centred unless it is alone.
+7. **Selects and inputs** are `sm`/`md` controls sized to their content, never stretched to a column's full width outside a form. A search input goes at the right end of the same row as the filters.
+8. **Empty states and loading** use `LoadingState` / `Skeleton` / `Alert`, never an ad-hoc grey box.
+9. **Density.** A page is `p-6` (`sm:p-8`) with sections `gap-6`. If a section needs more air than that, the content is wrong, not the spacing.
+
 ## The rules that matter most
 
 1. **Tokens only.** No hardcoded colors, font sizes, radii, shadows, or easings. Use the generated utilities: `text-ink`, `text-ink-2`, `text-ink-3`, `bg-canvas`, `bg-surface`, `bg-field`, `bg-hover`, `bg-hover-2`, `bg-inset`, `bg-sidebar`, `border-line`, `border-line-strong`, `text-accent`, `text-green`, `text-red`, `text-orange`, the `*-tint` backgrounds, and the categorical chart ramp `chart-1..5` plus `chart-track` (for data series only — never colour a series with green or red, those carry meaning). If a value has no token, add the token first.
@@ -76,9 +90,9 @@ Also confirm at least one import from `src/formic/components` exists in every ne
 
 ## What is in the box
 
-**Primitives** (`primitives.tsx`): Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, DiffStat, IconButton, SendButton, Switch, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Popover.
+**Primitives** (`primitives.tsx`): Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, DiffStat, IconButton, SendButton, Switch, Checkbox, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Popover.
 **Hooks** (`hooks.ts`): useSequence, useElapsed, useStream, useAnchoredLayer, useModalLayer, useReducedMotion.
-**Controls and forms:** Button, Field, Input, Textarea, Select, Switch, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker.
+**Controls and forms:** Button, Field, Input, Textarea, Select, Switch, Checkbox, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker.
 **Overlays:** Modal, Drawer, Toast (`ToastProvider` at the root), DropdownMenu, Popover, Tooltip.
 **Feedback and agents:** Alert, Progress, Skeleton, LoadingState, ThinkingState, TaskRows, ToolChips.
 **Conversation:** ChatThread, MessageBubble, StreamingText, Markdown, CodeBlock, SelectionActions, PromptBar, ChatComposer, ApprovalCard, ApprovalFlow, RecommendationCard, ContextCards, ChatApp.

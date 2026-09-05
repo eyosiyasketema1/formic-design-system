@@ -100,7 +100,7 @@ Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (d
 
 **Feedback and agents:** ThinkingState, TaskRows, ToolChips, LoadingState, Progress, Skeleton, Alert, Toast
 
-**Forms:** Field, Input, Textarea, Select, Switch, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker
+**Forms:** Field, Input, Textarea, Select, Switch, Checkbox, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker
 
 **Overlays:** Modal, Drawer, DropdownMenu, Popover, Tooltip
 
@@ -110,7 +110,7 @@ Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (d
 
 **Navigation:** Tabs, Pagination, Breadcrumbs, Menubar, SidebarNav, SearchList
 
-**Primitives** (`components/primitives.tsx`): Icon, Spinner, StreamText, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, Badge, IconButton, SendButton, Switch, Disclosure, GlideMenu, Card, Popover, AvatarStack
+**Primitives** (`components/primitives.tsx`): Icon, Spinner, StreamText, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, Badge, IconButton, SendButton, Switch, Checkbox, Disclosure, GlideMenu, Card, Popover, AvatarStack
 
 Open the [gallery](https://formicai.dev/preview.html): one page per component with a live playground, and global controls for theme, palette, accent, radius and size. Deep-link any component as `preview.html#/button`.
 
@@ -128,12 +128,12 @@ curl -fsSL https://formicai.dev/install.sh | bash
 
 It copies `styles/` and `components/` into `src/formic/` (pass another folder as the first argument if you prefer) and writes `AGENTS.md`, `.cursor/rules/formic-design-system.mdc`, `.github/copilot-instructions.md`, `.claude/skills/formic-design-system/SKILL.md`, and a Formic section in `CLAUDE.md`. Re-run it to update; it never overwrites your own files. Read [`install.sh`](install.sh) first if you like to know what you are piping into bash.
 
-**2. Wire the CSS** (Tailwind v4, after `@import "tailwindcss"`) and `npm install @tabler/icons-react`:
+**2. Wire the CSS** (Tailwind v4, three lines in this order) and `npm install @tabler/icons-react`. With `--new` this is already done.
 
 ```css
-@import "./formic/styles/tokens.css";
-@import "./formic/styles/themes.css";          /* optional */
-@import "./formic/styles/tailwind-theme.css";
+@import "./formic/styles/fonts.css";    /* first: the Urbanist font */
+@import "tailwindcss";
+@import "./formic/styles/formic.css";   /* tokens, palettes, Tailwind bridge, component sheets */
 ```
 
 **3. Restart your tool and name the system in the first prompt:**

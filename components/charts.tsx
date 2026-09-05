@@ -371,7 +371,7 @@ export function DonutChart({
 /* The mini trend inside a StatCard. Decorative by design: the
  * number beside it carries the meaning, so it is aria-hidden.
  * `smooth` runs a Catmull-Rom curve through the points so weekly
- * data reads as one calm wave; `animate` draws the line in once. */
+ * data reads as one calm wave; `animate` reveals it left to right once. */
 function smoothPath(pts: { x: number; y: number }[]): string {
   if (pts.length < 2) return "";
   let d = `M ${pts[0].x} ${pts[0].y}`;
@@ -395,7 +395,7 @@ export function Sparkline({
   area?: boolean;
   /** Catmull-Rom curve instead of straight segments */
   smooth?: boolean;
-  /** one-shot draw-in on mount; collapses to the final frame under reduced motion */
+  /** one-shot left→right reveal on mount; collapses to the final frame under reduced motion */
   animate?: boolean;
   className?: string;
 }) {
@@ -415,6 +415,10 @@ export function Sparkline({
     <svg
       viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true"
       className={`h-8 w-full overflow-visible ${SERIES_TEXT[color]} ${className}`}
+      /* The reveal clips the whole svg left→right. A stroke-dash draw-in
+         (pathLength + dasharray) breaks under non-scaling-stroke in Chromium
+         and showed up as a line with holes in it. */
+      style={drawing ? { animation: "reveal-x 1700ms var(--ease-out-quint) both" } : undefined}
     >
       {area && (
         <>
@@ -424,19 +428,12 @@ export function Sparkline({
               <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
             </linearGradient>
           </defs>
-          <path
-            d={`${d} L${W} ${H} L0 ${H} Z`} fill={`url(#${gradientId})`}
-            style={drawing ? { animation: "fade-in 1400ms var(--ease-out-quint) both" } : undefined}
-          />
+          <path d={`${d} L${W} ${H} L0 ${H} Z`} fill={`url(#${gradientId})`} />
         </>
       )}
       <path
         d={d} fill="none" stroke="currentColor" strokeWidth="2"
         strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"
-        pathLength={1}
-        strokeDasharray={drawing ? 1 : undefined}
-        strokeDashoffset={drawing ? 1 : undefined}
-        style={drawing ? { animation: "draw-in 1700ms var(--ease-out-quint) forwards" } : undefined}
       />
     </svg>
   );

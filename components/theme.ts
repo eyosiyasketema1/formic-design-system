@@ -22,6 +22,10 @@ const OVERRIDE_ID = "ds-accent-override";
  * These are anchors for math, not rendered colors. */
 const LIGHT_ANCHOR = "#ffffff";
 const DARK_ANCHOR = "#262626";
+/* The 10% accent tint sits on each palette's light --surface, none of which
+   is pure white (ocean is #fbfdfd, the darkest). Fitting the tint against
+   the darkest surface makes the result hold on every palette. */
+const TINT_SURFACE_ANCHOR = "#fbfdfd";
 const MIN_CONTRAST = 4.5;
 type Rgb = { r: number; g: number; b: number };
 function hexToRgb(hex: string): Rgb | null {
@@ -81,6 +85,13 @@ function hslToRgb({ h, s, l }: { h: number; s: number; l: number }): Rgb {
     b: hue(p, q, h - 1 / 3) * 255,
   };
 }
+function mixRgb(a: Rgb, b: Rgb, weight: number): Rgb {
+  return {
+    r: Math.round(a.r * weight + b.r * (1 - weight)),
+    g: Math.round(a.g * weight + b.g * (1 - weight)),
+    b: Math.round(a.b * weight + b.b * (1 - weight)),
+  };
+}
 /* walk lightness toward `direction` until the anchor contrast passes —
  * measured on the ROUNDED channels, since rounding is what ships */
 function fitContrast(color: Rgb, anchor: Rgb, direction: -1 | 1): Rgb {
@@ -96,7 +107,11 @@ function fitContrast(color: Rgb, anchor: Rgb, direction: -1 | 1): Rgb {
       g: Math.round(candidate.g),
       b: Math.round(candidate.b),
     };
-    if (contrast(rounded, anchor) >= MIN_CONTRAST) return rounded;
+    /* Light accents must also hold on their own 10% tint (accent-soft
+       buttons, lead tiles), which is always the harder test — so that is
+       the anchor when darkening. Dark accents sit on the dark anchor. */
+    const target = direction < 0 ? mixRgb(rounded, hexToRgb(TINT_SURFACE_ANCHOR)!, 0.1) : anchor;
+    if (contrast(rounded, target) >= MIN_CONTRAST) return rounded;
   }
   return rounded; /* extreme lightness — as close as the hue allows */
 }

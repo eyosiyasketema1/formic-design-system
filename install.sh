@@ -162,13 +162,13 @@ export default function Dashboard() {
       </header>
 
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="New leads" caption="This month" display="128" delta="+24%" icon="user-add" trend={[6, 9, 7, 12, 10, 15, 13, 19]} trendSmooth trendAnimate />
-        <StatCard label="Orders" caption="Won this month" display="34" delta="+8%" icon="circle-check" iconTone={2} trend={[2, 3, 3, 5, 4, 6, 5, 7]} trendTone={2} />
-        <StatCard label="Conversion" caption="Lead to client" display="18%" delta="-2%" deltaTone="down" icon="chart" iconTone={4} />
-        <StatCard label="People reached" caption="Returning: 9" display="43" delta="0.0%" deltaTone="flat" icon="globe" iconTone={5} />
+        <StatCard label="New leads" caption="This month" display="128" delta="+24%" icon="user-add" iconTone="accent" trend={[6, 9, 7, 12, 10, 15, 13, 19]} trendSmooth trendAnimate />
+        <StatCard label="Orders" caption="Won this month" display="34" delta="+8%" icon="circle-check" trend={[2, 3, 3, 5, 4, 6, 5, 7]} trendTone={2} />
+        <StatCard label="Conversion" caption="Lead to client" display="18%" delta="-2%" deltaTone="down" icon="chart" />
+        <StatCard label="People reached" caption="Returning: 9" display="43" delta="0.0%" deltaTone="flat" icon="globe" />
       </div>
 
-      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-5">
+      <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-5">
         <Card className="p-4 lg:col-span-3">
           <p className="mb-3 text-caption font-medium text-ink">Revenue by month</p>
           <BarChart labels={["Apr", "May", "Jun", "Jul", "Aug", "Sep"]} series={[{ name: "Invoiced", values: [38, 52, 32, 41, 35, 48] }]} highlight={5} />

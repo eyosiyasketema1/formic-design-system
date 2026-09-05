@@ -112,6 +112,7 @@ PAIRS = [  # (fg var | literal, bg var, minimum, label)
     ("--chart-3", "--canvas", 3.0, "chart series 3 on canvas"),
     ("--chart-4", "--canvas", 3.0, "chart series 4 on canvas"),
     ("--chart-5", "--canvas", 3.0, "chart series 5 on canvas"),
+    ("--accent", "--accent-tint", 4.5, "accent icon / text on the accent tint (StatCard lead tile)"),
     ("--accent", "--chart-track", 3.0, "BarList leader / Gauge lit ticks on the track"),
     ("--ink-3", "--chart-track", 3.0, "BarList rest bars on the track"),
 ]

@@ -1579,6 +1579,10 @@ function SelectionActions({
 const TH_OVERRIDE_ID = "ds-accent-override";
 const TH_LIGHT_ANCHOR = "#ffffff";
 const TH_DARK_ANCHOR = "#262626";
+/* The 10% accent tint sits on each palette's light --surface, none of which
+   is pure white (ocean is #fbfdfd, the darkest). Fitting the tint against
+   the darkest surface makes the result hold on every palette. */
+const TH_TINT_SURFACE_ANCHOR = "#fbfdfd";
 const TH_MIN_CONTRAST = 4.5;
 function TH_hexToRgb(hex) {
   const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
@@ -1631,6 +1635,13 @@ function TH_hslToRgb({ h, s, l }) {
     b: hue(p, q, h - 1 / 3) * 255
   };
 }
+function TH_mixRgb(a, b, weight) {
+  return {
+    r: Math.round(a.r * weight + b.r * (1 - weight)),
+    g: Math.round(a.g * weight + b.g * (1 - weight)),
+    b: Math.round(a.b * weight + b.b * (1 - weight)),
+  };
+}
 function TH_fitContrast(color, anchor, direction) {
   const hsl = TH_rgbToHsl(color);
   let rounded = color;
@@ -1644,7 +1655,11 @@ function TH_fitContrast(color, anchor, direction) {
       g: Math.round(candidate.g),
       b: Math.round(candidate.b)
     };
-    if (TH_contrast(rounded, anchor) >= TH_MIN_CONTRAST) return rounded;
+    /* Light accents must also hold on their own 10% tint (accent-soft
+       buttons, lead tiles), which is always the harder test — so that is
+       the anchor when darkening. Dark accents sit on the dark anchor. */
+    const target = direction < 0 ? TH_mixRgb(rounded, TH_hexToRgb(TH_TINT_SURFACE_ANCHOR), 0.1) : anchor;
+    if (TH_contrast(rounded, target) >= TH_MIN_CONTRAST) return rounded;
   }
   return rounded;
 }
