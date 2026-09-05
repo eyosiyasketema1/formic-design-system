@@ -8,7 +8,9 @@ import { GlideMenu, Icon, type IconName } from "./primitives";
  * compact workspace switcher, primary navigation, searchable
  * chat history, and a collapse that preserves icon alignment.
  *
- * Requires styles/sidebar.css alongside the token sheets.
+ * Requires styles/sidebar.css (included by styles/formic.css).
+ * Fills its parent: mount it inside a `flex h-dvh` shell next to a
+ * `min-w-0 flex-1 overflow-y-auto` main column.
  * ───────────────────────────────────────────────────────── */
 /* workspace logo — an illustrative mark, kept local like brand SVGs */
 const LOGO = (
@@ -42,6 +44,7 @@ const DEFAULT_RECENTS: SidebarRecent[] = [
 type SidebarNavProps = {
   activeTitle?: string | null;
   className?: string;
+  /** stretch to the parent's height (default). `false` gives a fixed 600px demo height for galleries. */
   fill?: boolean;
   onNewChat?: () => void;
   onPick?: (id: string, label: string, prompt?: string) => void;
@@ -191,7 +194,7 @@ function WorkspaceMenu({
 export default function SidebarNav({
   activeTitle,
   className = "",
-  fill = false,
+  fill = true,
   onNewChat,
   onPick,
   activeNav,

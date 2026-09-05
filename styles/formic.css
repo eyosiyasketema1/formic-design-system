@@ -1,0 +1,16 @@
+/* ─────────────────────────────────────────────────────────
+ * FORMIC — the whole stylesheet stack in one import
+ *
+ *   @import "./formic/styles/fonts.css";   (first — a later @import is dropped)
+ *   @import "tailwindcss";
+ *   @import "./formic/styles/formic.css";
+ *
+ * Pulls in the tokens, the 5 palettes, the Tailwind v4 bridge, and the
+ * per-component sheets (sidebar, records). Import the individual files
+ * instead if you want to leave something out.
+ * ───────────────────────────────────────────────────────── */
+@import "./tokens.css";
+@import "./themes.css";
+@import "./tailwind-theme.css";
+@import "./sidebar.css";
+@import "./records.css";

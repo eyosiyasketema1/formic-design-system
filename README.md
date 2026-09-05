@@ -50,7 +50,7 @@ Green **Code** button on this repo, then **Download ZIP**, and copy `styles/` an
 npm install react react-dom @tabler/icons-react
 ```
 
-Tailwind v4 is required for the utility bridge. Some components need one extra stylesheet: `RecordsTable` uses `styles/records.css`, `SidebarNav` uses `styles/sidebar.css`.
+Tailwind v4 is required for the utility bridge. `styles/formic.css` bundles everything after Tailwind (tokens, palettes, bridge, and the `sidebar.css` / `records.css` component sheets); import the individual files instead if you want to leave something out.
 
 ---
 
@@ -59,11 +59,9 @@ Tailwind v4 is required for the utility bridge. Some components need one extra s
 Import the stylesheets in this order in your global CSS:
 
 ```css
-@import "./formic/styles/fonts.css";          /* first: the Urbanist font */
+@import "./formic/styles/fonts.css";    /* first: the Urbanist font */
 @import "tailwindcss";
-@import "./formic/styles/tokens.css";         /* source of truth: tokens, keyframes, primitives */
-@import "./formic/styles/themes.css";         /* optional: the 5 palettes */
-@import "./formic/styles/tailwind-theme.css"; /* generates text-ink, bg-hover, text-body, ... */
+@import "./formic/styles/formic.css";   /* tokens, palettes, Tailwind bridge, component sheets */
 ```
 
 Then compose:
@@ -165,7 +163,7 @@ It checks forbidden patterns, WCAG contrast for every mode and palette, token dr
 ## Repo map
 
 ```
-styles/          tokens.css (source of truth), themes.css, tailwind-theme.css, sidebar.css, records.css
+styles/          fonts.css, formic.css (imports the rest), tokens.css (source of truth), themes.css, tailwind-theme.css, sidebar.css, records.css
 components/      React components + primitives.tsx, hooks.ts, theme.ts
 skill/           SKILL.md and formic-design-system.skill, the installable AI skill
 scripts/         qa_check.py (the QA gate) and check_sri.py
