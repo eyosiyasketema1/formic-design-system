@@ -84,7 +84,7 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
 **Dashboard:** `Panel` (titled card: `title`, `caption`, `actions`, `padding`), `StatCard` (`iconTone` "neutral" | "accent"), `MetricRow`, `Delta`, `BarChart` / `LineChart` (`fill` to take the panel's height, no width cap), `DonutChart`, `Sparkline` (`smooth`, `animate`), `ChartLegend`, `CountUp`, `Gauge`, `BarList` (`charts.tsx`); `PrivacyScope`, `PrivacyToggle`, `Masked` (`Privacy.tsx`) mask figures until the eye is opened. `StatCard`'s `display` and `MetricRow`'s `value` accept a node, so `<CountUp>` and `<Masked>` slot straight in.
 **Data:** `RecordsTable`, `FilterTable`, `DiffTable`.
 **Structure:** `Accordion`, `Steps`, `Timeline`.
-**Navigation:** `Tabs`, `Pagination`, `Breadcrumbs`, `Menubar`, `AppSidebar` (dashboard rail: `expanded` | `rail`, `sections`, `active`, `onSelect`, `user`), `SidebarNav` (chat rail), `SearchList`.
+**Navigation:** `Tabs`, `Pagination`, `Breadcrumbs`, `Menubar`, `AppSidebar` (dashboard rail: `expanded` | `rail`, `sections` with optional `children` sub-menus, `active`, `onSelect`, `user`, `workspace.logo` defaults to the Formic mark in accent), `SidebarNav` (chat rail), `SearchList`.
 
 All components ship demo content as prop defaults (`DEFAULT_*`); always pass real data via props in apps. Variant props are typed unions.
 

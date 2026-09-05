@@ -8195,13 +8195,28 @@ function Panel({
   );
 }
 
+/* ═══════════ FormicMark (mirrors components/brand.tsx) ═══════════ */
+function FormicMark({ size = 20, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 512 512" aria-hidden="true" className={className}>
+      <path fill="currentColor" fillRule="evenodd" d="M203 373 L204 378 L211 383 L221 388 L223 388 L233 392 L242 393 L243 394 L268 394 L269 393 L278 392 L279 391 L290 388 L300 383 L306 379 L308 376 L308 373 L289 349 L278 356 L276 356 L273 358 L266 359 L265 360 L246 360 L245 359 L238 358 L235 356 L233 356 L229 354 L222 349Z M120 244 L120 278 L213 278 L214 279 L213 280 L207 281 L204 283 L199 284 L196 286 L194 286 L178 294 L173 298 L167 301 L154 312 L153 312 L140 325 L140 326 L129 339 L131 341 L155 357 L159 356 L179 335 L198 322 L219 313 L222 313 L230 310 L242 309 L243 308 L268 308 L269 309 L275 309 L276 310 L280 310 L281 311 L285 311 L289 313 L292 313 L298 316 L300 316 L305 319 L307 319 L313 323 L318 325 L332 335 L348 351 L348 352 L354 357 L358 356 L382 339 L376 331 L370 325 L370 324 L359 313 L358 313 L348 304 L331 293 L317 286 L315 286 L312 284 L310 284 L297 279 L298 278 L391 278 L391 244Z M147 184 L147 185 L154 192 L155 192 L164 200 L176 208 L183 211 L189 215 L191 215 L196 218 L198 218 L201 220 L203 220 L213 224 L216 224 L221 226 L225 226 L226 227 L230 227 L231 228 L238 228 L239 229 L272 229 L273 228 L280 228 L281 227 L285 227 L286 226 L290 226 L291 225 L298 224 L299 223 L310 220 L338 206 L352 196 L364 185 L364 184 L341 161 L339 161 L327 172 L315 180 L303 186 L301 186 L298 188 L296 188 L289 191 L286 191 L281 193 L277 193 L276 194 L270 194 L269 195 L242 195 L241 194 L230 193 L229 192 L226 192 L225 191 L222 191 L221 190 L213 188 L191 177 L180 169 L172 161 L170 161Z M201 143 L201 144 L217 154 L219 154 L227 158 L230 158 L231 159 L238 160 L239 161 L244 161 L245 162 L266 162 L267 161 L277 160 L278 159 L284 158 L287 156 L289 156 L303 149 L310 144 L307 139 L289 117 L275 125 L269 126 L268 127 L264 127 L263 128 L248 128 L247 127 L239 126 L228 121 L222 117Z" />
+    </svg>
+  );
+}
 /* ═══════════ AppSidebar (mirrors components/AppSidebar.tsx) ═══════════ */
-const APPSB_WORKSPACE = { name: "Formic Studio", monogram: "F" };
+const APPSB_WORKSPACE = { name: "Formic Studio", logo: <FormicMark size={22} className="text-accent" /> };
 const APPSB_SECTIONS = [
   {
     items: [
       { key: "overview", label: "Overview", icon: "home" },
-      { key: "reports", label: "Reports", icon: "chart", count: "12" },
+      {
+        key: "reports", label: "Reports", icon: "chart", count: "12",
+        children: [
+          { key: "reports-sales", label: "Sales", count: "5" },
+          { key: "reports-customers", label: "Customers", count: "4" },
+          { key: "reports-products", label: "Products", count: "3" },
+        ],
+      },
       { key: "records", label: "Records", icon: "file" },
     ],
   },
@@ -8215,7 +8230,7 @@ const APPSB_SECTIONS = [
     ],
   },
 ];
-const APPSB_USER = { name: "Samson Usmael", detail: "Admin" };
+const APPSB_USER = { name: "Eyosiyas Ketema", detail: "Admin" };
 function AppSidebar({
   workspace = APPSB_WORKSPACE,
   sections = APPSB_SECTIONS,
@@ -8241,32 +8256,105 @@ function AppSidebar({
      not drawn rather than drawn dead. */
   const canFlip = collapsible && (variant === undefined || Boolean(onVariantChange));
   const current = active === null ? undefined : (active ?? sections[0]?.items[0]?.key);
+  const parentOf = (key) =>
+    sections.flatMap((s) => s.items).find((i) => i.children?.some((c) => c.key === key))?.key;
+  const activeParent = parentOf(current);
+
+  /* Expanded: which groups are open. The active child's group starts open. */
+  const [openGroups, setOpenGroups] = useState(() => (activeParent ? { [activeParent]: true } : {}));
+  useEffect(() => {
+    if (activeParent) setOpenGroups((o) => (o[activeParent] ? o : { ...o, [activeParent]: true }));
+  }, [activeParent]);
+  const toggleGroup = (key) => setOpenGroups((o) => ({ ...o, [key]: !o[key] }));
+
+  /* Rail: one flyout at a time, placed beside the icon that opened it. */
+  const flyoutId = useId();
+  const [flyout, setFlyout] = useState(null);
+  useEffect(() => {
+    if (!flyout) return;
+    const onDown = (event) => {
+      const layer = document.getElementById(flyoutId);
+      if (layer && !layer.containsevent.target) setFlyout(null);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [flyout, flyoutId]);
+  useEffect(() => { if (!rail) setFlyout(null); }, [rail]);
+
+  const pick = (key) => {
+    setFlyout(null);
+    onSelect?.(key);
+  };
+
+  const rowClass = (on) =>
+    `relative z-10 flex h-9 w-full items-center rounded-control transition-colors duration-150 ${rail ? "justify-center" : "gap-2.5 px-2.5"} ${on ? "bg-hover-2 text-ink" : "text-ink-2 hover:text-ink"}`;
 
   /* One row, both variants: in the rail the label and count are not
      rendered at all (a tooltip carries the name), so the icon square is
      the whole hit area and stays exactly where it was — collapsing never
      shifts the icons. */
   const row = (item) => {
-    const on = item.key === current;
+    const group = Boolean(item.children?.length);
+    const on = item.key === current || item.key === activeParent;
+    const expanded = Boolean(openGroups[item.key]);
+    const onClick = (event) => {
+      if (!group) return pick(item.key);
+      if (!rail) return toggleGroup(item.key);
+      const r = event.currentTarget.getBoundingClientRect();
+      setFlyout((f) => (f?.key === item.key ? null : { key: item.key, x: r.right + 6, top: r.top }));
+    };
     const button = (
       <button
-        key={item.key}
         type="button"
         data-menu-row
-        aria-current={on ? "page" : undefined}
+        aria-current={!group && on ? "page" : undefined}
+        aria-expanded={group ? (rail ? flyout?.key === item.key : expanded) : undefined}
+        aria-haspopup={group && rail ? "menu" : undefined}
+        aria-controls={group && rail && flyout?.key === item.key ? flyoutId : undefined}
         aria-label={rail ? item.label : undefined}
-        onClick={() => onSelect?.(item.key)}
-        className={`relative z-10 flex h-9 w-full items-center rounded-control transition-colors duration-150
-          ${rail ? "justify-center" : "gap-2.5 px-2.5"}
-          ${on ? "bg-hover-2 text-ink" : "text-ink-2 hover:text-ink"}`}
+        onClick={onClick}
+        className={rowClass(on)}
       >
         <Icon name={item.icon} size={16} strokeWidth={2} className="shrink-0" />
         {!rail && <span className="min-w-0 flex-1 truncate text-left text-body font-medium">{item.label}</span>}
         {!rail && item.count && <span className="shrink-0 text-small font-medium text-ink-3 tabular-nums">{item.count}</span>}
+        {!rail && group && (
+          <Icon name="chevron" size={14} strokeWidth={2} className={`shrink-0 text-ink-3 transition-transform duration-150 ${expanded ? "rotate-180" : ""}`} />
+        )}
       </button>
     );
-    return rail ? <Tooltip key={item.key} label={item.label}>{button}</Tooltip> : button;
+    const head = rail ? <Tooltip label={item.label}>{button}</Tooltip> : button;
+    if (!group || rail) return <div key={item.key}>{head}</div>;
+    return (
+      <div key={item.key}>
+        {head}
+        <Disclosure open={expanded} duration={220}>
+          {/* children sit on a hairline that starts under the parent's icon,
+              so the indent reads as hierarchy rather than a second list */}
+          <div className="mt-0.5 ml-4.5 flex flex-col gap-0.5 border-l border-line pl-3">
+            {item.children.map((child) => {
+              const childOn = child.key === current;
+              return (
+                <button
+                  key={child.key}
+                  type="button"
+                  data-menu-row
+                  aria-current={childOn ? "page" : undefined}
+                  onClick={() => pick(child.key)}
+                  className={`relative z-10 flex h-8 w-full items-center gap-2 rounded-control px-2 transition-colors duration-150 ${childOn ? "bg-hover-2 text-ink" : "text-ink-2 hover:text-ink"}`}
+                >
+                  <span className="min-w-0 flex-1 truncate text-left text-caption font-medium">{child.label}</span>
+                  {child.count && <span className="shrink-0 text-small text-ink-3 tabular-nums">{child.count}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </Disclosure>
+      </div>
+    );
   };
+
+  const flyoutItem = flyout ? sections.flatMap((s) => s.items).find((i) => i.key === flyout.key) : undefined;
 
   return (
     <aside
@@ -8275,16 +8363,29 @@ function AppSidebar({
       className={`flex h-full shrink-0 flex-col border-r border-line bg-sidebar transition-[width] duration-300 ${rail ? "w-14" : "w-60"} ${className}`}
       style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
     >
-      {/* workspace mark + collapse control share one row */}
-      <div className={`flex h-14 shrink-0 items-center ${rail ? "justify-center" : "gap-2 px-3"}`}>
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-ink text-small font-semibold text-canvas">
-          {workspace.monogram}
-        </span>
+      {/* Header: workspace mark, and the collapse / expand control in the
+          same place in both variants, so the eye knows where to go back. */}
+      <div className={`flex shrink-0 ${rail ? "flex-col items-center gap-1 py-2.5" : "h-14 items-center gap-2 px-3"}`}>
+        {workspace.logo ? (
+          <span className="flex size-7 shrink-0 items-center justify-center">{workspace.logo}</span>
+        ) : (
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-ink text-small font-semibold text-canvas">
+            {workspace.monogram ?? workspace.name.slice(0, 1)}
+          </span>
+        )}
         {!rail && <span className="min-w-0 flex-1 truncate text-body font-semibold text-ink">{workspace.name}</span>}
-        {!rail && canFlip && (
-          <IconButton label="Collapse sidebar" onClick={flip} className="text-ink-3 hover:bg-hover-2 hover:text-ink">
-            <Icon name="sidebar" size={15} strokeWidth={2} />
-          </IconButton>
+        {canFlip && (
+          rail ? (
+            <Tooltip label="Expand sidebar">
+              <IconButton label="Expand sidebar" onClick={flip} className="size-9 text-ink-3 hover:bg-hover-2 hover:text-ink">
+                <Icon name="sidebar" size={15} strokeWidth={2} className="rotate-180" />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <IconButton label="Collapse sidebar" onClick={flip} className="text-ink-3 hover:bg-hover-2 hover:text-ink">
+              <Icon name="sidebar" size={15} strokeWidth={2} />
+            </IconButton>
+          )
         )}
       </div>
 
@@ -8302,12 +8403,35 @@ function AppSidebar({
         ))}
       </nav>
 
-      <div className={`mt-auto shrink-0 border-t border-line ${rail ? "flex flex-col items-center gap-1 py-2" : "p-2.5"}`}>
-        {rail && canFlip && (
-          <IconButton label="Expand sidebar" onClick={flip} className="size-9 text-ink-3 hover:bg-hover-2 hover:text-ink">
-            <Icon name="sidebar" size={15} strokeWidth={2} className="rotate-180" />
-          </IconButton>
-        )}
+      {/* Rail flyout for a group: the sub-menu beside its icon */}
+      {rail && flyout && flyoutItem?.children && (
+        <Popover id={flyoutId} role="menu" x={flyout.x} top={flyout.top} className="w-52" onClose={() => setFlyout(null)}>
+          <div className="p-1.5">
+            <p className="px-2 pb-1 pt-1 text-micro font-medium tracking-wide text-ink-3 uppercase">{flyoutItem.label}</p>
+            <GlideMenu className="flex flex-col gap-0.5" highlightClassName="inset-x-0 rounded-sm bg-hover">
+              {flyoutItem.children.map((child) => {
+                const childOn = child.key === current;
+                return (
+                  <button
+                    key={child.key}
+                    type="button"
+                    role="menuitem"
+                    data-menu-row
+                    aria-current={childOn ? "page" : undefined}
+                    onClick={() => pick(child.key)}
+                    className={`relative z-10 flex h-8 w-full items-center gap-2 rounded-sm px-2 text-left transition-colors duration-150 ${childOn ? "bg-hover-2 text-ink" : "text-ink-2 hover:text-ink"}`}
+                  >
+                    <span className="min-w-0 flex-1 truncate text-caption font-medium">{child.label}</span>
+                    {child.count && <span className="shrink-0 text-small text-ink-3 tabular-nums">{child.count}</span>}
+                  </button>
+                );
+              })}
+            </GlideMenu>
+          </div>
+        </Popover>
+      )}
+
+      <div className={`mt-auto shrink-0 border-t border-line ${rail ? "flex flex-col items-center py-2" : "p-2.5"}`}>
         {footer !== undefined ? footer : user && (
           rail ? (
             <Tooltip label={user.name}>
@@ -9549,28 +9673,28 @@ function Page_panel() {
 }
 
 function Page_appsidebar() {
-  const [active, setActive] = useState("reports");
+  const [active, setActive] = useState("reports-sales");
   const [variant, setVariant] = useState("expanded");
   return (
     <>
-      <GalleryCard label="Expanded and rail, controlled from the app" full>
-        <div className="flex h-[440px] overflow-hidden rounded-card border border-line">
+      <GalleryCard label="Full view · expanded with a sub-menu open, collapse in the header" full>
+        <div className="flex h-[600px] overflow-hidden rounded-card border border-line">
           <AppSidebar active={active} onSelect={setActive} variant={variant} onVariantChange={setVariant} />
           <div className="flex min-w-0 flex-1 flex-col gap-3 bg-canvas p-5">
             <p className="text-body font-medium text-ink">{active}</p>
-            <p className="text-caption text-ink-3">The page for the active item goes here. Collapse with the control in the sidebar header.</p>
+            <p className="text-caption text-ink-3">Reports is a group: in the expanded rail its pages open in place; in the collapsed rail they open as a flyout beside the icon. The collapse and expand control is in the header in both.</p>
           </div>
         </div>
       </GalleryCard>
-      <GalleryCard label="Rail" wide>
-        <div className="flex h-[360px] overflow-hidden rounded-card border border-line">
+      <GalleryCard label="Rail · click Reports for the flyout" wide>
+        <div className="flex h-[600px] overflow-hidden rounded-card border border-line">
           <AppSidebar variant="rail" collapsible={false} active="records" />
           <div className="min-w-0 flex-1 bg-canvas" />
         </div>
       </GalleryCard>
-      <GalleryCard label="Expanded, no account row" wide>
-        <div className="flex h-[360px] overflow-hidden rounded-card border border-line">
-          <AppSidebar collapsible={false} user={null} active="people" />
+      <GalleryCard label="Expanded, no account row, nothing selected" wide>
+        <div className="flex h-[600px] overflow-hidden rounded-card border border-line">
+          <AppSidebar collapsible={false} user={null} active={null} />
           <div className="min-w-0 flex-1 bg-canvas" />
         </div>
       </GalleryCard>
@@ -9868,7 +9992,7 @@ const PAGES = [
   { id: "pagination", group: "Navigation", title: "Pagination", note: "Numbered pages with sibling windows and gap ellipses \u2014 first and last stay reachable, active page carries aria-current, edges disable prev / next.", file: "components/Pagination.tsx", Component: Page_pagination },
   { id: "breadcrumbs", group: "Navigation", title: "Breadcrumbs", note: "Path trail \u2014 long trails collapse their middle into a DropdownMenu, the current page carries aria-current, labels truncate instead of breaking the row. Navigating fires a toast here.", file: "components/Breadcrumbs.tsx", Component: Page_breadcrumbs },
   { id: "menubar", group: "Navigation", title: "Menubar", note: "A bar of action menus, each a DropdownMenu \u2014 dividers, disabled and destructive items included. Selections fire toasts here.", file: "components/Menubar.tsx", Component: Page_menubar },
-  { id: "appsidebar", group: "Navigation", title: "AppSidebar", note: "The menu rail for dashboards and admin apps, as opposed to SidebarNav, the chat rail. Grouped navigation with counts, a workspace mark at the top, an account row at the bottom. Two variants on the same --sidebar surface: expanded (240px, icon + label + count, section titles) and rail (56px, icons only, labels as tooltips). Collapsing never moves the icons.", file: "components/AppSidebar.tsx", Component: Page_appsidebar },
+  { id: "appsidebar", group: "Navigation", title: "AppSidebar", note: "The menu rail for dashboards and admin apps, as opposed to SidebarNav, the chat rail. Grouped navigation with counts and sub-menus, a workspace mark at the top, an account row at the bottom. Two variants on the same --sidebar surface: expanded (240px, icon + label + count, section titles, sub-menus open in place) and rail (56px, icons only, labels as tooltips, sub-menus as a flyout). The collapse and expand control sits in the header in both, and collapsing never moves the icons.", file: "components/AppSidebar.tsx", Component: Page_appsidebar },
   { id: "sidebarnav", group: "Navigation", title: "SidebarNav", note: "Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.", file: "components/SidebarNav.tsx", Component: Page_sidebarnav },
   { id: "searchlist", group: "Navigation", title: "SearchList", note: "Command search with live filtering \u2014 type to filter, gibberish for the empty state.", file: "components/SearchList.tsx", Component: Page_searchlist }
 ];
@@ -10123,10 +10247,10 @@ const PLAYGROUNDS = {
       { key: "variant", label: "Variant", type: "select", value: "expanded", options: ["expanded", "rail"] },
       { key: "collapsible", label: "Collapse control", type: "toggle", value: true },
       { key: "user", label: "Account row", type: "toggle", value: true },
-      { key: "active", label: "Active", type: "select", value: "reports", options: ["overview", "reports", "records", "people", "settings"] },
+      { key: "active", label: "Active", type: "select", value: "reports-sales", options: ["overview", "reports-sales", "reports-customers", "records", "people", "settings"] },
     ],
     render: (p, set) => (
-      <div className="flex h-96 w-full overflow-hidden rounded-card border border-line">
+      <div className="flex h-[560px] w-full overflow-hidden rounded-card border border-line">
         <AppSidebar variant={p.variant} onVariantChange={(v) => set("variant", v)} collapsible={p.collapsible} user={p.user ? undefined : null} active={p.active} onSelect={(k) => set("active", k)} />
         <div className="min-w-0 flex-1 bg-canvas" />
       </div>

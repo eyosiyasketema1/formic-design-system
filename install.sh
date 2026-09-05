@@ -144,7 +144,9 @@ import { Icon } from "../formic/components/primitives";
 const NAV = [
   { items: [
     { key: "overview", label: "Overview", icon: "home" as const },
-    { key: "reports", label: "Reports", icon: "chart" as const, count: "12" },
+    { key: "reports", label: "Reports", icon: "chart" as const, count: "12", children: [
+      { key: "reports-sales", label: "Sales", count: "5" }, { key: "reports-customers", label: "Customers", count: "4" },
+    ] },
     { key: "records", label: "Records", icon: "file" as const },
   ] },
   { title: "Workspace", items: [
