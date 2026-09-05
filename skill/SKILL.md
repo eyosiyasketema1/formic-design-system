@@ -61,17 +61,26 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
 - **App rails** sit on `--sidebar` with a `border-line` edge. Nav active state is a flat `bg-hover-2` fill with ink copy and ink icon: no border, no accent recolor.
 - **Responsive:** component roots are fluid (`w-full` plus a `max-w-*` cap); wide content scrolls in its own `overflow-x-auto`; text truncates with `min-w-0 truncate`; touch targets >= 24px.
 
+## Layout and composition (what agents get wrong)
+
+- **Checkbox vs Switch.** `Switch` only for a setting that applies the moment it flips. Completion, selection, "done today", "include row" = `Checkbox`. Never switches down a list.
+- **Icons are furniture.** `StatCard` icons are ink on inset by default; at most one tile per view is `iconTone="accent"`. A different colour per card is the machine-made tell. Colour lives in three places only: accent (one primary action, lead series), green/red (success/danger), chart ramp (series).
+- **Cards fit content.** `items-start` on card grids, or make content fill (`flex flex-col` + `flex-1` chart with a `height` chosen for the card). An empty bottom half is a bug.
+- **Card anatomy.** Title `text-body font-medium text-ink` + caption `text-caption text-ink-3` left, controls right, same baseline; body `mt-3`; padding `p-4`.
+- **Proximity and alignment.** Filters in one row directly above the list, sized to content (`max-w-*`), search at the row's right end; comparison pickers together with "vs", beside the title. One grid: `gap-3.5` in sections, `gap-6` between; numbers right with `tabular-nums`; nothing centred unless alone.
+- **Page density.** `p-6 sm:p-8`, sections `gap-6`.
+
 ## Component inventory
 
-**Primitives** (`primitives.tsx`): `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Skeleton`, `Avatar`, `Tooltip`, `Progress`, `Separator`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`.
+**Primitives** (`primitives.tsx`): `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Skeleton`, `Avatar`, `Tooltip`, `Progress`, `Separator`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Checkbox`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`.
 **Hooks** (`hooks.ts`): `useSequence`, `useElapsed`, `useStream`, `useAnchoredLayer`, `useModalLayer`, `useReducedMotion` (the one way to read `prefers-reduced-motion`; never call `matchMedia` in a component).
 
 **Controls:** `Button` (10 variants x 4 sizes x square/pill).
-**Forms:** `Field`, `Input`, `Textarea`, `Select`, `Switch`, `Slider`, `OTPInput`, `FileDropzone`, `DatePicker`, `DateRangePicker`, `Calendar`, `ColorPicker`.
+**Forms:** `Field`, `Input`, `Textarea`, `Select`, `Switch`, `Checkbox`, `Slider`, `OTPInput`, `FileDropzone`, `DatePicker`, `DateRangePicker`, `Calendar`, `ColorPicker`.
 **Overlays:** `Modal`, `Drawer`, `Toast`, `DropdownMenu`, `Popover`, `Tooltip`.
 **Feedback:** `Alert`, `Progress`, `Skeleton`, `LoadingState`, `ThinkingState`, `TaskRows`, `ToolChips`.
 **Conversation:** `ChatThread`, `StreamingText`, `Markdown`, `CodeBlock`, `SelectionActions`, `PromptBar`, `ChatComposer`, `ApprovalCard`, `ApprovalFlow`, `RecommendationCard`, `ContextCards`.
-**Dashboard:** `StatCard`, `MetricRow`, `Delta`, `BarChart`, `LineChart`, `DonutChart`, `Sparkline` (`smooth`, `animate`), `ChartLegend`, `CountUp`, `Gauge`, `BarList` (`charts.tsx`); `PrivacyScope`, `PrivacyToggle`, `Masked` (`Privacy.tsx`) mask figures until the eye is opened. `StatCard`'s `display` and `MetricRow`'s `value` accept a node, so `<CountUp>` and `<Masked>` slot straight in.
+**Dashboard:** `StatCard` (`iconTone` "neutral" | "accent"), `MetricRow`, `Delta`, `BarChart`, `LineChart`, `DonutChart`, `Sparkline` (`smooth`, `animate`), `ChartLegend`, `CountUp`, `Gauge`, `BarList` (`charts.tsx`); `PrivacyScope`, `PrivacyToggle`, `Masked` (`Privacy.tsx`) mask figures until the eye is opened. `StatCard`'s `display` and `MetricRow`'s `value` accept a node, so `<CountUp>` and `<Masked>` slot straight in.
 **Data:** `RecordsTable`, `FilterTable`, `DiffTable`.
 **Structure:** `Accordion`, `Steps`, `Timeline`.
 **Navigation:** `Tabs`, `Pagination`, `Breadcrumbs`, `Menubar`, `SidebarNav`, `SearchList`.

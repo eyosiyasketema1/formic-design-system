@@ -42,7 +42,7 @@
   --inset: #e9e9e9;        /* selected/inset surface */
 
   /* Accents (light values pass WCAG AA for their usage) */
-  --accent: #587f0f;      /* lime, fitted to AA on white — the brand accent in light mode */
+  --accent: #557611;      /* lime, fitted to AA on white AND on its own 10% tint (accent-soft, lead tiles) */
   --orange: #a34a08;
   --green: #15803d;
   --red: #b91c1c;
@@ -347,9 +347,9 @@ a:hover .animated-underline,
 }
 
 /* Shared: card/overlay entrance */
-/* One-shot line draw for charts: pathLength=1 on the path, then this
-   runs the dash offset from 1 to 0 exactly once. Never loops. */
-@keyframes draw-in { to { stroke-dashoffset: 0; } }
+/* One-shot left→right reveal for sparklines: clips the whole svg, so it
+   works with non-scaling strokes where a dash draw-in does not. */
+@keyframes reveal-x { from { clip-path: inset(-4px 100% -4px -4px); } to { clip-path: inset(-4px); } }
 @keyframes pop-in {
   0%   { opacity: 0; transform: scale(0.95); }
   100% { opacity: 1; transform: scale(1); }

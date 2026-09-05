@@ -102,7 +102,7 @@ Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (d
 
 **Feedback and agents:** ThinkingState, TaskRows, ToolChips, LoadingState, Progress, Skeleton, Alert, Toast
 
-**Forms:** Field, Input, Textarea, Select, Switch, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker
+**Forms:** Field, Input, Textarea, Select, Switch, Checkbox, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker
 
 **Overlays:** Modal, Drawer, DropdownMenu, Popover, Tooltip
 
@@ -112,7 +112,7 @@ Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (d
 
 **Navigation:** Tabs, Pagination, Breadcrumbs, Menubar, SidebarNav, SearchList
 
-**Primitives** (`components/primitives.tsx`): Icon, Spinner, StreamText, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, Badge, IconButton, SendButton, Switch, Disclosure, GlideMenu, Card, Popover, AvatarStack
+**Primitives** (`components/primitives.tsx`): Icon, Spinner, StreamText, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, Badge, IconButton, SendButton, Switch, Checkbox, Disclosure, GlideMenu, Card, Popover, AvatarStack
 
 Open the [gallery](https://formicai.dev/preview.html): one page per component with a live playground, and global controls for theme, palette, accent, radius and size. Deep-link any component as `preview.html#/button`.
 

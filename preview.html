@@ -36,7 +36,7 @@
   --hover: #f2f2f2;
   --hover-2: #ececec;
   --inset: #e9e9e9;
-  --accent: #587f0f;      /* lime, fitted to AA on white — the brand accent in light mode */
+  --accent: #557611;      /* lime, fitted to AA on white AND on its own 10% tint (accent-soft, lead tiles) */
   --orange: #a34a08;
   --green: #15803d;
   --red: #b91c1c;
@@ -150,9 +150,9 @@
 }
 @keyframes pixel-on { 0%,100% { opacity:.15 } 40% { opacity:1 } }
 @keyframes shimmer-text { 0% { background-position:200% 0 } 100% { background-position:-200% 0 } }
-/* One-shot line draw for charts: pathLength=1 on the path, then this
-   runs the dash offset from 1 to 0 exactly once. Never loops. */
-@keyframes draw-in { to { stroke-dashoffset: 0; } }
+/* One-shot left→right reveal for sparklines: clips the whole svg, so it
+   works with non-scaling strokes where a dash draw-in does not. */
+@keyframes reveal-x { from { clip-path: inset(-4px 100% -4px -4px); } to { clip-path: inset(-4px); } }
 @keyframes pop-in { 0% { opacity:0; transform:scale(.95) } 100% { opacity:1; transform:scale(1) } }
 @keyframes fade-in { from { opacity:0 } to { opacity:1 } }
 @keyframes fade-up { from { opacity:0; transform:translateY(4px) } to { opacity:1; transform:translateY(0) } }
@@ -917,17 +917,55 @@ function Badge({ tone = "neutral", free = false, className = "", style, children
     </span>
   );
 }
-function RadioCheck({ type, on }) {
+function RadioCheck({ type, on, mixed = false }) {
+  const filled = on || (type === "check" && mixed);
   return (
-    <span className={`flex size-4 shrink-0 items-center justify-center transition-colors duration-200 ${type === "radio" ? "rounded-full" : "rounded-[5px]"} ${on ? "bg-ink text-canvas" : "shadow-[inset_0_0_0_1.5px_var(--line-strong)] text-transparent"}`}>
+    <span
+      className={`flex size-4 shrink-0 items-center justify-center transition-colors duration-200
+        ${type === "radio" ? "rounded-full" : "rounded-[5px]"}
+        ${filled ? "bg-ink text-canvas" : "shadow-[inset_0_0_0_1.5px_var(--line-strong)] text-transparent"}`}
+    >
       {type === "radio" ? (
-        <span className="size-1.5 rounded-full bg-canvas transition-transform duration-200" style={{ transform: on ? "scale(1)" : "scale(0)" }} />
+        <span
+          className="size-1.5 rounded-full bg-canvas transition-transform duration-200"
+          style={{ transform: on ? "scale(1)" : "scale(0)" }}
+        />
       ) : (
-        <Icon name="check" size={12} strokeWidth={3} />
+        <Icon name={mixed && !on ? "minus" : "check"} size={12} strokeWidth={3} />
       )}
     </span>
   );
 }
+/* ── Checkbox (mirrors primitives.tsx) ── */
+function Checkbox({
+  checked,
+  onChange,
+  label,
+  description,
+  mixed = false,
+  disabled = false,
+  className = "",
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={mixed ? "mixed" : checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`flex min-h-6 items-start gap-2 rounded-sm text-left disabled:opacity-45 ${className}`}
+    >
+      <span className="mt-0.5 flex shrink-0">
+        <RadioCheck type="check" on={checked && !mixed} mixed={mixed} />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-body text-ink">{label}</span>
+        {description && <span className="block text-small text-ink-3">{description}</span>}
+      </span>
+    </button>
+  );
+}
+
 function Skeleton({ className = "h-4 w-full" }) {
   return (
     <span aria-hidden className={`block rounded-sm ${className}`}
@@ -7785,6 +7823,10 @@ function Sparkline({
     <svg
       viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true"
       className={`h-8 w-full overflow-visible ${SERIES_TEXT[color]} ${className}`}
+      /* The reveal clips the whole svg left→right. A stroke-dash draw-in
+         (pathLength + dasharray) breaks under non-scaling-stroke in Chromium
+         and showed up as a line with holes in it. */
+      style={drawing ? { animation: "reveal-x 1700ms var(--ease-out-quint) both" } : undefined}
     >
       {area && (
         <>
@@ -7794,19 +7836,12 @@ function Sparkline({
               <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
             </linearGradient>
           </defs>
-          <path
-            d={`${d} L${W} ${H} L0 ${H} Z`} fill={`url(#${gradientId})`}
-            style={drawing ? { animation: "fade-in 1400ms var(--ease-out-quint) both" } : undefined}
-          />
+          <path d={`${d} L${W} ${H} L0 ${H} Z`} fill={`url(#${gradientId})`} />
         </>
       )}
       <path
         d={d} fill="none" stroke="currentColor" strokeWidth="2"
         strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"
-        pathLength={1}
-        strokeDasharray={drawing ? 1 : undefined}
-        strokeDashoffset={drawing ? 1 : undefined}
-        style={drawing ? { animation: "draw-in 1700ms var(--ease-out-quint) forwards" } : undefined}
       />
     </svg>
   );
@@ -7927,8 +7962,8 @@ function BarList({
 const DELTA_TONES = { up: "bg-green-tint text-green", down: "bg-red-tint text-red", flat: "bg-inset text-ink-2" };
 const DELTA_ICONS = { up: "arrow-up", down: "arrow-up", flat: "minus" };
 const STAT_ICON_TINTS = {
-  1: "bg-accent-tint text-chart-1", 2: "bg-inset text-chart-2", 3: "bg-inset text-chart-3",
-  4: "bg-orange-tint text-chart-4", 5: "bg-inset text-chart-5",
+  neutral: "bg-inset text-ink-2",
+  accent: "bg-accent-tint text-accent",
 };
 function Delta({ tone = "up", children }) {
   return (
@@ -7947,7 +7982,7 @@ function StatCard({
   delta,
   deltaTone = "up",
   icon,
-  iconTone = 1,
+  iconTone = "neutral",
   trend,
   trendTone = 1,
   trendSmooth = false,
@@ -8253,6 +8288,10 @@ function usePalette() {
 const TH_OVERRIDE_ID = "ds-accent-override";
 const TH_LIGHT_ANCHOR = "#ffffff";
 const TH_DARK_ANCHOR = "#262626";
+/* The 10% accent tint sits on each palette's light --surface, none of which
+   is pure white (ocean is #fbfdfd, the darkest). Fitting the tint against
+   the darkest surface makes the result hold on every palette. */
+const TH_TINT_SURFACE_ANCHOR = "#fbfdfd";
 const TH_MIN_CONTRAST = 4.5;
 function TH_hexToRgb(hex) {
   const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
@@ -8305,6 +8344,13 @@ function TH_hslToRgb({ h, s, l }) {
     b: hue(p, q, h - 1 / 3) * 255
   };
 }
+function TH_mixRgb(a, b, weight) {
+  return {
+    r: Math.round(a.r * weight + b.r * (1 - weight)),
+    g: Math.round(a.g * weight + b.g * (1 - weight)),
+    b: Math.round(a.b * weight + b.b * (1 - weight)),
+  };
+}
 function TH_fitContrast(color, anchor, direction) {
   const hsl = TH_rgbToHsl(color);
   let rounded = color;
@@ -8318,7 +8364,11 @@ function TH_fitContrast(color, anchor, direction) {
       g: Math.round(candidate.g),
       b: Math.round(candidate.b)
     };
-    if (TH_contrast(rounded, anchor) >= TH_MIN_CONTRAST) return rounded;
+    /* Light accents must also hold on their own 10% tint (accent-soft
+       buttons, lead tiles), which is always the harder test — so that is
+       the anchor when darkening. Dark accents sit on the dark anchor. */
+    const target = direction < 0 ? TH_mixRgb(rounded, TH_hexToRgb(TH_TINT_SURFACE_ANCHOR), 0.1) : anchor;
+    if (TH_contrast(rounded, target) >= TH_MIN_CONTRAST) return rounded;
   }
   return rounded;
 }
@@ -9063,8 +9113,8 @@ function Page_statcard() {
       <GalleryCard label="Stat tiles" full>
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total profit" display="$88.5k" caption="All time" delta="-18%" deltaTone="down" trend={[9, 7, 8, 5, 6, 4, 5, 3]} trendTone={5} />
-          <StatCard label="Total income" caption="Last week" display="$4,673" delta="+25.2%" icon="chart" iconTone={2} trend={[3, 6, 4, 9, 7, 11, 10, 14]} trendTone={2} />
-          <StatCard label="Total expense" caption="Last month" display="$1.28K" delta="-12.2%" deltaTone="down" icon="layers" iconTone={4} />
+          <StatCard label="Total income" caption="Last week" display="$4,673" delta="+25.2%" icon="chart" iconTone="accent" trend={[3, 6, 4, 9, 7, 11, 10, 14]} trendTone={2} />
+          <StatCard label="Total expense" caption="Last month" display="$1.28K" delta="-12.2%" deltaTone="down" icon="layers" />
           <StatCard label="Sessions" value={124000} caption="Last week" delta="0.0%" deltaTone="flat" />
         </div>
       </GalleryCard>
@@ -9303,10 +9353,10 @@ function Page_dashboard() {
     <>
       <GalleryCard label="Headline tiles · CountUp + smooth animated Sparkline" full>
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="New leads" caption="This month" display={<CountUp value={128} />} delta="+24%" icon="user-add" iconTone={1} trend={[6, 9, 7, 12, 10, 15, 13, 19]} trendSmooth trendAnimate />
-          <StatCard label="Orders" caption="Won this month" display={<CountUp value={34} />} delta="+8%" icon="circle-check" iconTone={2} trend={[2, 3, 3, 5, 4, 6, 5, 7]} trendTone={2} trendSmooth trendAnimate />
-          <StatCard label="Conversion" caption="Lead to client" display={<><CountUp value={18} />%</>} delta="-2%" deltaTone="down" icon="chart" iconTone={4} />
-          <StatCard label="People reached" caption="Returning: 9" display={<CountUp value={43} />} delta="0.0%" deltaTone="flat" icon="globe" iconTone={5} />
+          <StatCard label="New leads" caption="This month" display={<CountUp value={128} />} delta="+24%" icon="user-add" iconTone="accent" trend={[6, 9, 7, 12, 10, 15, 13, 19]} trendSmooth trendAnimate />
+          <StatCard label="Orders" caption="Won this month" display={<CountUp value={34} />} delta="+8%" icon="circle-check" trend={[2, 3, 3, 5, 4, 6, 5, 7]} trendTone={2} trendSmooth trendAnimate />
+          <StatCard label="Conversion" caption="Lead to client" display={<><CountUp value={18} />%</>} delta="-2%" deltaTone="down" icon="chart" />
+          <StatCard label="People reached" caption="Returning: 9" display={<CountUp value={43} />} delta="0.0%" deltaTone="flat" icon="globe" />
         </div>
       </GalleryCard>
       <GalleryCard label="Revenue · PrivacyScope masks the money until the eye opens" wide>
@@ -9378,6 +9428,36 @@ function Page_privacy() {
   );
 }
 
+function Page_checkbox() {
+  const [done, setDone] = useState({ run: true, read: false, water: true });
+  const all = Object.values(done).every(Boolean), none = Object.values(done).every((v) => !v);
+  const setAll = (v) => setDone({ run: v, read: v, water: v });
+  return (
+    <>
+      <GalleryCard label="Completion list · checkbox, not switch" wide>
+        <div className="flex flex-col gap-3">
+          <Checkbox checked={all} mixed={!all && !none} onChange={setAll} label="Today" description="Select all" />
+          <div className="ml-6 flex flex-col gap-3 border-l border-line pl-4">
+            <Checkbox checked={done.run} onChange={(v) => setDone({ ...done, run: v })} label="Morning run" description="5 km · logged 7:15 AM" />
+            <Checkbox checked={done.read} onChange={(v) => setDone({ ...done, read: v })} label="Read 30 minutes" />
+            <Checkbox checked={done.water} onChange={(v) => setDone({ ...done, water: v })} label="Hydrate" description="2.5 litres" />
+          </div>
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Switch is for settings" wide>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3"><span className="text-body text-ink">Email me a weekly summary</span><Switch on onToggle={() => {}} label="Weekly summary" size="sm" /></div>
+          <div className="flex items-center justify-between gap-3"><span className="text-body text-ink">Reminders at 8:00 AM</span><Switch on={false} onToggle={() => {}} label="Reminders" size="sm" /></div>
+          <p className="text-small text-ink-3">A switch applies the moment it flips. A checkbox records a state or a selection. Never use one for the other.</p>
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Disabled" wide>
+        <Checkbox checked disabled onChange={() => {}} label="Archived habit" description="Cannot be changed" />
+      </GalleryCard>
+    </>
+  );
+}
+
 function Page_colorpicker() {
   const [hex, setHex] = useState("#a5e12a");
   return (
@@ -9408,6 +9488,7 @@ const PAGES = [
   { id: "input", group: "Forms", title: "Field & Input", note: "The form trio \u2014 Field owns label / hint / error and wires aria onto its control; Input and Textarea share the system's quiet field focus (border shift, no ring).", file: "components/Input.tsx", Component: Page_input },
   { id: "select", group: "Forms", title: "Select", note: "Combobox on the quiet field style \u2014 the listbox portals over the page, matches the trigger's width, and is fully keyboard-driven (arrows, Home/End, Enter, Escape).", file: "components/Select.tsx", Component: Page_select },
   { id: "switch", group: "Forms", title: "Switch", note: "The system toggle, promoted from RecordsTable's private switch \u2014 role=switch, two sizes, Field-compatible. RecordsTable now consumes the same primitive.", file: "components/primitives.tsx", Component: Page_switch },
+  { id: "checkbox", group: "Forms", title: "Checkbox", note: "A labelled checkbox for completion and selection. The visual is the RadioCheck primitive; the semantics are a button with role=checkbox, so keyboard, focus ring and a 24px hit area come from the system. Switch is for settings that apply the moment they flip \u2014 a habit marked done, a row included in a selection, a task ticked off is a checkbox, never a switch.", file: "components/primitives.tsx", Component: Page_checkbox },
   { id: "colorpicker", group: "Forms", title: "ColorPicker", note: "A Figma-style picker with no dependencies: saturation and brightness square, hue strip, hex field, eyedropper where the browser has one, and swatches. Hex only, no alpha — it picks brand colours, and a translucent accent would void every contrast guarantee.", file: "components/ColorPicker.tsx", Component: Page_colorpicker },
   { id: "filedropzone", group: "Forms", title: "FileDropzone", note: "Drag files onto the zone or click to browse \u2014 accept / size validation announces rejections, accepted files become chips with remove. Try dropping anything.", file: "components/FileDropzone.tsx", Component: Page_filedropzone },
   { id: "slider-otp", group: "Forms", title: "Slider & OTP", note: "Two more Field-ready controls \u2014 Slider is a native range drawn with tokens (platform keyboard and touch for free); OTPInput distributes typing, paste, and one-time-code autofill across quiet field cells.", file: "components/Slider.tsx components/OTPInput.tsx", Component: Page_slider_otp },
@@ -9689,7 +9770,7 @@ const PLAYGROUNDS = {
       { key: "delta", label: "Delta", type: "text", value: "+25.2%" },
       { key: "deltaTone", label: "Direction", type: "select", value: "up", options: ["up", "down", "flat"] },
       { key: "icon", label: "Icon", type: "toggle", value: true },
-      { key: "iconTone", label: "Icon tone", type: "select", value: 2, options: [1, 2, 3, 4, 5] },
+      { key: "iconTone", label: "Icon tone", type: "select", value: "neutral", options: ["neutral", "accent"] },
       { key: "trend", label: "Sparkline", type: "toggle", value: true },
       { key: "trendSmooth", label: "Smooth trend", type: "toggle", value: false },
     ],
@@ -9765,6 +9846,16 @@ const PLAYGROUNDS = {
         <p className="mt-2 text-display font-semibold text-ink tabular-nums"><Masked placeholder={p.placeholder}>$42,180</Masked></p>
       </PrivacyScope>
     ),
+  },
+  checkbox: {
+    schema: [
+      { key: "label", label: "Label", type: "text", value: "Morning run" },
+      { key: "description", label: "Description", type: "text", value: "5 km" },
+      { key: "checked", label: "Checked", type: "toggle", value: true },
+      { key: "mixed", label: "Mixed", type: "toggle", value: false },
+      { key: "disabled", label: "Disabled", type: "toggle", value: false },
+    ],
+    render: (p, set) => <Checkbox checked={p.checked} mixed={p.mixed} disabled={p.disabled} label={p.label} description={p.description || undefined} onChange={(v) => set("checked", v)} />,
   },
   colorpicker: {
     schema: [

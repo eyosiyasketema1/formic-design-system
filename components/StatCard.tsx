@@ -40,9 +40,13 @@ export function Delta({ tone = "up", children }: { tone?: DeltaTone; children: R
   );
 }
 
-const STAT_ICON_TINTS: Record<ChartColor, string> = {
-  1: "bg-accent-tint text-chart-1", 2: "bg-inset text-chart-2", 3: "bg-inset text-chart-3",
-  4: "bg-orange-tint text-chart-4", 5: "bg-inset text-chart-5",
+export type StatIconTone = "neutral" | "accent";
+/* Icons are furniture, not data: ink on inset by default, accent only on
+ * the one tile a dashboard leads with. A different colour per card is the
+ * surest sign of machine-made UI (rule 16 covers series, this covers icons). */
+const STAT_ICON_TINTS: Record<StatIconTone, string> = {
+  neutral: "bg-inset text-ink-2",
+  accent: "bg-accent-tint text-accent",
 };
 
 export function StatCard({
@@ -54,7 +58,7 @@ export function StatCard({
   delta,
   deltaTone = "up",
   icon,
-  iconTone = 1,
+  iconTone = "neutral",
   trend,
   trendTone = 1,
   trendSmooth = false,
@@ -69,7 +73,8 @@ export function StatCard({
   delta?: string;
   deltaTone?: DeltaTone;
   icon?: IconName;
-  iconTone?: ChartColor;
+  /** "neutral" (default) or "accent" for the single lead tile */
+  iconTone?: StatIconTone;
   trend?: number[];
   trendTone?: ChartColor;
   /** curve the sparkline (Catmull-Rom) */
