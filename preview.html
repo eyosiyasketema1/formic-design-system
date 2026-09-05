@@ -4218,7 +4218,7 @@ function SnWorkspaceMenu({
 function SidebarNav({
   activeTitle,
   className = "",
-  fill = false,
+  fill = true,
   onNewChat,
   onPick,
   activeNav,
@@ -9243,7 +9243,7 @@ function Page_menubar() {
 function Page_sidebarnav() {
   return (
     <>
-      <div className="flex"><SidebarNav /></div>
+      <div className="flex"><SidebarNav fill={false} /></div>
     </>
   );
 }

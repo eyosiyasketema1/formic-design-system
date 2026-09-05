@@ -117,11 +117,9 @@ createRoot(document.getElementById("root")!).render(
 );
 EOF
   cat > "$APP/src/index.css" <<'EOF'
-@import "./formic/styles/fonts.css";          /* first: the Urbanist font */
+@import "./formic/styles/fonts.css";    /* first: the Urbanist font */
 @import "tailwindcss";
-@import "./formic/styles/tokens.css";          /* source of truth: tokens, keyframes, primitives */
-@import "./formic/styles/themes.css";          /* the 5 palettes, optional */
-@import "./formic/styles/tailwind-theme.css";  /* generates text-ink, bg-surface, text-body, ... */
+@import "./formic/styles/formic.css";   /* tokens, palettes, Tailwind bridge, component sheets */
 EOF
   cat > "$APP/src/App.tsx" <<'EOF'
 import Dashboard from "./pages/Dashboard";
@@ -307,8 +305,6 @@ printf '\nNext, by hand:\n'
 printf '  • In your global CSS (Tailwind v4), in this order (fonts.css must be first):\n'
 printf '       @import "<relative path to>/%s/styles/fonts.css";\n' "$DEST"
 printf '       @import "tailwindcss";\n'
-printf '       @import "<relative path to>/%s/styles/tokens.css";\n' "$DEST"
-printf '       @import "<relative path to>/%s/styles/themes.css";         /* optional palettes */\n' "$DEST"
-printf '       @import "<relative path to>/%s/styles/tailwind-theme.css";\n' "$DEST"
+printf '       @import "<relative path to>/%s/styles/formic.css";\n' "$DEST"
 printf '  • Open your agent and start with:\n'
 printf '       "Use Formic (%s). Read AGENTS.md first, then build ..."\n\n' "$DEST"

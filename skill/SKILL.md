@@ -31,13 +31,11 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
    Both copy `styles/` and `components/` into `src/formic/` and write `AGENTS.md`, a Cursor rule, Copilot instructions, and this skill into the project.
 2. **Wire the CSS once** (Tailwind v4 global stylesheet, in this order; fix the relative path to `src/formic`):
    ```css
-   @import "./formic/styles/fonts.css";          /* first: the Urbanist font */
+   @import "./formic/styles/fonts.css";    /* first: the Urbanist font */
    @import "tailwindcss";
-   @import "./formic/styles/tokens.css";          /* source of truth: tokens, keyframes, primitive classes */
-   @import "./formic/styles/themes.css";          /* optional: 5 palettes */
-   @import "./formic/styles/tailwind-theme.css";  /* @theme bridge -> text-ink, bg-hover, text-body, ... */
+   @import "./formic/styles/formic.css";   /* tokens, palettes, Tailwind bridge, component sheets */
    ```
-   Peer deps: `react >=18`, `react-dom >=18`, `@tabler/icons-react >=3`. `RecordsTable` also needs `styles/records.css`; `SidebarNav` needs `styles/sidebar.css`. Wrap the app in `<ToastProvider>` if toasts are used.
+   Peer deps: `react >=18`, `react-dom >=18`, `@tabler/icons-react >=3`. `formic.css` already includes the `sidebar.css` / `records.css` component sheets. Wrap the app in `<ToastProvider>` if toasts are used.
 3. **Read before writing.** Open `src/formic/styles/tokens.css` and list `src/formic/components/`. Never write a component that already exists.
 4. **Import, don't re-create.** Buttons, inputs, cards, chips, tables, charts, modals, chat surfaces, dashboard tiles all come from `src/formic/components/`. Pass props; never copy markup into a page or edit a component's internals for a one-off.
 5. **New patterns compose primitives** from `src/formic/components/primitives.tsx` plus token utilities. No raw `<svg>` icons, no second icon package, no chart libraries, no UI kits.
@@ -90,6 +88,8 @@ All components ship demo content as prop defaults (`DEFAULT_*`); always pass rea
 ## Composition guidance
 
 Human-in-the-loop: `ApprovalCard` for a short, directly-controlled approval; `ApprovalFlow` when the run needs several questions in sequence (sliding stack, rolling counter, auto-advance on single choice).
+
+Any page with a rail: `<div className="flex h-dvh"><SidebarNav … /><main className="min-w-0 flex-1 overflow-y-auto">…</main></div>` — `SidebarNav` fills its parent, never give it a fixed height.
 
 A chat app is `SidebarNav` (rail) + `ChatThread` for the conversation (embed `Markdown`, `CodeBlock`, `ToolChips`, `ApprovalCard` as assistant message children via `MessageBubble`) + `PromptBar` pinned at the bottom + `ToastProvider` at the root. Streaming replies use the `StreamText` primitive or `StreamingText`. Agent progress uses `ThinkingState` or `TaskRows`. File input uses `FileDropzone` or PromptBar attachments.
 
