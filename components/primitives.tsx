@@ -21,6 +21,7 @@ import {
 } from "@tabler/icons-react";
 import { useStream } from "./hooks";
 import { useDoodle } from "./doodle";
+import { FORMIC_CONFIG } from "./config";
 /* ─────────────────────────────────────────────────────────
  * PRIMITIVES — the atoms every component composes
  *
@@ -724,7 +725,7 @@ const toneOf = (name: string) => {
 export function Avatar({
   name,
   src,
-  doodle = false,
+  doodle = FORMIC_CONFIG.avatar === "doodle",
   size = "md",
   tone,
   ring,

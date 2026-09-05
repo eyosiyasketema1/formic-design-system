@@ -3,6 +3,7 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { TOOLTIP_CHIP, TOOLTIP_CHIP_STYLE } from "./primitives";
 import { useReducedMotion } from "./hooks";
+import { FORMIC_CONFIG } from "./config";
 /* ─────────────────────────────────────────────────────────
  * CHARTS
  * Bars, lines and rings for dashboards. No chart library:
@@ -149,7 +150,7 @@ export function BarChart({
   height = 168,
   fill = false,
   showValues = true,
-  animate = true,
+  animate = FORMIC_CONFIG.motion,
   className = "",
 }: {
   labels?: string[];
@@ -264,7 +265,7 @@ export function LineChart({
   points = true,
   height = 150,
   fill = false,
-  animate = true,
+  animate = FORMIC_CONFIG.motion,
   className = "",
 }: {
   labels?: string[];
@@ -394,7 +395,7 @@ export function DonutChart({
   label = "Visitors",
   color = 4,
   size = 116,
-  animate = true,
+  animate = FORMIC_CONFIG.motion,
   className = "",
 }: {
   value?: number;
@@ -455,7 +456,7 @@ export function Sparkline({
   color = 1,
   area = true,
   smooth = false,
-  animate = true,
+  animate = FORMIC_CONFIG.motion,
   className = "",
 }: {
   values?: number[];
@@ -548,7 +549,7 @@ export function Gauge({
   percent = 64,
   label = "of people become clients",
   ticks = 36,
-  animate = true,
+  animate = FORMIC_CONFIG.motion,
   className = "",
 }: {
   percent?: number;
@@ -608,7 +609,7 @@ export function BarList({
   format = (n: number) => n.toLocaleString(),
   stagger = 90,
   fill = false,
-  animate = true,
+  animate = FORMIC_CONFIG.motion,
   className = "",
 }: {
   items?: BarItem[];

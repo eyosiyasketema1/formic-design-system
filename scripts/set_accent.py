@@ -17,7 +17,10 @@ the two variants the system needs:
 Then it rewrites `--accent` in the light `:root` block and the
 `[data-theme="dark"]` block of tokens.css (and, inside the repo, the
 mirrored copies in preview.html and index.html), and the accent-tint and
-chart-1 follow automatically because they are derived from --accent.
+chart-1 follow automatically because they are derived from --accent. In an
+app that vendors Formic it also replaces every palette's accent in
+themes.css, so switching palette never brings back a foreign colour; the
+design-system repo keeps each palette's own accent for the gallery.
 
 This is the same algorithm as `deriveAccentVariants` in
 components/theme.ts, so a runtime `setAccent()` and a static token edit
@@ -122,13 +125,24 @@ def derive(color):
     }
 
 
+def in_repo(root):
+    """the design-system repo keeps each palette's own accent for the
+    gallery; an app that vendors Formic gets the brand accent everywhere.
+    The repo is the folder with the CI gate and the gallery, which no
+    vendored copy carries (copying scripts/ wholesale must not count)."""
+    return (root / ".github" / "workflows" / "qa.yml").exists() and (root / "preview.html").exists()
+
+
 ACCENT_LINE = re.compile(r"(--accent:\s*)#[0-9a-fA-F]{6};[ \t]*(?:/\*[^\n]*?\*/)?([^\n]*)")
 
 
-def rewrite(path, light, dark):
-    """replace --accent in the light :root block and the dark block"""
+def rewrite(path, light, dark, palettes=False):
+    """replace --accent in the light :root block and the dark block; with
+    palettes=True also in every :root[data-palette=…] block (themes.css),
+    so the brand accent wins over the palette's own, as setAccent() does"""
     src = path.read_text()
-    blocks = list(re.finditer(r"(:root(?:\[data-theme=\"dark\"\])?)\s*\{", src))
+    pat = r"(:root(?:\[[^\]]+\])*)\s*\{" if palettes else r"(:root(?:\[data-theme=\"dark\"\])?)\s*\{"
+    blocks = list(re.finditer(pat, src))
     out, n = src, 0
     # walk blocks from the end so offsets stay valid
     for m in reversed(blocks):
@@ -136,11 +150,20 @@ def rewrite(path, light, dark):
         start = m.end()
         end = src.index("\n}", start)
         body = src[start:end]
-        is_dark = "dark" in sel
+        is_dark = 'data-theme="dark"' in sel
         value = dark if is_dark else light
         note = (f"/* brand accent, dark mode — fitted to AA on dark surfaces by scripts/set_accent.py */" if is_dark
                 else f"/* brand accent, light mode — fitted to AA on white and its 10% tint by scripts/set_accent.py */")
-        new_body, k = ACCENT_LINE.subn(lambda mm: f"{mm.group(1)}{value}; {note}{mm.group(2)}", body, count=1)
+        def sub(mm):
+            current = re.search(r"#[0-9a-fA-F]{6}", mm.group(0)).group(0).lower()
+            if current == value.lower():
+                return mm.group(0)  # same value: keep the line and its comment as they are
+            rest = mm.group(2)
+            return f"{mm.group(1)}{value}; {note}{' ' + rest.lstrip() if rest.strip() else ''}"
+        new_body, k = ACCENT_LINE.subn(sub, body, count=1)
+        if palettes and "data-palette" in sel:
+            # palette blocks keep their one-line layout: value only, no note
+            new_body, k = ACCENT_LINE.subn(lambda mm: f"{mm.group(1)}{value}; {mm.group(2).lstrip()}".rstrip(), body, count=1)
         if k:
             out = out[:start] + new_body + out[end:]
             n += k
@@ -163,6 +186,8 @@ def main():
     for p in (tokens, root / "preview.html", root / "index.html"):
         if p.exists() and rewrite(p, v["light"], v["dark"]):
             touched.append(p.name)
+    if not in_repo(root) and rewrite(root / "styles" / "themes.css", v["light"], v["dark"], palettes=True):
+        touched.append("themes.css (all palettes)")
     white, dark = hex_to_rgb(LIGHT_ANCHOR), hex_to_rgb(DARK_ANCHOR)
     lr, dr = hex_to_rgb(v["light"]), hex_to_rgb(v["dark"])
     tint = mix(lr, hex_to_rgb(TINT_SURFACE_ANCHOR), 0.1)

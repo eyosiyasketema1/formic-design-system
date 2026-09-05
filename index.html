@@ -1042,6 +1042,7 @@ footer.site a:hover { color: var(--ink); }
         <a href="#principles">Principles</a>
         <a href="#components">Components</a>
         <a href="#start">Quick start</a>
+        <a href="./customize">Customize</a>
         <a href="./preview.html">Gallery</a>
       </nav>
     </div>
@@ -1171,7 +1172,7 @@ npm install @tabler/icons-react</pre>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/></svg>
           Build with your AI tool
         </div>
-        <p>A rules file alone is not enough. If the components are not in your project, every agent falls back to generic Tailwind, however good the prompt. These three steps give Claude Code, Cursor, Copilot and Codex the code and the rules together, and none of them asks you to edit a file.</p>
+        <p>A rules file alone is not enough. If the components are not in your project, every agent falls back to generic Tailwind, however good the prompt. These four steps give Claude Code, Cursor, Copilot and Codex the code and the rules together, and none of them asks you to edit a file.</p>
         <ol class="ai-steps">
           <li>
             <div class="ai-step-title">Get a project with Formic inside</div>
@@ -1197,6 +1198,17 @@ Then build a settings page with a SidebarNav, a form of Field + Input + Switch, 
 grep -rnE "#[0-9a-fA-F]{6}|text-sm|text-lg|bg-gray|shadow-lg|font-bold" src --include=*.tsx | grep -v "^src/formic"</pre>
               </div>
             </details>
+          </li>
+          <li>
+            <div class="ai-step-title">Make it yours, once</div>
+            <p>Open <a href="./customize">Customize</a>: accent, palette, radius, size, starting theme, avatars and sidebar, with light and dark side by side. The accent you bring is fitted for both modes there, so what you see is what ships. Press <strong>Copy for your AI tool</strong>, paste into the same chat, and the agent saves <code>formic.config.json</code> and runs the script that applies it. Every later prompt inherits those choices; re-running the installer keeps them.</p>
+            <div class="lcode">
+              <div class="lcode-head">What the copy button gives you</div>
+              <pre>Apply this Formic configuration and keep it as the source of truth:
+save it as src/formic/formic.config.json, then run
+  python3 src/formic/scripts/apply_config.py
+{ "accent": "#29E0C2", "palette": "paper", "radius": "rounded", ... }</pre>
+            </div>
           </li>
         </ol>
         <div class="ai-ways">
@@ -1253,6 +1265,7 @@ curl -o ~/.claude/skills/formic-design-system/SKILL.md \
     <div class="links">
       <a href="https://github.com/eyosiyasketema1/formic-design-system">GitHub</a>
       <a href="./preview.html">Live gallery</a>
+      <a href="./customize">Customize</a>
       <a href="https://github.com/eyosiyasketema1/formic-design-system#readme">Docs</a>
       <a href="https://github.com/eyosiyasketema1/formic-design-system/blob/main/CONTRIBUTING.md">Contributing</a>
       <a href="https://github.com/eyosiyasketema1/formic-design-system/issues">Issues</a>

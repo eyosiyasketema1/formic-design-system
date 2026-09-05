@@ -102,7 +102,20 @@ When the user gives a colour ("make #29E0C2 the accent"), do not write it into `
 python3 src/formic/scripts/set_accent.py "#29E0C2"
 ```
 
-It keeps the hue and saturation, darkens for light mode until the colour holds 4.5:1 on white and on its own tint, lightens for dark mode until it holds 4.5:1 on dark surfaces, writes both `--accent` values, and prints the ratios. `accent-tint` and `chart-1` follow automatically. For a colour chosen at runtime (a theme picker), call `setAccent(hex)` from `components/theme.ts` — the same algorithm. Editing `--accent` by hand is a bug.
+It keeps the hue and saturation, darkens for light mode until the colour holds 4.5:1 on white and on its own tint, lightens for dark mode until it holds 4.5:1 on dark surfaces, writes both `--accent` values, and prints the ratios. `accent-tint` and `chart-1` follow automatically, and in an app the brand accent also replaces each palette's own accent (a palette is the neutral family; the accent is always the brand's). For a colour chosen at runtime (a theme picker), call `setAccent(hex)` from `components/theme.ts` — the same algorithm. Editing `--accent` by hand is a bug.
+
+## App configuration: `formic.config.json` is the source of truth
+
+The app's choices live in one file, `src/formic/formic.config.json`: `accent`, `palette`, `radius`, `size`, `theme` (starting theme), `avatar` (people without a photo: `initials` or `doodle`), `sidebar` (`expanded` or `rail`) and `motion`. Users make them at https://formicai.dev/customize and paste a block that looks like this:
+
+```
+Apply this Formic configuration and keep it as the source of truth:
+save it as src/formic/formic.config.json, then run
+  python3 src/formic/scripts/apply_config.py
+{ "accent": "#29E0C2", "palette": "paper", "radius": "rounded", ... }
+```
+
+When you receive one: save the JSON exactly as given to `src/formic/formic.config.json`, run the script, restart the dev server, and reply with the ratios it printed. The script does everything deterministically: it fits the accent for both modes (through `set_accent.py`), writes the `data-*` attributes on `<html>` in the app's `index.html`, and writes `components/config.ts`, which `Avatar`, `AppSidebar` and the charts read as their prop defaults. Do none of that by hand, and do not undo it inline: no `doodle={false}` because you prefer initials, no `defaultVariant="expanded"` when the config says `rail`, no second accent. A user who says "make the corners rounder" or "start in dark mode" is asking for a config change: edit the JSON, run the script. Re-running the installer keeps the config and re-applies it.
 
 ## The rules that matter most
 
@@ -121,7 +134,7 @@ It keeps the hue and saturation, darkens for light mode until the colour holds 4
 
 ## What is in the box
 
-**Brand** (`brand.tsx`): FormicMark, BrandIcon (80+ company and social marks). **Helpers**: iconFor(label); `scripts/set_accent.py` and `setAccent()` for the brand colour.
+**Brand** (`brand.tsx`): FormicMark, BrandIcon (80+ company and social marks). **Helpers**: iconFor(label); `scripts/set_accent.py` and `setAccent()` for the brand colour; `formic.config.json` + `scripts/apply_config.py` for the app's choices (accent, palette, radius, size, theme, avatar, sidebar, motion), read by components through `config.ts`.
 **Primitives** (`primitives.tsx`): Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Skeleton, Avatar (initials, `src` photo, or `doodle` — an illustrated face derived from the name), AvatarGroup (people overlapping with a +N tile), Tooltip, Progress, Separator, Chip, DiffStat, IconButton, SendButton, Switch, Checkbox, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Popover.
 **Hooks** (`hooks.ts`): useSequence, useElapsed, useStream, useAnchoredLayer, useModalLayer, useReducedMotion.
 **Controls and forms:** Button, Field, Input, Textarea, Select, Switch, Checkbox, FilterBar, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker.

@@ -93,6 +93,8 @@ Light is the default everywhere. Dark is opt in:
 
 Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (default is paper). Two more global scales work the same way: `data-radius="sharp | rounded | full"` and `data-size="comfortable | spacious"`. For a runtime brand color, call `setAccent("#7c3aed")` from `components/theme.ts`, which derives AA-passing light and dark variants; `setAccent(null)` reverts.
 
+All of these choices, plus the avatar fallback, the sidebar's first variant and chart motion, live in one file: `formic.config.json`. Make them at [formicai.dev/customize](https://formicai.dev/customize) (light and dark side by side), copy the block it gives you into your AI tool, or edit the file and run `python3 src/formic/scripts/apply_config.py`. It fits the accent for both modes, writes the `data-*` attributes on `<html>` and the component defaults in `components/config.ts`. Re-running the installer keeps the file and re-applies it.
+
 ---
 
 ## Components
@@ -169,7 +171,7 @@ It checks forbidden patterns, WCAG contrast for every mode and palette, token dr
 styles/          fonts.css, formic.css (imports the rest), tokens.css (source of truth), themes.css, tailwind-theme.css, brands.css, sidebar.css, records.css
 components/      React components + primitives.tsx, hooks.ts, theme.ts
 skill/           SKILL.md and formic-design-system.skill, the installable AI skill
-scripts/         qa_check.py (the QA gate), check_sri.py, set_accent.py (brand colour → both modes)
+scripts/         qa_check.py (the QA gate), check_sri.py, set_accent.py (brand colour → both modes), apply_config.py (formic.config.json → tokens, html attributes, component defaults)
 .github/         CI workflow, PR template, issue forms
 preview.html     standalone gallery, opens in any browser with no build
 index.html       the landing page

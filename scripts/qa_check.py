@@ -232,6 +232,42 @@ if m:
     for name in sorted(missing):
         fails.append(f"preview.html: React hook {name} used but not destructured from React")
 
+# ── 3c. formic.config.json is the source of truth (rule 21) ──
+# The repo's own config must agree with what ships: the accent pair in
+# tokens.css must be exactly what set_accent derives from it, and the
+# prop defaults in components/config.ts, the preview mirror and the
+# customizer's defaults must all say the same thing. Otherwise the
+# customizer promises one thing and the install delivers another.
+import json as _json
+sys.path.insert(0, str(ROOT / "scripts"))
+try:
+    import set_accent as _sa
+    _cfg = _json.loads((ROOT / "formic.config.json").read_text())
+    _pair = _sa.derive(_cfg["accent"])
+    _dark_tokens = tokens.get(':root[data-theme="dark"]', {})
+    if base_light.get("--accent", "").lower() != _pair["light"]:
+        fails.append(f"config: tokens.css light --accent is {base_light.get('--accent')} but formic.config.json accent {_cfg['accent']} derives {_pair['light']} (run scripts/apply_config.py)")
+    if _dark_tokens.get("--accent", "").lower() != _pair["dark"]:
+        fails.append(f"config: tokens.css dark --accent is {_dark_tokens.get('--accent')} but formic.config.json accent {_cfg['accent']} derives {_pair['dark']} (run scripts/apply_config.py)")
+    _ts = (ROOT / "components" / "config.ts").read_text()
+    _ts_vals = dict(re.findall(r"^\s+(avatar|sidebar|motion):\s*\"?([\w]+)\"?,", _ts, re.M))
+    _pv_m = re.search(r"const FORMIC_CONFIG = \{([^}]*)\}", preview)
+    _pv_vals = dict(re.findall(r"(avatar|sidebar|motion):\s*\"?([\w]+)\"?", _pv_m.group(1))) if _pv_m else {}
+    _cz_m = re.search(r"const CZ_DEFAULTS = \{([^}]*)\}", preview)
+    _cz_vals = dict(re.findall(r"(\w+):\s*\"?([#\w]+)\"?", _cz_m.group(1))) if _cz_m else {}
+    for k in ("avatar", "sidebar", "motion"):
+        want = str(_cfg[k]).lower()
+        if _ts_vals.get(k) != want:
+            fails.append(f"config: components/config.ts {k} is {_ts_vals.get(k)} but formic.config.json says {want} (run scripts/apply_config.py)")
+        if _pv_vals.get(k) != want:
+            fails.append(f"config: preview.html FORMIC_CONFIG {k} is {_pv_vals.get(k)} but formic.config.json says {want} (rule 9)")
+    for k in ("accent", "palette", "radius", "size", "theme", "avatar", "sidebar", "motion"):
+        want = str(_cfg[k]).lower()
+        if _cz_vals.get(k, "").lower() != want:
+            fails.append(f"config: customizer CZ_DEFAULTS {k} is {_cz_vals.get(k)} but formic.config.json says {want}")
+except FileNotFoundError as e:
+    fails.append(f"config: {e.filename} missing (rule 21)")
+
 # ── 4. Components compile ───────────────────────────────────
 try:
     r = subprocess.run(
