@@ -28,11 +28,9 @@ curl -fsSL https://formicai.dev/install.sh | bash
 Then make sure the global CSS imports the token stack (Tailwind v4) and `@tabler/icons-react` is a dependency:
 
 ```css
-@import "./formic/styles/fonts.css";          /* first: the Urbanist font */
+@import "./formic/styles/fonts.css";    /* first: the Urbanist font */
 @import "tailwindcss";
-@import "./formic/styles/tokens.css";          /* adjust the relative path to src/formic */
-@import "./formic/styles/themes.css";          /* optional: 5 palettes */
-@import "./formic/styles/tailwind-theme.css";  /* generates text-ink, bg-surface, text-body, ... */
+@import "./formic/styles/formic.css";   /* tokens, palettes, Tailwind bridge, component sheets */
 ```
 
 **Step 2: read before you write.** Open `src/formic/styles/tokens.css` (the tokens and their names) and list `src/formic/components/` (what already exists). Do not write a component that already exists there.
@@ -85,8 +83,17 @@ Also confirm at least one import from `src/formic/components` exists in every ne
 **Feedback and agents:** Alert, Progress, Skeleton, LoadingState, ThinkingState, TaskRows, ToolChips.
 **Conversation:** ChatThread, MessageBubble, StreamingText, Markdown, CodeBlock, SelectionActions, PromptBar, ChatComposer, ApprovalCard, ApprovalFlow, RecommendationCard, ContextCards, ChatApp.
 **Dashboard:** StatCard, MetricRow, Delta, BarChart, LineChart, DonutChart, Sparkline, ChartLegend, CountUp, Gauge, BarList, PrivacyScope / PrivacyToggle / Masked.
-**Data and structure:** RecordsTable (needs `styles/records.css`), FilterTable, DiffTable, Accordion, Steps, Timeline.
-**Navigation:** Tabs, Pagination, Breadcrumbs, Menubar, SidebarNav (needs `styles/sidebar.css`), SearchList.
+**Data and structure:** RecordsTable, FilterTable, DiffTable, Accordion, Steps, Timeline.
+**Navigation:** Tabs, Pagination, Breadcrumbs, Menubar, SidebarNav, SearchList.
+
+**App shell.** `SidebarNav` fills its parent's height, so any page with a rail uses this skeleton (never give the rail a fixed height, never put it inside a scrolling page):
+
+```tsx
+<div className="flex h-dvh">
+  <SidebarNav activeTitle="General" />
+  <main className="min-w-0 flex-1 overflow-y-auto p-6">…</main>
+</div>
+```
 
 Typical screens: a chat app is `SidebarNav` + `ChatThread` + `PromptBar` + `ToastProvider`; a dashboard is a grid of `StatCard` with `BarChart` / `LineChart` / `BarList` / `Gauge` and `MetricRow` breakdowns inside `Card`; an agent run is `ThinkingState` or `TaskRows` with `ApprovalCard` / `ApprovalFlow` for human-in-the-loop moments.
 

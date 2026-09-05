@@ -1145,12 +1145,10 @@ cd my-app && npm run dev</pre>
 npm install @tabler/icons-react</pre>
         </div>
         <div class="lcode">
-          <div class="lcode-head">globals.css · Tailwind v4, in this order</div>
-          <pre><span class="k">@import</span> "./formic/styles/fonts.css";           <span class="c">/* first: Urbanist */</span>
+          <div class="lcode-head">globals.css · three lines, in this order</div>
+          <pre><span class="k">@import</span> "./formic/styles/fonts.css";    <span class="c">/* first: Urbanist */</span>
 <span class="k">@import</span> "tailwindcss";
-<span class="k">@import</span> "./formic/styles/tokens.css";          <span class="c">/* source of truth */</span>
-<span class="k">@import</span> "./formic/styles/themes.css";          <span class="c">/* 5 palettes, optional */</span>
-<span class="k">@import</span> "./formic/styles/tailwind-theme.css";  <span class="c">/* → text-ink, bg-hover, … */</span></pre>
+<span class="k">@import</span> "./formic/styles/formic.css";   <span class="c">/* tokens, palettes, bridge, component sheets */</span></pre>
         </div>
         <div class="lcode">
           <div class="lcode-head">Then compose</div>
