@@ -30,6 +30,7 @@ DEST="${DEST%/}"
 say()  { printf '  \033[32m✓\033[0m %s\n' "$1"; }
 skip() { printf '  \033[90m–\033[0m %s\n' "$1"; }
 die()  { printf '  \033[31m✗\033[0m %s\n' "$1" >&2; exit 1; }
+warn() { printf '  \033[33m!\033[0m %s\n' "$1"; }
 
 command -v git >/dev/null 2>&1 || die "git is required (https://git-scm.com)"
 
@@ -255,9 +256,50 @@ mkdir -p "$DEST"
 rm -rf "$DEST/styles" "$DEST/components" "$DEST/scripts"
 cp -R "$TMP/formic/styles" "$DEST/styles"
 cp -R "$TMP/formic/components" "$DEST/components"
-mkdir -p "$DEST/scripts" && cp "$TMP/formic/scripts/set_accent.py" "$DEST/scripts/set_accent.py"
+mkdir -p "$DEST/scripts"
+cp "$TMP/formic/scripts/set_accent.py" "$DEST/scripts/set_accent.py"
+cp "$TMP/formic/scripts/apply_config.py" "$DEST/scripts/apply_config.py"
 printf 'formic-design-system %s\nhttps://github.com/eyosiyasketema1/formic-design-system\nre-run install.sh to update\n' "$SHA" > "$DEST/VERSION"
-say "$DEST/styles, $DEST/components and $DEST/scripts/set_accent.py (commit $SHA)"
+say "$DEST/styles, $DEST/components and $DEST/scripts (commit $SHA)"
+
+# ── 1b. formic.config.json — the app's choices, kept across updates ──
+# styles/ and components/ were just replaced, so the accent and the
+# component defaults are back to stock. If the app has a config (from
+# https://formicai.dev/customize, or edited by hand), re-apply it now;
+# otherwise write the stock one so there is a file to edit.
+if [ -f "$DEST/formic.config.json" ]; then
+  if command -v python3 >/dev/null 2>&1; then
+    python3 "$DEST/scripts/apply_config.py" >/dev/null && say "$DEST/formic.config.json re-applied (accent, html attributes, component defaults)" \
+      || warn "$DEST/formic.config.json could not be applied; run python3 $DEST/scripts/apply_config.py"
+  else
+    warn "python3 not found; run python3 $DEST/scripts/apply_config.py to re-apply $DEST/formic.config.json"
+  fi
+else
+  # First install: start from the stock choices, but read what the app's
+  # index.html already says (data-theme, data-palette, data-radius,
+  # data-size) so the file describes the app as it is, then apply it —
+  # a fresh install and an update must leave the same files behind.
+  cp "$TMP/formic/formic.config.json" "$DEST/formic.config.json"
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - "$DEST/formic.config.json" <<'PY' || true
+import json, re, sys
+from pathlib import Path
+cfg_path = Path(sys.argv[1]); cfg = json.loads(cfg_path.read_text())
+html = Path("index.html")
+if html.exists() and 'id="root"' in html.read_text():
+    tag = re.search(r"<html\b([^>]*)>", html.read_text())
+    attrs = dict(re.findall(r'data-(theme|palette|radius|size)="([^"]+)"', tag.group(1) if tag else ""))
+    for k in ("theme", "palette", "radius", "size"):
+        if k in attrs:
+            cfg[k] = attrs[k]
+cfg_path.write_text(json.dumps(cfg, indent=2) + "\n")
+PY
+    python3 "$DEST/scripts/apply_config.py" >/dev/null && say "$DEST/formic.config.json (stock choices, seeded from index.html; change them at https://formicai.dev/customize)" \
+      || warn "$DEST/formic.config.json written but not applied; run python3 $DEST/scripts/apply_config.py"
+  else
+    say "$DEST/formic.config.json (stock choices; python3 not found, so run $DEST/scripts/apply_config.py once it is)"
+  fi
+fi
 
 # Rewrite the default path if the caller chose another folder.
 localise() { # file
@@ -333,6 +375,8 @@ if [ "$NEW" = 1 ]; then
   printf '  cd %s && npm run dev        # opens the demo dashboard in your browser\n\n' "$APP"
   printf 'Then open your AI tool in this folder (claude, or Cursor) and start with:\n'
   printf '  "Use Formic (src/formic). Read AGENTS.md first and follow its procedure. Then build ..."\n\n'
+  printf 'Make it yours: pick accent, palette, radius, size, avatars and sidebar at\n'
+  printf '  https://formicai.dev/customize   then paste the block it copies into your AI tool.\n\n'
   exit 0
 fi
 
@@ -345,4 +389,5 @@ printf '       @import "<relative path to>/%s/styles/fonts.css";\n' "$DEST"
 printf '       @import "tailwindcss";\n'
 printf '       @import "<relative path to>/%s/styles/formic.css";\n' "$DEST"
 printf '  • Open your agent and start with:\n'
-printf '       "Use Formic (%s). Read AGENTS.md first, then build ..."\n\n' "$DEST"
+printf '       "Use Formic (%s). Read AGENTS.md first, then build ..."\n' "$DEST"
+printf '  • Make it yours at https://formicai.dev/customize and paste the block it copies into your agent.\n\n'

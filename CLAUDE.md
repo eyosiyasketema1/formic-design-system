@@ -31,6 +31,8 @@ Rules for any AI agent (or human) working in this repo. These exist because past
 
 20. **The accent is derived, never typed.** `--accent` has two values (light `:root`, dark block) that must each pass AA for their own surfaces; `scripts/set_accent.py <hex>` and `setAccent()` in `theme.ts` share one algorithm that fits both from any colour the user brings. Writing a hex into either block by hand — or the same hex into both — is a defect the gate will usually catch and the design never survives.
 
+21. **`formic.config.json` is the source of truth for an app's choices.** Accent, palette, radius, size, starting theme, avatar fallback, sidebar variant and motion live there; `scripts/apply_config.py` applies them (accent through rule 20's algorithm, `data-*` attributes on the app's `<html>`, prop defaults in `components/config.ts`, which `Avatar`, `AppSidebar`, the charts and `StatCard` read). The customizer at `/customize` (inside `preview.html`, a Vercel rewrite) is where users make them and copy the block their agent pastes. In this repo the gate checks that the config, `tokens.css`, `config.ts`, the preview mirror and the customizer's defaults all agree, so change the config and run the script rather than editing any of them. Components read `FORMIC_CONFIG` only for defaults; a prop still wins.
+
 ## Extraction rule
 
 After every piece of work, look for extractable pieces and extract them:

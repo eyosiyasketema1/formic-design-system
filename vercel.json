@@ -10,7 +10,7 @@
       ]
     },
     {
-      "source": "/(index.html|preview.html|landing.jsx|install.sh)",
+      "source": "/(index.html|preview.html|customize|landing.jsx|install.sh)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
@@ -22,6 +22,9 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
       ]
     }
+  ],
+  "rewrites": [
+    { "source": "/customize", "destination": "/preview.html" }
   ],
   "redirects": [
     { "source": "/gallery", "destination": "/preview.html", "permanent": false }

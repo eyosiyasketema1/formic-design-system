@@ -2,6 +2,7 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { Avatar, Disclosure, GlideMenu, Icon, IconButton, Popover, Tooltip, type IconName } from "./primitives";
 import { FormicMark } from "./brand";
+import { FORMIC_CONFIG } from "./config";
 /* ─────────────────────────────────────────────────────────
  * APP SIDEBAR — the menu rail for dashboards and admin apps
  * SidebarNav is the chat rail (workspace switcher, searchable
@@ -63,7 +64,8 @@ const DEFAULT_SECTIONS: AppSidebarSection[] = [
     ],
   },
 ];
-const DEFAULT_USER = { name: "Eyosiyas Ketema", detail: "Admin" };
+export type AppSidebarUser = { name: string; detail?: string; src?: string; /** drawn face instead of initials when there is no photo */ doodle?: boolean };
+const DEFAULT_USER: AppSidebarUser = { name: "Eyosiyas Ketema", detail: "Admin" };
 
 export default function AppSidebar({
   workspace = DEFAULT_WORKSPACE,
@@ -71,7 +73,7 @@ export default function AppSidebar({
   active,
   onSelect,
   variant,
-  defaultVariant = "expanded",
+  defaultVariant = FORMIC_CONFIG.sidebar,
   onVariantChange,
   collapsible = true,
   submenus = "nested",
@@ -93,7 +95,7 @@ export default function AppSidebar({
   /** "nested" (default): groups open in place / as a flyout. "none": flat, children ignored, every item is a page */
   submenus?: "nested" | "none";
   /** account row at the bottom; pass `null` to omit */
-  user?: { name: string; detail?: string; src?: string } | null;
+  user?: AppSidebarUser | null;
   /** replaces the account row entirely */
   footer?: ReactNode;
   className?: string;
@@ -296,12 +298,12 @@ export default function AppSidebar({
           rail ? (
             <Tooltip label={user.name}>
               <button type="button" aria-label={user.name} className="flex size-9 items-center justify-center rounded-control hover:bg-hover-2">
-                <Avatar name={user.name} src={user.src} size="sm" />
+                <Avatar name={user.name} src={user.src} doodle={user.doodle} size="sm" />
               </button>
             </Tooltip>
           ) : (
             <button type="button" className="flex h-10 w-full items-center gap-2.5 rounded-control px-2 text-left hover:bg-hover-2">
-              <Avatar name={user.name} src={user.src} size="sm" />
+              <Avatar name={user.name} src={user.src} doodle={user.doodle} size="sm" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-caption font-medium text-ink">{user.name}</span>
                 {user.detail && <span className="block truncate text-small text-ink-3">{user.detail}</span>}

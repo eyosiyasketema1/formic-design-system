@@ -2,6 +2,7 @@
 import type { ReactNode } from "react";
 import { Card, Icon, type IconName } from "./primitives";
 import { Sparkline, compact, type ChartColor } from "./charts";
+import { FORMIC_CONFIG } from "./config";
 /* ─────────────────────────────────────────────────────────
  * STAT CARD / METRIC ROW
  * The small tiles a dashboard is mostly made of: a label, one
@@ -62,7 +63,7 @@ export function StatCard({
   trend,
   trendTone = 1,
   trendSmooth = false,
-  trendAnimate = true,
+  trendAnimate = FORMIC_CONFIG.motion,
   className = "",
 }: {
   label?: string;

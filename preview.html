@@ -852,6 +852,9 @@ tfoot .records-sticky-cell { z-index: 5; }
 </script>
 <script type="text/babel" data-presets="react">
 const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useId, cloneElement, isValidElement, createContext, useContext, Children, Fragment } = React;
+/* mirror of components/config.ts — the defaults an app chooses at
+   formicai.dev/customize (apply_config.py writes the real one) */
+const FORMIC_CONFIG = { avatar: "initials", sidebar: "expanded", motion: true };
 
 /* ═══════════ Primitives ═══════════ */
 /* Icons: real projects use @tabler/icons-react through the Icon wrapper in
@@ -1453,7 +1456,7 @@ function useDoodle(seed, enabled = true) {
 function Avatar({
   name,
   src,
-  doodle = false,
+  doodle = FORMIC_CONFIG.avatar === "doodle",
   size = "md",
   tone,
   ring,
@@ -8205,7 +8208,7 @@ function BarChart({
   height = 168,
   fill = false,
   showValues = true,
-  animate = true,
+  animate = FORMIC_CONFIG.motion,
   className = "",
 }) {
   const { tip, show, hide } = useTip();
@@ -8302,7 +8305,7 @@ function LineChart({
   points = true,
   height = 150,
   fill = false,
-  animate = true,
+  animate = FORMIC_CONFIG.motion,
   className = "",
 }) {
   const gradientId = useId();
@@ -8417,7 +8420,7 @@ function DonutChart({
   label = "Visitors",
   color = 4,
   size = 116,
-  animate = true,
+  animate = FORMIC_CONFIG.motion,
   className = "",
 }) {
   const { settled, drawing } = useEntrance(animate);
@@ -8464,7 +8467,7 @@ function Sparkline({
   color = 1,
   area = true,
   smooth = false,
-  animate = true,
+  animate = FORMIC_CONFIG.motion,
   className = "",
 }) {
   const gradientId = useId();
@@ -8534,7 +8537,7 @@ function Gauge({
   percent = 64,
   label = "of people become clients",
   ticks = 36,
-  animate = true,
+  animate = FORMIC_CONFIG.motion,
   className = "",
 }) {
   const { drawing } = useEntrance(animate);
@@ -8579,7 +8582,7 @@ function BarList({
   format = (n) => n.toLocaleString(),
   stagger = 90,
   fill = false,
-  animate = true,
+  animate = FORMIC_CONFIG.motion,
   className = "",
 }) {
   const { settled: on, drawing } = useEntrance(animate);
@@ -8643,7 +8646,7 @@ function StatCard({
   trend,
   trendTone = 1,
   trendSmooth = false,
-  trendAnimate = true,
+  trendAnimate = FORMIC_CONFIG.motion,
   className = "",
 }) {
   return (
@@ -8789,7 +8792,7 @@ function AppSidebar({
   active,
   onSelect,
   variant,
-  defaultVariant = "expanded",
+  defaultVariant = FORMIC_CONFIG.sidebar,
   onVariantChange,
   collapsible = true,
   submenus = "nested",
@@ -8995,12 +8998,12 @@ function AppSidebar({
           rail ? (
             <Tooltip label={user.name}>
               <button type="button" aria-label={user.name} className="flex size-9 items-center justify-center rounded-control hover:bg-hover-2">
-                <Avatar name={user.name} src={user.src} size="sm" />
+                <Avatar name={user.name} src={user.src} doodle={user.doodle} size="sm" />
               </button>
             </Tooltip>
           ) : (
             <button type="button" className="flex h-10 w-full items-center gap-2.5 rounded-control px-2 text-left hover:bg-hover-2">
-              <Avatar name={user.name} src={user.src} size="sm" />
+              <Avatar name={user.name} src={user.src} doodle={user.doodle} size="sm" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-caption font-medium text-ink">{user.name}</span>
                 {user.detail && <span className="block truncate text-small text-ink-3">{user.detail}</span>}
@@ -10774,6 +10777,8 @@ function useRoute() {
   const [route, setRoute] = useState(readRoute);
   useEffect(() => {
     const onHash = () => {
+      /* the customizer is a different app in this file: reload into it */
+      if (/^#\/?customize$/.test(location.hash)) { location.reload(); return; }
       const next = readRoute();
       // normalise old-style #button to #/button so the address bar is canonical
       if (location.hash && !location.hash.startsWith("#/") && PAGE_INDEX[location.hash.slice(1)] !== undefined) {
@@ -11313,6 +11318,346 @@ function RailPanels({ page, pg, knobs, pgState, pgSet, pgReset }) {
   );
 }
 
+/* ═══════════ Customize — formicai.dev/customize ═══════════
+   One page, every choice an app makes, light and dark side by side.
+   The Copy button hands the user a formic.config.json block plus the
+   one instruction their AI tool needs: save it, run apply_config.py.
+   Nothing here is typed into a component by hand: the accent is
+   derived with the same algorithm as scripts/set_accent.py, and the
+   two panes are scoped copies of the real token blocks, built from
+   the live stylesheet, so they cannot drift. State lives in the URL,
+   so a designer can send the link to a developer. */
+const CZ_KEYS = ["accent", "palette", "radius", "size", "theme", "avatar", "sidebar", "motion"];
+const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", radius: "default", size: "default", theme: "light", avatar: "initials", sidebar: "expanded", motion: true };
+const CZ_CHOICES = {
+  palette: PALETTES.map((p) => p.id),
+  radius: RADII,
+  size: SIZES,
+  theme: ["light", "dark"],
+  avatar: ["initials", "doodle"],
+  sidebar: ["expanded", "rail"],
+};
+const CZ_HELP = {
+  accent: "Bring the brand colour. Light and dark each get their own value, fitted to AA on their surfaces.",
+  palette: "The neutral family under everything: canvas, surfaces, lines, ink.",
+  radius: "One scale for every corner, from controls to cards.",
+  size: "Control heights, padding and gaps move together. Type never scales.",
+  theme: "Where the app starts. Users can still switch.",
+  avatar: "People without a photo: initials, or a drawn face derived from the name.",
+  sidebar: "How the app sidebar first opens. Users can collapse either way.",
+  motion: "Charts and sparklines animate in once. Reduced motion always wins.",
+};
+function czIsCustomize() {
+  return /\/customize\/?$/.test(location.pathname) || /^#\/?customize$/.test(location.hash);
+}
+function czRead() {
+  const q = new URLSearchParams(location.search);
+  const cfg = { ...CZ_DEFAULTS };
+  for (const k of CZ_KEYS) {
+    const v = q.get(k);
+    if (v === null) continue;
+    if (k === "accent") { const h = "#" + v.replace("#", "").toLowerCase(); if (isHex(h)) cfg.accent = h; }
+    else if (k === "motion") cfg.motion = !["off", "false", "0"].includes(v);
+    else if (CZ_CHOICES[k].includes(v)) cfg[k] = v;
+  }
+  return cfg;
+}
+function czWrite(cfg) {
+  const q = new URLSearchParams();
+  for (const k of CZ_KEYS) {
+    if (cfg[k] === CZ_DEFAULTS[k]) continue;
+    q.set(k, k === "accent" ? cfg.accent.slice(1) : k === "motion" ? (cfg.motion ? "on" : "off") : cfg[k]);
+  }
+  const s = q.toString();
+  history.replaceState(null, "", location.pathname + (s ? "?" + s : "") + location.hash);
+}
+function czJson(cfg) {
+  return JSON.stringify({ ...cfg, accent: cfg.accent.toUpperCase() }, null, 2);
+}
+function czBlock(cfg) {
+  return [
+    "Apply this Formic configuration and keep it as the source of truth:",
+    "save it as src/formic/formic.config.json, then run",
+    "  python3 src/formic/scripts/apply_config.py",
+    "and restart the dev server. Do not set --accent, the html data-*",
+    "attributes or these prop defaults by hand; the script derives them.",
+    "",
+    czJson(cfg),
+    "",
+  ].join("\n");
+}
+/* Scoped tokens: every `:root…` rule in the live stylesheets is re-emitted
+   for `.cz-scope…`, so a pane can be light while the page is dark and
+   carry its own palette, radius and size. Built from the CSSOM rather than
+   a second copy of tokens.css, so there is nothing to keep in sync. */
+function czBuildScope() {
+  if (document.getElementById("cz-scope")) return true;
+  const out = [];
+  const walk = (rules) => {
+    for (const r of rules) {
+      if (r.type === 1) {
+        const sel = r.selectorText || "";
+        if (!sel.startsWith(":root") || sel.includes(":root:root")) continue;
+        const scoped = sel.split(",").map((s) => s.trim()).filter((s) => s.startsWith(":root")).map((s) => s.replace(/^:root/, ".cz-scope"));
+        /* whole cssText, not style.cssText: the token block nests an
+           @supports (color-mix fallback), and the declarations after it
+           live in nested rules that only the full serialisation keeps */
+        if (scoped.length) out.push(r.cssText.replace(/^[^{]+/, `${scoped.join(", ")} `));
+      } else if (r.cssRules && !r.media) {
+        walk(r.cssRules); // @layer, @supports; never @media, those rules are conditional
+      }
+    }
+  };
+  for (const sheet of document.styleSheets) { try { walk(sheet.cssRules); } catch {} }
+  if (!out.some((s) => s.includes("--ink:"))) return false; // Tailwind has not compiled yet
+  const el = document.createElement("style");
+  el.id = "cz-scope";
+  el.textContent = out.join("\n");
+  document.head.appendChild(el);
+  return true;
+}
+function useCzScope() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let alive = true, tries = 0;
+    (function poll() {
+      if (!alive) return;
+      if (czBuildScope()) return setReady(true);
+      if (++tries < 600) requestAnimationFrame(poll);
+    })();
+    return () => { alive = false; };
+  }, []);
+  return ready;
+}
+
+const CZ_TREND_A = [22, 28, 25, 34, 31, 40, 38, 46, 44, 52];
+const CZ_TREND_B = [18, 17, 21, 20, 24, 23, 27, 26, 30, 29];
+const CZ_PEOPLE = [
+  { name: "Eyosiyas Ketema", src: "https://i.pravatar.cc/128?img=12", role: "Admin" },
+  { name: "Amina Yusuf", src: "https://i.pravatar.cc/128?img=47", role: "Editor" },
+  { name: "Daniel Tesfaye", role: "Viewer" },
+  { name: "Sara Bekele", role: "Editor" },
+  { name: "Yonas Alemu", role: "Viewer" },
+];
+/* Below 768px a pane cannot hold a 240px sidebar and a dashboard; the
+   preview shows the rail instead and says so. The copied config keeps
+   the user's choice. */
+function useCzNarrow() {
+  const q = "(max-width: 767px)";
+  const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.matchMedia(q).matches);
+  useEffect(() => {
+    const m = window.matchMedia(q);
+    const on = () => setNarrow(m.matches);
+    m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
+  }, []);
+  return narrow;
+}
+function CzPane({ cfg, mode, accent, ratio, ready }) {
+  const fallback = cfg.avatar === "doodle";
+  const narrow = useCzNarrow();
+  const sidebar = narrow ? "rail" : cfg.sidebar;
+  const people = CZ_PEOPLE.map((p) => (p.src ? { name: p.name, src: p.src } : { name: p.name, doodle: fallback }));
+  const starts = cfg.theme === mode;
+  /* motion and sidebar remount their subtrees so a change replays the
+     entrance rather than waiting for the next data change */
+  const k = `${cfg.motion}-${sidebar}`;
+  return (
+    <section
+      aria-label={`${cap(mode)} mode preview`}
+      className={`cz-scope flex min-w-0 flex-col overflow-hidden rounded-card bg-canvas text-ink shadow-card transition-opacity duration-150 ${ready ? "" : "opacity-0"}`}
+      data-theme={mode}
+      data-palette={cfg.palette !== "paper" ? cfg.palette : undefined}
+      data-radius={cfg.radius !== "default" ? cfg.radius : undefined}
+      data-size={cfg.size !== "default" ? cfg.size : undefined}
+      style={{ "--accent": accent, colorScheme: mode }}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-line bg-surface px-4 py-2">
+        <span className="flex items-center gap-2 text-caption font-medium text-ink">
+          {cap(mode)}
+          {starts && <Badge>Starts here</Badge>}
+        </span>
+        <span className="flex items-center gap-2 font-mono text-micro whitespace-nowrap text-ink-3">
+          <span aria-hidden className="size-3 shrink-0 rounded-full bg-accent" />
+          --accent {accent} · {ratio.toFixed(2)}:1 {mode === "light" ? "on its tint" : "on dark"}
+        </span>
+        {narrow && cfg.sidebar === "expanded" && <span className="basis-full text-small text-ink-3">Rail shown at this width; the app opens expanded.</span>}
+      </div>
+      <div className="flex min-h-140 min-w-0">
+        <AppSidebar key={k} variant={sidebar} collapsible={false} active="overview" onSelect={() => {}} user={{ name: "Eyosiyas Ketema", detail: "Admin", src: fallback ? undefined : CZ_PEOPLE[0].src, doodle: fallback }} />
+        <div className="@container flex min-w-0 flex-1 flex-col gap-3 overflow-hidden p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h2 className="text-title font-semibold tracking-tight text-ink">Overview</h2>
+              <p className="text-small text-ink-3">Last 30 days</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button variant="ghost" size="sm" icon={<Icon name="download" size={14} />}>Export</Button>
+              <Button variant="accent" size="sm" icon={<Icon name="plus" size={14} />}>New report</Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3 @min-[360px]:grid-cols-2">
+            <StatCard key={k + "a"} label="Revenue" display="$128.4k" delta="+12.4%" icon="chart" iconTone="accent" trend={CZ_TREND_A} trendAnimate={cfg.motion} />
+            <StatCard key={k + "b"} label="Active users" display="8,214" delta="+3.1%" icon="user-add" trend={CZ_TREND_B} trendAnimate={cfg.motion} />
+          </div>
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 @min-[520px]:grid-cols-5">
+            <div className="min-h-0 min-w-0 @min-[520px]:col-span-3">
+              <Panel title="Sales" caption="Transactions by month" bodyClassName="min-h-0">
+                <BarChart key={k + "c"} fill showValues={false} animate={cfg.motion} />
+              </Panel>
+            </div>
+            <div className="min-h-0 min-w-0 @min-[520px]:col-span-2">
+              <Panel title="Team" actions={<AvatarGroup people={people} size="sm" max={3} ring="surface" />} bodyClassName="min-h-0 overflow-hidden">
+                <ul className="flex flex-col">
+                  {people.slice(0, 4).map((p, i) => (
+                    <li key={p.name} className="flex items-center gap-2.5 border-t border-line py-2 first:border-t-0">
+                      <Avatar {...p} size="sm" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-caption font-medium text-ink">{p.name}</span>
+                        <span className="block truncate text-small text-ink-3">{CZ_PEOPLE[i].role}</span>
+                      </span>
+                      <Switch on={i < 2} onToggle={() => {}} label={`${p.name} active`} size="sm" />
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+function CzChoice({ label, help, value, options, onChange }) {
+  const id = useId();
+  const keys = options.map((o) => (typeof o === "string" ? o : o.id));
+  /* one tab stop per group, arrows move the selection (WAI-ARIA radiogroup) */
+  const onKey = (event) => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+    if (!step) return;
+    event.preventDefault();
+    const group = event.currentTarget;
+    onChange(keys[(keys.indexOf(value) + step + keys.length) % keys.length]);
+    requestAnimationFrame(() => group.querySelector('[aria-checked="true"]')?.focus());
+  };
+  return (
+    <div>
+      <p id={id} className="mb-1.5 text-caption font-medium text-ink">{label}</p>
+      <div role="radiogroup" aria-labelledby={id} className="flex flex-wrap gap-1" onKeyDown={onKey}>
+        {options.map((o) => {
+          const v = typeof o === "string" ? o : o.id;
+          const on = v === value;
+          return (
+            <button key={v} type="button" role="radio" aria-checked={on} tabIndex={on ? 0 : -1} onClick={() => onChange(v)}
+              className={`corner-smooth flex h-7 items-center gap-1.5 rounded-control px-2.5 text-caption transition-colors duration-150 ${on ? "bg-hover-2 font-medium text-ink" : "text-ink-2 hover:bg-hover hover:text-ink"}`}>
+              {o.swatch && <span aria-hidden className="size-2.5 rounded-full" style={{ background: o.swatch }} />}
+              <span className="optical-text">{typeof o === "string" ? cap(o) : o.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      {help && <p className="mt-1.5 text-small text-ink-3">{help}</p>}
+    </div>
+  );
+}
+function CustomizeApp() {
+  const [cfg, setCfg] = useState(czRead);
+  const set = (k, v) => setCfg((c) => ({ ...c, [k]: v }));
+  useEffect(() => { czWrite(cfg); }, [cfg]);
+  useEffect(() => {
+    document.title = "Customize · Formic AI Design System";
+    requestAnimationFrame(() => document.getElementById("page-title")?.focus({ preventScroll: true }));
+  }, []);
+  const ready = useCzScope();
+  const toast = useToast();
+  const variants = useMemo(() => deriveAccentVariants(cfg.accent) || deriveAccentVariants(CZ_DEFAULTS.accent), [cfg.accent]);
+  const ratios = useMemo(() => {
+    const l = TH_hexToRgb(variants.light), d = TH_hexToRgb(variants.dark);
+    return {
+      light: TH_contrast(l, TH_mixRgb(l, TH_hexToRgb(TH_TINT_SURFACE_ANCHOR), 0.1)),
+      dark: TH_contrast(d, TH_hexToRgb(TH_DARK_ANCHOR)),
+    };
+  }, [variants]);
+  const changed = CZ_KEYS.filter((k) => cfg[k] !== CZ_DEFAULTS[k]).length;
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(czBlock(cfg));
+      toast({ tone: "success", title: "Copied", description: "Paste it into your AI tool. It saves the file and runs the script." });
+    } catch {
+      toast({ tone: "error", title: "Could not copy", description: "Select the block below and copy it by hand." });
+    }
+  };
+  const same = variants.light === variants.dark;
+  return (
+    <div className="min-h-screen">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-sidebar px-5 py-3">
+        <div className="flex items-center gap-1">
+          <BackToSite />
+          <a href="./preview.html" className="corner-smooth inline-flex h-7 items-center rounded-control px-2 text-caption text-ink-3 transition-colors duration-150 hover:bg-hover hover:text-ink">Gallery</a>
+        </div>
+        <div className="flex items-center gap-2">
+          {changed > 0 && (
+            <Button variant="ghost" size="sm" onClick={() => setCfg({ ...CZ_DEFAULTS })}>Reset</Button>
+          )}
+          <Button variant="accent" size="sm" icon={<Icon name="copy" size={14} />} onClick={copy}>Copy for your AI tool</Button>
+        </div>
+      </header>
+      <div className="flex flex-col gap-6 px-5 py-6 lg:flex-row lg:items-start">
+        <aside className="flex w-full shrink-0 flex-col gap-5 lg:sticky lg:top-6 lg:w-72" aria-label="Choices">
+          <div>
+            <h1 id="page-title" tabIndex={-1} className="text-display font-semibold tracking-tight text-ink outline-none">Customize</h1>
+            <p className="mt-1 text-body text-ink-2">Make the choices once. Both modes update as you go; copy the result into the AI tool you build with and it keeps them.</p>
+          </div>
+          <div>
+            <p className="mb-1.5 text-caption font-medium text-ink">Accent</p>
+            <ColorPicker value={cfg.accent} onChange={(hex) => set("accent", hex.toLowerCase())} className="max-w-none" />
+            <p className="mt-1.5 text-small text-ink-3">{CZ_HELP.accent}</p>
+            <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-micro text-ink-3">
+              <dt>light</dt><dd className="flex items-center gap-1.5 text-ink-2"><span aria-hidden className="size-2.5 rounded-full" style={{ background: variants.light }} />{variants.light} · {ratios.light.toFixed(2)}:1 on its tint</dd>
+              <dt>dark</dt><dd className="flex items-center gap-1.5 text-ink-2"><span aria-hidden className="size-2.5 rounded-full" style={{ background: variants.dark }} />{variants.dark} · {ratios.dark.toFixed(2)}:1 on dark</dd>
+            </dl>
+            {!same && <p className="mt-1.5 text-small text-ink-3">Two values from one colour: {cfg.accent.toUpperCase()} as typed would fail in at least one mode, so each mode gets the nearest shade that passes.</p>}
+          </div>
+          <CzChoice label="Palette" help={CZ_HELP.palette} value={cfg.palette} options={PALETTES} onChange={(v) => set("palette", v)} />
+          <CzChoice label="Radius" help={CZ_HELP.radius} value={cfg.radius} options={RADII} onChange={(v) => set("radius", v)} />
+          <CzChoice label="Size" help={CZ_HELP.size} value={cfg.size} options={SIZES} onChange={(v) => set("size", v)} />
+          <CzChoice label="Starting theme" help={CZ_HELP.theme} value={cfg.theme} options={CZ_CHOICES.theme} onChange={(v) => set("theme", v)} />
+          <CzChoice label="Avatar without a photo" help={CZ_HELP.avatar} value={cfg.avatar} options={CZ_CHOICES.avatar} onChange={(v) => set("avatar", v)} />
+          <CzChoice label="Sidebar" help={CZ_HELP.sidebar} value={cfg.sidebar} options={CZ_CHOICES.sidebar} onChange={(v) => set("sidebar", v)} />
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-caption font-medium text-ink">Motion</p>
+              <p className="mt-0.5 text-small text-ink-3">{CZ_HELP.motion}</p>
+            </div>
+            <Switch on={cfg.motion} onToggle={() => set("motion", !cfg.motion)} label="Charts animate in" />
+          </div>
+        </aside>
+        <main className="@container flex min-w-0 flex-1 flex-col gap-5">
+          {/* side by side only when each pane keeps a real dashboard width:
+              a rail needs ~560px, an expanded sidebar ~720px; below that
+              the two stack at full width rather than squeeze. The query
+              reads <main>, the container, not the grid itself. */}
+          <div className={`grid min-w-0 grid-cols-1 gap-5 ${cfg.sidebar === "rail" ? "@min-[1160px]:grid-cols-2" : "@min-[1480px]:grid-cols-2"}`}>
+            <CzPane cfg={cfg} mode="light" accent={variants.light} ratio={ratios.light} ready={ready} />
+            <CzPane cfg={cfg} mode="dark" accent={variants.dark} ratio={ratios.dark} ready={ready} />
+          </div>
+          <section aria-labelledby="cz-how" className="rounded-card bg-surface p-5 shadow-card">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 id="cz-how" className="text-title font-semibold text-ink">Then, in your AI tool</h2>
+                <p className="mt-1 max-w-2xl text-body text-ink-2">Copy the block and paste it into Claude Code, Cursor, Copilot or whichever agent builds your app. It saves <code className="font-mono text-caption text-ink">formic.config.json</code> next to the vendored system and runs <code className="font-mono text-caption text-ink">apply_config.py</code>, which fits the accent for both modes, sets the html attributes and the component defaults. From then on every prompt inherits these choices.</p>
+              </div>
+              <Button variant="primary" size="sm" icon={<Icon name="copy" size={14} />} onClick={copy}>Copy</Button>
+            </div>
+            <pre className="mt-4 overflow-x-auto rounded-md bg-inset p-4 font-mono text-small leading-relaxed whitespace-pre text-ink-2" aria-label="Configuration block">{czBlock(cfg)}</pre>
+            <p className="mt-3 text-small text-ink-3">Not using an agent? Save the JSON as <code className="font-mono">src/formic/formic.config.json</code> and run the script yourself. This URL holds the same choices, so it can be sent to whoever does.</p>
+          </section>
+        </main>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [theme, setTheme] = useTheme();
   const [palette, setPalette] = usePalette();
@@ -11339,6 +11684,10 @@ function App() {
           <BackToSite className="-ml-2 mb-2" />
           <p className="text-title font-semibold tracking-tight text-ink">Formic AI Design System</p>
           <p className="mt-0.5 font-mono text-micro text-ink-3">v0.1 · {PAGES.filter((p) => p.group !== "Foundations").length} components</p>
+          <a href="./customize" className="corner-smooth mt-2 inline-flex h-7 items-center gap-1.5 rounded-control bg-surface px-2 text-caption font-medium text-ink shadow-btn transition-colors duration-150 hover:bg-hover">
+            <Icon name="sparkles" size={13} strokeWidth={2} />
+            Customize
+          </a>
         </div>
         <nav className="flex flex-col" aria-label="Components">
           {groups.map((g) => (
@@ -11383,7 +11732,9 @@ function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<ToastProvider><App /></ToastProvider>);
+/* /customize is this same file (a Vercel rewrite); it renders the
+   customizer instead of the gallery. #/customize works locally too. */
+ReactDOM.createRoot(document.getElementById("root")).render(<ToastProvider>{czIsCustomize() ? <CustomizeApp /> : <App />}</ToastProvider>);
 </script>
 </body>
 </html>
