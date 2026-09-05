@@ -168,7 +168,7 @@ It checks forbidden patterns, WCAG contrast for every mode and palette, token dr
 styles/          fonts.css, formic.css (imports the rest), tokens.css (source of truth), themes.css, tailwind-theme.css, brands.css, sidebar.css, records.css
 components/      React components + primitives.tsx, hooks.ts, theme.ts
 skill/           SKILL.md and formic-design-system.skill, the installable AI skill
-scripts/         qa_check.py (the QA gate) and check_sri.py
+scripts/         qa_check.py (the QA gate), check_sri.py, set_accent.py (brand colour → both modes)
 .github/         CI workflow, PR template, issue forms
 preview.html     standalone gallery, opens in any browser with no build
 index.html       the landing page

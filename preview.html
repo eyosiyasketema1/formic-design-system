@@ -8918,6 +8918,8 @@ function AppSidebar({
 /* ═══════════ FilterBar (mirrors components/FilterBar.tsx) ═══════════ */
 function FilterBar({
   children,
+  leading,
+  trailing,
   search,
   active = 0,
   onClear,
@@ -8925,7 +8927,13 @@ function FilterBar({
   className = "",
 }) {
   return (
-    <div role="group" aria-label="Filters" className={`flex w-full flex-wrap items-center gap-2 ${className}`}>
+    <div role="group" aria-label="Filters" className={`flex w-full min-w-0 flex-wrap items-center gap-2 ${className}`}>
+      {leading && (
+        <span className="flex h-8 shrink-0 items-center gap-1.5 pr-1 text-caption text-ink-3">
+          <Icon name="filter" size={14} strokeWidth={2} />
+          {leading}
+        </span>
+      )}
       {/* each child keeps its own width: min-w-0 lets a long select shrink
           before the row wraps, and `[&>*]:max-w-full` stops any one control
           from forcing a scrollbar at 360px */}
@@ -8935,7 +8943,12 @@ function FilterBar({
           {clearLabel} · {active}
         </Button>
       )}
-      {search && <div className="ml-auto min-w-0 shrink-0">{search}</div>}
+      {(trailing || search) && (
+        <div className="ml-auto flex min-w-0 flex-wrap items-center gap-2">
+          {trailing}
+          {search}
+        </div>
+      )}
     </div>
   );
 }
@@ -10417,12 +10430,13 @@ function Page_filterbar() {
   const [period, setPeriod] = useState("");
   const [owner, setOwner] = useState("");
   const [q, setQ] = useState("");
+  const [cmp, setCmp] = useState(true);
   const active = [cat, status, period, owner].filter(Boolean).length;
   const clear = () => { setCat(""); setStatus(""); setPeriod(""); setOwner(""); };
   return (
     <>
-      <GalleryCard label="Four filters share a row; only the overflow wraps" full>
-        <FilterBar active={active} onClear={clear} search={<Input size="sm" leadingIcon="search" placeholder="Filter by name…" value={q} onChange={(e) => setQ(e.target.value)} width="w-56" />}>
+      <GalleryCard label="Label, filters, compare toggle and search in one wrapping row — nothing clips" full>
+        <FilterBar leading="Filters" active={active} onClear={clear} trailing={<span className="flex items-center gap-2 text-caption text-ink-2"><Icon name="clock" size={14} strokeWidth={2} className="text-ink-3" />Compare previous period<Switch on={cmp} onToggle={() => setCmp(!cmp)} label="Compare previous period" size="sm" /></span>} search={<Input size="sm" leadingIcon="search" placeholder="Filter by name…" value={q} onChange={(e) => setQ(e.target.value)} width="w-56" />}>
           <Select size="sm" placeholder="All categories" value={cat} onChange={setCat} options={[{ value: "electronics", label: "Electronics" }, { value: "apparel", label: "Apparel" }, { value: "home", label: "Home & Living" }]} width="w-44" />
           <Select size="sm" placeholder="All statuses" value={status} onChange={setStatus} options={[{ value: "todo", label: "To do" }, { value: "progress", label: "In progress" }, { value: "done", label: "Completed" }]} width="w-40" />
           <Select size="sm" placeholder="This month" value={period} onChange={setPeriod} options={[{ value: "week", label: "This week" }, { value: "month", label: "This month" }, { value: "quarter", label: "This quarter" }]} width="w-40" />
@@ -10555,7 +10569,7 @@ const PAGES = [
   { id: "select", group: "Forms", title: "Select", note: "Combobox on the quiet field style \u2014 the listbox portals over the page, matches the trigger's width, and is fully keyboard-driven (arrows, Home/End, Enter, Escape).", file: "components/Select.tsx", Component: Page_select },
   { id: "switch", group: "Forms", title: "Switch", note: "The system toggle, promoted from RecordsTable's private switch \u2014 role=switch, two sizes, Field-compatible. RecordsTable now consumes the same primitive.", file: "components/primitives.tsx", Component: Page_switch },
   { id: "checkbox", group: "Forms", title: "Checkbox", note: "A labelled checkbox for completion and selection. The visual is the RadioCheck primitive; the semantics are a button with role=checkbox, so keyboard, focus ring and a 24px hit area come from the system. Switch is for settings that apply the moment they flip \u2014 a habit marked done, a row included in a selection, a task ticked off is a checkbox, never a switch.", file: "components/primitives.tsx", Component: Page_checkbox },
-  { id: "filterbar", group: "Forms", title: "FilterBar", note: "The row above a list. Filters share one line and wrap only when they run out of room \u2014 four selects on one row, the fifth drops down alone. Every control is sized to its content, the search input is pinned to the right end, and Clear appears only while something is applied. One filter per row, each full width, is the layout to avoid.", file: "components/FilterBar.tsx", Component: Page_filterbar },
+  { id: "filterbar", group: "Forms", title: "FilterBar", note: "The row above a list. A label at the start, the filters, then whatever sits at the end (a compare toggle, a view switch) and search \u2014 all in one wrapping row, so when it is full the next control goes to the next line instead of being clipped. Every control is sized through its width prop, and Clear appears only while something is applied. One filter per row, each full width, is the layout to avoid; so is an overflow-hidden row that cuts the last control off.", file: "components/FilterBar.tsx", Component: Page_filterbar },
   { id: "colorpicker", group: "Forms", title: "ColorPicker", note: "A Figma-style picker with no dependencies: saturation and brightness square, hue strip, hex field, eyedropper where the browser has one, and swatches. Hex only, no alpha — it picks brand colours, and a translucent accent would void every contrast guarantee.", file: "components/ColorPicker.tsx", Component: Page_colorpicker },
   { id: "filedropzone", group: "Forms", title: "FileDropzone", note: "Drag files onto the zone or click to browse \u2014 accept / size validation announces rejections, accepted files become chips with remove. Try dropping anything.", file: "components/FileDropzone.tsx", Component: Page_filedropzone },
   { id: "slider-otp", group: "Forms", title: "Slider & OTP", note: "Two more Field-ready controls \u2014 Slider is a native range drawn with tokens (platform keyboard and touch for free); OTPInput distributes typing, paste, and one-time-code autofill across quiet field cells.", file: "components/Slider.tsx components/OTPInput.tsx", Component: Page_slider_otp },
@@ -10965,9 +10979,11 @@ const PLAYGROUNDS = {
       { key: "count", label: "Filters", type: "select", value: 4, options: [2, 3, 4, 5, 6] },
       { key: "search", label: "Search", type: "toggle", value: true },
       { key: "active", label: "Applied", type: "select", value: 1, options: [0, 1, 2, 3] },
+      { key: "leading", label: "Label", type: "toggle", value: true },
+      { key: "trailing", label: "Compare toggle", type: "toggle", value: true },
     ],
     render: (p) => (
-      <FilterBar active={p.active} onClear={() => {}} search={p.search ? <Input size="sm" leadingIcon="search" placeholder="Search…" width="w-48" /> : undefined}>
+      <FilterBar leading={p.leading ? "Filters" : undefined} trailing={p.trailing ? <span className="flex items-center gap-2 text-caption text-ink-2">Compare<Switch on onToggle={() => {}} label="Compare" size="sm" /></span> : undefined} active={p.active} onClear={() => {}} search={p.search ? <Input size="sm" leadingIcon="search" placeholder="Search…" width="w-48" /> : undefined}>
         {Array.from({ length: p.count }, (_, i) => <Select key={i} size="sm" placeholder={["All categories", "All statuses", "This month", "Any owner", "Any region", "Any channel"][i]} width="w-40" />)}
       </FilterBar>
     ),

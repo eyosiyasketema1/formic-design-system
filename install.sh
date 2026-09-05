@@ -250,11 +250,12 @@ SHA="$(git -C "$TMP/formic" rev-parse --short HEAD)"
 
 # ── 1. The system itself ───────────────────────────────────
 mkdir -p "$DEST"
-rm -rf "$DEST/styles" "$DEST/components"
+rm -rf "$DEST/styles" "$DEST/components" "$DEST/scripts"
 cp -R "$TMP/formic/styles" "$DEST/styles"
 cp -R "$TMP/formic/components" "$DEST/components"
+mkdir -p "$DEST/scripts" && cp "$TMP/formic/scripts/set_accent.py" "$DEST/scripts/set_accent.py"
 printf 'formic-design-system %s\nhttps://github.com/eyosiyasketema1/formic-design-system\nre-run install.sh to update\n' "$SHA" > "$DEST/VERSION"
-say "$DEST/styles and $DEST/components (commit $SHA)"
+say "$DEST/styles, $DEST/components and $DEST/scripts/set_accent.py (commit $SHA)"
 
 # Rewrite the default path if the caller chose another folder.
 localise() { # file
