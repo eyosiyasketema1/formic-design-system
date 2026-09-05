@@ -72,7 +72,7 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
 - **Filters are a `FilterBar`** (children = the selects, `search` pinned right, `active` + `onClear`): one row, wrap only on overflow, each control sized to content. Never one filter per row.
 - **Every chart animates in by default** (bars grow, lines reveal, donuts sweep, sparklines draw); reduced motion is honoured automatically. `animate={false}` only for live-updating charts. No custom keyframes, no motion libraries.
 - **Icons match labels:** `iconFor(label)` from `primitives.tsx` (`"Refresh"` → `retry`, `"Export CSV"` → `download`, `"Add user"` → `user-add`); `undefined` means leave the icon off.
-- **Brand marks:** `<BrandIcon name="github" />` from `brand.tsx` (80+ companies and social networks), monochrome like any icon. No logo images, no second icon package.
+- **Brand marks:** `<BrandIcon name="github" />` from `brand.tsx` (80+ companies and social networks), monochrome by default; `color="brand"` for sign-in buttons and integration directories only. No logo images, no second icon package.
 - **Page density.** `p-6 sm:p-8`, sections `gap-6`.
 
 ## Component inventory

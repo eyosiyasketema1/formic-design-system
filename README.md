@@ -165,7 +165,7 @@ It checks forbidden patterns, WCAG contrast for every mode and palette, token dr
 ## Repo map
 
 ```
-styles/          fonts.css, formic.css (imports the rest), tokens.css (source of truth), themes.css, tailwind-theme.css, sidebar.css, records.css
+styles/          fonts.css, formic.css (imports the rest), tokens.css (source of truth), themes.css, tailwind-theme.css, brands.css, sidebar.css, records.css
 components/      React components + primitives.tsx, hooks.ts, theme.ts
 skill/           SKILL.md and formic-design-system.skill, the installable AI skill
 scripts/         qa_check.py (the QA gate) and check_sri.py

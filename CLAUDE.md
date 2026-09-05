@@ -27,7 +27,7 @@ Rules for any AI agent (or human) working in this repo. These exist because past
 
 18. **Charts move in, once, by default.** Every chart's entrance (bars grow from the baseline, lines reveal left to right, arcs sweep, sparklines draw, ranked bars grow) runs through the shared `useEntrance` in `charts.tsx`: on by default, off with `animate={false}`, collapsed to the final frame under reduced motion. Motion is a property of the system, not a garnish one chart gets and the next forgets.
 
-19. **Icons mean what their label says.** `iconFor(label)` in `primitives.tsx` is the source of truth for label→glyph; extend its table rather than picking by eye. Brand marks come from `BrandIcon` in `brand.tsx` (Tabler's brand set, so still one icon package), monochrome, never in the brand's own colour.
+19. **Icons mean what their label says.** `iconFor(label)` in `primitives.tsx` is the source of truth for label→glyph; extend its table rather than picking by eye. Brand marks come from `BrandIcon` in `brand.tsx` (Tabler's brand set, so still one icon package): monochrome by default; `color="brand"` reads the mark's published colour from `styles/brands.css` (the one place hex is allowed outside tokens, and exempt from the contrast rule because it colours a logo, never UI) — for sign-in buttons and integration directories, not navigation.
 
 ## Extraction rule
 

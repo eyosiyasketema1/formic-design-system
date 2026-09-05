@@ -17,10 +17,13 @@ export function FormicMark({ size = 20, className = "" }: { size?: number; class
 
 /* ── BrandIcon — company and social marks, from the same Tabler set ── */
 /* Rule 3 says one icon package. Tabler ships the brands, so no second
- * library: <BrandIcon name="github" />. Monochrome, currentColor, the
- * same 24-grid as the UI icons; colour it like any icon (ink, ink-2,
- * accent) — never with a brand's own colour, which fails contrast and
- * makes a row of logos look like a sticker sheet. */
+ * library: <BrandIcon name="github" />. Monochrome by default —
+ * currentColor, the same 24-grid as the UI icons, coloured like any
+ * icon (ink, ink-2, accent). `color="brand"` paints the mark in its
+ * published colour (styles/brands.css), for the places where the logo
+ * has to be recognised at a glance: sign-in buttons, an integrations
+ * directory, a "connected accounts" row. Never for navigation or
+ * status, where a row of brand colours reads as a sticker sheet. */
 import {
   IconBrandAdobe,
   IconBrandAirbnb,
@@ -190,7 +193,22 @@ const BRANDS: Record<BrandName, TablerIcon> = {
   "netflix": IconBrandNetflix,
   "disney": IconBrandDisney,
 };
-export function BrandIcon({ name, size = 16, strokeWidth = 1.8, className, style }: { name: BrandName; size?: number; strokeWidth?: number; className?: string; style?: CSSProperties }) {
+export function BrandIcon({
+  name,
+  size = 16,
+  strokeWidth = 1.8,
+  color = "mono",
+  className,
+  style,
+}: {
+  name: BrandName;
+  size?: number;
+  strokeWidth?: number;
+  /** "mono" (default) inherits currentColor; "brand" uses the mark's own colour */
+  color?: "mono" | "brand";
+  className?: string;
+  style?: CSSProperties;
+}) {
   const Glyph = BRANDS[name];
-  return <Glyph aria-hidden size={size} stroke={strokeWidth} className={className} style={style} />;
+  return <Glyph aria-hidden size={size} stroke={strokeWidth} className={className} style={color === "brand" ? { color: `var(--brand-${name})`, ...style } : style} />;
 }

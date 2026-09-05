@@ -152,6 +152,90 @@
 @keyframes shimmer-text { 0% { background-position:200% 0 } 100% { background-position:-200% 0 } }
 /* One-shot left→right reveal for sparklines: clips the whole svg, so it
    works with non-scaling strokes where a dash draw-in does not. */
+/* brand colours (mirrors styles/brands.css) */
+:root {
+  --brand-github: var(--ink);
+  --brand-google: #4285f4;
+  --brand-apple: var(--ink);
+  --brand-windows: #0078d4;
+  --brand-slack: #4a154b;
+  --brand-notion: var(--ink);
+  --brand-figma: #f24e1e;
+  --brand-linkedin: #0a66c2;
+  --brand-x: var(--ink);
+  --brand-instagram: #e4405f;
+  --brand-facebook: #0866ff;
+  --brand-youtube: #ff0000;
+  --brand-tiktok: var(--ink);
+  --brand-telegram: #26a5e4;
+  --brand-whatsapp: #25d366;
+  --brand-discord: #5865f2;
+  --brand-stripe: #635bff;
+  --brand-paypal: #003087;
+  --brand-spotify: #1db954;
+  --brand-android: #34a853;
+  --brand-chrome: #4285f4;
+  --brand-openai: var(--ink);
+  --brand-vercel: var(--ink);
+  --brand-github-copilot: var(--ink);
+  --brand-gmail: #ea4335;
+  --brand-google-drive: #4285f4;
+  --brand-zoom: #0b5cff;
+  --brand-trello: #0052cc;
+  --brand-asana: #f06a6a;
+  --brand-airtable: #18bfff;
+  --brand-amazon: #ff9900;
+  --brand-meta: #0467df;
+  --brand-pinterest: #bd081c;
+  --brand-reddit: #ff4500;
+  --brand-threads: var(--ink);
+  --brand-snapchat: #fffc00;
+  --brand-twitch: #9146ff;
+  --brand-mastodon: #6364ff;
+  --brand-medium: var(--ink);
+  --brand-behance: #1769ff;
+  --brand-dribbble: #ea4c89;
+  --brand-wordpress: #21759b;
+  --brand-webflow: #146ef5;
+  --brand-framer: #0055ff;
+  --brand-adobe: #ff0000;
+  --brand-sketch: #f7b500;
+  --brand-visa: #1a1f71;
+  --brand-mastercard: #eb001b;
+  --brand-docker: #2496ed;
+  --brand-aws: #ff9900;
+  --brand-azure: #0078d4;
+  --brand-firebase: #dd2c00;
+  --brand-supabase: #3fcf8e;
+  --brand-vue: #4fc08d;
+  --brand-react: #61dafb;
+  --brand-nextjs: var(--ink);
+  --brand-tailwind: #06b6d4;
+  --brand-typescript: #3178c6;
+  --brand-javascript: #f7df1e;
+  --brand-python: #3776ab;
+  --brand-php: #777bb4;
+  --brand-laravel: #ff2d20;
+  --brand-git: #f05032;
+  --brand-gitlab: #fc6d26;
+  --brand-bitbucket: #0052cc;
+  --brand-ubuntu: #e95420;
+  --brand-teams: #6264a7;
+  --brand-office: #d83b01;
+  --brand-onedrive: #0078d4;
+  --brand-google-analytics: #e37400;
+  --brand-google-play: #414141;
+  --brand-samsungpass: #1428a0;
+  --brand-tesla: #cc0000;
+  --brand-uber: var(--ink);
+  --brand-airbnb: #ff5a5f;
+  --brand-booking: #003580;
+  --brand-tripadvisor: #34e0a1;
+  --brand-soundcloud: #ff5500;
+  --brand-vimeo: #1ab7ea;
+  --brand-netflix: #e50914;
+  --brand-disney: #113ccf;
+}
 @keyframes reveal-x { from { clip-path: inset(-4px 100% -4px -4px); } to { clip-path: inset(-4px); } }
 @keyframes pop-in { 0% { opacity:0; transform:scale(.95) } 100% { opacity:1; transform:scale(1) } }
 @keyframes fade-in { from { opacity:0 } to { opacity:1 } }
@@ -986,10 +1070,11 @@ const BRAND_PATHS = {  /* Tabler brand glyphs (@tabler/icons, MIT) */
   "netflix": (<><path d="M9 3l10 18h-4l-10 -18z" /><path d="M5 3v18h4v-10.5" /><path d="M19 21v-18h-4v10.5" /></>),
   "disney": (<><path d="M3.22 5.838c-1.307 -.15 -1.22 -.578 -1.22 -.794c0 -.216 .424 -1.044 4.34 -1.044c4.694 0 14.66 3.645 14.66 10.042s-8.71 4.931 -10.435 4.52c-1.724 -.412 -5.565 -2.256 -5.565 -4.174c0 -1.395 3.08 -2.388 6.715 -2.388c3.634 0 5.285 1.041 5.285 2c0 .5 -.074 1.229 -1 1.5" /><path d="M10.02 8a505.153 505.153 0 0 0 0 13" /></>),
 };
-function BrandIcon({ name, size = 16, strokeWidth = 1.8, className, style }) {
+function BrandIcon({ name, size = 16, strokeWidth = 1.8, color = "mono", className, style }) {
   return (
     <svg aria-hidden width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
+      strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}
+      style={color === "brand" ? { color: `var(--brand-${name})`, ...style } : style}>
       {BRAND_PATHS[name]}
     </svg>
   );
@@ -10255,17 +10340,27 @@ function Page_brandicon() {
           ))}
         </div>
       </GalleryCard>
+      <GalleryCard label={`${names.length} brands · color="brand": the mark's own colour, for logo rows and sign-in buttons`} full>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-2">
+          {names.map((n) => (
+            <div key={n} className="flex items-center gap-2 rounded-control px-2 py-1.5 text-caption text-ink-2">
+              <BrandIcon name={n} size={18} color="brand" className="shrink-0" />
+              <span className="min-w-0 truncate font-mono text-small">{n}</span>
+            </div>
+          ))}
+        </div>
+      </GalleryCard>
       <GalleryCard label="In context: sign-in buttons and an integrations list" wide>
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" icon={<BrandIcon name="google" />}>Continue with Google</Button>
+            <Button variant="outline" size="sm" icon={<BrandIcon name="google" color="brand" />}>Continue with Google</Button>
             <Button variant="outline" size="sm" icon={<BrandIcon name="github" />}>Continue with GitHub</Button>
             <Button variant="outline" size="sm" icon={<BrandIcon name="apple" />}>Continue with Apple</Button>
           </div>
           <div className="flex flex-col">
             {[["slack", "Slack", "Alerts to #ops", "Connected"], ["notion", "Notion", "Sync meeting notes", "Connected"], ["figma", "Figma", "Design tokens", "Not connected"]].map(([n, name, detail, state]) => (
               <div key={n} className="flex items-center gap-2.5 border-t border-line py-3 first:border-t-0">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-inset text-ink-2"><BrandIcon name={n} size={16} /></span>
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-inset"><BrandIcon name={n} size={16} color="brand" /></span>
                 <span className="min-w-0 flex-1"><span className="block truncate text-caption font-medium text-ink">{name}</span><span className="block truncate text-small text-ink-3">{detail}</span></span>
                 <Badge tone={state === "Connected" ? "green" : "neutral"}>{state}</Badge>
               </div>
@@ -10322,7 +10417,7 @@ const PAGES = [
   { id: "colors", group: "Foundations", title: "Colors", note: "The token palette. Every value lives in styles/tokens.css and re-resolves live \u2014 switch theme or palette to watch the whole page follow.", file: "styles/tokens.css", Component: Page_colors },
   { id: "typography", group: "Foundations", title: "Typography", note: "Urbanist (variable, 300\u2013800). One standard ramp \u2014 14px base, integer steps, 10 to 48 \u2014 plus the true weight ramp. text-nano (8px) stays reserved for mini-badge letters.", file: "styles/tokens.css", Component: Page_typography },
   { id: "shape-motion", group: "Foundations", title: "Shape & motion", note: "Six radii; one easing \u2014 var(--ease-out-quint) \u2014 drives every entrance and transition. Replay to see the house motion.", file: "styles/tokens.css", Component: Page_shape_motion },
-  { id: "brandicon", group: "Foundations", title: "Brand icons", note: "Company and social marks from the same Tabler set, so there is still one icon package. Monochrome and currentColor: colour them like any icon (ink, ink-2, accent), never with the brand\u2019s own colour, which fails contrast and turns a row of logos into a sticker sheet.", file: "components/brand.tsx", Component: Page_brandicon },
+  { id: "brandicon", group: "Foundations", title: "Brand icons", note: "Company and social marks from the same Tabler set, so there is still one icon package. Monochrome by default, coloured like any icon (ink, ink-2, accent). color=\"brand\" paints the mark in its published colour for sign-in buttons, integration directories and connected-account rows \u2014 never for navigation or status, where a row of brand colours reads as a sticker sheet.", file: "components/brand.tsx", Component: Page_brandicon },
   { id: "iconfor", group: "Foundations", title: "Icon for a label", note: "iconFor(label) resolves a button or menu label to the icon that means the same thing: Refresh is the retry arrow, Export is the download arrow, Add user is the user-plus. Longest match wins, and no match returns undefined \u2014 then leave the icon off rather than decorate with a random one.", file: "components/primitives.tsx", Component: Page_iconfor },
   { id: "primitives", group: "Primitives", title: "Primitives", note: "The atoms everything below composes: Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, DiffStat, IconButton, SendButton, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Switch, Popover + timing hooks (useSequence, useElapsed, useStream).", file: "components/primitives.tsx", Component: Page_primitives },
   { id: "badge", group: "Primitives", title: "Badge", note: "A status pill. Three tones, because green and red carry meaning.", file: "components/primitives.tsx", Component: Page_badge },
@@ -10755,9 +10850,9 @@ const PLAYGROUNDS = {
     schema: [
       { key: "name", label: "Brand", type: "select", value: "github", options: ["github", "google", "apple", "slack", "notion", "figma", "linkedin", "x", "instagram", "youtube", "stripe", "openai"] },
       { key: "size", label: "Size", type: "select", value: 20, options: [14, 16, 20, 24, 32] },
-      { key: "tone", label: "Colour", type: "select", value: "text-ink", options: ["text-ink", "text-ink-2", "text-accent"] },
+      { key: "tone", label: "Colour", type: "select", value: "text-ink", options: ["text-ink", "text-ink-2", "text-accent", "brand"] },
     ],
-    render: (p) => <BrandIcon name={p.name} size={p.size} className={p.tone} />,
+    render: (p) => <BrandIcon name={p.name} size={p.size} color={p.tone === "brand" ? "brand" : "mono"} className={p.tone === "brand" ? "" : p.tone} />,
   },
   colorpicker: {
     schema: [
