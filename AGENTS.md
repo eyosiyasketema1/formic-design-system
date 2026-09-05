@@ -65,13 +65,29 @@ These came from reviewing real agent output. Each one is a tell that a page was 
 
 1. **Checkbox vs Switch.** A `Switch` is a setting that takes effect the moment it flips (notifications on, dark mode). Anything that records a state or a selection — a habit done today, a task ticked, a row included — is a `Checkbox`. A list of items with switches down the left edge is wrong.
 2. **Icons are furniture, not data.** Card icons are ink on inset (`StatCard` default). At most one tile per view gets `iconTone="accent"`, the one the page leads with. A different colour per card is the signature of machine-made UI. Colour appears in exactly three places: the accent (one primary action, the lead series), green/red (success and danger only), and the chart ramp (data series only).
-3. **Cards fit their content.** Never let a grid stretch a card past what is in it: use `items-start` on card grids, or make the content fill (`flex flex-col` on the card, `flex-1` on the chart). A card whose bottom half is empty is a bug. A chart's `height` is picked to fill its card, not left at the default.
-4. **Card anatomy.** Header row: title (`text-body font-medium text-ink`) and caption (`text-caption text-ink-3`) on the left, controls on the right, on the same baseline. Body below with `mt-3`. Padding `p-4`, or `p-5` for a hero card. Nothing else.
-5. **Proximity.** Controls sit next to the thing they act on: filters directly above the list, in one row, sized to their content (`max-w-*`), not stacked full-width. A comparison's two pickers sit together with "vs" between them, next to the title, not in a far corner.
-6. **One grid.** Every card in a row shares the same gutter (`gap-3.5` inside sections, `gap-6` between sections) and left edge. Numbers align right with `tabular-nums`. Labels align left. Nothing is centred unless it is alone.
-7. **Selects and inputs** are `sm`/`md` controls sized to their content, never stretched to a column's full width outside a form. A search input goes at the right end of the same row as the filters.
-8. **Empty states and loading** use `LoadingState` / `Skeleton` / `Alert`, never an ad-hoc grey box.
-9. **Density.** A page is `p-6` (`sm:p-8`) with sections `gap-6`. If a section needs more air than that, the content is wrong, not the spacing.
+3. **Every titled section is a `Panel`.** `<Panel title caption actions>` gives the anatomy for free: title and caption left, controls right, one baseline, body below, `p-4`. Use `Card` directly only for things that are not a titled section (a stat tile, a message). Never hand-build a card header.
+4. **Panels in a row are the same height, and their bodies fill.** The grid stretches them (that is the default; never add `items-start`), and the content reaches the bottom: charts get `fill` (`<LineChart fill />`, `<BarChart fill />`), ranked lists get `fill` (`<BarList fill />`), tables are `w-full`. A panel whose lower half is empty, or a chart that stops at 60% of its panel's width, is a bug. Charts have no width cap: they are as wide as the panel.
+5. **Buttons are one line.** Label and icon sit on one row, always; pass the icon through `icon=` / `iconEnd=` or as a child, both work. A button whose icon sits above its label is broken, not a variant. Labels never wrap.
+6. **Tables fill their container** (`RecordsTable`, `FilterTable`, `DiffTable` are `w-full`), unless the user asks for a fixed width. Wide tables scroll inside their own `overflow-x-auto`, never the page.
+7. **Proximity.** Controls sit next to the thing they act on: filters directly above the list, in one row, sized to their content (`max-w-*`), not stacked full-width; the search input at the row's right end. A comparison's two pickers sit together with "vs" between them, in the panel's `actions`, not in a far corner.
+8. **One grid.** Every panel in a row shares the same gutter (`gap-3.5` inside sections, `gap-6` between sections) and left edge. Numbers align right with `tabular-nums`. Labels align left. Nothing is centred unless it is alone.
+9. **Rails.** A dashboard or admin app gets `AppSidebar` (grouped menu, `expanded` or `rail` variant); a chat app gets `SidebarNav`. Both fill the shell's height. Never build a sidebar from divs.
+10. **Empty states and loading** use `LoadingState` / `Skeleton` / `Alert`, never an ad-hoc grey box.
+11. **Density.** A page is `p-6` (`sm:p-8`) with sections `gap-6`. If a section needs more air than that, the content is wrong, not the spacing.
+
+A dashboard row, done right:
+
+```tsx
+<div className="grid grid-cols-1 gap-3.5 lg:grid-cols-5">
+  <Panel title="Revenue & sales" caption="Weekly, current vs previous" className="lg:col-span-3"
+         actions={<Select size="sm" … />}>
+    <LineChart fill labels={weeks} series={[current, previous]} />
+  </Panel>
+  <Panel title="Revenue by location" caption="Top regions" className="lg:col-span-2">
+    <BarList fill items={regions} format={usd} />
+  </Panel>
+</div>
+```
 
 ## The rules that matter most
 
@@ -96,20 +112,20 @@ These came from reviewing real agent output. Each one is a tell that a page was 
 **Overlays:** Modal, Drawer, Toast (`ToastProvider` at the root), DropdownMenu, Popover, Tooltip.
 **Feedback and agents:** Alert, Progress, Skeleton, LoadingState, ThinkingState, TaskRows, ToolChips.
 **Conversation:** ChatThread, MessageBubble, StreamingText, Markdown, CodeBlock, SelectionActions, PromptBar, ChatComposer, ApprovalCard, ApprovalFlow, RecommendationCard, ContextCards, ChatApp.
-**Dashboard:** StatCard, MetricRow, Delta, BarChart, LineChart, DonutChart, Sparkline, ChartLegend, CountUp, Gauge, BarList, PrivacyScope / PrivacyToggle / Masked.
+**Dashboard:** Panel (the titled card), StatCard, MetricRow, Delta, BarChart, LineChart, DonutChart, Sparkline, ChartLegend, CountUp, Gauge, BarList, PrivacyScope / PrivacyToggle / Masked.
 **Data and structure:** RecordsTable, FilterTable, DiffTable, Accordion, Steps, Timeline.
-**Navigation:** Tabs, Pagination, Breadcrumbs, Menubar, SidebarNav, SearchList.
+**Navigation:** Tabs, Pagination, Breadcrumbs, Menubar, AppSidebar (dashboard rail, expanded / rail), SidebarNav (chat rail), SearchList.
 
-**App shell.** `SidebarNav` fills its parent's height, so any page with a rail uses this skeleton (never give the rail a fixed height, never put it inside a scrolling page):
+**App shell.** Rails fill their parent's height, so any page with one uses this skeleton (never give the rail a fixed height, never put it inside a scrolling page). `AppSidebar` for dashboards and admin apps, `SidebarNav` for chat:
 
 ```tsx
 <div className="flex h-dvh">
-  <SidebarNav activeTitle="General" />
+  <AppSidebar sections={nav} active={page} onSelect={setPage} />
   <main className="min-w-0 flex-1 overflow-y-auto p-6">…</main>
 </div>
 ```
 
-Typical screens: a chat app is `SidebarNav` + `ChatThread` + `PromptBar` + `ToastProvider`; a dashboard is a grid of `StatCard` with `BarChart` / `LineChart` / `BarList` / `Gauge` and `MetricRow` breakdowns inside `Card`; an agent run is `ThinkingState` or `TaskRows` with `ApprovalCard` / `ApprovalFlow` for human-in-the-loop moments.
+Typical screens: a chat app is `SidebarNav` + `ChatThread` + `PromptBar` + `ToastProvider`; a dashboard is `AppSidebar` + a grid of `StatCard` and `Panel`s holding `BarChart` / `LineChart` / `BarList` (with `fill`) / `Gauge` and `MetricRow` breakdowns; an agent run is `ThinkingState` or `TaskRows` with `ApprovalCard` / `ApprovalFlow` for human-in-the-loop moments.
 
 ## Data, not hardcoded content
 

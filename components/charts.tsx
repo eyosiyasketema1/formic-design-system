@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { TOOLTIP_CHIP, TOOLTIP_CHIP_STYLE } from "./primitives";
 import { useReducedMotion } from "./hooks";
 /* ─────────────────────────────────────────────────────────
@@ -68,23 +69,33 @@ function useTip() {
   const [tip, setTip] = useState<Tip>(null);
   return {
     tip,
+    /** viewport coordinates — pass the mark's bounding rect centre-top */
     show: (x: number, y: number, node: ReactNode) => setTip({ x, y, node }),
     hide: () => setTip(null),
   };
 }
+/** the mark's anchor point in viewport space: horizontal centre, top edge */
+function anchorOf(event: React.MouseEvent | React.FocusEvent): [number, number] {
+  const r = (event.currentTarget as Element).getBoundingClientRect();
+  return [r.left + r.width / 2, r.top];
+}
 
 function ChartTip({ tip }: { tip: Tip }) {
-  if (!tip) return null;
-  return (
+  if (!tip || typeof document === "undefined") return null;
+  /* Portalled and fixed: charts live inside cards with overflow-hidden and
+     scroll containers with overflow-x-auto (which also clips vertically), so
+     an in-flow tooltip above the tallest bar was cut off. */
+  return createPortal(
     <div
       /* aria-hidden: the value is already on the mark's aria-label,
          so announcing the tip too would read it twice. */
       aria-hidden="true"
-      className={`pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full ${TOOLTIP_CHIP}`}
+      className={`pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full ${TOOLTIP_CHIP}`}
       style={{ left: tip.x, top: tip.y - 8, ...TOOLTIP_CHIP_STYLE }}
     >
       {tip.node}
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -119,6 +130,7 @@ export function BarChart({
   /** index of the column to emphasise; the rest drop to a tint */
   highlight,
   height = 168,
+  fill = false,
   showValues = true,
   className = "",
 }: {
@@ -126,12 +138,14 @@ export function BarChart({
   series?: Series[];
   variant?: BarVariant;
   highlight?: number;
+  /** plot height in px; with `fill` it becomes the minimum */
   height?: number;
+  /** stretch to the parent's height — inside a Panel body this fills the card */
+  fill?: boolean;
   showValues?: boolean;
   className?: string;
 }) {
   const { tip, show, hide } = useTip();
-  const boxRef = useRef<HTMLDivElement>(null);
   const stacked = variant === "stacked";
 
   /* Scale off the tallest thing a column will actually draw: the sum
@@ -149,19 +163,26 @@ export function BarChart({
   const labelValues = showValues && (stacked || series.length === 1);
 
   const onEnter = (event: React.MouseEvent | React.FocusEvent, node: ReactNode) => {
-    const box = boxRef.current?.getBoundingClientRect();
-    const bar = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    if (!box) return;
-    show(bar.left - box.left + bar.width / 2, bar.top - box.top, node);
+    const [x, y] = anchorOf(event);
+    show(x, y, node);
   };
 
   return (
-    <div className={`w-full max-w-160 ${className}`}>
-      {series.length > 1 && <div className="mb-3"><ChartLegend series={series} /></div>}
+    <div className={`flex w-full flex-col ${fill ? "h-full min-h-0" : ""} ${className}`}>
+      {series.length > 1 && <div className="mb-3 shrink-0"><ChartLegend series={series} /></div>}
       {/* Every bar has to stay a 24px target, so a dense grouped chart
           scrolls rather than shrinking its bars into unhittable slivers. */}
-      <div ref={boxRef} className="relative overflow-x-auto" onMouseLeave={hide}>
-        <div className="flex items-end gap-1.5" style={{ height }}>
+      {/* When filling, the plot is absolutely positioned inside a wrapper that
+          only sets a minimum height. In a stretched grid row the wrapper grows
+          (flex-1) and the plot with it; in an auto-height row the wrapper is
+          exactly `height` tall. A plain h-full child would resolve to auto
+          there and the bars would collapse to nothing. */}
+      <div
+        className={`overflow-x-auto ${fill ? "relative min-h-0 flex-1" : ""}`}
+        style={fill ? { minHeight: height } : undefined}
+        onMouseLeave={hide}
+      >
+        <div className={`flex items-end gap-1.5 ${fill ? "absolute inset-0" : ""}`} style={fill ? undefined : { height }}>
           {labels.map((label, i) => (
             <div
               key={`${label}-${i}`}
@@ -216,6 +237,7 @@ export function LineChart({
   area = true,
   points = true,
   height = 150,
+  fill = false,
   className = "",
 }: {
   labels?: string[];
@@ -223,33 +245,41 @@ export function LineChart({
   series?: Series[];
   area?: boolean;
   points?: boolean;
+  /** plot height in px; with `fill` it becomes the minimum */
   height?: number;
+  /** stretch to the parent's height — inside a Panel body this fills the card */
+  fill?: boolean;
   className?: string;
 }) {
   const gradientId = useId();
   const { tip, show, hide } = useTip();
-  const boxRef = useRef<HTMLDivElement>(null);
   const W = 100, H = 40;                      // viewBox units; CSS does the sizing
   const max = niceMax(Math.max(0, ...series.flatMap((s) => s.values)));
   const slots = Math.max(labels.length, ...series.map((s) => s.values.length), 1);
   const step = slots > 1 ? W / (slots - 1) : W;
 
   const onPoint = (event: React.MouseEvent | React.FocusEvent, node: ReactNode) => {
-    const box = boxRef.current?.getBoundingClientRect();
-    const dot = (event.currentTarget as Element).getBoundingClientRect();
-    if (!box) return;
-    show(dot.left - box.left + dot.width / 2, dot.top - box.top, node);
+    const [x, y] = anchorOf(event);
+    show(x, y, node);
   };
 
   return (
-    <div className={`w-full max-w-160 ${className}`}>
-      {series.length > 1 && <div className="mb-3"><ChartLegend series={series} /></div>}
-      <div ref={boxRef} className="relative" onMouseLeave={hide}>
+    <div className={`flex w-full flex-col ${fill ? "h-full min-h-0" : ""} ${className}`}>
+      {series.length > 1 && <div className="mb-3 shrink-0"><ChartLegend series={series} /></div>}
+      {/* Filling: the svg is absolute so its 100×40 viewBox aspect cannot set
+          the height; the wrapper takes the panel's height (flex-1) or, in an
+          auto-height row, exactly `height`. Dots are %-positioned in the same
+          wrapper, so they track whatever height CSS settles on. */}
+      <div
+        className={`relative ${fill ? "min-h-0 flex-1" : ""}`}
+        style={fill ? { minHeight: height } : undefined}
+        onMouseLeave={hide}
+      >
         <svg
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
-          style={{ height }}
-          className="w-full overflow-visible"
+          style={fill ? undefined : { height }}
+          className={`block w-full overflow-visible ${fill ? "absolute inset-0 h-full" : ""}`}
           role="img"
           aria-label={series.map((s) => `${s.name}: ${s.values.map((v) => v.toLocaleString()).join(", ")}`).join(". ")}
         >
@@ -306,7 +336,8 @@ export function LineChart({
               style={{
                 width: HIT, height: HIT,
                 left: `${(i / Math.max(slots - 1, 1)) * 100}%`,
-                top: `${(1 - v / max) * height}px`,
+                /* percent, not px: the plot's height is whatever CSS gave it */
+                top: `${(1 - v / max) * 100}%`,
               }}
             >
               <span className={`size-2.5 rounded-full border-2 border-surface transition-transform duration-150 ${SERIES_BG[tone]}`} />
@@ -315,7 +346,7 @@ export function LineChart({
         })}
         <ChartTip tip={tip} />
       </div>
-      <div className="mt-2 flex justify-between">
+      <div className="mt-2 flex shrink-0 justify-between">
         {labels.map((l, i) => (
           <span key={`${l}-${i}`} className="min-w-0 truncate text-tiny text-ink-3">{l}</span>
         ))}
@@ -536,6 +567,7 @@ export function BarList({
   max,
   format = (n: number) => n.toLocaleString(),
   stagger = 90,
+  fill = false,
   className = "",
 }: {
   items?: BarItem[];
@@ -544,6 +576,8 @@ export function BarList({
   format?: (n: number) => string;
   /** ms between each bar's entrance */
   stagger?: number;
+  /** spread the rows over the parent's height — inside a Panel body this fills the card */
+  fill?: boolean;
   className?: string;
 }) {
   const reduced = useReducedMotion();
@@ -555,7 +589,7 @@ export function BarList({
   }, [reduced]);
   const ceiling = max ?? Math.max(1, ...items.map((i) => i.value));
   return (
-    <div className={`flex w-full max-w-160 flex-col gap-2.5 ${className}`}>
+    <div className={`flex w-full flex-col gap-2.5 ${fill ? "h-full justify-between" : ""} ${className}`}>
       {items.map((item, i) => {
         const pct = Math.max(2, (item.value / ceiling) * 100);
         const leader = i === 0;

@@ -1,5 +1,5 @@
 "use client";
-import { type CSSProperties, type MouseEvent, type ReactNode } from "react";
+import { Children, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { Spinner } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * BUTTON — the workhorse control
@@ -90,7 +90,9 @@ export default function Button({
   disabled?: boolean;
   /** stretch to the container's width */
   fullWidth?: boolean;
-  /** leading icon — sized automatically to the button */
+  /** leading icon — sized automatically to the button. An <Icon> passed as a
+   *  child also works: the label row is a flex row, so Tailwind's block svg
+   *  preflight cannot stack it above the text. Labels never wrap. */
   icon?: ReactNode;
   /** trailing icon — sized automatically to the button */
   iconEnd?: ReactNode;
@@ -117,7 +119,14 @@ export default function Button({
       ) : (
         icon && <span aria-hidden className="shrink-0">{icon}</span>
       )}
-      <span className="optical-text">{children}</span>
+      <span className="inline-flex items-center gap-[inherit] whitespace-nowrap">
+        {/* text-box trims block containers only, so each text run gets its own
+            block span (a blockified flex item); an <Icon> child stays a sibling
+            in the row instead of stacking under Tailwind's block-svg preflight */}
+        {Children.map(children, (child) =>
+          typeof child === "string" || typeof child === "number" ? <span className="optical-text">{child}</span> : child,
+        )}
+      </span>
       {!loading && iconEnd && <span aria-hidden className="shrink-0">{iconEnd}</span>}
     </>
   );

@@ -63,9 +63,12 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
 
 - **Checkbox vs Switch.** `Switch` only for a setting that applies the moment it flips. Completion, selection, "done today", "include row" = `Checkbox`. Never switches down a list.
 - **Icons are furniture.** `StatCard` icons are ink on inset by default; at most one tile per view is `iconTone="accent"`. A different colour per card is the machine-made tell. Colour lives in three places only: accent (one primary action, lead series), green/red (success/danger), chart ramp (series).
-- **Cards fit content.** `items-start` on card grids, or make content fill (`flex flex-col` + `flex-1` chart with a `height` chosen for the card). An empty bottom half is a bug.
-- **Card anatomy.** Title `text-body font-medium text-ink` + caption `text-caption text-ink-3` left, controls right, same baseline; body `mt-3`; padding `p-4`.
-- **Proximity and alignment.** Filters in one row directly above the list, sized to content (`max-w-*`), search at the row's right end; comparison pickers together with "vs", beside the title. One grid: `gap-3.5` in sections, `gap-6` between; numbers right with `tabular-nums`; nothing centred unless alone.
+- **Every titled section is a `Panel`** (`title`, `caption`, `actions`, body). Never hand-build a card header. `Card` is for untitled things only.
+- **Panels in a row are equal height and their bodies fill:** grid stretches (never `items-start`), charts and lists take `fill` (`<LineChart fill />`, `<BarChart fill />`, `<BarList fill />`), tables are `w-full`. Charts have no width cap. An empty lower half, or a chart stopping at 60% of the panel's width, is a bug.
+- **Buttons are one line.** Icon and label on one row, via `icon=` or as a child; labels never wrap. Icon above label = broken.
+- **Tables fill their container** unless the user asks for a width; wide ones scroll in their own `overflow-x-auto`.
+- **Rails:** `AppSidebar` (dashboard / admin, `expanded` or `rail`) or `SidebarNav` (chat), inside `<div className="flex h-dvh">…<main className="min-w-0 flex-1 overflow-y-auto">`. Never build a sidebar from divs.
+- **Proximity and alignment.** Filters in one row directly above the list, sized to content, search at the right end; comparison pickers together with "vs" in the panel's `actions`. One grid: `gap-3.5` in sections, `gap-6` between; numbers right with `tabular-nums`; nothing centred unless alone.
 - **Page density.** `p-6 sm:p-8`, sections `gap-6`.
 
 ## Component inventory
@@ -78,10 +81,10 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
 **Overlays:** `Modal`, `Drawer`, `Toast`, `DropdownMenu`, `Popover`, `Tooltip`.
 **Feedback:** `Alert`, `Progress`, `Skeleton`, `LoadingState`, `ThinkingState`, `TaskRows`, `ToolChips`.
 **Conversation:** `ChatThread`, `StreamingText`, `Markdown`, `CodeBlock`, `SelectionActions`, `PromptBar`, `ChatComposer`, `ApprovalCard`, `ApprovalFlow`, `RecommendationCard`, `ContextCards`.
-**Dashboard:** `StatCard` (`iconTone` "neutral" | "accent"), `MetricRow`, `Delta`, `BarChart`, `LineChart`, `DonutChart`, `Sparkline` (`smooth`, `animate`), `ChartLegend`, `CountUp`, `Gauge`, `BarList` (`charts.tsx`); `PrivacyScope`, `PrivacyToggle`, `Masked` (`Privacy.tsx`) mask figures until the eye is opened. `StatCard`'s `display` and `MetricRow`'s `value` accept a node, so `<CountUp>` and `<Masked>` slot straight in.
+**Dashboard:** `Panel` (titled card: `title`, `caption`, `actions`, `padding`), `StatCard` (`iconTone` "neutral" | "accent"), `MetricRow`, `Delta`, `BarChart` / `LineChart` (`fill` to take the panel's height, no width cap), `DonutChart`, `Sparkline` (`smooth`, `animate`), `ChartLegend`, `CountUp`, `Gauge`, `BarList` (`charts.tsx`); `PrivacyScope`, `PrivacyToggle`, `Masked` (`Privacy.tsx`) mask figures until the eye is opened. `StatCard`'s `display` and `MetricRow`'s `value` accept a node, so `<CountUp>` and `<Masked>` slot straight in.
 **Data:** `RecordsTable`, `FilterTable`, `DiffTable`.
 **Structure:** `Accordion`, `Steps`, `Timeline`.
-**Navigation:** `Tabs`, `Pagination`, `Breadcrumbs`, `Menubar`, `SidebarNav`, `SearchList`.
+**Navigation:** `Tabs`, `Pagination`, `Breadcrumbs`, `Menubar`, `AppSidebar` (dashboard rail: `expanded` | `rail`, `sections`, `active`, `onSelect`, `user`), `SidebarNav` (chat rail), `SearchList`.
 
 All components ship demo content as prop defaults (`DEFAULT_*`); always pass real data via props in apps. Variant props are typed unions.
 
@@ -89,7 +92,7 @@ All components ship demo content as prop defaults (`DEFAULT_*`); always pass rea
 
 Human-in-the-loop: `ApprovalCard` for a short, directly-controlled approval; `ApprovalFlow` when the run needs several questions in sequence (sliding stack, rolling counter, auto-advance on single choice).
 
-Any page with a rail: `<div className="flex h-dvh"><SidebarNav … /><main className="min-w-0 flex-1 overflow-y-auto">…</main></div>` — `SidebarNav` fills its parent, never give it a fixed height.
+Any page with a rail: `<div className="flex h-dvh"><AppSidebar … /><main className="min-w-0 flex-1 overflow-y-auto">…</main></div>` (`SidebarNav` for chat) — rails fill their parent, never give them a fixed height.
 
 A chat app is `SidebarNav` (rail) + `ChatThread` for the conversation (embed `Markdown`, `CodeBlock`, `ToolChips`, `ApprovalCard` as assistant message children via `MessageBubble`) + `PromptBar` pinned at the bottom + `ToastProvider` at the root. Streaming replies use the `StreamText` primitive or `StreamingText`. Agent progress uses `ThinkingState` or `TaskRows`. File input uses `FileDropzone` or PromptBar attachments.
 
