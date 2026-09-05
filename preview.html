@@ -1423,11 +1423,74 @@ const AVATAR_SIZES = { sm: "size-6 text-micro", md: "size-7 text-tiny", lg: "siz
 const AVATAR_TONES = ["bg-accent-tint text-accent", "bg-green-tint text-green", "bg-orange-tint text-orange", "bg-field text-ink-2"];
 const avatarInitials = (name) => { const words = name.split(/\s+/).filter(Boolean); if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase(); return (words[0] || "").slice(0, 2).toUpperCase(); };
 const avatarTone = (name) => { let hash = 0; for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) % 997; return AVATAR_TONES[hash % AVATAR_TONES.length]; };
-function Avatar({ name, src, size = "md", tone, className = "" }) {
-  if (src) return <img src={src} alt={name} className={`source-avatar shrink-0 rounded-full bg-surface shadow-hairline ${AVATAR_SIZES[size]} ${className}`} />;
+/* ═══════════ doodle (mirrors components/doodle.ts) ═══════════ */
+/* The real component imports @dicebear/core + @dicebear/notionists; the
+   standalone gallery pulls the same pinned builds from the CDN the first
+   time a doodle renders. Offline, initials stay — nothing breaks. */
+const DOODLE_CACHE = new Map();
+const loadModule = new Function("u", "return import(u)");
+function doodleSvg(seed) {
+  let p = DOODLE_CACHE.get(seed);
+  if (!p) {
+    p = Promise.all([
+      loadModule("https://cdn.jsdelivr.net/npm/@dicebear/core@9.2.2/+esm"),
+      loadModule("https://cdn.jsdelivr.net/npm/@dicebear/notionists@9.2.2/+esm"),
+    ]).then(([{ createAvatar }, notionists]) => createAvatar(notionists, { seed, size: 128 }).toString());
+    DOODLE_CACHE.set(seed, p);
+  }
+  return p;
+}
+function useDoodle(seed, enabled = true) {
+  const [svg, setSvg] = useState(null);
+  useEffect(() => {
+    if (!enabled) return;
+    let live = true;
+    doodleSvg(seed).then((s) => { if (live) setSvg(s); }).catch(() => {});
+    return () => { live = false; };
+  }, [seed, enabled]);
+  return enabled ? svg : null;
+}
+function Avatar({
+  name,
+  src,
+  doodle = false,
+  size = "md",
+  tone,
+  ring,
+  className = "",
+}) {
+  const svg = useDoodle(name, doodle && !src);
+  /* The hairline is a plain (unlayered) rule, so a utility ring could never
+     win over it. The ring is therefore chosen here, not stacked. */
+  const edge = ring === "surface" ? "shadow-[0_0_0_2px_var(--surface)]" : ring === "canvas" ? "shadow-[0_0_0_2px_var(--canvas)]" : "shadow-hairline";
+  if (svg) {
+    return (
+      <span
+        role="img"
+        aria-label={name}
+        className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-field [&>svg]:size-full ${edge} ${AVATAR_SIZES[size]} ${className}`}
+        /* static SVG from DiceBear, generated from the name — not user content */
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+    );
+  }
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        className={`source-avatar shrink-0 rounded-full bg-surface ${edge} ${AVATAR_SIZES[size]} ${className}`}
+      />
+    );
+  }
   return (
-    <span role="img" aria-label={name}
-      className={`flex shrink-0 items-center justify-center rounded-full font-medium shadow-hairline ${tone !== undefined ? AVATAR_TONES[tone] : avatarTone(name)} ${AVATAR_SIZES[size]} ${className}`}>
+    <span
+      role="img"
+      aria-label={name}
+      className={`flex shrink-0 items-center justify-center rounded-full font-medium ${edge} ${
+        tone !== undefined ? AVATAR_TONES[tone] : avatarTone(name)
+      } ${AVATAR_SIZES[size]} ${className}`}
+    >
       {avatarInitials(name)}
     </span>
   );
@@ -1478,6 +1541,42 @@ function AvatarStack({ srcs, className = "" }) {
     </span>
   );
 }
+const AVG_PEOPLE = [
+  { name: "Eyosiyas Ketema", src: "https://i.pravatar.cc/128?img=12" },
+  { name: "Amina Yusuf", src: "https://i.pravatar.cc/128?img=47" },
+  { name: "Daniel Tesfaye", doodle: true },
+  { name: "Sara Bekele", src: "https://i.pravatar.cc/128?img=32" },
+  { name: "Yonas Alemu", doodle: true },
+  { name: "Hana Mulugeta" },
+];
+function AvatarGroup({
+  people = AVG_PEOPLE,
+  size = "md",
+  max = 4,
+  ring = "canvas",
+  className = "",
+}) {
+  const shown = people.slice(0, max);
+  const rest = people.length - shown.length;
+  const ringClass = ring === "surface" ? "shadow-[0_0_0_2px_var(--surface)]" : "shadow-[0_0_0_2px_var(--canvas)]";
+  const overlap = size === "lg" ? "-space-x-3" : "-space-x-2";
+  return (
+    <span className={`flex items-center ${overlap} ${className}`} role="group" aria-label={people.map((p) => p.name).join(", ")}>
+      {shown.map((p) => (
+        <Avatar key={p.name} name={p.name} src={p.src} doodle={p.doodle} tone={p.tone} size={size} ring={ring} className="relative" />
+      ))}
+      {rest > 0 && (
+        <span
+          aria-hidden="true"
+          className={`relative flex shrink-0 items-center justify-center rounded-full bg-inset font-medium text-ink-2 tabular-nums ${ringClass} ${AVATAR_SIZES[size]}`}
+        >
+          +{rest}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function Popover({ x, top, bottom, width, id, role = "tooltip", className = "w-72", onClose, onMouseEnter, onMouseLeave, children }) {
   useEffect(() => {
     if (!onClose) return;
@@ -10304,7 +10403,43 @@ function Page_avatar() {
             <Avatar name="Dawit Bekele" size="lg" tone={3} />
           </div>
         </GalleryCard>
-        <GalleryCard label="Stack"><AvatarStack srcs={[SOURCE_IMAGES.scoop, SOURCE_IMAGES.trends, SOURCE_IMAGES.market]} /></GalleryCard>
+        <GalleryCard label="Photos · pass src" wide>
+          <div className="flex flex-wrap items-center gap-3">
+            <Avatar name="Eyosiyas Ketema" src="https://i.pravatar.cc/128?img=12" size="sm" />
+            <Avatar name="Amina Yusuf" src="https://i.pravatar.cc/128?img=47" size="md" />
+            <Avatar name="Sara Bekele" src="https://i.pravatar.cc/128?img=32" size="lg" />
+            <Avatar name="Daniel Tesfaye" src="https://i.pravatar.cc/128?img=68" size="xl" />
+          </div>
+        </GalleryCard>
+        <GalleryCard label="Doodles · doodle, derived from the name (DiceBear notionists, CC0)" wide>
+          <div className="flex flex-wrap items-center gap-3">
+            <Avatar name="Eyosiyas Ketema" doodle size="sm" />
+            <Avatar name="Amina Yusuf" doodle size="md" />
+            <Avatar name="Sara Bekele" doodle size="lg" />
+            <Avatar name="Daniel Tesfaye" doodle size="xl" />
+          </div>
+        </GalleryCard>
+      </Section>
+      <Section id="avatar-group" title="AvatarGroup" note="People overlapping at avatar sizes, with a +N tile past max. Photos, doodles and initials mix freely; ring matches the surface the group sits on.">
+        <GalleryCard label="Photos" wide>
+          <AvatarGroup ring="surface" size="lg" people={[
+            { name: "Eyosiyas Ketema", src: "https://i.pravatar.cc/128?img=12" }, { name: "Amina Yusuf", src: "https://i.pravatar.cc/128?img=47" },
+            { name: "Sara Bekele", src: "https://i.pravatar.cc/128?img=32" }, { name: "Daniel Tesfaye", src: "https://i.pravatar.cc/128?img=68" }, { name: "Yonas Alemu", src: "https://i.pravatar.cc/128?img=15" }, { name: "Hana Mulugeta", src: "https://i.pravatar.cc/128?img=25" },
+          ]} />
+        </GalleryCard>
+        <GalleryCard label="Doodles" wide>
+          <AvatarGroup ring="surface" size="lg" people={[
+            { name: "Eyosiyas Ketema", doodle: true }, { name: "Amina Yusuf", doodle: true }, { name: "Sara Bekele", doodle: true },
+            { name: "Daniel Tesfaye", doodle: true }, { name: "Yonas Alemu", doodle: true }, { name: "Hana Mulugeta", doodle: true },
+          ]} />
+        </GalleryCard>
+        <GalleryCard label="Initials" wide>
+          <AvatarGroup ring="surface" size="lg" people={[{ name: "Eyosiyas Ketema" }, { name: "Amina Yusuf" }, { name: "Sara Bekele" }, { name: "Daniel Tesfaye" }, { name: "Yonas Alemu" }]} />
+        </GalleryCard>
+        <GalleryCard label="Mixed · md, default people, max 4" wide>
+          <AvatarGroup ring="surface" />
+        </GalleryCard>
+        <GalleryCard label="Source stack (favicons) · AvatarStack" wide><AvatarStack srcs={[SOURCE_IMAGES.scoop, SOURCE_IMAGES.trends, SOURCE_IMAGES.market]} /></GalleryCard>
       </Section>
     </>
   );
@@ -10563,7 +10698,7 @@ const PAGES = [
   { id: "badge", group: "Primitives", title: "Badge", note: "A status pill. Three tones, because green and red carry meaning.", file: "components/primitives.tsx", Component: Page_badge },
   { id: "chip", group: "Primitives", title: "Chip", note: "Inline chips for file names, tool calls and tags.", file: "components/primitives.tsx", Component: Page_chip },
   { id: "progress", group: "Primitives", title: "Progress", note: "A flat progress track on the accent, determinate or indeterminate.", file: "components/primitives.tsx", Component: Page_progress },
-  { id: "avatar", group: "Primitives", title: "Avatar", note: "Initials or a photo, four sizes, four tones, and a stack.", file: "components/primitives.tsx", Component: Page_avatar },
+  { id: "avatar", group: "Primitives", title: "Avatar", note: "Initials from the name, a photo through src, or a doodle derived from the name (DiceBear notionists, CC0, generated locally, initials until it loads). AvatarGroup overlaps people at avatar sizes with a +N tile; AvatarStack is the tiny favicon strip for sources.", file: "components/primitives.tsx", Component: Page_avatar },
   { id: "button", group: "Controls", title: "Button", note: "The complete matrix \u2014 every variant at every size, every state, both shapes, icons, width, links, and live loading. Rows generate from the component's own maps, so this page can never drift from the code.", file: "components/Button.tsx", Component: Page_button },
   { id: "input", group: "Forms", title: "Field & Input", note: "The form trio \u2014 Field owns label / hint / error and wires aria onto its control; Input and Textarea share the system's quiet field focus (border shift, no ring).", file: "components/Input.tsx", Component: Page_input },
   { id: "select", group: "Forms", title: "Select", note: "Combobox on the quiet field style \u2014 the listbox portals over the page, matches the trigger's width, and is fully keyboard-driven (arrows, Home/End, Enter, Escape).", file: "components/Select.tsx", Component: Page_select },
@@ -10842,8 +10977,9 @@ const PLAYGROUNDS = {
       { key: "name", label: "Name", type: "text", value: "Amina Tesfaye" },
       { key: "size", label: "Size", type: "select", value: "lg", options: ["sm", "md", "lg", "xl"] },
       { key: "tone", label: "Tone", type: "select", value: 0, options: [0, 1, 2, 3] },
+      { key: "kind", label: "Kind", type: "select", value: "initials", options: ["initials", "photo", "doodle"] },
     ],
-    render: (p) => <Avatar name={p.name} size={p.size} tone={p.tone} />,
+    render: (p) => <Avatar name={p.name} size={p.size} tone={p.tone} doodle={p.kind === "doodle"} src={p.kind === "photo" ? "https://i.pravatar.cc/128?img=47" : undefined} />,
   },
   panel: {
     schema: [

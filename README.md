@@ -48,6 +48,7 @@ Green **Code** button on this repo, then **Download ZIP**, and copy `styles/` an
 
 ```bash
 npm install react react-dom @tabler/icons-react
+npm install @dicebear/core @dicebear/notionists   # only for doodle avatars; loaded on demand
 ```
 
 Tailwind v4 is required for the utility bridge. `styles/formic.css` bundles everything after Tailwind (tokens, palettes, bridge, and the `sidebar.css` / `records.css` component sheets); import the individual files instead if you want to leave something out.
@@ -112,7 +113,7 @@ Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (d
 
 **Brand** (`components/brand.tsx`, `components/brand-logos.tsx`): FormicMark, BrandIcon (81 monochrome marks), BrandLogo (101 real full-colour logos)
 
-**Primitives** (`components/primitives.tsx`): Icon, Spinner, StreamText, Skeleton, Avatar, Tooltip, Progress, Separator, Chip, Badge, IconButton, SendButton, Switch, Checkbox, Disclosure, GlideMenu, Card, Popover, AvatarStack
+**Primitives** (`components/primitives.tsx`): Icon, Spinner, StreamText, Skeleton, Avatar (photo, doodle, initials), AvatarGroup, Tooltip, Progress, Separator, Chip, Badge, IconButton, SendButton, Switch, Checkbox, Disclosure, GlideMenu, Card, Popover, AvatarStack
 
 Open the [gallery](https://formicai.dev/preview.html): one page per component with a live playground, and global controls for theme, palette, accent, radius and size. Deep-link any component as `preview.html#/button`.
 

@@ -20,6 +20,7 @@ import {
   IconWallet, IconWifi, IconZoomIn, IconZoomOut, type Icon as TablerIcon,
 } from "@tabler/icons-react";
 import { useStream } from "./hooks";
+import { useDoodle } from "./doodle";
 /* ─────────────────────────────────────────────────────────
  * PRIMITIVES — the atoms every component composes
  *
@@ -39,7 +40,8 @@ import { useStream } from "./hooks";
  *   Card          surface container (rounded-card + shadow)
  *   Badge         status pill: green/red/neutral tints
  *   RadioCheck    custom radio/checkbox visual
- *   AvatarStack   overlapping mini avatars
+ *   AvatarStack   overlapping mini avatars (sources)
+ *   AvatarGroup   people, overlapping, with +N overflow
  *   Popover       fixed-position portal (Escape closes)
  *   inertWhen     version-safe inert for hidden regions
  *   fadeUp/popIn  staggered entrance style helpers
@@ -722,25 +724,46 @@ const toneOf = (name: string) => {
 export function Avatar({
   name,
   src,
+  doodle = false,
   size = "md",
   tone,
+  ring,
   className = "",
 }: {
-  /** person's name — drives initials and the deterministic tone */
+  /** person's name — drives initials, the deterministic tone, and the doodle */
   name: string;
   /** photo URL — renders the image (hairline ring) instead of initials */
   src?: string;
+  /** an illustrated face derived from the name (DiceBear notionists, generated locally); initials show until it loads */
+  doodle?: boolean;
   size?: AvatarSize;
   /** pin a tone (0 accent · 1 green · 2 orange · 3 neutral) instead of hashing the name */
   tone?: AvatarTone;
+  /** inside a group: a 2px ring in the surface the group sits on, replacing the hairline */
+  ring?: "canvas" | "surface";
   className?: string;
 }) {
+  const svg = useDoodle(name, doodle && !src);
+  /* The hairline is a plain (unlayered) rule, so a utility ring could never
+     win over it. The ring is therefore chosen here, not stacked. */
+  const edge = ring === "surface" ? "shadow-[0_0_0_2px_var(--surface)]" : ring === "canvas" ? "shadow-[0_0_0_2px_var(--canvas)]" : "shadow-hairline";
+  if (svg) {
+    return (
+      <span
+        role="img"
+        aria-label={name}
+        className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-field [&>svg]:size-full ${edge} ${AVATAR_SIZES[size]} ${className}`}
+        /* static SVG from DiceBear, generated from the name — not user content */
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+    );
+  }
   if (src) {
     return (
       <img
         src={src}
         alt={name}
-        className={`source-avatar shrink-0 rounded-full bg-surface shadow-hairline ${AVATAR_SIZES[size]} ${className}`}
+        className={`source-avatar shrink-0 rounded-full bg-surface ${edge} ${AVATAR_SIZES[size]} ${className}`}
       />
     );
   }
@@ -748,7 +771,7 @@ export function Avatar({
     <span
       role="img"
       aria-label={name}
-      className={`flex shrink-0 items-center justify-center rounded-full font-medium shadow-hairline ${
+      className={`flex shrink-0 items-center justify-center rounded-full font-medium ${edge} ${
         tone !== undefined ? AVATAR_TONES[tone] : toneOf(name)
       } ${AVATAR_SIZES[size]} ${className}`}
     >
@@ -868,6 +891,57 @@ export function AvatarStack({ srcs, className = "" }: { srcs: string[]; classNam
           className="source-avatar size-3.5 rounded-full bg-surface shadow-[0_0_0_1.5px_var(--canvas)]"
         />
       ))}
+    </span>
+  );
+}
+
+/* ── AvatarGroup — people, overlapping, with an overflow count ── */
+/* AvatarStack is the tiny favicon strip for sources; this is the people
+ * version at avatar sizes: assignees, members, attendees. Each face gets
+ * a 2px ring in the surface it sits on so overlaps read as separate
+ * heads; past `max` a "+N" tile carries the rest. Photos, doodles and
+ * initials mix freely — whatever each person has. */
+export type AvatarPerson = { name: string; src?: string; doodle?: boolean; tone?: AvatarTone };
+const DEFAULT_PEOPLE: AvatarPerson[] = [
+  { name: "Eyosiyas Ketema", src: "https://i.pravatar.cc/128?img=12" },
+  { name: "Amina Yusuf", src: "https://i.pravatar.cc/128?img=47" },
+  { name: "Daniel Tesfaye", doodle: true },
+  { name: "Sara Bekele", src: "https://i.pravatar.cc/128?img=32" },
+  { name: "Yonas Alemu", doodle: true },
+  { name: "Hana Mulugeta" },
+];
+export function AvatarGroup({
+  people = DEFAULT_PEOPLE,
+  size = "md",
+  max = 4,
+  ring = "canvas",
+  className = "",
+}: {
+  people?: AvatarPerson[];
+  size?: AvatarSize;
+  /** faces shown before the "+N" tile */
+  max?: number;
+  /** the surface the group sits on — the ring colour that separates the heads */
+  ring?: "canvas" | "surface";
+  className?: string;
+}) {
+  const shown = people.slice(0, max);
+  const rest = people.length - shown.length;
+  const ringClass = ring === "surface" ? "shadow-[0_0_0_2px_var(--surface)]" : "shadow-[0_0_0_2px_var(--canvas)]";
+  const overlap = size === "lg" ? "-space-x-3" : "-space-x-2";
+  return (
+    <span className={`flex items-center ${overlap} ${className}`} role="group" aria-label={people.map((p) => p.name).join(", ")}>
+      {shown.map((p) => (
+        <Avatar key={p.name} name={p.name} src={p.src} doodle={p.doodle} tone={p.tone} size={size} ring={ring} className="relative" />
+      ))}
+      {rest > 0 && (
+        <span
+          aria-hidden="true"
+          className={`relative flex shrink-0 items-center justify-center rounded-full bg-inset font-medium text-ink-2 tabular-nums ${ringClass} ${AVATAR_SIZES[size]}`}
+        >
+          +{rest}
+        </span>
+      )}
     </span>
   );
 }

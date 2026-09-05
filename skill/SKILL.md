@@ -35,7 +35,7 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
    @import "tailwindcss";
    @import "./formic/styles/formic.css";   /* tokens, palettes, Tailwind bridge, component sheets */
    ```
-   Peer deps: `react >=18`, `react-dom >=18`, `@tabler/icons-react >=3`. `formic.css` already includes the `sidebar.css` / `records.css` component sheets. Wrap the app in `<ToastProvider>` if toasts are used.
+   Peer deps: `react >=18`, `react-dom >=18`, `@tabler/icons-react >=3`; `@dicebear/core` + `@dicebear/notionists` ^9 only if doodle avatars are used (loaded on demand). `formic.css` already includes the `sidebar.css` / `records.css` component sheets. Wrap the app in `<ToastProvider>` if toasts are used.
 3. **Read before writing.** Open `src/formic/styles/tokens.css` and list `src/formic/components/`. Never write a component that already exists.
 4. **Import, don't re-create.** Buttons, inputs, cards, chips, tables, charts, modals, chat surfaces, dashboard tiles all come from `src/formic/components/`. Pass props; never copy markup into a page or edit a component's internals for a one-off.
 5. **New patterns compose primitives** from `src/formic/components/primitives.tsx` plus token utilities. No raw `<svg>` icons, no second icon package, no chart libraries, no UI kits.
@@ -78,7 +78,7 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
 
 ## Component inventory
 
-**Primitives** (`primitives.tsx`): `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Skeleton`, `Avatar`, `Tooltip`, `Progress`, `Separator`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Checkbox`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`.
+**Primitives** (`primitives.tsx`): `Icon`, `Spinner`, `ShimmerLabel`, `StreamText`, `StreamCaret`, `Skeleton`, `Avatar` (`src` photo | `doodle` face from the name | initials), `AvatarGroup` (`people`, `max`, `ring`), `Tooltip`, `Progress`, `Separator`, `Chip`, `DiffStat`, `IconButton`, `SendButton`, `Switch`, `Checkbox`, `Disclosure`, `GlideMenu`, `Card`, `Badge`, `RadioCheck`, `AvatarStack`, `Popover`.
 **Brand** (`brand.tsx`, `brand-logos.tsx`): `FormicMark`, `BrandLogo` (real logos, `BRAND_LOGO_NAMES`, `brandTitle`), `BrandIcon` (`name`: github, google, apple, slack, notion, figma, linkedin, x, instagram, youtube, stripe, openai, …). **Helper:** `iconFor(label)`.
 **Hooks** (`hooks.ts`): `useSequence`, `useElapsed`, `useStream`, `useAnchoredLayer`, `useModalLayer`, `useReducedMotion` (the one way to read `prefers-reduced-motion`; never call `matchMedia` in a component).
 

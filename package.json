@@ -6,6 +6,16 @@
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18",
-    "@tabler/icons-react": ">=3.0.0"
+    "@tabler/icons-react": ">=3.0.0",
+    "@dicebear/core": "^9.2.2",
+    "@dicebear/notionists": "^9.2.2"
+  },
+  "peerDependenciesMeta": {
+    "@dicebear/core": {
+      "optional": true
+    },
+    "@dicebear/notionists": {
+      "optional": true
+    }
   }
 }

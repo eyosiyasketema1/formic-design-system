@@ -48,6 +48,8 @@ if [ "$NEW" = 1 ]; then
   "type": "module",
   "scripts": { "dev": "vite --open", "build": "tsc -b && vite build", "preview": "vite preview" },
   "dependencies": {
+    "@dicebear/core": "^9.2.2",
+    "@dicebear/notionists": "^9.2.2",
     "@tabler/icons-react": "^3.31.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
@@ -337,7 +339,7 @@ fi
 NEED_TABLER=1
 if [ -f package.json ] && grep -q '"@tabler/icons-react"' package.json; then NEED_TABLER=0; fi
 printf '\nNext, by hand:\n'
-[ "$NEED_TABLER" = 1 ] && printf '  • npm install @tabler/icons-react        # the one peer dependency besides React\n'
+[ "$NEED_TABLER" = 1 ] && printf '  • npm install @tabler/icons-react @dicebear/core @dicebear/notionists   # icons, and doodle avatars\n'
 printf '  • In your global CSS (Tailwind v4), in this order (fonts.css must be first):\n'
 printf '       @import "<relative path to>/%s/styles/fonts.css";\n' "$DEST"
 printf '       @import "tailwindcss";\n'
