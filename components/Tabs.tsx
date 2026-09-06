@@ -4,11 +4,36 @@ import { Icon, type IconName } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * TABS
  * APG tablist: roving tabindex, arrow keys with automatic
- * activation, Home/End. The underline slides to the active
+ * activation, Home/End. One indicator slides to the active
  * tab with the house easing; the list scrolls on narrow
- * viewports instead of wrapping.
+ * viewports instead of wrapping. Three looks, one component:
+ *
+ *   underline  full-width row on a hairline, ink bar under the
+ *              active tab: page sections
+ *   segmented  a field-coloured track, the active tab is a raised
+ *              surface pill: views of the same thing (Library /
+ *              Recents), and toolbars
+ *   subtle     no track, the active tab is a quiet hover-2 pill:
+ *              filters and secondary navigation inside a panel
  * ───────────────────────────────────────────────────────── */
 export type TabItem = { key: string; label: string; icon?: IconName; content?: ReactNode };
+export type TabsVariant = "underline" | "segmented" | "subtle";
+const LIST: Record<TabsVariant, string> = {
+  underline: "flex w-full items-center gap-1 border-b border-line",
+  segmented: "corner-smooth inline-flex max-w-full items-center gap-0.5 rounded-md bg-field p-1",
+  subtle: "inline-flex max-w-full items-center gap-1",
+};
+const TAB: Record<TabsVariant, string> = {
+  underline: "h-9 px-2.5",
+  segmented: "corner-smooth h-7 rounded-control px-3",
+  subtle: "corner-smooth h-8 rounded-control px-3",
+};
+/* the moving piece: a bar under the tab, or a pill behind it */
+const INDICATOR: Record<TabsVariant, string> = {
+  underline: "bottom-0 h-0.5 rounded-full bg-ink",
+  segmented: "corner-smooth top-1 bottom-1 rounded-control bg-surface shadow-hairline",
+  subtle: "corner-smooth top-0 bottom-0 rounded-control bg-hover-2",
+};
 const DEFAULT_TABS: TabItem[] = [
   {
     key: "overview",
@@ -31,10 +56,13 @@ export default function Tabs({
   value,
   defaultValue,
   onChange,
+  variant = "underline",
   className = "",
 }: {
   /** the tab set; defaults to demo content */
   tabs?: TabItem[];
+  /** underline (default), segmented (raised pill on a track), subtle (quiet pill, no track) */
+  variant?: TabsVariant;
   /** controlled active key — omit and use defaultValue for uncontrolled */
   value?: string;
   defaultValue?: string;
@@ -85,8 +113,20 @@ export default function Tabs({
         ref={listRef}
         role="tablist"
         onKeyDown={onKeyDown}
-        className="relative flex items-center gap-1 overflow-x-auto border-b border-line [scrollbar-width:none]"
+        className={`relative overflow-x-auto [scrollbar-width:none] ${LIST[variant]}`}
       >
+        {/* the indicator renders first so the tabs paint above it */}
+        {bar && (
+          <span
+            aria-hidden
+            className={`absolute ${INDICATOR[variant]}`}
+            style={{
+              left: bar.left,
+              width: bar.width,
+              transition: "left 250ms var(--ease-out-quint), width 250ms var(--ease-out-quint)",
+            }}
+          />
+        )}
         {tabs.map((tab) => {
           const isActive = tab.key === activeKey;
           return (
@@ -99,7 +139,7 @@ export default function Tabs({
               aria-controls={tab.content !== undefined ? panelId(tab.key) : undefined}
               tabIndex={isActive ? 0 : -1}
               onClick={() => select(tab.key)}
-              className={`flex h-9 shrink-0 items-center gap-1.5 px-2.5 text-caption font-medium whitespace-nowrap transition-colors duration-150 ${
+              className={`relative flex shrink-0 items-center gap-1.5 text-caption font-medium whitespace-nowrap transition-colors duration-150 ${TAB[variant]} ${
                 isActive ? "text-ink" : "text-ink-3 hover:text-ink-2"
               }`}
             >
@@ -108,17 +148,6 @@ export default function Tabs({
             </button>
           );
         })}
-        {bar && (
-          <span
-            aria-hidden
-            className="absolute bottom-0 h-0.5 rounded-full bg-ink"
-            style={{
-              left: bar.left,
-              width: bar.width,
-              transition: "left 250ms var(--ease-out-quint), width 250ms var(--ease-out-quint)",
-            }}
-          />
-        )}
       </div>
       {active?.content !== undefined && (
         <div

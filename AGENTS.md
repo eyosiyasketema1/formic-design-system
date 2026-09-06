@@ -143,7 +143,7 @@ When you receive one: save the JSON exactly as given to `src/formic/formic.confi
 **Conversation:** ChatThread, MessageBubble, StreamingText, Markdown, CodeBlock, SelectionActions, PromptBar, ChatComposer, ApprovalCard, ApprovalFlow, RecommendationCard, ContextCards, ChatApp.
 **Dashboard:** Panel (the titled card), StatCard, MetricRow, Delta, BarChart, LineChart, DonutChart, Sparkline, ChartLegend, CountUp, Gauge, BarList, PrivacyScope / PrivacyToggle / Masked.
 **Data and structure:** RecordsTable, FilterTable, DiffTable, Accordion, Steps, Timeline, and the card family in `cards.tsx`: CardGroup (`columns` 1 to 4, or `orientation="inline"` for one surface with hairline-divided rows) with Card + CardHeader, CardMedia (icon tile or picture), CardTitle, CardDescription, CardFooter, CardButton; the same markup is a stacked card in a grid and a row in a list.
-**Navigation:** Tabs, Pagination, Breadcrumbs, Menubar, AppSidebar (dashboard rail, expanded / rail, sub-menus), ProjectSidebar (workspace rail: switcher, search, groups, row menus, edge / inset), SidebarNav (chat rail), SearchList.
+**Navigation:** Tabs (underline for page sections, segmented for views of one thing, subtle for filters), Pagination, Breadcrumbs, Menubar, AppSidebar (dashboard rail, expanded / rail, sub-menus), ProjectSidebar (workspace rail: switcher, search, groups, row menus, edge / inset), SidebarNav (chat rail), SearchList.
 
 **App shell.** Rails fill their parent's height, so any page with one uses this skeleton (never give the rail a fixed height, never put it inside a scrolling page). `AppSidebar` for dashboards and admin apps, `ProjectSidebar` for project and document tools (with `<ProjectInset>` as the main element when `layout="inset"`), `SidebarNav` for chat:
 
