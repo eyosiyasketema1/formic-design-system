@@ -292,7 +292,7 @@ export function Spinner({ size = 12, className = "" }: { size?: number; classNam
 }
 
 /* ── ShimmerLabel ──────────────────────────────────────── */
-export function ShimmerLabel({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function ShimmerLabel({ children, className = "", style }: { children: ReactNode; className?: string; /** merged last: compose the shimmer with an entrance */ style?: CSSProperties }) {
   return (
     <span
       className={`bg-clip-text text-body font-medium text-transparent ${className}`}
@@ -301,6 +301,7 @@ export function ShimmerLabel({ children, className = "" }: { children: ReactNode
           "linear-gradient(90deg, var(--ink-3) 35%, var(--ink) 50%, var(--ink-3) 65%)",
         backgroundSize: "200% 100%",
         animation: "shimmer-text 1.4s linear infinite",
+        ...style,
       }}
     >
       {children}

@@ -84,9 +84,9 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
 **Hooks** (`hooks.ts`): `useSequence`, `useElapsed`, `useStream`, `useAnchoredLayer`, `useModalLayer`, `useReducedMotion` (the one way to read `prefers-reduced-motion`; never call `matchMedia` in a component).
 
 **Controls:** `Button` (10 variants x 4 sizes x square/pill).
-**Forms:** `Field`, `Input`, `Textarea`, `Select`, `Switch`, `Checkbox`, `FilterBar`, `Slider`, `OTPInput`, `FileDropzone`, `DatePicker`, `DateRangePicker`, `Calendar`, `ColorPicker`.
+**Forms:** `Field`, `Input`, `Textarea`, `Select`, `Switch`, `Checkbox`, `FilterBar`, `Slider`, `OTPInput`, `FileDropzone`, `DatePicker`, `DateRangePicker`, `Calendar`, `ColorPicker`, `InputCopy` (read-only value + copy, `variant` icon | button), `InputGroup` + `InputField` (several fields as one block, label inside the row, `icon`, `error`, `trailing`).
 **Overlays:** `Modal`, `Drawer`, `Toast`, `DropdownMenu`, `Popover`, `Tooltip`.
-**Feedback:** `Alert`, `Progress`, `Skeleton`, `LoadingState`, `ThinkingState`, `TaskRows`, `ToolChips`.
+**Feedback:** `Alert`, `Progress`, `Skeleton`, `LoadingState`, `ThinkingIndicator` (one line, `words`, `glyph`), `ThinkingState`, `TaskRows`, `ToolChips`.
 **Conversation:** `ChatThread`, `StreamingText`, `Markdown`, `CodeBlock`, `SelectionActions`, `PromptBar`, `ChatComposer`, `ApprovalCard`, `ApprovalFlow`, `AskUserQuestions` (`questions[]` with `options`, `multiSelect`, `allowOther`, `freeText`, `skippable`; `onComplete(answers)`), `RecommendationCard`, `ContextCards`.
 **Dashboard:** `Panel` (titled card: `title`, `caption`, `actions`, `padding`), `StatCard` (`iconTone` "neutral" | "accent"), `MetricRow`, `Delta`, `BarChart` / `LineChart` (`fill` to take the panel's height, no width cap, `animate` default true), `DonutChart`, `Sparkline` (`smooth`, `animate`), `ChartLegend`, `CountUp`, `Gauge`, `BarList` (`charts.tsx`); `PrivacyScope`, `PrivacyToggle`, `Masked` (`Privacy.tsx`) mask figures until the eye is opened. `StatCard`'s `display` and `MetricRow`'s `value` accept a node, so `<CountUp>` and `<Masked>` slot straight in.
 **Data:** `RecordsTable`, `FilterTable`, `DiffTable`.
@@ -101,7 +101,7 @@ Human-in-the-loop: `ApprovalCard` for a short, directly-controlled approval; `Ap
 
 Any page with a rail: `<div className="flex h-dvh"><AppSidebar … /><main className="min-w-0 flex-1 overflow-y-auto">…</main></div>` (`SidebarNav` for chat) — rails fill their parent, never give them a fixed height.
 
-A chat app is `SidebarNav` (rail) + `ChatThread` for the conversation (embed `Markdown`, `CodeBlock`, `ToolChips`, `ApprovalCard` as assistant message children via `MessageBubble`) + `PromptBar` pinned at the bottom + `ToastProvider` at the root. Streaming replies use the `StreamText` primitive or `StreamingText`. Agent progress uses `ThinkingState` or `TaskRows`. File input uses `FileDropzone` or PromptBar attachments.
+A chat app is `SidebarNav` (rail) + `ChatThread` for the conversation (embed `Markdown`, `CodeBlock`, `ToolChips`, `ApprovalCard` as assistant message children via `MessageBubble`) + `PromptBar` pinned at the bottom + `ToastProvider` at the root. Streaming replies use the `StreamText` primitive or `StreamingText`; before one starts, `ThinkingIndicator`. Agent progress uses `ThinkingState` or `TaskRows`. `PromptBar` takes `status="streaming"` + `onStop` (Stop button, queued drafts via `queue`/`onQueueChange`), `history`, `suggestion` (Tab fills), `suggestions`. `Accordion` has `variant="grouped"` (rows on the page, `highlight` item | trigger). File input uses `FileDropzone` or PromptBar attachments.
 
 ## Live gallery
 

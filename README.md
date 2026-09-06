@@ -101,9 +101,9 @@ All of these choices, plus the avatar fallback, the sidebar's first variant and 
 
 **Conversation:** ChatThread, MessageBubble, StreamingText, PromptBar, ChatComposer, Markdown, CodeBlock, SelectionActions, ApprovalCard, ApprovalFlow, AskUserQuestions, RecommendationCard, ContextCards, ChatApp
 
-**Feedback and agents:** ThinkingState, TaskRows, ToolChips, LoadingState, Progress, Skeleton, Alert, Toast
+**Feedback and agents:** ThinkingIndicator, ThinkingState, TaskRows, ToolChips, LoadingState, Progress, Skeleton, Alert, Toast
 
-**Forms:** Field, Input, Textarea, Select, Switch, Checkbox, FilterBar, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker
+**Forms:** Field, Input, Textarea, Select, Switch, Checkbox, FilterBar, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker, InputCopy, InputGroup
 
 **Overlays:** Modal, Drawer, DropdownMenu, Popover, Tooltip
 

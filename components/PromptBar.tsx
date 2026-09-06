@@ -121,6 +121,13 @@ export default function PromptBar({
   commands = DEFAULT_COMMANDS,
   models = DEFAULT_MODELS,
   onSend,
+  status = "idle",
+  onStop,
+  queue,
+  onQueueChange,
+  history = [],
+  suggestion,
+  suggestions = [],
 }: {
   variant?: "Rounded" | "Pill";
   /** the self-running walkthrough; turn off when embedding in a real surface */
@@ -135,10 +142,29 @@ export default function PromptBar({
   /** model picker entries */
   models?: Model[];
   onSend?: (text: string) => void;
+  /** streaming: the send button becomes Stop (empty draft) or Queue (a draft);
+   *  on the streaming → idle edge the first queued message is sent */
+  status?: "idle" | "streaming";
+  onStop?: () => void;
+  /** messages held while the assistant answers; shown as rows above the field */
+  queue?: string[];
+  onQueueChange?: (queue: string[]) => void;
+  /** sent messages, oldest first: ArrowUp on an empty first line recalls them */
+  history?: string[];
+  /** a suggested prompt shown as the placeholder; Tab fills it in */
+  suggestion?: string;
+  /** suggested prompts listed under the field while the draft is empty; ArrowDown enters the list, Enter fills */
+  suggestions?: string[];
 }) {
   const pill = variant === "Pill";
   const reduced = useReducedMotion();
   const [draft, setDraft] = useState("");
+  /* history recall: -1 is the live draft, 0.. walks back from the newest */
+  const [histAt, setHistAt] = useState(-1);
+  const [stash, setStash] = useState("");
+  const [sugAt, setSugAt] = useState(-1);
+  const streaming = status === "streaming";
+  const queued = queue ?? [];
   const [dismissed, setDismissed] = useState(false);
   const [plusOpen, setPlusOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
@@ -302,10 +328,44 @@ export default function PromptBar({
   const canSend = draft.trim().length > 0 || attachments.length > 0;
   const send = () => {
     if (!canSend) return;
-    onSend?.(draft.trim());
+    if (streaming) {
+      /* a draft while the answer streams waits its turn */
+      onQueueChange?.([...queued, draft.trim()]);
+    } else {
+      onSend?.(draft.trim());
+    }
     setDraft("");
     setAttachments([]);
+    setHistAt(-1);
+    setSugAt(-1);
     closeMenus();
+  };
+  /* streaming → idle: the first queued message goes out by itself */
+  const wasStreaming = useRef(streaming);
+  useEffect(() => {
+    if (wasStreaming.current && !streaming && queued.length > 0) {
+      const [next, ...rest] = queued;
+      onQueueChange?.(rest);
+      onSend?.(next);
+    }
+    wasStreaming.current = streaming;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fires on the status edge only
+  }, [streaming]);
+  const recall = (dir: 1 | -1) => {
+    if (history.length === 0) return false;
+    const next = histAt + dir; // dir 1 = older
+    if (next < -1 || next >= history.length) return false;
+    if (histAt === -1) setStash(draft);
+    setHistAt(next);
+    setDraft(next === -1 ? stash : history[history.length - 1 - next]);
+    return true;
+  };
+  const showSuggestions = suggestions.length > 0 && draft.trim() === "" && !menu;
+  const fill = (text: string) => {
+    setDraft(text);
+    setSugAt(-1);
+    setHistAt(-1);
+    requestAnimationFrame(() => inputRef.current?.focus());
   };
   return (
     <div
@@ -453,6 +513,33 @@ export default function PromptBar({
         >
           {draft}
         </span>
+        {queued.length > 0 && (
+          <ul aria-label="Queued messages" className={`flex flex-col gap-0.5 pt-0.5 ${pill ? "px-1" : "px-0.5"}`}>
+            {queued.map((text, i) => (
+              <li key={`${i}-${text}`} className="group/queued flex h-7 items-center gap-2 rounded-control px-2 text-caption text-ink-2 transition-colors duration-150 hover:bg-hover" style={{ animation: "pop-in 200ms var(--ease-out-quint) both" }}>
+                <Icon name="clock" size={13} strokeWidth={2} className="shrink-0 text-ink-3" />
+                <span className="min-w-0 flex-1 truncate">{text}</span>
+                <span className="font-mono text-micro text-ink-3">queued</span>
+                <button
+                  type="button"
+                  aria-label={`Edit queued message: ${text}`}
+                  onClick={() => { onQueueChange?.(queued.filter((_, j) => j !== i)); fill(text); }}
+                  className="flex size-6 items-center justify-center rounded-sm text-ink-3 opacity-0 transition-opacity duration-150 group-hover/queued:opacity-100 focus-visible:opacity-100 hover:bg-hover-2 hover:text-ink"
+                >
+                  <Icon name="edit" size={12} strokeWidth={2} />
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Remove queued message: ${text}`}
+                  onClick={() => onQueueChange?.(queued.filter((_, j) => j !== i))}
+                  className="flex size-6 items-center justify-center rounded-sm text-ink-3 opacity-0 transition-opacity duration-150 group-hover/queued:opacity-100 focus-visible:opacity-100 hover:bg-hover-2 hover:text-ink"
+                >
+                  <Icon name="close" size={12} strokeWidth={2} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         {attachments.length > 0 && (
           <div className={`flex flex-wrap gap-1.5 pt-0.5 ${pill ? "px-1" : "px-0.5"}`}>
             {attachments.map((file, i) => (
@@ -510,6 +597,8 @@ export default function PromptBar({
               setDraft(event.target.value);
               setDismissed(false);
               setPlusOpen(false);
+              setHistAt(-1);
+              setSugAt(-1);
             }}
             onKeyDown={(event) => {
               if (menu && rows.length > 0) {
@@ -527,15 +616,30 @@ export default function PromptBar({
               }
               if (event.key === "Escape") {
                 setDismissed(true);
+                setSugAt(-1);
                 closeMenus();
                 return;
               }
+              /* suggestions: ArrowDown enters the list, ArrowUp walks out, Enter fills */
+              if (showSuggestions) {
+                if (event.key === "ArrowDown" && sugAt < suggestions.length - 1) { event.preventDefault(); setSugAt(sugAt + 1); return; }
+                if (event.key === "ArrowUp" && sugAt >= 0) { event.preventDefault(); setSugAt(sugAt - 1); return; }
+                if (event.key === "Enter" && sugAt >= 0 && !event.shiftKey) { event.preventDefault(); fill(suggestions[sugAt]); return; }
+              }
+              /* Tab takes the placeholder suggestion */
+              if (event.key === "Tab" && suggestion && draft === "" && !event.shiftKey) { event.preventDefault(); fill(suggestion); return; }
+              /* history: ArrowUp with the caret on the first line, ArrowDown on the last */
+              const el = event.currentTarget;
+              const caretFirstLine = !el.value.slice(0, el.selectionStart).includes("\n");
+              const caretLastLine = !el.value.slice(el.selectionEnd).includes("\n");
+              if (event.key === "ArrowUp" && caretFirstLine && (draft === "" || histAt >= 0) && recall(1)) { event.preventDefault(); return; }
+              if (event.key === "ArrowDown" && caretLastLine && histAt >= 0 && recall(-1)) { event.preventDefault(); return; }
               if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
                 event.preventDefault();
                 send();
               }
             }}
-            placeholder={listening ? "Listening…" : placeholder ?? "Write a message…"}
+            placeholder={listening ? "Listening…" : draft === "" && suggestion ? suggestion : placeholder ?? "Write a message…"}
             aria-label="Prompt"
             className={`${tall ? "min-h-[68px] px-2 py-2 text-lead leading-5" : "min-h-7 px-1 py-[5px] text-body leading-[18px]"} min-w-0 w-full resize-none bg-transparent text-ink outline-none [overflow-wrap:anywhere] placeholder:text-ink-3 ${
               wide ? "col-span-full col-start-1 row-start-1" : "col-start-2 row-start-1"
@@ -585,13 +689,44 @@ export default function PromptBar({
             )}
           </button>
           {/* send — tactile square (round in the pill variant) */}
-          <SendButton
-            enabled={canSend}
-            round={pill}
-            onClick={send}
-            className={wide ? "col-start-5 row-start-2" : "col-start-5 row-start-1"}
-          />
+          {streaming && !canSend ? (
+            <button
+              type="button"
+              aria-label="Stop generating"
+              onClick={onStop}
+              className={`flex size-7 shrink-0 items-center justify-center bg-ink text-surface shadow-btn transition-transform duration-200 active:scale-[0.96] ${pill ? "rounded-full" : "rounded-control"} ${wide ? "col-start-5 row-start-2" : "col-start-5 row-start-1"}`}
+            >
+              <span aria-hidden className="size-2.5 rounded-[2px] bg-surface" />
+            </button>
+          ) : (
+            <SendButton
+              enabled={canSend}
+              label={streaming ? "Queue message" : "Send"}
+              round={pill}
+              onClick={send}
+              className={wide ? "col-start-5 row-start-2" : "col-start-5 row-start-1"}
+            />
+          )}
         </div>
+        {/* suggestions under the field while the draft is empty */}
+        {showSuggestions && (
+          <ul role="listbox" aria-label="Suggested prompts" className={`flex flex-col gap-px border-t border-line pt-1.5 ${pill ? "px-1" : "px-0.5"}`}>
+            {suggestions.map((text, i) => (
+              <li key={text} role="option" aria-selected={sugAt === i}>
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onMouseEnter={() => setSugAt(i)}
+                  onClick={() => fill(text)}
+                  className={`flex h-7 w-full items-center gap-2 rounded-control px-2 text-left text-caption transition-colors duration-150 ${sugAt === i ? "bg-hover text-ink" : "text-ink-2 hover:bg-hover hover:text-ink"}`}
+                >
+                  <Icon name="sparkles" size={13} strokeWidth={2} className="shrink-0 text-ink-3" />
+                  <span className="min-w-0 flex-1 truncate">{text}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       </div>
     </div>
