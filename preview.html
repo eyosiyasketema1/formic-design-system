@@ -275,9 +275,9 @@
 .primitive-field:focus-within { border-color: var(--line-strong); }
 .primitive-field[data-invalid="true"], .primitive-field[data-invalid="true"]:focus-within { border-color: var(--red); }
 .primitive-slider { appearance: none; height: 24px; background: transparent; }
-.primitive-slider::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--slider-fill, 0%), var(--inset) var(--slider-fill, 0%)); box-shadow: 0 0 0 1px var(--line); }
-.primitive-slider::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; margin-top: -5px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn); }
-.primitive-slider::-moz-range-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--slider-fill, 0%), var(--inset) var(--slider-fill, 0%)); box-shadow: 0 0 0 1px var(--line); }
+.primitive-slider::-webkit-slider-runnable-track { height: var(--slider-track, 6px); border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--slider-fill, 0%), var(--inset) var(--slider-fill, 0%)); box-shadow: 0 0 0 1px var(--line); }
+.primitive-slider::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; margin-top: calc((var(--slider-track, 6px) - 16px) / 2); border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn); }
+.primitive-slider::-moz-range-track { height: var(--slider-track, 6px); border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--slider-fill, 0%), var(--inset) var(--slider-fill, 0%)); box-shadow: 0 0 0 1px var(--line); }
 .primitive-slider::-moz-range-thumb { width: 13px; height: 13px; border: none; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn); }
 input[type="range"].primitive-slider:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .primitive-slider.is-layered { pointer-events: none; }
@@ -7050,6 +7050,9 @@ function Accordion({
  * name), for a price band or a date window.
  * ───────────────────────────────────────────────────────── */
 
+const TRACK = { thin: 4, default: 6, thick: 10 };
+const trackPx = (t) => (typeof t === "number" ? t : TRACK[t]);
+
 const nearest = (v, steps) => steps.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a), steps[0]);
 
 /* keyboard on a stepped slider walks the list, not the native step */
@@ -7169,6 +7172,7 @@ function Slider({
   formatValue,
   editable = false,
   valuePosition = "right",
+  thickness = "default",
   disabled = false,
   className = "",
   id,
@@ -7205,7 +7209,7 @@ function Slider({
           onFocus={() => setActive(true)}
           onBlur={() => setActive(false)}
           className="primitive-slider w-full min-w-0 cursor-pointer disabled:cursor-default disabled:opacity-60"
-          style={{ "--slider-fill": `${percent}%` }}
+          style={{ "--slider-fill": `${percent}%`, "--slider-track": `${trackPx(thickness)}px` }}
         />
         {showSteps && steps?.length ? <StepDots steps={steps} min={min} max={max} current={current} /> : null}
         {valuePosition === "thumb" && <ThumbValue percent={percent} text={format(current)} show={active} />}
@@ -7231,6 +7235,7 @@ function RangeSlider({
   formatValue,
   editable = false,
   valuePosition = "right",
+  thickness = "default",
   disabled = false,
   className = "",
 } = {}) {
@@ -7263,6 +7268,7 @@ function RangeSlider({
       onBlur={() => setActive(null)}
       /* the thumb being moved sits on top so it can cross the other one */
       className={`primitive-slider is-layered absolute inset-0 w-full min-w-0 cursor-pointer disabled:cursor-default disabled:opacity-60 ${active === which ? "z-20" : "z-10"}`}
+      style={{ "--slider-track": `${trackPx(thickness)}px` }}
     />
   );
   return (
@@ -7272,7 +7278,7 @@ function RangeSlider({
       )}
       <span className="relative flex h-6 min-w-0 flex-1 items-center">
         {/* the shared track: inset with the accent between the thumbs */}
-        <span aria-hidden className="absolute inset-x-0 h-1.5 rounded-full bg-inset shadow-hairline">
+        <span aria-hidden className="absolute inset-x-0 rounded-full bg-inset shadow-hairline" style={{ height: trackPx(thickness) }}>
           <span className="absolute inset-y-0 rounded-full bg-accent" style={{ left: `${pct(lo)}%`, right: `${100 - pct(hi)}%` }} />
         </span>
         {thumb(0)}
@@ -10212,6 +10218,14 @@ function Page_slider_otp() {
       <GalleryCard label="Field-wrapped" wide><SliderOtpDemo /></GalleryCard>
       <GalleryCard label="Steps · snaps to a list, dots on the track, editable readout" wide>
         <Slider label="Quality" defaultValue={50} steps={[0, 25, 50, 75, 100]} showSteps editable showValue formatValue={(v) => `${v}%`} />
+      </GalleryCard>
+      <GalleryCard label="Thickness · thin, default, thick, or a number of px" wide>
+        <div className="flex flex-col gap-4">
+          <Slider label="Thin" thickness="thin" defaultValue={30} />
+          <Slider label="Default" defaultValue={50} />
+          <Slider label="Thick" thickness="thick" defaultValue={70} />
+          <RangeSlider label="Thick range" thickness="thick" defaultValue={[20, 80]} />
+        </div>
       </GalleryCard>
       <GalleryCard label="Value on the thumb · while dragging or focused" wide>
         <Slider label="Opacity" defaultValue={64} valuePosition="thumb" formatValue={(v) => `${v}%`} />
