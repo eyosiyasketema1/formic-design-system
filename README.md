@@ -99,7 +99,7 @@ All of these choices, plus the avatar fallback, the sidebar's first variant and 
 
 ## Components
 
-**Conversation:** ChatThread, MessageBubble, StreamingText, PromptBar, ChatComposer, Markdown, CodeBlock, SelectionActions, ApprovalCard, ApprovalFlow, RecommendationCard, ContextCards, ChatApp
+**Conversation:** ChatThread, MessageBubble, StreamingText, PromptBar, ChatComposer, Markdown, CodeBlock, SelectionActions, ApprovalCard, ApprovalFlow, AskUserQuestions, RecommendationCard, ContextCards, ChatApp
 
 **Feedback and agents:** ThinkingState, TaskRows, ToolChips, LoadingState, Progress, Skeleton, Alert, Toast
 
@@ -184,3 +184,5 @@ install.sh       one-command install into a consuming project (also at formicai.
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+AskUserQuestions is a port of [Ask User Questions](https://www.fluidfunctionalism.com/docs/ask-user-questions) by Micka Touillaud (fluid functionalism, MIT), rebuilt on Formic primitives. Doodle avatars use DiceBear notionists (MIT, art CC0); brand logos come from svgl.
