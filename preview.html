@@ -1251,11 +1251,11 @@ function Spinner({ size = 12, className = "" }) {
         borderColor: "color-mix(in srgb, currentColor 30%, transparent)", borderTopColor: "currentColor" }} />
   );
 }
-function ShimmerLabel({ children, className = "" }) {
+function ShimmerLabel({ children, className = "", style }) {
   return (
     <span className={`bg-clip-text text-body font-medium text-transparent ${className}`}
       style={{ backgroundImage: "linear-gradient(90deg, var(--ink-3) 35%, var(--ink) 50%, var(--ink-3) 65%)",
-        backgroundSize: "200% 100%", animation: "shimmer-text 1.4s linear infinite" }}>
+        backgroundSize: "200% 100%", animation: "shimmer-text 1.4s linear infinite", ...style }}>
       {children}
     </span>
   );
@@ -2840,11 +2840,24 @@ function PromptBar({
   sources = PB_SOURCES,
   commands = PB_COMMANDS,
   models = PB_MODELS,
-  onSend
+  onSend,
+  status = "idle",
+  onStop,
+  queue,
+  onQueueChange,
+  history = [],
+  suggestion,
+  suggestions = []
 }) {
   const pill = variant === "Pill";
   const reduced = useReducedMotion();
   const [draft, setDraft] = useState("");
+  /* history recall: -1 is the live draft, 0.. walks back from the newest */
+  const [histAt, setHistAt] = useState(-1);
+  const [stash, setStash] = useState("");
+  const [sugAt, setSugAt] = useState(-1);
+  const streaming = status === "streaming";
+  const queued = queue ?? [];
   const [dismissed, setDismissed] = useState(false);
   const [plusOpen, setPlusOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
@@ -2988,10 +3001,43 @@ function PromptBar({
   const canSend = draft.trim().length > 0 || attachments.length > 0;
   const send = () => {
     if (!canSend) return;
-    onSend?.(draft.trim());
+    if (streaming) {
+      /* a draft while the answer streams waits its turn */
+      onQueueChange?.([...queued, draft.trim()]);
+    } else {
+      onSend?.(draft.trim());
+    }
     setDraft("");
     setAttachments([]);
+    setHistAt(-1);
+    setSugAt(-1);
     closeMenus();
+  };
+  /* streaming → idle: the first queued message goes out by itself */
+  const wasStreaming = useRef(streaming);
+  useEffect(() => {
+    if (wasStreaming.current && !streaming && queued.length > 0) {
+      const [next, ...rest] = queued;
+      onQueueChange?.(rest);
+      onSend?.(next);
+    }
+    wasStreaming.current = streaming;
+  }, [streaming]);
+  const recall = (dir) => {
+    if (history.length === 0) return false;
+    const next = histAt + dir;
+    if (next < -1 || next >= history.length) return false;
+    if (histAt === -1) setStash(draft);
+    setHistAt(next);
+    setDraft(next === -1 ? stash : history[history.length - 1 - next]);
+    return true;
+  };
+  const showSuggestions = suggestions.length > 0 && draft.trim() === "" && !menu;
+  const fill = (text) => {
+    setDraft(text);
+    setSugAt(-1);
+    setHistAt(-1);
+    requestAnimationFrame(() => inputRef.current?.focus());
   };
   return <div
     data-promptbar
@@ -3128,6 +3174,23 @@ function PromptBar({
   >
           {draft}
         </span>
+        {queued.length > 0 && (
+          <ul aria-label="Queued messages" className={`flex flex-col gap-0.5 pt-0.5 ${pill ? "px-1" : "px-0.5"}`}>
+            {queued.map((text, i) => (
+              <li key={`${i}-${text}`} className="group/queued flex h-7 items-center gap-2 rounded-control px-2 text-caption text-ink-2 transition-colors duration-150 hover:bg-hover" style={{ animation: "pop-in 200ms var(--ease-out-quint) both" }}>
+                <Icon name="clock" size={13} strokeWidth={2} className="shrink-0 text-ink-3" />
+                <span className="min-w-0 flex-1 truncate">{text}</span>
+                <span className="font-mono text-micro text-ink-3">queued</span>
+                <button type="button" aria-label={`Edit queued message: ${text}`} onClick={() => { onQueueChange?.(queued.filter((_, j) => j !== i)); fill(text); }} className="flex size-6 items-center justify-center rounded-sm text-ink-3 opacity-0 transition-opacity duration-150 group-hover/queued:opacity-100 focus-visible:opacity-100 hover:bg-hover-2 hover:text-ink">
+                  <Icon name="edit" size={12} strokeWidth={2} />
+                </button>
+                <button type="button" aria-label={`Remove queued message: ${text}`} onClick={() => onQueueChange?.(queued.filter((_, j) => j !== i))} className="flex size-6 items-center justify-center rounded-sm text-ink-3 opacity-0 transition-opacity duration-150 group-hover/queued:opacity-100 focus-visible:opacity-100 hover:bg-hover-2 hover:text-ink">
+                  <Icon name="close" size={12} strokeWidth={2} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         {attachments.length > 0 && <div className={`flex flex-wrap gap-1.5 pt-0.5 ${pill ? "px-1" : "px-0.5"}`}>
             {attachments.map((file, i) => <span
     key={`${file}-${i}`}
@@ -3171,6 +3234,8 @@ function PromptBar({
       setDraft(event.target.value);
       setDismissed(false);
       setPlusOpen(false);
+      setHistAt(-1);
+      setSugAt(-1);
     }}
     onKeyDown={(event) => {
       if (menu && rows.length > 0) {
@@ -3188,15 +3253,27 @@ function PromptBar({
       }
       if (event.key === "Escape") {
         setDismissed(true);
+        setSugAt(-1);
         closeMenus();
         return;
       }
+      if (showSuggestions) {
+        if (event.key === "ArrowDown" && sugAt < suggestions.length - 1) { event.preventDefault(); setSugAt(sugAt + 1); return; }
+        if (event.key === "ArrowUp" && sugAt >= 0) { event.preventDefault(); setSugAt(sugAt - 1); return; }
+        if (event.key === "Enter" && sugAt >= 0 && !event.shiftKey) { event.preventDefault(); fill(suggestions[sugAt]); return; }
+      }
+      if (event.key === "Tab" && suggestion && draft === "" && !event.shiftKey) { event.preventDefault(); fill(suggestion); return; }
+      const el = event.currentTarget;
+      const caretFirstLine = !el.value.slice(0, el.selectionStart).includes("\n");
+      const caretLastLine = !el.value.slice(el.selectionEnd).includes("\n");
+      if (event.key === "ArrowUp" && caretFirstLine && (draft === "" || histAt >= 0) && recall(1)) { event.preventDefault(); return; }
+      if (event.key === "ArrowDown" && caretLastLine && histAt >= 0 && recall(-1)) { event.preventDefault(); return; }
       if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
         event.preventDefault();
         send();
       }
     }}
-    placeholder={listening ? "Listening\u2026" : placeholder ?? "Write a message\u2026"}
+    placeholder={listening ? "Listening\u2026" : draft === "" && suggestion ? suggestion : placeholder ?? "Write a message\u2026"}
     aria-label="Prompt"
     className={`${tall ? "min-h-[68px] px-2 py-2 text-lead leading-5" : "min-h-7 px-1 py-[5px] text-body leading-[18px]"} min-w-0 w-full resize-none bg-transparent text-ink outline-none [overflow-wrap:anywhere] placeholder:text-ink-3 ${wide ? "col-span-full col-start-1 row-start-1" : "col-start-2 row-start-1"}`}
   />
@@ -3240,13 +3317,26 @@ function PromptBar({
           {
     /* send — tactile square (round in the pill variant) */
   }
-          <SendButton
-    enabled={canSend}
-    round={pill}
-    onClick={send}
-    className={wide ? "col-start-5 row-start-2" : "col-start-5 row-start-1"}
-  />
+          {streaming && !canSend ? (
+            <button type="button" aria-label="Stop generating" onClick={onStop} className={`flex size-7 shrink-0 items-center justify-center bg-ink text-surface shadow-btn transition-transform duration-200 active:scale-[0.96] ${pill ? "rounded-full" : "rounded-control"} ${wide ? "col-start-5 row-start-2" : "col-start-5 row-start-1"}`}>
+              <span aria-hidden className="size-2.5 rounded-[2px] bg-surface" />
+            </button>
+          ) : (
+            <SendButton enabled={canSend} label={streaming ? "Queue message" : "Send"} round={pill} onClick={send} className={wide ? "col-start-5 row-start-2" : "col-start-5 row-start-1"} />
+          )}
         </div>
+        {showSuggestions && (
+          <ul role="listbox" aria-label="Suggested prompts" className={`flex flex-col gap-px border-t border-line pt-1.5 ${pill ? "px-1" : "px-0.5"}`}>
+            {suggestions.map((text, i) => (
+              <li key={text} role="option" aria-selected={sugAt === i}>
+                <button type="button" tabIndex={-1} onMouseEnter={() => setSugAt(i)} onClick={() => fill(text)} className={`flex h-7 w-full items-center gap-2 rounded-control px-2 text-left text-caption transition-colors duration-150 ${sugAt === i ? "bg-hover text-ink" : "text-ink-2 hover:bg-hover hover:text-ink"}`}>
+                  <Icon name="sparkles" size={13} strokeWidth={2} className="shrink-0 text-ink-3" />
+                  <span className="min-w-0 flex-1 truncate">{text}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       </div>
     </div>;
@@ -6881,6 +6971,8 @@ function Accordion({
   items = AC_DEFAULT_ITEMS,
   multiple = false,
   defaultOpen = [],
+  variant = "card",
+  highlight = "item",
   className = ""
 } = {}) {
   const id = useId();
@@ -6891,12 +6983,14 @@ function Accordion({
       return multiple ? [...current, key] : [key];
     });
   };
-  return <div className={`w-full overflow-hidden rounded-card bg-surface shadow-card ${className}`}>
+  const grouped = variant === "grouped";
+  return <div className={grouped ? `flex w-full flex-col gap-0.5 ${className}` : `w-full overflow-hidden rounded-card bg-surface shadow-card ${className}`}>
       {items.map((item) => {
     const open = openKeys.includes(item.key);
     const headerId = `${id}-header-${item.key}`;
     const panelId = `${id}-panel-${item.key}`;
-    return <div key={item.key} className="border-b border-line last:border-0">
+    const itemTint = grouped && highlight === "item" && open;
+    return <div key={item.key} className={grouped ? `corner-smooth rounded-control transition-colors duration-150 ${itemTint ? "bg-hover" : ""}` : "border-b border-line last:border-0"}>
             <h3>
               <button
       type="button"
@@ -6904,7 +6998,7 @@ function Accordion({
       aria-expanded={open}
       aria-controls={panelId}
       onClick={() => toggle(item.key)}
-      className="flex h-11 w-full items-center justify-between gap-3 px-4 text-left text-body font-medium text-ink transition-colors duration-150 hover:bg-hover"
+      className={`flex w-full items-center justify-between gap-3 text-left text-body font-medium text-ink transition-colors duration-150 ${grouped ? `corner-smooth h-9 rounded-control px-3 ${itemTint ? "" : "hover:bg-hover"}` : "h-11 px-4 hover:bg-hover"}`}
     >
                 <span className="min-w-0 truncate">{item.title}</span>
                 <Icon
@@ -6921,7 +7015,7 @@ function Accordion({
       id={panelId}
       role="region"
       aria-labelledby={headerId}
-      className="px-4 pb-3.5 text-body leading-relaxed text-ink-2"
+      className={`text-body leading-relaxed text-ink-2 ${grouped ? "px-3 pb-3" : "px-4 pb-3.5"}`}
     >
                 {item.content}
               </div>
@@ -9908,7 +10002,9 @@ function Page_datepicker() {
 function Page_accordion() {
   return (
     <>
-      <GalleryCard label="Single open" wide><Accordion defaultOpen={["restock"]} /></GalleryCard>
+      <GalleryCard label="Card · single open" wide><Accordion defaultOpen={["restock"]} /></GalleryCard>
+      <GalleryCard label="Grouped · rows on the page, the open item tints as one block" wide><Accordion variant="grouped" defaultOpen={["seasonal"]} /></GalleryCard>
+      <GalleryCard label="Grouped · highlight=&quot;trigger&quot;: only the row, only on hover" wide><Accordion variant="grouped" highlight="trigger" multiple defaultOpen={["restock", "suppliers"]} /></GalleryCard>
     </>
   );
 }
@@ -10111,7 +10207,30 @@ function Page_promptbar() {
     <>
       <GalleryCard label="Rounded" wide><PromptBar variant="Rounded" /></GalleryCard>
       <GalleryCard label="Pill" wide><PromptBar variant="Pill" /></GalleryCard>
+      <GalleryCard label="Streaming · Stop, a queue while the answer streams, history on ArrowUp, Tab suggestion, suggestion list" wide><PromptBarStreamingDemo /></GalleryCard>
     </>
+  );
+}
+function PromptBarStreamingDemo() {
+  const toast = useToast();
+  const [status, setStatus] = useState("idle");
+  const [queue, setQueue] = useState([]);
+  const [history, setHistory] = useState(["Summarise the Q2 numbers", "Draft the release note"]);
+  const timer = useRef(null);
+  const send = (text) => {
+    setHistory((h) => [...h, text]);
+    toast({ title: `Sent: ${text}` });
+    setStatus("streaming");
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setStatus("idle"), 4000);
+  };
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <div className="flex items-center gap-3 text-caption text-ink-3">
+        <span className="flex items-center gap-1.5"><span className={`size-1.5 rounded-full ${status === "streaming" ? "bg-accent" : "bg-ink-3"}`} />{status === "streaming" ? "Answer streaming for 4s: send again to queue, or press Stop" : "Idle: send a message to start streaming"}</span>
+      </div>
+      <PromptBar demo={false} status={status} onStop={() => { if (timer.current) clearTimeout(timer.current); setStatus("idle"); }} queue={queue} onQueueChange={setQueue} history={history} suggestion="Ask about last week's incidents" suggestions={["What changed in the build?", "Explain the failing test", "Draft a status update"]} onSend={send} />
+    </div>
   );
 }
 
@@ -10460,6 +10579,48 @@ function Page_projectsidebar() {
 }
 
 /* one page for all three rails */
+function Page_inputcopy() {
+  const toast = useToast();
+  return (
+    <>
+      <GalleryCard label="Icon · a quiet copy inside the field" wide><InputCopy label="Install" value="curl -fsSL https://formicai.dev/install.sh | bash" onCopy={() => toast({ tone: "success", title: "Copied" })} /></GalleryCard>
+      <GalleryCard label="Button · for values people copy often" wide><InputCopy label="Share link" value="https://formicai.dev/customize?accent=29e0c2" mono={false} variant="button" /></GalleryCard>
+      <GalleryCard label="No label" wide><InputCopy value="fmc_live_9f3a…c21e" /></GalleryCard>
+    </>
+  );
+}
+
+function Page_inputgroup() {
+  return (
+    <>
+      <GalleryCard label="Three fields as one block" wide>
+        <InputGroup>
+          <InputField label="Full name" icon="user" defaultValue="Eyosiyas Ketema" />
+          <InputField label="Email" icon="mail" type="email" placeholder="you@company.com" />
+          <InputField label="Company" icon="building" placeholder="Where you work" />
+        </InputGroup>
+      </GalleryCard>
+      <GalleryCard label="With an error and a trailing unit" wide>
+        <InputGroup>
+          <InputField label="Website" icon="globe" defaultValue="formicai" error="Enter a full address, like formicai.dev" />
+          <InputField label="Budget" icon="wallet" type="number" defaultValue="12000" trailing="USD / month" />
+          <InputField label="Notes" labelHidden placeholder="Notes (label hidden, placeholder carries it)" />
+        </InputGroup>
+      </GalleryCard>
+    </>
+  );
+}
+
+function Page_thinkingindicator() {
+  return (
+    <>
+      <GalleryCard label="Default · glyph and rotating word" wide><ThinkingIndicator /></GalleryCard>
+      <GalleryCard label="Own words" wide><ThinkingIndicator words={["Reading the repo", "Finding the callers", "Writing the patch"]} interval={2400} /></GalleryCard>
+      <GalleryCard label="Text only, inline before a reply" wide><p className="text-body text-ink-2">Assistant <ThinkingIndicator glyph={false} className="align-middle" /></p></GalleryCard>
+    </>
+  );
+}
+
 function Page_askuserquestions() {
   const toast = useToast();
   const [run, setRun] = useState(0);
@@ -10970,7 +11131,9 @@ const PAGES = [
   { id: "slider-otp", group: "Forms", title: "Slider & OTP", note: "Two more Field-ready controls \u2014 Slider is a native range drawn with tokens (platform keyboard and touch for free); OTPInput distributes typing, paste, and one-time-code autofill across quiet field cells.", file: "components/Slider.tsx components/OTPInput.tsx", Component: Page_slider_otp },
   { id: "datepicker", group: "Forms", title: "DatePicker", note: "A dependency-free month grid on the APG date pattern \u2014 arrows move by day, PageUp/Down by month, Home/End across the week. mode=range picks a span with a live preview band; DatePicker and DateRangePicker drop it behind the quiet field trigger.", file: "components/DatePicker.tsx components/DateRangePicker.tsx components/Calendar.tsx", Component: Page_datepicker },
   { id: "card", group: "Structure", title: "Card", note: "A card composed from parts: CardHeader, CardMedia (an icon tile or a picture), CardTitle, CardDescription, CardFooter, CardButton. CardGroup lays them out: a grid of surfaces in 1 to 4 columns, or inline, one surface with rows divided by hairlines where the media leads, the header fills the middle and the footer sits at the trailing edge. Same markup either way; the parts read the orientation. Tiles are ink on inset, accent only on the one card a view leads with.", file: "components/cards.tsx components/primitives.tsx", Component: Page_card },
-  { id: "accordion", group: "Structure", title: "Accordion", note: "Stacked disclosure rows on Disclosure \u2014 single-open by default, closed content inert, house easing throughout.", file: "components/Accordion.tsx", Component: Page_accordion },
+  { id: "inputcopy", group: "Forms", title: "InputCopy", note: "A read-only value with the one action it needs: copy. The button becomes a check for a moment and says so to screen readers; a failed clipboard says that too. variant=\"button\" puts a labelled Copy button on the trailing edge for values people copy often: a key, a share link, an install command.", file: "components/InputCopy.tsx", Component: Page_inputcopy },
+  { id: "inputgroup", group: "Forms", title: "InputGroup", note: "Several fields as one block: rows on a single surface divided by hairlines, the label inside the row above the value. The row under the pointer tints, the row being typed in lifts to the surface with a hairline, an error row carries its message in red. For a short related set (name, email, company); Field + Input for a conventional form.", file: "components/InputGroup.tsx", Component: Page_inputgroup },
+  { id: "accordion", group: "Structure", title: "Accordion", note: "Two looks: card (rows on a surface) and grouped (rounded rows on the page, the open item tints as one block, or only its row on hover with highlight=trigger). Stacked disclosure rows on Disclosure \u2014 single-open by default, closed content inert, house easing throughout.", file: "components/Accordion.tsx", Component: Page_accordion },
   { id: "steps", group: "Structure", title: "Steps", note: "Wizard progress \u2014 completed circles fill ink, the current step rings accent with aria-current, completed steps are clickable to go back.", file: "components/Steps.tsx", Component: Page_steps },
   { id: "timeline", group: "Structure", title: "Timeline", note: "Event history on a rail \u2014 toned dots, monospaced times, staggered entrance.", file: "components/Timeline.tsx", Component: Page_timeline },
   { id: "modal", group: "Overlays", title: "Modal", note: "Portal dialog on the system scrim \u2014 focus trapped and restored, page scroll locked, Escape / backdrop dismiss. Footer takes the system Buttons.", file: "components/Modal.tsx", Component: Page_modal },
@@ -10980,6 +11143,7 @@ const PAGES = [
   { id: "alert", group: "Feedback", title: "Alert", note: "Inline callouts on the system tints \u2014 five tones, optional dismiss. Copy stays ink so every palette keeps AA contrast.", file: "components/Alert.tsx", Component: Page_alert },
   { id: "skeleton", group: "Feedback", title: "Skeleton", note: "Loading placeholders \u2014 one primitive, shaped entirely by className. Compose avatars, lines, and cards from it.", file: "components/primitives.tsx", Component: Page_skeleton },
   { id: "loadingstate", group: "Feedback", title: "LoadingState", note: "Pixel-grid loader with shimmer label and elapsed timer.", file: "components/LoadingState.tsx", Component: Page_loadingstate },
+  { id: "thinkingindicator", group: "Feedback", title: "ThinkingIndicator", note: "The smallest working-on-it: a glyph that breathes between a circle and an infinity loop, and one shimmering word that rotates every few seconds. For the gap before a reply starts, inline in a thread; ThinkingState is the bigger sibling with steps and sources. Screen readers hear one Thinking, not every word; reduced motion keeps a still glyph and the first word.", file: "components/ThinkingIndicator.tsx", Component: Page_thinkingindicator },
   { id: "thinkingstate", group: "Feedback", title: "ThinkingState", note: "Expandable agent trace. Runs once on load \u2014 replay to see the sequence again.", file: "components/ThinkingState.tsx", Component: Page_thinkingstate },
   { id: "taskrows", group: "Feedback", title: "TaskRows", note: "Agent tasks as expandable rows \u2014 a scripted status run plays once (spin \u2192 failed \u2192 completed).", file: "components/TaskRows.tsx", Component: Page_taskrows },
   { id: "toolchips", group: "Feedback", title: "ToolChips", note: "Agent run as compact rows. Click rows to expand; hover the file chips for diff previews.", file: "components/ToolChips.tsx", Component: Page_toolchips },
@@ -10992,7 +11156,7 @@ const PAGES = [
   { id: "askuserquestions", group: "Conversation", title: "AskUserQuestions", note: "An agent asks, the person answers: a stepped flow of questions with numbered options. 1 to 9 picks, Enter confirms, Backspace goes back. Single-select advances on its own, multi-select waits for Next, an Other row opens an inline field, a free-text question is a textarea (\u2318 Enter submits), and a question can be skippable. onComplete returns every answer. For a decision the agent needs before it continues; ApprovalCard is for a yes or no with consequences. Ported from Micka Touillaud\u2019s Ask User Questions (MIT), rebuilt on Formic primitives.", file: "components/AskUserQuestions.tsx", Component: Page_askuserquestions },
   { id: "approvalcard", group: "Conversation", title: "ApprovalCard", note: "Human-in-the-loop questions \u2014 fully interactive, try answering.", file: "components/ApprovalCard.tsx", Component: Page_approvalcard },
   { id: "approvalflow", group: "Conversation", title: "ApprovalFlow", note: "The stepper sibling of ApprovalCard, for a run that needs several questions in sequence. The stack slides vertically and the card's height animates to fit, so it never jumps; the counter rolls like an odometer. Single-choice answers auto-advance, multi-select waits for Continue, and every question takes a free-text answer.", file: "components/ApprovalFlow.tsx", Component: Page_approvalflow },
-  { id: "promptbar", group: "Conversation", title: "PromptBar", note: "Full composer: @ sources, / commands, model picker (pick Sprinkles 5 for the rainbow), dictation. Self-running demo hands over on interaction.", file: "components/PromptBar.tsx", Component: Page_promptbar },
+  { id: "promptbar", group: "Conversation", title: "PromptBar", note: "Full composer: @ sources, / commands, model picker (pick Sprinkles 5 for the rainbow), dictation. Self-running demo hands over on interaction. While an answer streams (status=\"streaming\") the send button is Stop, a draft sent meanwhile waits in a queue above the field and goes out when the answer ends; ArrowUp recalls history, Tab takes the placeholder suggestion, and a suggestion list sits under an empty field.", file: "components/PromptBar.tsx", Component: Page_promptbar },
   { id: "chatcomposer", group: "Conversation", title: "ChatComposer", note: "Interactive chat panel \u2014 type a prompt and send to trigger the reply sequence.", file: "components/ChatComposer.tsx", Component: Page_chatcomposer },
   { id: "panel", group: "Dashboard", title: "Panel", note: "The dashboard card with its anatomy built in: title and caption left, actions right, one baseline, body below. It stretches to its grid cell and its body is a flex column that fills it, so a chart or list with `fill` reaches the bottom edge and two panels in a row end up the same height with nothing empty. Use Card directly only for things that are not a titled section.", file: "components/Panel.tsx", Component: Page_panel },
   { id: "statcard", group: "Dashboard", title: "StatCard & MetricRow", note: "The tiles a dashboard is mostly made of. Delta direction is an explicit prop, never inferred from the sign \u2014 down is good for churn and cost, and only the caller knows which.", file: "components/StatCard.tsx", Component: Page_statcard },
@@ -11575,6 +11739,210 @@ function RailPanels({ page, pg, knobs, pgState, pgSet, pgReset }) {
         </RailPanel>
       )}
     </>
+  );
+}
+
+/* ═══════════ InputCopy (mirrors components/InputCopy.tsx) ═══════════ */
+/* ─────────────────────────────────────────────────────────
+ * INPUT COPY — a value to take away
+ * A read-only field with the one action it needs: copy. The
+ * button turns into a check for a moment and says so to screen
+ * readers; a failed clipboard says that too. `variant="button"`
+ * puts a labelled Copy button on the trailing edge instead of
+ * the icon, for values people copy often (an API key, a share
+ * link, an install command).
+ * ───────────────────────────────────────────────────────── */
+function InputCopy({
+  value = "npx formic add project-sidebar",
+  label,
+  variant = "icon",
+  mono = true,
+  onCopy,
+  className = "",
+}) {
+  const id = useId();
+  const [status, setStatus] = useState("idle");
+  const timer = useRef(null);
+  useEffect(() => () => { if (timer.current) window.clearTimeout(timer.current); }, []);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setStatus("copied");
+      onCopy?.(value);
+    } catch {
+      setStatus("error");
+    }
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setStatus("idle"), 1600);
+  };
+  const name = status === "copied" ? "Copied" : status === "error" ? "Could not copy" : `Copy${label ? ` ${label}` : ""}`;
+  const glyph = status === "copied" ? "check" : status === "error" ? "alert" : "copy";
+  const tone = status === "copied" ? "text-green" : status === "error" ? "text-red" : "text-ink-3 hover:text-ink";
+  return (
+    <div className={`flex w-full flex-col gap-1.5 ${className}`}>
+      {label && <label htmlFor={id} className="text-caption font-medium text-ink">{label}</label>}
+      <div className="flex items-center gap-2">
+        <span className="primitive-field corner-smooth flex h-9 min-w-0 flex-1 items-center gap-1 rounded-control border border-line bg-field pr-1 pl-3">
+          <input
+            id={id}
+            readOnly
+            value={value}
+            onFocus={(event) => event.currentTarget.select()}
+            aria-label={label ? undefined : "Value to copy"}
+            className={`min-w-0 flex-1 bg-transparent text-caption text-ink outline-none ${mono ? "font-mono" : ""}`}
+          />
+          {variant === "icon" && (
+            <Tooltip label={name}>
+              <IconButton label={name} onClick={copy} className={`size-7 rounded-sm transition-colors duration-150 hover:bg-hover ${tone}`}>
+                <span key={status} className="flex" style={{ animation: "pop-in 200ms var(--ease-out-quint) both" }}>
+                  <Icon name={glyph} size={15} strokeWidth={2} />
+                </span>
+              </IconButton>
+            </Tooltip>
+          )}
+        </span>
+        {variant === "button" && (
+          <Button variant="secondary" size="md" icon={<Icon name={glyph} size={14} />} onClick={copy} aria-label={name} className={status === "copied" ? "text-green" : status === "error" ? "text-red" : ""}>
+            {status === "copied" ? "Copied" : "Copy"}
+          </Button>
+        )}
+      </div>
+      <span className="sr-only" role="status" aria-live="polite">{status === "idle" ? "" : name}</span>
+    </div>
+  );
+}
+
+/* ═══════════ InputGroup (mirrors components/InputGroup.tsx) ═══════════ */
+/* ─────────────────────────────────────────────────────────
+ * INPUT GROUP — several fields as one block
+ * Rows on a single surface divided by hairlines, the way a
+ * settings sheet or a sign-up card lays out its fields. The
+ * label sits inside the row above the value, so nothing needs
+ * a column of labels beside it. The row under the pointer tints
+ * (hover), the row being typed in lifts to the surface with a
+ * hairline (focus), and an error row carries its message below
+ * the value in red. Use Field + Input for a single field or a
+ * conventional form; this is for a short, related set: name,
+ * email, company; street, city, postcode.
+ *
+ *   <InputGroup>
+ *     <InputField label="Name" icon="user" />
+ *     <InputField label="Email" type="email" error="Enter a valid address" />
+ *   </InputGroup>
+ * ───────────────────────────────────────────────────────── */
+function InputGroup({ children, className = "" }) {
+  return (
+    <div role="group" className={`corner-smooth flex w-full flex-col divide-y divide-line overflow-hidden rounded-md border border-line bg-field ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+function InputField({
+  label,
+  labelHidden = false,
+  icon,
+  error,
+  disabled = false,
+  trailing,
+  className = "",
+  ...rest
+}) {
+  const id = useId();
+  const [focused, setFocused] = useState(false);
+  const errorId = error ? `${id}-error` : undefined;
+  return (
+    <div
+      className={`group/field relative flex items-center gap-3 px-3 transition-colors duration-150 ${labelHidden ? "h-10" : "min-h-14 py-2"} ${
+        disabled ? "opacity-50" : focused ? "bg-surface" : "hover:bg-hover"
+      } ${error ? "text-red" : ""} ${className}`}
+      onClick={() => document.getElementById(id)?.focus()}
+    >
+      {icon && <Icon name={icon} size={16} strokeWidth={focused ? 2 : 1.6} className={`shrink-0 transition-colors duration-150 ${error ? "text-red" : focused ? "text-ink" : "text-ink-3"}`} />}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <label
+          htmlFor={id}
+          className={labelHidden ? "sr-only" : `text-small transition-colors duration-150 ${error ? "text-red" : focused ? "font-medium text-ink" : "text-ink-3"}`}
+        >
+          {label}
+        </label>
+        <input
+          id={id}
+          disabled={disabled}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={errorId}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder={labelHidden ? label : rest.placeholder}
+          className="min-w-0 w-full bg-transparent text-body text-ink outline-none placeholder:text-ink-3"
+          {...rest}
+        />
+        {error && <span id={errorId} className="mt-0.5 text-small text-red">{error}</span>}
+      </div>
+      {trailing && <span className="shrink-0 text-caption text-ink-3">{trailing}</span>}
+      {/* the focused row's hairline, drawn inside so the group's dividers stay put */}
+      <span aria-hidden className={`pointer-events-none absolute inset-0 border transition-colors duration-150 ${focused ? (error ? "border-red" : "border-line-strong") : "border-transparent"}`} />
+    </div>
+  );
+}
+
+
+/* ═══════════ ThinkingIndicator (mirrors components/ThinkingIndicator.tsx) ═══════════ */
+/* ─────────────────────────────────────────────────────────
+ * THINKING INDICATOR — the smallest "working on it"
+ * A glyph that breathes between a circle and an infinity loop,
+ * and one word that shimmers and rotates every few seconds
+ * (Thinking, Planning, Refining…). For the gap before a reply
+ * starts, inline in a thread. ThinkingState is the bigger
+ * sibling with steps, reasoning and sources; this is a single
+ * line. Screen readers hear one "Thinking…", not every word.
+ * Reduced motion: still glyph, first word, no rotation.
+ *
+ * The morphing path is a component-specific illustration (an
+ * SVG animate on `d`, no library); the glyph is not an icon.
+ * ───────────────────────────────────────────────────────── */
+const CIRCLE_A = "M 12 8 C 14.21 8 16 9.79 16 12 C 16 14.21 14.21 16 12 16 C 9.79 16 8 14.21 8 12 C 8 9.79 9.79 8 12 8 Z";
+const INFINITY = "M 12 12 C 14 8.5 19 8.5 19 12 C 19 15.5 14 15.5 12 12 C 10 8.5 5 8.5 5 12 C 5 15.5 10 15.5 12 12 Z";
+const CIRCLE_B = "M 12 16 C 14.21 16 16 14.21 16 12 C 16 9.79 14.21 8 12 8 C 9.79 8 8 9.79 8 12 C 8 14.21 9.79 16 12 16 Z";
+const DEFAULT_WORDS = ["Thinking", "Planning", "Refining", "Checking"];
+
+function ThinkingIndicator({
+  words = DEFAULT_WORDS,
+  interval = 3200,
+  glyph = true,
+  className = "",
+}) {
+  const reduced = useReducedMotion();
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (reduced || words.length < 2) return;
+    const t = window.setInterval(() => setIndex((i) => (i + 1) % words.length), interval);
+    return () => window.clearInterval(t);
+  }, [reduced, words.length, interval]);
+  const longest = words.reduce((a, b) => (a.length >= b.length ? a : b), "");
+  const word = reduced ? words[0] : words[index];
+  return (
+    <div role="status" className={`inline-flex items-center gap-2 ${className}`}>
+      <span className="sr-only">Thinking…</span>
+      {glyph && (
+        <svg aria-hidden width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-ink-3">
+          {reduced ? (
+            <path d={INFINITY} />
+          ) : (
+            <path d={CIRCLE_A}>
+              <animate attributeName="d" dur="6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" values={`${CIRCLE_A};${INFINITY};${CIRCLE_B};${INFINITY};${CIRCLE_A}`} />
+            </path>
+          )}
+        </svg>
+      )}
+      {/* the longest word reserves the width, so the line never shifts */}
+      <span aria-hidden className="inline-grid overflow-hidden text-caption">
+        <span className="invisible col-start-1 row-start-1 font-medium">{longest}</span>
+        <ShimmerLabel key={word} className="col-start-1 row-start-1 text-caption" style={reduced ? undefined : { animation: "shimmer-text 1.4s linear infinite, fade-up 240ms var(--ease-out-quint) both" }}>
+          {word}
+        </ShimmerLabel>
+      </span>
+    </div>
   );
 }
 

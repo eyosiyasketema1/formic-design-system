@@ -220,6 +220,12 @@ if m0:
         if "_" in name:  # only const-style names, not acronyms in strings/comments
             fails.append(f"preview.html: {name} referenced but never defined (lost in a mirror regen?)")
 
+# ── 3a4. Preview script: no ES module syntax (Babel inline script is not a module) ──
+if m0:
+    for mm in re.finditer(r"^(export|import)\b", m0.group(1), re.M):
+        line = m0.group(1)[: mm.start()].count("\n") + 1
+        fails.append(f"preview.html: script line {line}: '{mm.group(1)}' in the inline Babel script white-screens the gallery (a mirror kept its module syntax)")
+
 # ── 3b. Preview script: every React hook used must be destructured ──
 m = re.search(r'<script type="text/babel"[^>]*>(.*?)</script>', preview, re.S)
 if m:
