@@ -15,7 +15,7 @@ edited by hand. Every key is optional; a missing key keeps the system default.
       "radius":  "default",        sharp | default | rounded | full
       "size":    "default",        default | comfortable | spacious
       "theme":   "light",          light | dark   (the app's starting theme)
-      "avatar":  "initials",       initials | doodle   (people without a photo)
+      "avatar":  "initials",       initials | doodle | photo   (people without a src)
       "sidebar": "expanded",       expanded | rail     (AppSidebar's first variant)
       "motion":  true              charts animate in
     }
@@ -64,7 +64,7 @@ CHOICES = {
     "radius": ("sharp", "default", "rounded", "full"),
     "size": ("default", "comfortable", "spacious"),
     "theme": ("light", "dark"),
-    "avatar": ("initials", "doodle"),
+    "avatar": ("initials", "doodle", "photo"),
     "sidebar": ("expanded", "rail"),
 }
 
@@ -205,6 +205,11 @@ def main():
         print(f"  html     {', '.join(attrs)} — {where}")
 
     # component defaults
+    if cfg["avatar"] == "doodle":
+        pkg = next((par / "package.json" for par in [ROOT, *ROOT.parents[:4]] if (par / "package.json").exists()), None)
+        if pkg and "@dicebear/core" not in pkg.read_text():
+            print("  ! doodle avatars need two packages this app does not list yet — run: npm i @dicebear/core @dicebear/notionists"
+                  "\n    (until then people show initials, and the console says why)")
     p = write_config_ts(cfg)
     print(f"  defaults avatar={cfg['avatar']} sidebar={cfg['sidebar']} motion={str(cfg['motion']).lower()} -> {p.relative_to(ROOT)}")
     if write_preview_mirrors(cfg):

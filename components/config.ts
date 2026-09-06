@@ -10,8 +10,10 @@
  * attributes, which the same script writes.
  * ───────────────────────────────────────────────────────── */
 export type FormicConfig = {
-  /** people without a photo: initials in an ink circle, or a drawn face (DiceBear notionists) */
-  avatar: "initials" | "doodle";
+  /** people without a `src`: initials in a tinted circle, a drawn face
+   *  (DiceBear notionists, generated from the name), or a placeholder
+   *  photo (pravatar, picked by the name) until real photos exist */
+  avatar: "initials" | "doodle" | "photo";
   /** AppSidebar's starting variant */
   sidebar: "expanded" | "rail";
   /** charts and sparklines animate in (reduced-motion still wins) */

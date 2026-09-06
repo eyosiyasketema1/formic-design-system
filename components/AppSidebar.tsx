@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useId, useState, type ReactNode } from "react";
-import { Avatar, Disclosure, GlideMenu, Icon, IconButton, Popover, Tooltip, type IconName } from "./primitives";
+import { Avatar, Disclosure, GlideMenu, Icon, IconButton, Popover, Tooltip, type AvatarKind, type IconName } from "./primitives";
 import { FormicMark } from "./brand";
 import { FORMIC_CONFIG } from "./config";
 /* ─────────────────────────────────────────────────────────
@@ -64,7 +64,7 @@ const DEFAULT_SECTIONS: AppSidebarSection[] = [
     ],
   },
 ];
-export type AppSidebarUser = { name: string; detail?: string; src?: string; /** drawn face instead of initials when there is no photo */ doodle?: boolean };
+export type AppSidebarUser = { name: string; detail?: string; src?: string; /** what shows without a photo; defaults to the config */ kind?: AvatarKind; doodle?: boolean };
 const DEFAULT_USER: AppSidebarUser = { name: "Eyosiyas Ketema", detail: "Admin" };
 
 export default function AppSidebar({
@@ -298,12 +298,12 @@ export default function AppSidebar({
           rail ? (
             <Tooltip label={user.name}>
               <button type="button" aria-label={user.name} className="flex size-9 items-center justify-center rounded-control hover:bg-hover-2">
-                <Avatar name={user.name} src={user.src} doodle={user.doodle} size="sm" />
+                <Avatar name={user.name} src={user.src} kind={user.kind} doodle={user.doodle} size="sm" />
               </button>
             </Tooltip>
           ) : (
             <button type="button" className="flex h-10 w-full items-center gap-2.5 rounded-control px-2 text-left hover:bg-hover-2">
-              <Avatar name={user.name} src={user.src} doodle={user.doodle} size="sm" />
+              <Avatar name={user.name} src={user.src} kind={user.kind} doodle={user.doodle} size="sm" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-caption font-medium text-ink">{user.name}</span>
                 {user.detail && <span className="block truncate text-small text-ink-3">{user.detail}</span>}
