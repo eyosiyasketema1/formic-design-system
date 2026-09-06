@@ -20,6 +20,11 @@ import { useEffect, useRef, useState } from "react";
  * ───────────────────────────────────────────────────────── */
 export type SliderValuePosition = "right" | "thumb";
 
+export type SliderThickness = "thin" | "default" | "thick";
+/* track height per thickness; the 16px thumb stays, centred on it */
+const TRACK: Record<SliderThickness, number> = { thin: 4, default: 6, thick: 10 };
+const trackPx = (t: SliderThickness | number) => (typeof t === "number" ? t : TRACK[t]);
+
 const nearest = (v: number, steps: number[]) => steps.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a), steps[0]);
 
 /* keyboard on a stepped slider walks the list, not the native step */
@@ -150,6 +155,7 @@ export default function Slider({
   formatValue,
   editable = false,
   valuePosition = "right",
+  thickness = "default",
   disabled = false,
   className = "",
   id,
@@ -176,6 +182,8 @@ export default function Slider({
   editable?: boolean;
   /** right: readout beside the track. thumb: a chip above the thumb while dragging or focused */
   valuePosition?: SliderValuePosition;
+  /** track height: thin 4px, default 6px, thick 10px, or a number of px */
+  thickness?: SliderThickness | number;
   disabled?: boolean;
   className?: string;
   id?: string;
@@ -212,7 +220,7 @@ export default function Slider({
           onFocus={() => setActive(true)}
           onBlur={() => setActive(false)}
           className="primitive-slider w-full min-w-0 cursor-pointer disabled:cursor-default disabled:opacity-60"
-          style={{ "--slider-fill": `${percent}%` } as React.CSSProperties}
+          style={{ "--slider-fill": `${percent}%`, "--slider-track": `${trackPx(thickness)}px` } as React.CSSProperties}
         />
         {showSteps && steps?.length ? <StepDots steps={steps} min={min} max={max} current={current} /> : null}
         {valuePosition === "thumb" && <ThumbValue percent={percent} text={format(current)} show={active} />}
@@ -238,6 +246,7 @@ export function RangeSlider({
   formatValue,
   editable = false,
   valuePosition = "right",
+  thickness = "default",
   disabled = false,
   className = "",
 }: {
@@ -255,6 +264,7 @@ export function RangeSlider({
   formatValue?: (v: number) => string;
   editable?: boolean;
   valuePosition?: SliderValuePosition;
+  thickness?: SliderThickness | number;
   disabled?: boolean;
   className?: string;
 } = {}) {
@@ -287,6 +297,7 @@ export function RangeSlider({
       onBlur={() => setActive(null)}
       /* the thumb being moved sits on top so it can cross the other one */
       className={`primitive-slider is-layered absolute inset-0 w-full min-w-0 cursor-pointer disabled:cursor-default disabled:opacity-60 ${active === which ? "z-20" : "z-10"}`}
+      style={{ "--slider-track": `${trackPx(thickness)}px` } as React.CSSProperties}
     />
   );
   return (
@@ -296,7 +307,7 @@ export function RangeSlider({
       )}
       <span className="relative flex h-6 min-w-0 flex-1 items-center">
         {/* the shared track: inset with the accent between the thumbs */}
-        <span aria-hidden className="absolute inset-x-0 h-1.5 rounded-full bg-inset shadow-hairline">
+        <span aria-hidden className="absolute inset-x-0 rounded-full bg-inset shadow-hairline" style={{ height: trackPx(thickness) }}>
           <span className="absolute inset-y-0 rounded-full bg-accent" style={{ left: `${pct(lo)}%`, right: `${100 - pct(hi)}%` }} />
         </span>
         {thumb(0)}

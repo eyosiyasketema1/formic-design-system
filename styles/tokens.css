@@ -255,7 +255,7 @@ textarea:focus-visible {
   background: transparent;
 }
 .primitive-slider::-webkit-slider-runnable-track {
-  height: 6px;
+  height: var(--slider-track, 6px);
   border-radius: 999px;
   background: linear-gradient(to right, var(--accent) var(--slider-fill, 0%), var(--inset) var(--slider-fill, 0%));
   box-shadow: 0 0 0 1px var(--line);
@@ -264,13 +264,13 @@ textarea:focus-visible {
   appearance: none;
   width: 16px;
   height: 16px;
-  margin-top: -5px;
+  margin-top: calc((var(--slider-track, 6px) - 16px) / 2);
   border-radius: 50%;
   background: var(--surface);
   box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn);
 }
 .primitive-slider::-moz-range-track {
-  height: 6px;
+  height: var(--slider-track, 6px);
   border-radius: 999px;
   background: linear-gradient(to right, var(--accent) var(--slider-fill, 0%), var(--inset) var(--slider-fill, 0%));
   box-shadow: 0 0 0 1px var(--line);
