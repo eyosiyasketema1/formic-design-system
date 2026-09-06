@@ -266,6 +266,7 @@ export function LineChart({
   height = 150,
   fill = false,
   animate = FORMIC_CONFIG.motion,
+  legend = true,
   className = "",
 }: {
   labels?: string[];
@@ -273,6 +274,8 @@ export function LineChart({
   series?: Series[];
   area?: boolean;
   points?: boolean;
+  /** the legend a multi-series chart carries; off only when the surrounding card already names the series with the same dots */
+  legend?: boolean;
   /** plot height in px; with `fill` it becomes the minimum */
   height?: number;
   /** stretch to the parent's height — inside a Panel body this fills the card */
@@ -286,6 +289,12 @@ export function LineChart({
   const { settled, drawing } = useEntrance(animate);
   const W = 100, H = 40;                      // viewBox units; CSS does the sizing
   const max = niceMax(Math.max(0, ...series.flatMap((s) => s.values)));
+  /* a series can go below zero (a return, a delta): the scale then runs
+     from the lowest value, and the area closes on the zero line */
+  const min = Math.min(0, ...series.flatMap((s) => s.values));
+  const span = max - min || 1;
+  const yOf = (v: number) => H - ((v - min) / span) * H;
+  const zeroY = yOf(0);
   const slots = Math.max(labels.length, ...series.map((s) => s.values.length), 1);
   const step = slots > 1 ? W / (slots - 1) : W;
 
@@ -296,7 +305,7 @@ export function LineChart({
 
   return (
     <div className={`flex w-full flex-col ${fill ? "h-full min-h-0" : ""} ${className}`}>
-      {series.length > 1 && <div className="mb-3 shrink-0"><ChartLegend series={series} /></div>}
+      {legend && series.length > 1 && <div className="mb-3 shrink-0"><ChartLegend series={series} /></div>}
       {/* Filling: the svg is absolute so its 100×40 viewBox aspect cannot set
           the height; the wrapper takes the panel's height (flex-1) or, in an
           auto-height row, exactly `height`. Dots are %-positioned in the same
@@ -322,7 +331,7 @@ export function LineChart({
           ))}
           {series.map((s, si) => {
             const tone = toneOf(s.color, si);
-            const d = s.values.map((v, i) => `${i ? "L" : "M"}${i * step} ${H - (v / max) * H}`).join(" ");
+            const d = s.values.map((v, i) => `${i ? "L" : "M"}${i * step} ${yOf(v)}`).join(" ");
             return (
               /* The colour class goes on the <g>, not the path: a gradient
                  stop resolves currentColor from its OWN inherited colour, so
@@ -336,7 +345,7 @@ export function LineChart({
                         <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
                       </linearGradient>
                     </defs>
-                    <path d={`${d} L${(s.values.length - 1) * step} ${H} L0 ${H} Z`} fill={`url(#${gradientId}-${si})`} />
+                    <path d={`${d} L${(s.values.length - 1) * step} ${zeroY} L0 ${zeroY} Z`} fill={`url(#${gradientId}-${si})`} />
                   </>
                 )}
                 <path
@@ -370,7 +379,7 @@ export function LineChart({
                 width: HIT, height: HIT,
                 left: `${(i / Math.max(slots - 1, 1)) * 100}%`,
                 /* percent, not px: the plot's height is whatever CSS gave it */
-                top: `${(1 - v / max) * 100}%`,
+                top: `${(yOf(v) / H) * 100}%`,
               }}
             >
               <span className={`size-2.5 rounded-full border-2 border-surface transition-transform duration-150 ${SERIES_BG[tone]}`} />
