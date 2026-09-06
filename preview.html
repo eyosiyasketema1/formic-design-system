@@ -8660,6 +8660,7 @@ function LineChart({
   height = 150,
   fill = false,
   animate = FORMIC_CONFIG.motion,
+  legend = true,
   className = "",
 }) {
   const gradientId = useId();
@@ -8667,6 +8668,12 @@ function LineChart({
   const { settled, drawing } = useEntrance(animate);
   const W = 100, H = 40;                      // viewBox units; CSS does the sizing
   const max = niceMax(Math.max(0, ...series.flatMap((s) => s.values)));
+  /* a series can go below zero (a return, a delta): the scale then runs
+     from the lowest value, and the area closes on the zero line */
+  const min = Math.min(0, ...series.flatMap((s) => s.values));
+  const span = max - min || 1;
+  const yOf = (v) => H - ((v - min) / span) * H;
+  const zeroY = yOf(0);
   const slots = Math.max(labels.length, ...series.map((s) => s.values.length), 1);
   const step = slots > 1 ? W / (slots - 1) : W;
 
@@ -8677,7 +8684,7 @@ function LineChart({
 
   return (
     <div className={`flex w-full flex-col ${fill ? "h-full min-h-0" : ""} ${className}`}>
-      {series.length > 1 && <div className="mb-3 shrink-0"><ChartLegend series={series} /></div>}
+      {legend && series.length > 1 && <div className="mb-3 shrink-0"><ChartLegend series={series} /></div>}
       {/* Filling: the svg is absolute so its 100×40 viewBox aspect cannot set
           the height; the wrapper takes the panel's height (flex-1) or, in an
           auto-height row, exactly `height`. Dots are %-positioned in the same
@@ -8703,7 +8710,7 @@ function LineChart({
           ))}
           {series.map((s, si) => {
             const tone = toneOf(s.color, si);
-            const d = s.values.map((v, i) => `${i ? "L" : "M"}${i * step} ${H - (v / max) * H}`).join(" ");
+            const d = s.values.map((v, i) => `${i ? "L" : "M"}${i * step} ${yOf(v)}`).join(" ");
             return (
               /* The colour class goes on the <g>, not the path: a gradient
                  stop resolves currentColor from its OWN inherited colour, so
@@ -8717,7 +8724,7 @@ function LineChart({
                         <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
                       </linearGradient>
                     </defs>
-                    <path d={`${d} L${(s.values.length - 1) * step} ${H} L0 ${H} Z`} fill={`url(#${gradientId}-${si})`} />
+                    <path d={`${d} L${(s.values.length - 1) * step} ${zeroY} L0 ${zeroY} Z`} fill={`url(#${gradientId}-${si})`} />
                   </>
                 )}
                 <path
@@ -8751,7 +8758,7 @@ function LineChart({
                 width: HIT, height: HIT,
                 left: `${(i / Math.max(slots - 1, 1)) * 100}%`,
                 /* percent, not px: the plot's height is whatever CSS gave it */
-                top: `${(1 - v / max) * 100}%`,
+                top: `${(yOf(v) / H) * 100}%`,
               }}
             >
               <span className={`size-2.5 rounded-full border-2 border-surface transition-transform duration-150 ${SERIES_BG[tone]}`} />
@@ -10833,6 +10840,20 @@ function Page_projectsidebar() {
 }
 
 /* one page for all three rails */
+function Page_insightcards() {
+  const toast = useToast();
+  return (
+    <>
+      <GalleryCard label="Three insights · use the arrows, press the prompt pill" wide><InsightCards onPrompt={(p) => toast({ title: `Sent: ${p}` })} /></GalleryCard>
+      <GalleryCard label="The cards on their own" full>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <CompareCard /><AnomalyCard /><AllocationCard />
+        </div>
+      </GalleryCard>
+    </>
+  );
+}
+
 function Page_flowchart() {
   const toast = useToast();
   return (
@@ -11426,6 +11447,7 @@ const PAGES = [
   { id: "codeblock", group: "Conversation", title: "CodeBlock", note: "AI code output \u2014 dependency-free syntax highlighting on theme tokens, copy action, optional line numbers. Block comments spanning lines stay plain (accepted).", file: "components/CodeBlock.tsx", Component: Page_codeblock },
   { id: "markdown", group: "Conversation", title: "Markdown", note: "Dependency-free renderer for AI output \u2014 headings, emphasis, safe links, nested lists, quotes, tables that scroll in place, and fenced code through CodeBlock. javascript: URLs are dropped.", file: "components/Markdown.tsx", Component: Page_markdown },
   { id: "selectionactions", group: "Conversation", title: "SelectionActions", note: "Contextual AI bar beneath selected text \u2014 quick actions, free-text edit instructions, streamed rewrite with keep / discard.", file: "components/SelectionActions.tsx", Component: Page_selectionactions },
+  { id: "insightcards", group: "Conversation", title: "InsightCards", note: "What the assistant noticed, one page at a time: a sentence with @entity mentions and mono deltas, a mini visualisation on a surface, and a follow-up prompt to send. Three cards ship: Compare (two series, big deltas, line), Anomaly (a spike against a threshold, Spend / Usage toggle, bars), Allocation (hero number, segmented bar, a legend that inspects). Pages take any component. Charts are the system\u2019s own, so colours, legends and motion follow the rest.", file: "components/InsightCards.tsx", Component: Page_insightcards },
   { id: "askuserquestions", group: "Conversation", title: "AskUserQuestions", note: "An agent asks, the person answers: a stepped flow of questions with numbered options. 1 to 9 picks, Enter confirms, Backspace goes back. Single-select advances on its own, multi-select waits for Next, an Other row opens an inline field, a free-text question is a textarea (\u2318 Enter submits), and a question can be skippable. onComplete returns every answer. For a decision the agent needs before it continues; ApprovalCard is for a yes or no with consequences. Ported from Micka Touillaud\u2019s Ask User Questions (MIT), rebuilt on Formic primitives.", file: "components/AskUserQuestions.tsx", Component: Page_askuserquestions },
   { id: "approvalcard", group: "Conversation", title: "ApprovalCard", note: "Human-in-the-loop questions \u2014 fully interactive, try answering.", file: "components/ApprovalCard.tsx", Component: Page_approvalcard },
   { id: "approvalflow", group: "Conversation", title: "ApprovalFlow", note: "The stepper sibling of ApprovalCard, for a run that needs several questions in sequence. The stack slides vertically and the card's height animates to fit, so it never jumps; the counter rolls like an odometer. Single-choice answers auto-advance, multi-select waits for Continue, and every question takes a free-text answer.", file: "components/ApprovalFlow.tsx", Component: Page_approvalflow },
@@ -12012,6 +12034,244 @@ function RailPanels({ page, pg, knobs, pgState, pgSet, pgReset }) {
         </RailPanel>
       )}
     </>
+  );
+}
+
+/* ═══════════ InsightCards (mirrors components/InsightCards.tsx) ═══════════ */
+/* ─────────────────────────────────────────────────────────
+ * INSIGHT CARDS — what the assistant noticed, one page at a time
+ * A small carousel ("Insights 3 ‹ ›"): each page is a sentence
+ * with @entity mentions and mono deltas, a mini visualisation on
+ * a surface, and a follow-up prompt the person can send. Three
+ * cards ship: Compare (two series, big deltas, line chart),
+ * Anomaly (a spike against a threshold, Spend / Usage toggle,
+ * bars) and Allocation (a hero number, a segmented bar, a legend
+ * that inspects a segment). Pages take any component, so an app
+ * adds its own.
+ *
+ * Charts are the system's own (LineChart, BarChart): categorical
+ * chart colours, legends, tooltips, entrance motion, no library.
+ * Deltas use --green / --red because they mean better and worse.
+ * ───────────────────────────────────────────────────────── */
+const formatPercent = (v) => `${v > 0 ? "+" : ""}${v.toFixed(2)}%`;
+const formatMoney = (v) => `$${Math.round(v).toLocaleString("en-US")}`;
+
+/* an inline @entity mention */
+function IC_Entity({ name, color = 1 }) {
+  return (
+    <span className="inline-flex items-center gap-1 align-baseline font-medium text-ink">
+      <span aria-hidden className={`inline-block size-2 rounded-full ${IC_DOT[color]}`} />
+      @{name}
+    </span>
+  );
+}
+/* a delta in mono, coloured by meaning */
+function IC_Delta({ children, tone }) {
+  return <code className={`font-mono text-tiny ${tone === "down" ? "text-red" : "text-green"}`}>{children}</code>;
+}
+const IC_DOT = { 1: "bg-chart-1", 2: "bg-chart-2", 3: "bg-chart-3", 4: "bg-chart-4", 5: "bg-chart-5" };
+
+/* the framed plot inside a card: a caption row, then the chart */
+function IC_Stage({ caption, action, children }) {
+  return (
+    <div className="mt-2 overflow-hidden rounded-control bg-inset shadow-hairline">
+      <div className="flex h-8 items-center justify-between gap-2 border-b border-line px-2.5">
+        <span className="min-w-0 truncate text-small text-ink-3 tabular-nums">{caption}</span>
+        {action ?? <Badge>Snapshot</Badge>}
+      </div>
+      <div className="bg-surface p-2">{children}</div>
+    </div>
+  );
+}
+
+/* ── 1. compare: two series, legend with the latest delta ── */
+const IC_COMPARE = [
+  { name: "Mint Chip", values: [-2.9, -3.4, -3.05, -3.86, -3.52, -4.1, -3.82, -4.41], sub: "-$2,377.66", color: 2 },
+  { name: "Pistachio", values: [0.22, 0.58, 0.42, 0.91, 0.76, 1.08, 0.96, 1.15], sub: "+$617.22", color: 1 },
+];
+const IC_WEEKS = ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8"];
+function CompareCard({ series = IC_COMPARE, labels = IC_WEEKS }) {
+  return (
+    <Card className="p-3">
+      <div className="flex items-start gap-4">
+        {series.map((s) => {
+          const last = s.values[s.values.length - 1] ?? 0;
+          return (
+            <div key={s.name} className="min-w-0 flex-1">
+              <span className="flex items-center gap-1.5 text-small text-ink-2">
+                <span aria-hidden className={`size-2 rounded-full ${IC_DOT[s.color]}`} />
+                <span className="truncate">{s.name}</span>
+              </span>
+              <span className={`block text-lead font-semibold tabular-nums ${last < 0 ? "text-red" : "text-green"}`}>{formatPercent(last)}</span>
+              <IC_Delta tone={last < 0 ? "down" : "up"}>{s.sub}</IC_Delta>
+            </div>
+          );
+        })}
+      </div>
+      <IC_Stage caption="Trend, last 8 weeks">
+        <LineChart labels={labels} series={series.map((s) => ({ name: s.name, values: s.values, color: s.color }))} height={130} points={false} legend={false} />
+      </IC_Stage>
+    </Card>
+  );
+}
+
+/* ── 2. anomaly: a spike against a threshold, two metrics ── */
+const IC_ANOMALY = {
+  spend: [274, 289, 264, 307, 331, 1210, 1718, 2112],
+  usage: [18, 19, 17, 21, 22, 58, 81, 96],
+  spendThreshold: 900,
+  usageThreshold: 40,
+};
+function AnomalyCard({ data = IC_ANOMALY, title = "High freezer spend", delta = "+$1,834.66", compare = "vs 3 months" }) {
+  const [metric, setMetric] = useState("spend");
+  const values = metric === "spend" ? data.spend : data.usage;
+  const threshold = metric === "spend" ? data.spendThreshold : data.usageThreshold;
+  const fmt = (v) => (metric === "spend" ? formatMoney(v) : `${Math.round(v)} kWh`);
+  const spike = values.findIndex((v) => v > threshold);
+  const last = data.spend[data.spend.length - 1] ?? 0;
+  return (
+    <Card className="p-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex min-w-0 items-center gap-1.5 text-caption font-medium text-ink">
+          <Icon name="arrow-up" size={13} strokeWidth={2.5} className="shrink-0 text-red" />
+          <span className="truncate">{title}</span>
+        </span>
+        <Badge>Snapshot</Badge>
+      </div>
+      <IC_Stage
+        caption={`${fmt(threshold)} threshold`}
+        action={
+          <Tabs
+            variant="segmented"
+            value={metric}
+            onChange={(k) => setMetric(k)}
+            tabs={[{ key: "spend", label: "Spend" }, { key: "usage", label: "Usage" }]}
+            className="w-auto [&_[role=tab]]:h-6 [&_[role=tab]]:px-2 [&_[role=tab]]:text-small [&_[role=tablist]]:p-0.5"
+          />
+        }
+      >
+        <BarChart key={metric} labels={data.labels ?? IC_WEEKS} series={[{ name: metric === "spend" ? "Spend" : "Usage", values }]} highlight={spike < 0 ? undefined : spike} height={120} showValues={false} />
+      </IC_Stage>
+      <div className="mt-2 flex flex-wrap items-baseline gap-2">
+        <span className="text-lead font-semibold text-ink tabular-nums">{formatMoney(last)} spent</span>
+        <IC_Delta tone="down">{delta}</IC_Delta>
+        <span className="text-small text-ink-3">{compare}</span>
+      </div>
+    </Card>
+  );
+}
+
+/* ── 3. allocation: hero number, segmented bar, legend that inspects ── */
+const IC_ALLOCATION = [
+  { name: "VAN", label: "Vanilla", pct: 72.5, amount: "$51,785", color: 1 },
+  { name: "CHOC", label: "Chocolate", pct: 22.8, amount: "$16,278", color: 2 },
+  { name: "MINT", label: "Mint", pct: 4.7, amount: "$3,357", color: 3 },
+];
+function AllocationCard({ segments = IC_ALLOCATION, title = "Vanilla allocation", note = "Contribution across current inventory value. Picking a segment changes what is inspected without moving the card." }) {
+  const [selected, setSelected] = useState(segments[0]?.name);
+  const active = segments.find((s) => s.name === selected) ?? segments[0];
+  return (
+    <Card className="p-3">
+      <span className="flex items-center gap-1.5 text-caption font-medium text-ink">
+        <span aria-hidden className={`size-2 rounded-full ${IC_DOT[active.color]}`} />
+        {title}
+      </span>
+      <span className="mt-1 block text-heading font-semibold tracking-tight text-ink tabular-nums">{active.amount}</span>
+      <div role="group" aria-label="Allocation segments" className="mt-3 flex h-8 gap-0.5 overflow-hidden rounded-full bg-field p-0.5">
+        {segments.map((s) => {
+          const on = s.name === selected;
+          return (
+            <button
+              key={s.name}
+              type="button"
+              aria-pressed={on}
+              aria-label={`${s.label}: ${s.pct}%`}
+              onClick={() => setSelected(s.name)}
+              className={`h-full min-w-2 rounded-full transition-[opacity,box-shadow] duration-300 ${IC_DOT[s.color]} ${on ? "opacity-100 shadow-[inset_0_0_0_2px_var(--surface)]" : "opacity-45 hover:opacity-70"}`}
+              style={{ width: `${s.pct}%`, transitionTimingFunction: "var(--ease-out-quint)" }}
+            />
+          );
+        })}
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-1">
+        {segments.map((s) => {
+          const on = s.name === selected;
+          return (
+            <button
+              key={s.name}
+              type="button"
+              aria-pressed={on}
+              onClick={() => setSelected(s.name)}
+              className={`corner-smooth flex h-6 items-center gap-1 rounded-full px-1.5 text-small transition-colors duration-150 ${on ? "bg-field text-ink" : "text-ink-2 hover:bg-hover hover:text-ink"}`}
+            >
+              <span aria-hidden className={`size-1.5 rounded-full ${IC_DOT[s.color]}`} />
+              {s.name} <span className="tabular-nums">{s.pct}%</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-3 rounded-control bg-inset px-2.5 py-2 shadow-hairline">
+        <span className="block text-small font-medium text-ink">{active.label}</span>
+        <span className="mt-0.5 block text-small leading-relaxed text-ink-3">{note}</span>
+      </div>
+    </Card>
+  );
+}
+
+/* ── the carousel ── */
+const IC_DEFAULT_PAGES = [
+  {
+    key: "compare",
+    prose: <>The worst performer in your <IC_Entity name="Creamery" color={2} /> is Rocky Road, down <IC_Delta tone="down">-6%</IC_Delta> or <IC_Delta tone="down">-$2,453.44</IC_Delta>.</>,
+    Card: CompareCard,
+    prompt: "Should I rebalance flavours?",
+  },
+  {
+    key: "anomaly",
+    prose: <>Unusually high freezer bill on <span className="font-medium text-ink">Dec 13</span>: <IC_Delta tone="down">+$1,834.66</IC_Delta> above your average.</>,
+    Card: AnomalyCard,
+    prompt: "Get tips on cutting freezer costs",
+  },
+  {
+    key: "allocation",
+    prose: <>You are heavily invested in <IC_Entity name="Vanilla" /> at <span className="font-medium text-ink">72.5%</span> of your case.</>,
+    Card: AllocationCard,
+    prompt: "If we look at seasonals, what changes?",
+  },
+];
+
+function InsightCards({
+  pages = IC_DEFAULT_PAGES,
+  title = "Insights",
+  onPrompt,
+  className = "",
+} = {}) {
+  const [index, setIndex] = useState(0);
+  const move = (d) => setIndex((i) => (i + d + pages.length) % pages.length);
+  const page = pages[index];
+  if (!page) return null;
+  const { prose, Card: Body, prompt } = page;
+  return (
+    <section aria-roledescription="carousel" aria-label={title} className={`w-full max-w-90 ${className}`}>
+      <div className="flex items-center justify-between">
+        <span className="flex items-baseline gap-1.5">
+          <span className="text-caption font-semibold text-ink">{title}</span>
+          <span className="text-caption text-ink-3 tabular-nums">{index + 1} / {pages.length}</span>
+        </span>
+        {pages.length > 1 && (
+          <span className="flex items-center gap-0.5">
+            <IconButton label="Previous insight" onClick={() => move(-1)} className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="chevron-left" size={14} strokeWidth={2.2} /></IconButton>
+            <IconButton label="Next insight" onClick={() => move(1)} className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="chevron-right" size={14} strokeWidth={2.2} /></IconButton>
+          </span>
+        )}
+      </div>
+      {/* the page remounts, so it fades in and its charts play their entrance */}
+      <div key={page.key} aria-live="polite" style={{ animation: "fade-in 200ms ease-out both" }}>
+        <p className="mt-1.5 text-caption leading-relaxed text-ink-2">{prose}</p>
+        <div className="mt-2"><Body /></div>
+        <Button variant="secondary" size="sm" shape="pill" icon={<Icon name="sparkles" size={13} />} className="mt-2" onClick={() => onPrompt?.(prompt, page)}>{prompt}</Button>
+      </div>
+    </section>
   );
 }
 
