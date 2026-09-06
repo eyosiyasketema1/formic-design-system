@@ -6218,11 +6218,23 @@ const TB_DEFAULT_TABS = [
     content: "Maple Orbit covers the base; Aurora Scoops is on standby for the waffle special."
   }
 ];
+const TB_LIST = {
+  underline: "flex w-full items-center gap-1 border-b border-line",
+  segmented: "corner-smooth inline-flex max-w-full items-center gap-0.5 rounded-md bg-field p-1",
+  subtle: "inline-flex max-w-full items-center gap-1",
+};
+const TB_TAB = { underline: "h-9 px-2.5", segmented: "corner-smooth h-7 rounded-control px-3", subtle: "corner-smooth h-8 rounded-control px-3" };
+const TB_INDICATOR = {
+  underline: "bottom-0 h-0.5 rounded-full bg-ink",
+  segmented: "corner-smooth top-1 bottom-1 rounded-control bg-surface shadow-hairline",
+  subtle: "corner-smooth top-0 bottom-0 rounded-control bg-hover-2",
+};
 function Tabs({
   tabs = TB_DEFAULT_TABS,
   value,
   defaultValue,
   onChange,
+  variant = "underline",
   className = ""
 } = {}) {
   const id = useId();
@@ -6267,8 +6279,17 @@ function Tabs({
     ref={listRef}
     role="tablist"
     onKeyDown={onKeyDown}
-    className="relative flex items-center gap-1 overflow-x-auto border-b border-line [scrollbar-width:none]"
+    className={`relative overflow-x-auto [scrollbar-width:none] ${TB_LIST[variant]}`}
   >
+        {bar && <span
+    aria-hidden
+    className={`absolute ${TB_INDICATOR[variant]}`}
+    style={{
+      left: bar.left,
+      width: bar.width,
+      transition: "left 250ms var(--ease-out-quint), width 250ms var(--ease-out-quint)"
+    }}
+  />}
         {tabs.map((tab) => {
     const isActive = tab.key === activeKey;
     return <button
@@ -6280,21 +6301,12 @@ function Tabs({
       aria-controls={tab.content !== void 0 ? panelId(tab.key) : void 0}
       tabIndex={isActive ? 0 : -1}
       onClick={() => select(tab.key)}
-      className={`flex h-9 shrink-0 items-center gap-1.5 px-2.5 text-caption font-medium whitespace-nowrap transition-colors duration-150 ${isActive ? "text-ink" : "text-ink-3 hover:text-ink-2"}`}
+      className={`relative flex shrink-0 items-center gap-1.5 text-caption font-medium whitespace-nowrap transition-colors duration-150 ${TB_TAB[variant]} ${isActive ? "text-ink" : "text-ink-3 hover:text-ink-2"}`}
     >
               {tab.icon && <Icon name={tab.icon} size={14} strokeWidth={2} />}
               {tab.label}
             </button>;
   })}
-        {bar && <span
-    aria-hidden
-    className="absolute bottom-0 h-0.5 rounded-full bg-ink"
-    style={{
-      left: bar.left,
-      width: bar.width,
-      transition: "left 250ms var(--ease-out-quint), width 250ms var(--ease-out-quint)"
-    }}
-  />}
       </div>
       {active?.content !== void 0 && <div
     key={active.key}
@@ -10214,7 +10226,30 @@ function Page_recommendationcard() {
 function Page_tabs() {
   return (
     <>
-      <GalleryCard label="Default" wide><Tabs /></GalleryCard>
+      <GalleryCard label="Underline · page sections" wide><Tabs /></GalleryCard>
+      <GalleryCard label="Segmented · views of the same thing, raised pill on a track" wide>
+        <Tabs variant="segmented" tabs={[
+          { key: "library", label: "Library", content: "Everything you have saved, newest first." },
+          { key: "recents", label: "Recents", content: "Opened in the last seven days." },
+          { key: "favorites", label: "Favorites", content: "Starred items, in the order you starred them." },
+          { key: "settings", label: "Settings", content: "Sync, storage and sharing defaults." },
+        ]} />
+      </GalleryCard>
+      <GalleryCard label="Subtle · quiet pill, no track: filters and secondary navigation" wide>
+        <Tabs variant="subtle" tabs={[
+          { key: "teamspaces", label: "Teamspaces", content: "Spaces you belong to." },
+          { key: "recents", label: "Recents", content: "Pages opened this week." },
+          { key: "favorites", label: "Favorites", content: "Pinned pages." },
+          { key: "shared", label: "Shared", content: "Shared with you by others." },
+        ]} />
+      </GalleryCard>
+      <GalleryCard label="Segmented with icons, no panels" wide>
+        <Tabs variant="segmented" tabs={[
+          { key: "list", label: "List", icon: "list" },
+          { key: "grid", label: "Grid", icon: "grid" },
+          { key: "table", label: "Table", icon: "table" },
+        ]} />
+      </GalleryCard>
     </>
   );
 }
@@ -10947,7 +10982,7 @@ const PAGES = [
   { id: "difftable", group: "Data", title: "DiffTable", note: "Proposed edit as a diff \u2014 click changed rows to include/exclude each edit, then apply.", file: "components/DiffTable.tsx", Component: Page_difftable },
   { id: "contextcards", group: "Data", title: "ContextCards", note: "Retrieved chunks with source chips \u2014 file-type badges link back to the original document.", file: "components/ContextCards.tsx", Component: Page_contextcards },
   { id: "recommendationcard", group: "Data", title: "RecommendationCard", note: "Ranked recommendation with an alternatives drawer \u2014 pick an option to promote it, then accept.", file: "components/RecommendationCard.tsx", Component: Page_recommendationcard },
-  { id: "tabs", group: "Navigation", title: "Tabs", note: "APG tablist \u2014 arrow keys with automatic activation, Home/End, and an underline that slides with the house easing. The list scrolls on narrow viewports.", file: "components/Tabs.tsx", Component: Page_tabs },
+  { id: "tabs", group: "Navigation", title: "Tabs", note: "APG tablist \u2014 arrow keys with automatic activation, Home/End, and one indicator that slides with the house easing. Three looks: underline (page sections, full width on a hairline), segmented (views of the same thing: a raised surface pill on a field track), subtle (filters and secondary navigation: a quiet hover-2 pill, no track). The list scrolls on narrow viewports.", file: "components/Tabs.tsx", Component: Page_tabs },
   { id: "pagination", group: "Navigation", title: "Pagination", note: "Numbered pages with sibling windows and gap ellipses \u2014 first and last stay reachable, active page carries aria-current, edges disable prev / next.", file: "components/Pagination.tsx", Component: Page_pagination },
   { id: "breadcrumbs", group: "Navigation", title: "Breadcrumbs", note: "Path trail \u2014 long trails collapse their middle into a DropdownMenu, the current page carries aria-current, labels truncate instead of breaking the row. Navigating fires a toast here.", file: "components/Breadcrumbs.tsx", Component: Page_breadcrumbs },
   { id: "menubar", group: "Navigation", title: "Menubar", note: "A bar of action menus, each a DropdownMenu \u2014 dividers, disabled and destructive items included. Selections fire toasts here.", file: "components/Menubar.tsx", Component: Page_menubar },
