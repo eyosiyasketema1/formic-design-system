@@ -10317,24 +10317,29 @@ function Page_appsidebar() {
 
 function Page_projectsidebar() {
   const toast = useToast();
-  const [active, setActive] = useState("gcm");
+  const [active, setActive] = useState("report");
   const [search, setSearch] = useState("");
   const [theme, setTheme] = useTheme();
   const insetBar = useProjectSidebar();
   const edgeBar = useProjectSidebar();
   const groups = [
     { key: "sites", label: "Client sites", onAdd: () => toast({ title: "Add a client site" }), items: [
-      { key: "abyssinia", label: "Abyssinia Bank redesign", status: "unread" },
-      { key: "gcm", label: "GCM annual report", status: "live" },
-      { key: "turumba-site", label: "Turumba marketing site" },
+      { key: "bank", label: "Northwind Bank redesign", status: "unread" },
+      { key: "report", label: "Annual report 2026", status: "live" },
+      { key: "marketing", label: "Marketing site" },
       { key: "menu", label: "Creamery menu board", status: "error" },
     ] },
     { key: "internal", label: "Internal", items: [
       { key: "ds", label: "Design system" },
       { key: "brand", label: "Brand book 2026" },
+      { key: "agents", label: "Agents", icon: "sparkles", children: [
+        { key: "agent-writer", label: "Copywriter", icon: "edit" },
+        { key: "agent-qa", label: "QA reviewer", icon: "circle-check", status: "live" },
+        { key: "agent-research", label: "Researcher", icon: "search" },
+      ] },
     ] },
   ];
-  const title = groups.flatMap((g) => g.items).find((i) => i.key === active)?.label ?? active;
+  const title = groups.flatMap((g) => g.items.flatMap((i) => [i, ...(i.children ?? [])])).find((i) => i.key === active)?.label ?? active;
   const shell = (layout, bar) => (
     <ProjectSidebar
       layout={layout}
@@ -10387,8 +10392,8 @@ function Page_projectsidebar() {
           <div className="min-w-0 lg:col-span-2">
             <Panel title="Details">
               <MetricRow label="Owner" value="Eyosiyas" />
-              <MetricRow label="Client" value="GCM Ethiopia" />
-              <MetricRow label="Domain" value="report.gcm.et" />
+              <MetricRow label="Client" value="Northwind" />
+              <MetricRow label="Domain" value="report.northwind.co" />
               <MetricRow label="Updated" value="2h ago" />
             </Panel>
           </div>
@@ -10421,7 +10426,7 @@ function Page_sidebar() {
       <Section title="App sidebar" note="For dashboards and admin apps: grouped menu with counts and sub-menus, expanded (240px) or rail (56px), collapse control in the header. The playground above drives this one.">
         <Page_appsidebar />
       </Section>
-      <Section title="Project sidebar" note="For tools that hold things: projects, documents, sites. Workspace switcher, ⌘K search, New row, collapsible groups, status dots, row menus, account menu. Layouts: inset and edge.">
+      <Section title="Project sidebar" note="For tools that hold things: projects, documents, sites. Workspace switcher, ⌘K search, New row, collapsible groups, status dots, row menus, a second level under Agents, account menu. Layouts: inset and edge.">
         <Page_projectsidebar />
       </Section>
       <Section title="Chat sidebar" note="SidebarNav: workspace switcher, searchable chat history, collapse that keeps icons aligned.">
@@ -11450,8 +11455,9 @@ function RailPanels({ page, pg, knobs, pgState, pgSet, pgReset }) {
  * projects, documents, sites: a workspace switcher, a search
  * field with its shortcut, a "New" row, collapsible groups
  * with a per-group add action, rows with a status dot and a
- * hover-revealed "more" menu, and an account row with its own
- * menu plus two quiet icon actions.
+ * hover-revealed "more" menu, a second level (a row with
+ * `children` opens them in place under a chevron), and an
+ * account row with its own menu plus two quiet icon actions.
  *
  * Two layouts, both on --sidebar (rule 14):
  *   edge   the rail is the window's left edge, hairline on the right
@@ -11466,17 +11472,18 @@ function RailPanels({ page, pg, knobs, pgState, pgSet, pgReset }) {
  * yields it to the two footer actions. The app owns open / closed through
  * useProjectSidebar(); ProjectSidebarTrigger is the button for it.
  * ───────────────────────────────────────────────────────── */
+
 const DEFAULT_WORKSPACES = [
-  { key: "formic", name: "Formic Studio", monogram: "F" },
-  { key: "turumba", name: "Turumba", monogram: "T" },
+  { key: "formic", name: "Formic Studio", logo: <FormicMark size={18} className="text-accent" /> },
+  { key: "personal", name: "Personal", monogram: "P" },
 ];
 const DEFAULT_GROUPS = [
   {
     key: "sites", label: "Client sites",
     items: [
-      { key: "abyssinia", label: "Abyssinia Bank redesign", status: "unread" },
-      { key: "gcm", label: "GCM annual report", status: "live" },
-      { key: "turumba-site", label: "Turumba marketing site" },
+      { key: "bank", label: "Northwind Bank redesign", status: "unread" },
+      { key: "report", label: "Annual report 2026", status: "live" },
+      { key: "marketing", label: "Marketing site" },
       { key: "menu", label: "Creamery menu board", status: "error" },
     ],
   },
@@ -11485,6 +11492,14 @@ const DEFAULT_GROUPS = [
     items: [
       { key: "ds", label: "Design system" },
       { key: "brand", label: "Brand book 2026" },
+      {
+        key: "agents", label: "Agents", icon: "sparkles",
+        children: [
+          { key: "agent-writer", label: "Copywriter", icon: "edit" },
+          { key: "agent-qa", label: "QA reviewer", icon: "circle-check", status: "live" },
+          { key: "agent-research", label: "Researcher", icon: "search" },
+        ],
+      },
     ],
   },
 ];
@@ -11528,10 +11543,12 @@ function ProjectSidebarTrigger({ open, toggle, className = "" }) {
   );
 }
 
-/* the page beside an inset rail: a surface card with a hairline, on --sidebar */
+/* the page beside an inset rail: a surface card with a hairline, on --sidebar.
+   8px on every side, so it sits the same with the rail hidden; the rail
+   drops its own right padding to keep the gap 8px when shown. */
 function ProjectInset({ children, className = "" }) {
   return (
-    <main className={`m-2 ml-0 flex min-w-0 flex-1 flex-col overflow-y-auto rounded-card bg-surface shadow-card ${className}`}>
+    <main className={`m-2 flex min-w-0 flex-1 flex-col overflow-y-auto rounded-card bg-surface shadow-card ${className}`}>
       {children}
     </main>
   );
@@ -11563,6 +11580,12 @@ function ProjectSidebar({
   const currentWs = workspaces.find((w) => w.key === workspace) ?? workspaces[0];
   const current = active === null ? undefined : (active ?? groups[0]?.items[0]?.key);
   const [closed, setClosed] = useState({});
+  /* level-2 rows: the one holding the current page starts open */
+  const parentOf = groups.flatMap((g) => g.items).find((i) => i.children?.some((c) => c.key === current))?.key;
+  const [openRows, setOpenRows] = useState(() => (parentOf ? { [parentOf]: true } : {}));
+  useEffect(() => {
+    if (parentOf) setOpenRows((o) => (o[parentOf] ? o : { ...o, [parentOf]: true }));
+  }, [parentOf]);
   const searchRef = useRef(null);
   /* ⌘K / Ctrl+K focuses the search, the way the chip promises */
   useEffect(() => {
@@ -11580,7 +11603,7 @@ function ProjectSidebar({
   return (
     <aside
       aria-label="Workspace"
-      className={`flex h-full w-64 shrink-0 flex-col gap-3 overflow-hidden bg-sidebar px-2 py-2 ${inset ? "" : "border-r border-line"} ${className}`}
+      className={`flex h-full w-64 shrink-0 flex-col gap-3 overflow-hidden bg-sidebar py-2 pl-2 ${inset ? "pr-0" : "border-r border-line pr-2"} ${className}`}
     >
       {/* header: workspace switcher, then search + New as one block */}
       <div className="flex flex-col gap-2">
@@ -11595,9 +11618,13 @@ function ProjectSidebar({
           onSelect={(key) => onWorkspace?.(key)}
         >
           <button type="button" className={`${ROW} ${ROW_REST} corner-smooth`}>
-            <span aria-hidden className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-ink text-micro font-semibold text-canvas">
-              {currentWs?.monogram ?? currentWs?.name.charAt(0)}
-            </span>
+            {currentWs?.logo ? (
+              <span aria-hidden className="flex size-5 shrink-0 items-center justify-center">{currentWs.logo}</span>
+            ) : (
+              <span aria-hidden className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-ink text-micro font-semibold text-canvas">
+                {currentWs?.monogram ?? currentWs?.name.charAt(0)}
+              </span>
+            )}
             <span className="min-w-0 flex-1 truncate text-left font-medium text-ink">{currentWs?.name}</span>
             <Icon name="chevron" size={14} strokeWidth={2} className="shrink-0 text-ink-3" />
           </button>
@@ -11651,8 +11678,70 @@ function ProjectSidebar({
               <Disclosure open={isOpen}>
                 <ul className="flex flex-col gap-px pt-0.5">
                   {g.items.map((item) => {
-                    const on = item.key === current;
                     const status = item.status ? STATUS[item.status] : null;
+                    if (item.children?.length) {
+                      const expanded = Boolean(openRows[item.key]);
+                      const holds = item.key === parentOf;
+                      return (
+                        <li key={item.key} className="flex flex-col">
+                          {/* level 1: owns the sub-tree, is not a page. The chevron
+                              sits in an action-sized slot on the trailing axis and
+                              turns 90° while open; an open row hides it at rest and
+                              hover or focus brings it back */}
+                          <button
+                            type="button"
+                            aria-expanded={expanded}
+                            onClick={() => setOpenRows((o) => ({ ...o, [item.key]: !expanded }))}
+                            className={`${ROW} ${holds && !expanded ? ROW_ON : ROW_REST} corner-smooth`}
+                          >
+                            <span aria-hidden className="flex size-4 shrink-0 items-center justify-center">
+                              <Icon name={item.icon ?? "folder"} size={16} strokeWidth={1.8} />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
+                            <span className="flex size-6 shrink-0 items-center justify-center">
+                              <Icon
+                                name="chevron-right"
+                                size={14}
+                                strokeWidth={2}
+                                className={`text-ink-3 transition-[transform,opacity] duration-300 ${expanded ? "rotate-90 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 [@media(hover:none)]:opacity-100" : ""}`}
+                                style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
+                              />
+                            </span>
+                          </button>
+                          {/* level 2: collapses on measured height (Disclosure), never an animated auto */}
+                          <Disclosure open={expanded}>
+                            <ul className="relative ml-4 flex flex-col gap-px border-l border-line py-0.5 pl-2">
+                              {item.children.map((child) => {
+                                const onChild = child.key === current;
+                                const cs = child.status ? STATUS[child.status] : null;
+                                return (
+                                  <li key={child.key}>
+                                    <button
+                                      type="button"
+                                      aria-current={onChild ? "page" : undefined}
+                                      onClick={() => onSelect?.(child.key)}
+                                      className={`group/row corner-smooth flex h-7 w-full min-w-0 items-center gap-2 rounded-control pr-1.5 pl-2 text-caption transition-colors duration-150 ${onChild ? ROW_ON : ROW_REST}`}
+                                    >
+                                      <span aria-hidden className="flex size-4 shrink-0 items-center justify-center">
+                                        {child.icon ? <Icon name={child.icon} size={14} strokeWidth={1.8} /> : <span className={`size-1.5 rounded-full ${cs ? cs.dot : "bg-ink-3"}`} />}
+                                      </span>
+                                      <span className="min-w-0 flex-1 truncate text-left">{child.label}</span>
+                                      {cs && (
+                                        <span aria-hidden className="flex size-6 shrink-0 items-center justify-center">
+                                          <span className={`size-1.5 rounded-full ${cs.dot}`} />
+                                        </span>
+                                      )}
+                                      {cs && <span className="sr-only">, {cs.text}</span>}
+                                    </button>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </Disclosure>
+                        </li>
+                      );
+                    }
+                    const on = item.key === current;
                     return (
                       <li key={item.key} className={`${ROW} ${on ? ROW_ON : ROW_REST} corner-smooth`}>
                         {/* the row itself is the page link; the menu is a sibling so
@@ -11661,7 +11750,7 @@ function ProjectSidebar({
                           <span className="sr-only">{item.label}</span>
                         </button>
                         <span aria-hidden className="relative flex size-4 shrink-0 items-center justify-center">
-                          <span className={`size-1.5 rounded-full ${status ? status.dot : "bg-ink-3"}`} />
+                          {item.icon ? <Icon name={item.icon} size={16} strokeWidth={1.8} /> : <span className={`size-1.5 rounded-full ${status ? status.dot : "bg-ink-3"}`} />}
                         </span>
                         <span className="pointer-events-none relative min-w-0 flex-1 truncate">
                           {item.label}
