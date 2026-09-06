@@ -20,7 +20,7 @@ import {
   IconWallet, IconWifi, IconZoomIn, IconZoomOut, type Icon as TablerIcon,
 } from "@tabler/icons-react";
 import { useStream } from "./hooks";
-import { useDoodle } from "./doodle";
+import { photoFor, useDoodle } from "./doodle";
 import { FORMIC_CONFIG } from "./config";
 /* ─────────────────────────────────────────────────────────
  * PRIMITIVES — the atoms every component composes
@@ -722,20 +722,24 @@ const toneOf = (name: string) => {
   for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) % 997;
   return AVATAR_TONES[hash % AVATAR_TONES.length];
 };
+export type AvatarKind = "initials" | "doodle" | "photo";
 export function Avatar({
   name,
   src,
-  doodle = FORMIC_CONFIG.avatar === "doodle",
+  kind = FORMIC_CONFIG.avatar,
+  doodle = kind === "doodle",
   size = "md",
   tone,
   ring,
   className = "",
 }: {
-  /** person's name — drives initials, the deterministic tone, and the doodle */
+  /** person's name — drives initials, the deterministic tone, the doodle and the placeholder photo */
   name: string;
   /** photo URL — renders the image (hairline ring) instead of initials */
   src?: string;
-  /** an illustrated face derived from the name (DiceBear notionists, generated locally); initials show until it loads */
+  /** what a person without a `src` gets: initials, a drawn face, or a placeholder photo. Defaults to formic.config.json's `avatar` */
+  kind?: AvatarKind;
+  /** shorthand for kind="doodle" (kept for existing calls) */
   doodle?: boolean;
   size?: AvatarSize;
   /** pin a tone (0 accent · 1 green · 2 orange · 3 neutral) instead of hashing the name */
@@ -745,6 +749,7 @@ export function Avatar({
   className?: string;
 }) {
   const svg = useDoodle(name, doodle && !src);
+  const photo = src ?? (kind === "photo" && !doodle ? photoFor(name) : undefined);
   /* The hairline is a plain (unlayered) rule, so a utility ring could never
      win over it. The ring is therefore chosen here, not stacked. */
   const edge = ring === "surface" ? "shadow-[0_0_0_2px_var(--surface)]" : ring === "canvas" ? "shadow-[0_0_0_2px_var(--canvas)]" : "shadow-hairline";
@@ -759,10 +764,10 @@ export function Avatar({
       />
     );
   }
-  if (src) {
+  if (photo) {
     return (
       <img
-        src={src}
+        src={photo}
         alt={name}
         className={`source-avatar shrink-0 rounded-full bg-surface ${edge} ${AVATAR_SIZES[size]} ${className}`}
       />
@@ -902,7 +907,7 @@ export function AvatarStack({ srcs, className = "" }: { srcs: string[]; classNam
  * a 2px ring in the surface it sits on so overlaps read as separate
  * heads; past `max` a "+N" tile carries the rest. Photos, doodles and
  * initials mix freely — whatever each person has. */
-export type AvatarPerson = { name: string; src?: string; doodle?: boolean; tone?: AvatarTone };
+export type AvatarPerson = { name: string; src?: string; kind?: AvatarKind; doodle?: boolean; tone?: AvatarTone };
 const DEFAULT_PEOPLE: AvatarPerson[] = [
   { name: "Eyosiyas Ketema", src: "https://i.pravatar.cc/128?img=12" },
   { name: "Amina Yusuf", src: "https://i.pravatar.cc/128?img=47" },
@@ -933,7 +938,7 @@ export function AvatarGroup({
   return (
     <span className={`flex items-center ${overlap} ${className}`} role="group" aria-label={people.map((p) => p.name).join(", ")}>
       {shown.map((p) => (
-        <Avatar key={p.name} name={p.name} src={p.src} doodle={p.doodle} tone={p.tone} size={size} ring={ring} className="relative" />
+        <Avatar key={p.name} name={p.name} src={p.src} kind={p.kind} doodle={p.doodle} tone={p.tone} size={size} ring={ring} className="relative" />
       ))}
       {rest > 0 && (
         <span

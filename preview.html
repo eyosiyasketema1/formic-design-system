@@ -1443,12 +1443,17 @@ function doodleSvg(seed) {
   }
   return p;
 }
+function photoFor(name) {
+  let hash = 0;
+  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) % 9973;
+  return `https://i.pravatar.cc/128?img=${(hash % 70) + 1}`;
+}
 function useDoodle(seed, enabled = true) {
   const [svg, setSvg] = useState(null);
   useEffect(() => {
     if (!enabled) return;
     let live = true;
-    doodleSvg(seed).then((s) => { if (live) setSvg(s); }).catch(() => {});
+    doodleSvg(seed).then((s) => { if (live) setSvg(s); }).catch((e) => console.warn("[formic] doodle avatars could not load", e));
     return () => { live = false; };
   }, [seed, enabled]);
   return enabled ? svg : null;
@@ -1456,13 +1461,15 @@ function useDoodle(seed, enabled = true) {
 function Avatar({
   name,
   src,
-  doodle = FORMIC_CONFIG.avatar === "doodle",
+  kind = FORMIC_CONFIG.avatar,
+  doodle = kind === "doodle",
   size = "md",
   tone,
   ring,
   className = "",
 }) {
   const svg = useDoodle(name, doodle && !src);
+  const photo = src ?? (kind === "photo" && !doodle ? photoFor(name) : undefined);
   /* The hairline is a plain (unlayered) rule, so a utility ring could never
      win over it. The ring is therefore chosen here, not stacked. */
   const edge = ring === "surface" ? "shadow-[0_0_0_2px_var(--surface)]" : ring === "canvas" ? "shadow-[0_0_0_2px_var(--canvas)]" : "shadow-hairline";
@@ -1477,10 +1484,10 @@ function Avatar({
       />
     );
   }
-  if (src) {
+  if (photo) {
     return (
       <img
-        src={src}
+        src={photo}
         alt={name}
         className={`source-avatar shrink-0 rounded-full bg-surface ${edge} ${AVATAR_SIZES[size]} ${className}`}
       />
@@ -1566,7 +1573,7 @@ function AvatarGroup({
   return (
     <span className={`flex items-center ${overlap} ${className}`} role="group" aria-label={people.map((p) => p.name).join(", ")}>
       {shown.map((p) => (
-        <Avatar key={p.name} name={p.name} src={p.src} doodle={p.doodle} tone={p.tone} size={size} ring={ring} className="relative" />
+        <Avatar key={p.name} name={p.name} src={p.src} kind={p.kind} doodle={p.doodle} tone={p.tone} size={size} ring={ring} className="relative" />
       ))}
       {rest > 0 && (
         <span
@@ -8998,12 +9005,12 @@ function AppSidebar({
           rail ? (
             <Tooltip label={user.name}>
               <button type="button" aria-label={user.name} className="flex size-9 items-center justify-center rounded-control hover:bg-hover-2">
-                <Avatar name={user.name} src={user.src} doodle={user.doodle} size="sm" />
+                <Avatar name={user.name} src={user.src} kind={user.kind} doodle={user.doodle} size="sm" />
               </button>
             </Tooltip>
           ) : (
             <button type="button" className="flex h-10 w-full items-center gap-2.5 rounded-control px-2 text-left hover:bg-hover-2">
-              <Avatar name={user.name} src={user.src} doodle={user.doodle} size="sm" />
+              <Avatar name={user.name} src={user.src} kind={user.kind} doodle={user.doodle} size="sm" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-caption font-medium text-ink">{user.name}</span>
                 {user.detail && <span className="block truncate text-small text-ink-3">{user.detail}</span>}
@@ -11334,7 +11341,7 @@ const CZ_CHOICES = {
   radius: RADII,
   size: SIZES,
   theme: ["light", "dark"],
-  avatar: ["initials", "doodle"],
+  avatar: ["initials", "doodle", "photo"],
   sidebar: ["expanded", "rail"],
 };
 const CZ_HELP = {
@@ -11343,7 +11350,7 @@ const CZ_HELP = {
   radius: "One scale for every corner, from controls to cards.",
   size: "Control heights, padding and gaps move together. Type never scales.",
   theme: "Where the app starts. Users can still switch.",
-  avatar: "People without a photo: initials, or a drawn face derived from the name.",
+  avatar: "People without a photo of their own: initials, a drawn face derived from the name, or a placeholder photo until real ones exist.",
   sidebar: "How the app sidebar first opens. Users can collapse either way.",
   motion: "Charts and sparklines animate in once. Reduced motion always wins.",
 };
@@ -11454,10 +11461,10 @@ function useCzNarrow() {
   return narrow;
 }
 function CzPane({ cfg, mode, accent, ratio, ready }) {
-  const fallback = cfg.avatar === "doodle";
   const narrow = useCzNarrow();
   const sidebar = narrow ? "rail" : cfg.sidebar;
-  const people = CZ_PEOPLE.map((p) => (p.src ? { name: p.name, src: p.src } : { name: p.name, doodle: fallback }));
+  /* two people have photos of their own; the rest show the chosen kind */
+  const people = CZ_PEOPLE.map((p) => (p.src ? { name: p.name, src: p.src } : { name: p.name, kind: cfg.avatar }));
   const starts = cfg.theme === mode;
   /* motion and sidebar remount their subtrees so a change replays the
      entrance rather than waiting for the next data change */
@@ -11484,7 +11491,7 @@ function CzPane({ cfg, mode, accent, ratio, ready }) {
         {narrow && cfg.sidebar === "expanded" && <span className="basis-full text-small text-ink-3">Rail shown at this width; the app opens expanded.</span>}
       </div>
       <div className="flex min-h-140 min-w-0">
-        <AppSidebar key={k} variant={sidebar} collapsible={false} active="overview" onSelect={() => {}} user={{ name: "Eyosiyas Ketema", detail: "Admin", src: fallback ? undefined : CZ_PEOPLE[0].src, doodle: fallback }} />
+        <AppSidebar key={k} variant={sidebar} collapsible={false} active="overview" onSelect={() => {}} user={{ name: "Eyosiyas Ketema", detail: "Admin", kind: cfg.avatar }} />
         <div className="@container flex min-w-0 flex-1 flex-col gap-3 overflow-hidden p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="min-w-0">
@@ -11622,7 +11629,7 @@ function CustomizeApp() {
           <CzChoice label="Radius" help={CZ_HELP.radius} value={cfg.radius} options={RADII} onChange={(v) => set("radius", v)} />
           <CzChoice label="Size" help={CZ_HELP.size} value={cfg.size} options={SIZES} onChange={(v) => set("size", v)} />
           <CzChoice label="Starting theme" help={CZ_HELP.theme} value={cfg.theme} options={CZ_CHOICES.theme} onChange={(v) => set("theme", v)} />
-          <CzChoice label="Avatar without a photo" help={CZ_HELP.avatar} value={cfg.avatar} options={CZ_CHOICES.avatar} onChange={(v) => set("avatar", v)} />
+          <CzChoice label="Avatar" help={CZ_HELP.avatar} value={cfg.avatar} options={CZ_CHOICES.avatar} onChange={(v) => set("avatar", v)} />
           <CzChoice label="Sidebar" help={CZ_HELP.sidebar} value={cfg.sidebar} options={CZ_CHOICES.sidebar} onChange={(v) => set("sidebar", v)} />
           <div className="flex items-start justify-between gap-3">
             <div>

@@ -23,13 +23,28 @@ export function doodleSvg(seed: string): Promise<string> {
   return p;
 }
 
+/* A missing package must not fail silently into initials: say so once. */
+let warned = false;
+function warnOnce(error: unknown) {
+  if (warned) return;
+  warned = true;
+  console.warn("[formic] doodle avatars need @dicebear/core and @dicebear/notionists: npm i @dicebear/core @dicebear/notionists", error);
+}
+
+/** placeholder photo for a name (pravatar.cc, free), used by avatar kind "photo" until real photos exist */
+export function photoFor(name: string): string {
+  let hash = 0;
+  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) % 9973;
+  return `https://i.pravatar.cc/128?img=${(hash % 70) + 1}`;
+}
+
 /** the doodle for a seed, or null until it has loaded (render initials meanwhile) */
 export function useDoodle(seed: string, enabled = true): string | null {
   const [svg, setSvg] = useState<string | null>(null);
   useEffect(() => {
     if (!enabled) return;
     let live = true;
-    doodleSvg(seed).then((s) => { if (live) setSvg(s); }).catch(() => {});
+    doodleSvg(seed).then((s) => { if (live) setSvg(s); }).catch(warnOnce);
     return () => { live = false; };
   }, [seed, enabled]);
   return enabled ? svg : null;
