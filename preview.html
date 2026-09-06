@@ -10315,6 +10315,71 @@ function Page_appsidebar() {
   );
 }
 
+function Page_projectsidebar() {
+  const toast = useToast();
+  const [active, setActive] = useState("gcm");
+  const [search, setSearch] = useState("");
+  const [theme, setTheme] = useTheme();
+  const bar = useProjectSidebar();
+  const shell = (layout) => (
+    <ProjectSidebar
+      layout={layout}
+      active={active}
+      onSelect={setActive}
+      search={search}
+      onSearch={setSearch}
+      open={layout === "edge" ? bar.open : true}
+      onNew={() => toast({ title: "New project" })}
+      onWorkspace={(k) => toast({ title: `Workspace: ${k}` })}
+      onItemAction={(item, action) => toast({ title: `${action}: ${item}` })}
+      onUserAction={(k) => toast({ title: `Account: ${k}` })}
+      onSettings={() => toast({ title: "Settings" })}
+      onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
+      theme={theme}
+      groups={[
+        { key: "sites", label: "Client sites", onAdd: () => toast({ title: "Add a client site" }), items: [
+          { key: "abyssinia", label: "Abyssinia Bank redesign", status: "unread" },
+          { key: "gcm", label: "GCM annual report", status: "live" },
+          { key: "turumba-site", label: "Turumba marketing site" },
+          { key: "menu", label: "Creamery menu board", status: "error" },
+        ] },
+        { key: "internal", label: "Internal", items: [
+          { key: "ds", label: "Design system" },
+          { key: "brand", label: "Brand book 2026" },
+        ] },
+      ]}
+    />
+  );
+  return (
+    <>
+      <GalleryCard label="Inset · the page is a surface card beside the rail" full>
+        <div className="flex h-[600px] overflow-x-auto rounded-card border border-line bg-sidebar">
+          {shell("inset")}
+          <ProjectInset className="min-w-64">
+            <header className="flex h-12 shrink-0 items-center gap-2 border-b border-line px-3">
+              <p className="text-body font-medium text-ink">{active}</p>
+            </header>
+            <div className="p-5">
+              <p className="max-w-lg text-caption text-ink-3">Hover a row for its menu, a group label for its add action, the search field for ⌘K. Every axis lines up: the workspace tile, the search icon, the status dots and the avatar sit 16px in; the chevron, the ⌘K chip and the row menus sit on the trailing axis.</p>
+            </div>
+          </ProjectInset>
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Edge · hairline on the right, with the trigger in the page header" full>
+        <div className="flex h-[600px] overflow-x-auto rounded-card border border-line">
+          {shell("edge")}
+          <div className="flex min-w-0 flex-1 flex-col bg-canvas">
+            <header className="flex h-12 shrink-0 items-center gap-2 px-2">
+              <ProjectSidebarTrigger open={bar.open} toggle={bar.toggle} />
+              <p className="text-body font-medium text-ink">{active}</p>
+            </header>
+          </div>
+        </div>
+      </GalleryCard>
+    </>
+  );
+}
+
 function Page_sidebarnav() {
   return (
     <>
@@ -10756,6 +10821,7 @@ const PAGES = [
   { id: "pagination", group: "Navigation", title: "Pagination", note: "Numbered pages with sibling windows and gap ellipses \u2014 first and last stay reachable, active page carries aria-current, edges disable prev / next.", file: "components/Pagination.tsx", Component: Page_pagination },
   { id: "breadcrumbs", group: "Navigation", title: "Breadcrumbs", note: "Path trail \u2014 long trails collapse their middle into a DropdownMenu, the current page carries aria-current, labels truncate instead of breaking the row. Navigating fires a toast here.", file: "components/Breadcrumbs.tsx", Component: Page_breadcrumbs },
   { id: "menubar", group: "Navigation", title: "Menubar", note: "A bar of action menus, each a DropdownMenu \u2014 dividers, disabled and destructive items included. Selections fire toasts here.", file: "components/Menubar.tsx", Component: Page_menubar },
+  { id: "projectsidebar", group: "Navigation", title: "ProjectSidebar", note: "The workspace rail of a tool that holds things: projects, documents, sites. A workspace switcher, search with its ⌘K chip, a New row with its shortcut, collapsible groups with a per-group add action, rows with a semantic status dot and a hover-revealed menu, and an account row with its own menu plus two quiet icon actions. Two layouts on --sidebar: edge (hairline on the right) and inset (the page sits in a rounded surface card beside the rail, via ProjectInset). Rows are 32px; every icon sits on one leading axis and every action on one trailing axis.", file: "components/ProjectSidebar.tsx", Component: Page_projectsidebar },
   { id: "appsidebar", group: "Navigation", title: "AppSidebar", note: "The menu rail for dashboards and admin apps, as opposed to SidebarNav, the chat rail. Grouped navigation with counts and sub-menus, a workspace mark at the top, an account row at the bottom. Two variants on the same --sidebar surface: expanded (240px, icon + label + count, section titles, sub-menus open in place) and rail (56px, icons only, labels as tooltips, sub-menus as a flyout). The collapse and expand control sits in the header in both, and collapsing never moves the icons. `submenus=\"none\"` makes it flat: every item is a page.", file: "components/AppSidebar.tsx", Component: Page_appsidebar },
   { id: "sidebarnav", group: "Navigation", title: "SidebarNav", note: "Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.", file: "components/SidebarNav.tsx", Component: Page_sidebarnav },
   { id: "searchlist", group: "Navigation", title: "SearchList", note: "Command search with live filtering \u2014 type to filter, gibberish for the empty state.", file: "components/SearchList.tsx", Component: Page_searchlist }
@@ -11323,6 +11389,285 @@ function RailPanels({ page, pg, knobs, pgState, pgSet, pgReset }) {
       )}
     </>
   );
+}
+
+/* ═══════════ ProjectSidebar (mirrors components/ProjectSidebar.tsx) ═══════════ */
+/* ─────────────────────────────────────────────────────────
+ * PROJECT SIDEBAR — the third rail
+ * SidebarNav is the chat rail, AppSidebar the dashboard menu.
+ * This is the workspace rail of a tool that holds things —
+ * projects, documents, sites: a workspace switcher, a search
+ * field with its shortcut, a "New" row, collapsible groups
+ * with a per-group add action, rows with a status dot and a
+ * hover-revealed "more" menu, and an account row with its own
+ * menu plus two quiet icon actions.
+ *
+ * Two layouts, both on --sidebar (rule 14):
+ *   edge   the rail is the window's left edge, hairline on the right
+ *   inset  the whole window is --sidebar and the page sits in a
+ *          rounded surface card beside the rail (ProjectInset)
+ *
+ * Rows are 32px on a tight rhythm; icons sit on one leading axis
+ * (16px in), trailing actions on one trailing axis, so the
+ * switcher tile, the search icon, the row dots and the avatar
+ * all line up; the switcher chevron, the shortcut chip and the row
+ * menus share the trailing axis, and the account row's chevron
+ * yields it to the two footer actions. The app owns open / closed through
+ * useProjectSidebar(); ProjectSidebarTrigger is the button for it.
+ * ───────────────────────────────────────────────────────── */
+const DEFAULT_WORKSPACES = [
+  { key: "formic", name: "Formic Studio", monogram: "F" },
+  { key: "turumba", name: "Turumba", monogram: "T" },
+];
+const DEFAULT_GROUPS = [
+  {
+    key: "sites", label: "Client sites",
+    items: [
+      { key: "abyssinia", label: "Abyssinia Bank redesign", status: "unread" },
+      { key: "gcm", label: "GCM annual report", status: "live" },
+      { key: "turumba-site", label: "Turumba marketing site" },
+      { key: "menu", label: "Creamery menu board", status: "error" },
+    ],
+  },
+  {
+    key: "internal", label: "Internal",
+    items: [
+      { key: "ds", label: "Design system" },
+      { key: "brand", label: "Brand book 2026" },
+    ],
+  },
+];
+const DEFAULT_ITEM_ACTIONS = [
+  { key: "rename", label: "Rename", icon: "edit" },
+  { key: "share", label: "Share", icon: "link" },
+  { type: "divider" },
+  { key: "archive", label: "Archive", icon: "archive" },
+];
+const DEFAULT_USER_MENU = [
+  { key: "profile", label: "Profile", icon: "user" },
+  { key: "settings", label: "Settings", icon: "gear" },
+  { type: "divider" },
+  { key: "sign-out", label: "Sign out", icon: "sign-out" },
+];
+const STATUS = {
+  unread: { dot: "bg-accent", text: "unread" },
+  live: { dot: "bg-green", text: "live" },
+  error: { dot: "bg-red", text: "needs attention" },
+};
+/* the shared row: 32px, icon on the leading axis, label, trailing slot */
+const ROW = "group/row relative flex h-8 w-full min-w-0 items-center gap-2 rounded-control pr-1.5 pl-2 text-caption transition-colors duration-150";
+const ROW_REST = "text-ink-2 hover:bg-hover hover:text-ink";
+const ROW_ON = "bg-hover-2 font-medium text-ink";
+/* a shortcut chip that appears on hover / focus of its row */
+function Kbd({ children }) {
+  return (
+    <kbd className="pointer-events-none font-mono text-tiny text-ink-3 opacity-0 transition-opacity duration-150 group-hover/row:opacity-100 group-focus-within/row:opacity-100 [@media(hover:none)]:opacity-100">
+      {children}
+    </kbd>
+  );
+}
+
+function ProjectSidebarTrigger({ open, toggle, className = "" }) {
+  return (
+    <Tooltip label={open ? "Hide sidebar" : "Show sidebar"}>
+      <IconButton label={open ? "Hide sidebar" : "Show sidebar"} aria-expanded={open} onClick={toggle} className={`size-7 text-ink-3 hover:bg-hover hover:text-ink ${className}`}>
+        <Icon name="sidebar" size={16} strokeWidth={1.8} />
+      </IconButton>
+    </Tooltip>
+  );
+}
+
+/* the page beside an inset rail: a surface card with a hairline, on --sidebar */
+function ProjectInset({ children, className = "" }) {
+  return (
+    <main className={`m-2 ml-0 flex min-w-0 flex-1 flex-col overflow-y-auto rounded-card bg-surface shadow-card ${className}`}>
+      {children}
+    </main>
+  );
+}
+
+function ProjectSidebar({
+  workspaces = DEFAULT_WORKSPACES,
+  workspace,
+  onWorkspace,
+  groups = DEFAULT_GROUPS,
+  active,
+  onSelect,
+  onNew,
+  newLabel = "New project",
+  search = "",
+  onSearch,
+  itemActions = DEFAULT_ITEM_ACTIONS,
+  onItemAction,
+  user = { name: "Eyosiyas Ketema" },
+  userMenu = DEFAULT_USER_MENU,
+  onUserAction,
+  onSettings,
+  onTheme,
+  theme = "light",
+  layout = "edge",
+  open = true,
+  className = "",
+}) {
+  const currentWs = workspaces.find((w) => w.key === workspace) ?? workspaces[0];
+  const current = active === null ? undefined : (active ?? groups[0]?.items[0]?.key);
+  const [closed, setClosed] = useState({});
+  const searchRef = useRef(null);
+  /* ⌘K / Ctrl+K focuses the search, the way the chip promises */
+  useEffect(() => {
+    const onKey = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  if (!open) return null;
+  const inset = layout === "inset";
+  return (
+    <aside
+      aria-label="Workspace"
+      className={`flex h-full w-64 shrink-0 flex-col gap-3 overflow-hidden bg-sidebar px-2 py-2 ${inset ? "" : "border-r border-line"} ${className}`}
+    >
+      {/* header: workspace switcher, then search + New as one block */}
+      <div className="flex flex-col gap-2">
+        <DropdownMenu
+          align="start"
+          menuWidth={240}
+          items={[
+            ...workspaces.map((w) => ({ key: w.key, label: w.name, icon: (w.key === currentWs?.key ? "check" : undefined) })),
+            { type: "divider" },
+            { key: "new-workspace", label: "New workspace", icon: "plus" },
+          ]}
+          onSelect={(key) => onWorkspace?.(key)}
+        >
+          <button type="button" className={`${ROW} ${ROW_REST} corner-smooth`}>
+            <span aria-hidden className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-ink text-micro font-semibold text-canvas">
+              {currentWs?.monogram ?? currentWs?.name.charAt(0)}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-left font-medium text-ink">{currentWs?.name}</span>
+            <Icon name="chevron" size={14} strokeWidth={2} className="shrink-0 text-ink-3" />
+          </button>
+        </DropdownMenu>
+        <div className="flex flex-col gap-0.5">
+          <label className="group/row primitive-field corner-smooth relative flex h-8 items-center gap-2 rounded-control bg-field pr-1.5 pl-2 text-caption">
+            <Icon name="search" size={16} strokeWidth={1.8} className="shrink-0 text-ink-3" />
+            <input
+              ref={searchRef}
+              type="search"
+              value={search}
+              onChange={(event) => onSearch?.(event.target.value)}
+              placeholder="Search…"
+              aria-label="Search"
+              className="min-w-0 flex-1 bg-transparent text-caption text-ink outline-none placeholder:text-ink-3"
+            />
+            <Kbd>⌘K</Kbd>
+          </label>
+          <button type="button" onClick={onNew} className={`${ROW} ${ROW_REST} corner-smooth`}>
+            <Icon name="plus" size={16} strokeWidth={1.8} className="shrink-0" />
+            <span className="min-w-0 flex-1 truncate text-left">{newLabel}</span>
+            <Kbd>⇧⌘N</Kbd>
+          </button>
+        </div>
+      </div>
+
+      {/* groups */}
+      <nav aria-label="Projects" className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+        {groups.map((g) => {
+          const isOpen = !closed[g.key];
+          return (
+            <section key={g.key} aria-label={g.label}>
+              <div className="group/row flex h-7 items-center gap-1 pr-1 pl-2">
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  onClick={() => setClosed((c) => ({ ...c, [g.key]: isOpen }))}
+                  className="flex h-7 min-w-0 flex-1 items-center gap-1 rounded-sm text-left font-mono text-micro tracking-wide text-ink-3 uppercase transition-colors duration-150 hover:text-ink"
+                >
+                  <span className="truncate">{g.label}</span>
+                  <Icon name="chevron" size={12} strokeWidth={2} className={`shrink-0 transition-transform duration-300 ${isOpen ? "" : "-rotate-90"}`} style={{ transitionTimingFunction: "var(--ease-out-quint)" }} />
+                </button>
+                {g.onAdd && (
+                  <Tooltip label={`Add to ${g.label}`}>
+                    <IconButton label={`Add to ${g.label}`} onClick={() => g.onAdd?.(g.key)} className="size-6 text-ink-3 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 hover:bg-hover hover:text-ink [@media(hover:none)]:opacity-100">
+                      <Icon name="plus" size={14} strokeWidth={2} />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </div>
+              <Disclosure open={isOpen}>
+                <ul className="flex flex-col gap-px pt-0.5">
+                  {g.items.map((item) => {
+                    const on = item.key === current;
+                    const status = item.status ? STATUS[item.status] : null;
+                    return (
+                      <li key={item.key} className={`${ROW} ${on ? ROW_ON : ROW_REST} corner-smooth`}>
+                        {/* the row itself is the page link; the menu is a sibling so
+                            neither nests a button in a button */}
+                        <button type="button" aria-current={on ? "page" : undefined} onClick={() => onSelect?.(item.key)} className="absolute inset-0 rounded-control" aria-label={item.label}>
+                          <span className="sr-only">{item.label}</span>
+                        </button>
+                        <span aria-hidden className="relative flex size-4 shrink-0 items-center justify-center">
+                          <span className={`size-1.5 rounded-full ${status ? status.dot : "bg-ink-3"}`} />
+                        </span>
+                        <span className="pointer-events-none relative min-w-0 flex-1 truncate">
+                          {item.label}
+                          {status && <span className="sr-only">, {status.text}</span>}
+                        </span>
+                        <span className="relative shrink-0">
+                          <DropdownMenu align="end" menuWidth={200} items={itemActions} onSelect={(key) => onItemAction?.(item.key, key)}>
+                            <IconButton label={`More for ${item.label}`} className="size-6 text-ink-3 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 hover:bg-hover-2 hover:text-ink [@media(hover:none)]:opacity-100">
+                              <Icon name="dots-vertical" size={14} strokeWidth={2} />
+                            </IconButton>
+                          </DropdownMenu>
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Disclosure>
+            </section>
+          );
+        })}
+      </nav>
+
+      {/* footer: account menu + two quiet actions */}
+      {user && (
+        <div className="flex items-center gap-1 border-t border-line pt-2">
+          <DropdownMenu align="start" menuWidth={240} items={userMenu} onSelect={(key) => onUserAction?.(key)}>
+            <button type="button" aria-label="Open account menu" className={`${ROW} ${ROW_REST} corner-smooth min-w-0 flex-1`}>
+              <Avatar name={user.name} src={user.src} kind={user.kind ?? FORMIC_CONFIG.avatar} size="sm" className="-ml-0.5" />
+              <span className="min-w-0 flex-1 truncate text-left font-medium text-ink">{user.name}</span>
+              <Icon name="sort" size={14} strokeWidth={2} className="shrink-0 text-ink-3" />
+            </button>
+          </DropdownMenu>
+          {onSettings && (
+            <Tooltip label="Settings">
+              <IconButton label="Settings" onClick={onSettings} className="text-ink-3 hover:bg-hover hover:text-ink">
+                <Icon name="gear" size={15} strokeWidth={1.8} />
+              </IconButton>
+            </Tooltip>
+          )}
+          {onTheme && (
+            <Tooltip label={theme === "dark" ? "Light mode" : "Dark mode"}>
+              <IconButton label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={onTheme} className="text-ink-3 hover:bg-hover hover:text-ink">
+                <Icon name={theme === "dark" ? "sun" : "moon"} size={15} strokeWidth={1.8} />
+              </IconButton>
+            </Tooltip>
+          )}
+        </div>
+      )}
+    </aside>
+  );
+}
+
+/* open state for the shell: `const bar = useProjectSidebar();` then
+   <ProjectSidebar open={bar.open} /> and <ProjectSidebarTrigger {...bar} /> */
+function useProjectSidebar(defaultOpen = true) {
+  const [open, setOpen] = useState(defaultOpen);
+  return { open, setOpen, toggle: () => setOpen((o) => !o) };
 }
 
 /* ═══════════ Customize — formicai.dev/customize ═══════════
