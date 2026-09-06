@@ -10286,7 +10286,7 @@ function Page_appsidebar() {
     <>
       <GalleryCard label="Full view · expanded with a sub-menu open, collapse in the header" full>
         <div className="flex h-[600px] overflow-hidden rounded-card border border-line">
-          <AppSidebar active={active} onSelect={setActive} variant={variant} onVariantChange={setVariant} />
+          <AppSidebar active={active} onSelect={setActive} variant={variant} onVariantChange={setVariant} user={{ name: "Eyosiyas Ketema", detail: "Admin", kind: "doodle" }} />
           <div className="flex min-w-0 flex-1 flex-col gap-3 bg-canvas p-5">
             <p className="text-body font-medium text-ink">{active}</p>
             <p className="text-caption text-ink-3">Reports is a group: in the expanded rail its pages open in place; in the collapsed rail they open as a flyout beside the icon. The collapse and expand control is in the header in both.</p>
@@ -10295,13 +10295,13 @@ function Page_appsidebar() {
       </GalleryCard>
       <GalleryCard label="Rail · click Reports for the flyout" wide>
         <div className="flex h-[600px] overflow-hidden rounded-card border border-line">
-          <AppSidebar variant="rail" collapsible={false} active="records" />
+          <AppSidebar variant="rail" collapsible={false} active="records" user={{ name: "Eyosiyas Ketema", detail: "Admin", kind: "doodle" }} />
           <div className="min-w-0 flex-1 bg-canvas" />
         </div>
       </GalleryCard>
       <GalleryCard label="Flat · submenus=&quot;none&quot;: every item is a page" wide>
         <div className="flex h-[600px] overflow-hidden rounded-card border border-line">
-          <AppSidebar submenus="none" collapsible={false} active="reports" />
+          <AppSidebar submenus="none" collapsible={false} active="reports" user={{ name: "Eyosiyas Ketema", detail: "Admin", kind: "doodle" }} />
           <div className="min-w-0 flex-1 bg-canvas" />
         </div>
       </GalleryCard>
@@ -10320,15 +10320,29 @@ function Page_projectsidebar() {
   const [active, setActive] = useState("gcm");
   const [search, setSearch] = useState("");
   const [theme, setTheme] = useTheme();
-  const bar = useProjectSidebar();
-  const shell = (layout) => (
+  const insetBar = useProjectSidebar();
+  const edgeBar = useProjectSidebar();
+  const groups = [
+    { key: "sites", label: "Client sites", onAdd: () => toast({ title: "Add a client site" }), items: [
+      { key: "abyssinia", label: "Abyssinia Bank redesign", status: "unread" },
+      { key: "gcm", label: "GCM annual report", status: "live" },
+      { key: "turumba-site", label: "Turumba marketing site" },
+      { key: "menu", label: "Creamery menu board", status: "error" },
+    ] },
+    { key: "internal", label: "Internal", items: [
+      { key: "ds", label: "Design system" },
+      { key: "brand", label: "Brand book 2026" },
+    ] },
+  ];
+  const title = groups.flatMap((g) => g.items).find((i) => i.key === active)?.label ?? active;
+  const shell = (layout, bar) => (
     <ProjectSidebar
       layout={layout}
       active={active}
       onSelect={setActive}
       search={search}
       onSearch={setSearch}
-      open={layout === "edge" ? bar.open : true}
+      open={bar.open}
       onNew={() => toast({ title: "New project" })}
       onWorkspace={(k) => toast({ title: `Workspace: ${k}` })}
       onItemAction={(item, action) => toast({ title: `${action}: ${item}` })}
@@ -10336,46 +10350,83 @@ function Page_projectsidebar() {
       onSettings={() => toast({ title: "Settings" })}
       onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
       theme={theme}
-      groups={[
-        { key: "sites", label: "Client sites", onAdd: () => toast({ title: "Add a client site" }), items: [
-          { key: "abyssinia", label: "Abyssinia Bank redesign", status: "unread" },
-          { key: "gcm", label: "GCM annual report", status: "live" },
-          { key: "turumba-site", label: "Turumba marketing site" },
-          { key: "menu", label: "Creamery menu board", status: "error" },
-        ] },
-        { key: "internal", label: "Internal", items: [
-          { key: "ds", label: "Design system" },
-          { key: "brand", label: "Brand book 2026" },
-        ] },
-      ]}
+      user={{ name: "Eyosiyas Ketema", kind: "doodle" }}
+      groups={groups}
     />
+  );
+  /* the page: a project overview, the way a real tool would show it */
+  const page = (bar) => (
+    <>
+      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-line px-2">
+        <ProjectSidebarTrigger open={bar.open} toggle={bar.toggle} />
+        <Separator vertical className="h-4" />
+        <p className="min-w-0 truncate text-body font-medium text-ink">{title}</p>
+        <Badge tone="green" className="ml-1">Live</Badge>
+        <div className="ml-auto flex items-center gap-2">
+          <AvatarGroup people={[{ name: "Eyosiyas Ketema", kind: "doodle" }, { name: "Amina Yusuf", kind: "doodle" }, { name: "Daniel Tesfaye", kind: "doodle" }]} size="sm" max={3} ring="surface" />
+          <Button variant="ghost" size="sm" icon={<Icon name="share" size={14} />}>Share</Button>
+          <Button variant="accent" size="sm" icon={<Icon name="rocket" size={14} />}>Publish</Button>
+        </div>
+      </header>
+      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <StatCard label="Pages" display="24" caption="3 drafts" icon="file" iconTone="accent" className="max-w-none" />
+          <StatCard label="Visitors" display="12.4k" delta="+8.2%" caption="Last 7 days" icon="users" trend={[12, 14, 13, 18, 17, 21, 24]} className="max-w-none" />
+          <StatCard label="Build" display="42s" caption="Deployed 2h ago" icon="rocket" className="max-w-none" />
+        </div>
+        <div className="grid min-h-0 grid-cols-1 gap-3 lg:grid-cols-5">
+          <div className="min-w-0 lg:col-span-3">
+            <Panel title="Activity" caption="What changed this week">
+              <Timeline items={[
+                { key: "1", title: "Cover and contents approved", time: "10:40", tone: "green", description: "Amina signed off the final spread." },
+                { key: "2", title: "Financials chapter regenerated", time: "Yesterday", tone: "accent", description: "Numbers pulled from the ledger export." },
+                { key: "3", title: "Two images missing alt text", time: "Mon", tone: "red", description: "Fix before publishing." },
+              ]} />
+            </Panel>
+          </div>
+          <div className="min-w-0 lg:col-span-2">
+            <Panel title="Details">
+              <MetricRow label="Owner" value="Eyosiyas" />
+              <MetricRow label="Client" value="GCM Ethiopia" />
+              <MetricRow label="Domain" value="report.gcm.et" />
+              <MetricRow label="Updated" value="2h ago" />
+            </Panel>
+          </div>
+        </div>
+      </div>
+    </>
   );
   return (
     <>
-      <GalleryCard label="Inset · the page is a surface card beside the rail" full>
-        <div className="flex h-[600px] overflow-x-auto rounded-card border border-line bg-sidebar">
-          {shell("inset")}
-          <ProjectInset className="min-w-64">
-            <header className="flex h-12 shrink-0 items-center gap-2 border-b border-line px-3">
-              <p className="text-body font-medium text-ink">{active}</p>
-            </header>
-            <div className="p-5">
-              <p className="max-w-lg text-caption text-ink-3">Hover a row for its menu, a group label for its add action, the search field for ⌘K. Every axis lines up: the workspace tile, the search icon, the status dots and the avatar sit 16px in; the chevron, the ⌘K chip and the row menus sit on the trailing axis.</p>
-            </div>
-          </ProjectInset>
+      <GalleryCard label="Inset · the page is a surface card beside the rail; the trigger hides and shows it" full>
+        <div className="flex h-[640px] overflow-x-auto rounded-card border border-line bg-sidebar">
+          {shell("inset", insetBar)}
+          <ProjectInset className="min-w-64">{page(insetBar)}</ProjectInset>
         </div>
       </GalleryCard>
-      <GalleryCard label="Edge · hairline on the right, with the trigger in the page header" full>
-        <div className="flex h-[600px] overflow-x-auto rounded-card border border-line">
-          {shell("edge")}
-          <div className="flex min-w-0 flex-1 flex-col bg-canvas">
-            <header className="flex h-12 shrink-0 items-center gap-2 px-2">
-              <ProjectSidebarTrigger open={bar.open} toggle={bar.toggle} />
-              <p className="text-body font-medium text-ink">{active}</p>
-            </header>
-          </div>
+      <GalleryCard label="Edge · hairline on the right, same page" full>
+        <div className="flex h-[640px] overflow-x-auto rounded-card border border-line">
+          {shell("edge", edgeBar)}
+          <div className="flex min-w-0 flex-1 flex-col bg-canvas">{page(edgeBar)}</div>
         </div>
       </GalleryCard>
+    </>
+  );
+}
+
+/* one page for all three rails */
+function Page_sidebar() {
+  return (
+    <>
+      <Section title="App sidebar" note="For dashboards and admin apps: grouped menu with counts and sub-menus, expanded (240px) or rail (56px), collapse control in the header. The playground above drives this one.">
+        <Page_appsidebar />
+      </Section>
+      <Section title="Project sidebar" note="For tools that hold things: projects, documents, sites. Workspace switcher, ⌘K search, New row, collapsible groups, status dots, row menus, account menu. Layouts: inset and edge.">
+        <Page_projectsidebar />
+      </Section>
+      <Section title="Chat sidebar" note="SidebarNav: workspace switcher, searchable chat history, collapse that keeps icons aligned.">
+        <Page_sidebarnav />
+      </Section>
     </>
   );
 }
@@ -10821,9 +10872,7 @@ const PAGES = [
   { id: "pagination", group: "Navigation", title: "Pagination", note: "Numbered pages with sibling windows and gap ellipses \u2014 first and last stay reachable, active page carries aria-current, edges disable prev / next.", file: "components/Pagination.tsx", Component: Page_pagination },
   { id: "breadcrumbs", group: "Navigation", title: "Breadcrumbs", note: "Path trail \u2014 long trails collapse their middle into a DropdownMenu, the current page carries aria-current, labels truncate instead of breaking the row. Navigating fires a toast here.", file: "components/Breadcrumbs.tsx", Component: Page_breadcrumbs },
   { id: "menubar", group: "Navigation", title: "Menubar", note: "A bar of action menus, each a DropdownMenu \u2014 dividers, disabled and destructive items included. Selections fire toasts here.", file: "components/Menubar.tsx", Component: Page_menubar },
-  { id: "projectsidebar", group: "Navigation", title: "ProjectSidebar", note: "The workspace rail of a tool that holds things: projects, documents, sites. A workspace switcher, search with its ⌘K chip, a New row with its shortcut, collapsible groups with a per-group add action, rows with a semantic status dot and a hover-revealed menu, and an account row with its own menu plus two quiet icon actions. Two layouts on --sidebar: edge (hairline on the right) and inset (the page sits in a rounded surface card beside the rail, via ProjectInset). Rows are 32px; every icon sits on one leading axis and every action on one trailing axis.", file: "components/ProjectSidebar.tsx", Component: Page_projectsidebar },
-  { id: "appsidebar", group: "Navigation", title: "AppSidebar", note: "The menu rail for dashboards and admin apps, as opposed to SidebarNav, the chat rail. Grouped navigation with counts and sub-menus, a workspace mark at the top, an account row at the bottom. Two variants on the same --sidebar surface: expanded (240px, icon + label + count, section titles, sub-menus open in place) and rail (56px, icons only, labels as tooltips, sub-menus as a flyout). The collapse and expand control sits in the header in both, and collapsing never moves the icons. `submenus=\"none\"` makes it flat: every item is a page.", file: "components/AppSidebar.tsx", Component: Page_appsidebar },
-  { id: "sidebarnav", group: "Navigation", title: "SidebarNav", note: "Workspace navigation: switcher menu, searchable chat history, and a collapse that keeps icons aligned. Try the collapse arrow and search.", file: "components/SidebarNav.tsx", Component: Page_sidebarnav },
+  { id: "sidebar", group: "Navigation", title: "Sidebar", note: "Three rails, one surface (--sidebar, hairline edge, flat bg-hover-2 selection). ProjectSidebar for tools that hold things (projects, documents, sites): workspace switcher, \u2318K search, groups, status dots, row menus, inset or edge layout. AppSidebar for dashboards and admin apps: grouped menu with counts and sub-menus, expanded or rail. SidebarNav for chat: workspace switcher and searchable history. All three fill the shell\u2019s height and follow formic.config.json for the account avatar.", file: "components/ProjectSidebar.tsx components/AppSidebar.tsx components/SidebarNav.tsx", Component: Page_sidebar },
   { id: "searchlist", group: "Navigation", title: "SearchList", note: "Command search with live filtering \u2014 type to filter, gibberish for the empty state.", file: "components/SearchList.tsx", Component: Page_searchlist }
 ];
 const PAGE_INDEX = Object.fromEntries(PAGES.map((p, i) => [p.id, i]));
@@ -10842,8 +10891,10 @@ function useRadius() { return useRootAttr("radius", "ds-radius", "default"); }
 function useSize() { return useRootAttr("size", "ds-size", "default"); }
 
 /* ═══════════ Routing: #/button — legacy #button anchors still resolve ═══════════ */
+const ROUTE_ALIASES = { appsidebar: "sidebar", projectsidebar: "sidebar", sidebarnav: "sidebar" };
 function readRoute() {
-  const raw = (location.hash || "").replace(/^#\/?/, "");
+  let raw = (location.hash || "").replace(/^#\/?/, "");
+  raw = ROUTE_ALIASES[raw] ?? raw;
   return PAGE_INDEX[raw] !== undefined ? raw : PAGES[0].id;
 }
 function useRoute() {
@@ -11075,7 +11126,7 @@ const PLAYGROUNDS = {
       </div>
     ),
   },
-  appsidebar: {
+  sidebar: {
     schema: [
       { key: "variant", label: "Variant", type: "select", value: "expanded", options: ["expanded", "rail"] },
       { key: "submenus", label: "Sub-menus", type: "select", value: "nested", options: ["nested", "none"] },
@@ -11085,7 +11136,7 @@ const PLAYGROUNDS = {
     ],
     render: (p, set) => (
       <div className="flex h-[560px] w-full overflow-hidden rounded-card border border-line">
-        <AppSidebar variant={p.variant} onVariantChange={(v) => set("variant", v)} submenus={p.submenus} collapsible={p.collapsible} user={p.user ? undefined : null} active={p.active} onSelect={(k) => set("active", k)} />
+        <AppSidebar variant={p.variant} onVariantChange={(v) => set("variant", v)} submenus={p.submenus} collapsible={p.collapsible} user={p.user ? { name: "Eyosiyas Ketema", detail: "Admin", kind: "doodle" } : null} active={p.active} onSelect={(k) => set("active", k)} />
         <div className="min-w-0 flex-1 bg-canvas" />
       </div>
     ),
