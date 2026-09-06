@@ -10833,6 +10833,24 @@ function Page_projectsidebar() {
 }
 
 /* one page for all three rails */
+function Page_flowchart() {
+  const toast = useToast();
+  return (
+    <>
+      <GalleryCard label="An order workflow · drag cards, drag the dots to pan, ⌘ wheel or the buttons to zoom, click a chip to edit the rule" full>
+        <Flowchart onSelect={(id) => id && toast({ title: `Selected ${id}` })} onRuleChange={(node, key, r) => toast({ title: `${r.property} ${r.operator} ${r.value}` })} />
+      </GalleryCard>
+      <GalleryCard label="A linear agent run · no branch" wide>
+        <Flowchart height={380} nodes={[
+          { id: "t", kind: "trigger", x: 220, y: 20, title: "Issue labelled bug", caption: "GitHub webhook", icon: "bug" },
+          { id: "a", kind: "action", x: 220, y: 150, title: "Reproduce", caption: "Agent builds the smallest failing case", icon: "terminal" },
+          { id: "b", kind: "action", x: 220, y: 280, title: "Open a PR", caption: "With the fix and the test", icon: "code" },
+        ]} edges={[{ from: "t", to: "a" }, { from: "a", to: "b" }]} />
+      </GalleryCard>
+    </>
+  );
+}
+
 function Page_inputcopy() {
   const toast = useToast();
   return (
@@ -11387,6 +11405,7 @@ const PAGES = [
   { id: "card", group: "Structure", title: "Card", note: "A card composed from parts: CardHeader, CardMedia (an icon tile or a picture), CardTitle, CardDescription, CardFooter, CardButton. CardGroup lays them out: a grid of surfaces in 1 to 4 columns, or inline, one surface with rows divided by hairlines where the media leads, the header fills the middle and the footer sits at the trailing edge. Same markup either way; the parts read the orientation. Tiles are ink on inset, accent only on the one card a view leads with.", file: "components/cards.tsx components/primitives.tsx", Component: Page_card },
   { id: "inputcopy", group: "Forms", title: "InputCopy", note: "A read-only value with the one action it needs: copy. The button becomes a check for a moment and says so to screen readers; a failed clipboard says that too. variant=\"button\" puts a labelled Copy button on the trailing edge for values people copy often: a key, a share link, an install command.", file: "components/InputCopy.tsx", Component: Page_inputcopy },
   { id: "inputgroup", group: "Forms", title: "InputGroup", note: "Several fields as one block: rows on a single surface divided by hairlines, the label inside the row above the value. The row under the pointer tints, the row being typed in lifts to the surface with a hairline, an error row carries its message in red. For a short related set (name, email, company); Field + Input for a conventional form.", file: "components/InputGroup.tsx", Component: Page_inputgroup },
+  { id: "flowchart", group: "Structure", title: "Flowchart", note: "An automation or agent workflow on a dotted canvas: trigger, action, condition and end cards joined by measured connectors with Yes / No labels. Cards drag, the canvas pans and zooms (wheel with \u2318, the buttons, \u23180 to fit), a condition card\u2019s chips open real menus so a rule is edited in place. Positions are numbers and every move is reported, so the app can save the layout. No graph library: right for the flows a product shows, not a thousand-node editor.", file: "components/Flowchart.tsx", Component: Page_flowchart },
   { id: "accordion", group: "Structure", title: "Accordion", note: "Two looks: card (rows on a surface) and grouped (rounded rows on the page, the open item tints as one block, or only its row on hover with highlight=trigger). Stacked disclosure rows on Disclosure \u2014 single-open by default, closed content inert, house easing throughout.", file: "components/Accordion.tsx", Component: Page_accordion },
   { id: "steps", group: "Structure", title: "Steps", note: "Wizard progress \u2014 completed circles fill ink, the current step rings accent with aria-current, completed steps are clickable to go back.", file: "components/Steps.tsx", Component: Page_steps },
   { id: "timeline", group: "Structure", title: "Timeline", note: "Event history on a rail \u2014 toned dots, monospaced times, staggered entrance.", file: "components/Timeline.tsx", Component: Page_timeline },
@@ -11993,6 +12012,336 @@ function RailPanels({ page, pg, knobs, pgState, pgSet, pgReset }) {
         </RailPanel>
       )}
     </>
+  );
+}
+
+/* ═══════════ Flowchart (mirrors components/Flowchart.tsx) ═══════════ */
+/* ─────────────────────────────────────────────────────────
+ * FLOWCHART — an automation or agent workflow on a dotted canvas
+ * Nodes are cards of a `kind` (trigger, action, condition, end),
+ * joined by measured bezier connectors that can carry a label
+ * (Yes / No). Cards drag anywhere; the canvas pans by dragging
+ * the dots and zooms with the wheel, the buttons, or ⌘0 to fit.
+ * A condition card holds "if / and" rows whose chips open real
+ * menus (DropdownMenu), so a rule can be edited in place.
+ * Selecting a node lights its connectors and calls `onSelect`;
+ * every move calls `onMove` with the new position, so the app
+ * can persist the layout.
+ *
+ * No graph library: positions are numbers, connectors are one
+ * SVG path each, dragging is pointer capture. Enough for the
+ * flows a product actually shows (a trigger, a few steps, a
+ * branch); a full editor with hundreds of nodes wants a graph
+ * engine and is out of scope here.
+ *
+ * Kinds are semantic, so they carry colour (rule 16 is about
+ * data series and furniture icons): trigger accent, condition
+ * orange, action ink, end green.
+ * ───────────────────────────────────────────────────────── */
+
+const FC_KIND = {
+  trigger: { label: "Trigger", icon: "bolt", pill: "bg-accent-tint text-accent", tile: "bg-accent-tint text-accent" },
+  action: { label: "Action", icon: "play", pill: "bg-inset text-ink-2", tile: "bg-inset text-ink-2" },
+  condition: { label: "If / Else", icon: "filter", pill: "bg-orange-tint text-orange", tile: "bg-orange-tint text-orange" },
+  end: { label: "End", icon: "flag", pill: "bg-green-tint text-green", tile: "bg-green-tint text-green" },
+};
+
+const FC_DEFAULT_NODES = [
+  { id: "trigger", kind: "trigger", x: 300, y: 24, title: "New order created", caption: "Runs when an order is placed" },
+  {
+    id: "cond", kind: "condition", x: 300, y: 170, w: 380, subject: "order",
+    rules: [
+      { key: "r1", property: "flavor", operator: "is", value: "Rocky Road" },
+      { key: "r2", property: "topping", operator: "is", value: "Rainbow sprinkles" },
+    ],
+  },
+  { id: "notify", kind: "action", x: 150, y: 360, title: "Notify the kitchen", caption: "Slack #orders", icon: "bell" },
+  { id: "done", kind: "end", x: 450, y: 360, title: "Done", caption: "Nothing else to do" },
+];
+const FC_DEFAULT_EDGES = [
+  { from: "trigger", to: "cond" },
+  { from: "cond", to: "notify", label: "Yes" },
+  { from: "cond", to: "done", label: "No" },
+];
+const FC_DEFAULT_OPTIONS = {
+  properties: ["flavor", "topping", "size", "scoops"],
+  operators: ["is", "is not", "contains"],
+  values: {
+    flavor: ["Rocky Road", "Mint Chip", "Pistachio", "Bubblegum"],
+    topping: ["Rainbow sprinkles", "Hot fudge", "Candied pecans", "Brown butter brittle"],
+    size: ["Small", "Regular", "Large"],
+    scoops: ["1", "2", "3"],
+  },
+};
+const FC_EST_H = { trigger: 60, action: 60, condition: 96, end: 60 };
+const FC_PILL = 28; // kind pill + gap above a card
+const FC_MIN_ZOOM = 0.5;
+const FC_MAX_ZOOM = 2;
+
+/* a chip that opens a menu of choices */
+function FC_Chip({ value, options, onPick, tone = "field" }) {
+  return (
+    <DropdownMenu align="start" menuWidth={200} items={options.map((o) => ({ key: o, label: o, icon: (o === value ? "check" : undefined) }))} onSelect={onPick}>
+      <button
+        type="button"
+        data-ui
+        className={`corner-smooth inline-flex h-6 max-w-44 min-w-0 items-center gap-1 rounded-sm px-1.5 text-small font-medium text-ink transition-colors duration-150 ${tone === "surface" ? "bg-surface shadow-btn" : "bg-field hover:bg-hover-2"}`}
+      >
+        <span className="min-w-0 truncate">{value}</span>
+        <Icon name="chevron" size={11} strokeWidth={2.4} className="shrink-0 text-ink-3" />
+      </button>
+    </DropdownMenu>
+  );
+}
+
+function FC_ConditionBody({ node, options, onRule }) {
+  return (
+    <div className="flex flex-col gap-1.5 px-3 py-2.5">
+      {(node.rules ?? []).map((r, i) => (
+        <div key={r.key} className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <span aria-hidden className="text-ink-3"><Icon name="lines" size={12} strokeWidth={2} /></span>
+          <span className="w-7 text-caption text-ink-2">{i === 0 ? "If" : "and"}</span>
+          <span data-ui className="inline-flex h-6 shrink-0 items-center gap-1 rounded-sm bg-surface px-1.5 text-small font-medium text-ink shadow-btn">
+            <Icon name="package" size={12} strokeWidth={2} className="text-ink-2" />
+            {node.subject ?? "item"}
+          </span>
+          <FC_Chip value={r.property} options={options.properties ?? []} onPick={(property) => onRule(r.key, { property, value: options.values?.[property]?.[0] ?? r.value })} />
+          <FC_Chip value={r.operator ?? "is"} options={options.operators ?? ["is"]} onPick={(operator) => onRule(r.key, { operator })} />
+          <FC_Chip value={r.value} options={options.values?.[r.property] ?? [r.value]} onPick={(value) => onRule(r.key, { value })} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FC_StepBody({ node }) {
+  const k = FC_KIND[node.kind];
+  return (
+    <div className="flex items-center gap-2.5 p-2.5">
+      <span className={`corner-smooth flex size-9 shrink-0 items-center justify-center rounded-control ${k.tile}`}>
+        <Icon name={node.icon ?? k.icon} size={16} strokeWidth={2} />
+      </span>
+      <span className="min-w-0 text-left">
+        <span className="block truncate text-caption font-semibold text-ink">{node.title ?? k.label}</span>
+        {node.caption && <span className="mt-0.5 block text-small text-ink-3">{node.caption}</span>}
+      </span>
+    </div>
+  );
+}
+
+function Flowchart({
+  nodes: nodesProp = FC_DEFAULT_NODES,
+  edges = FC_DEFAULT_EDGES,
+  options = FC_DEFAULT_OPTIONS,
+  height = 460,
+  onSelect,
+  onMove,
+  onRuleChange,
+  className = "",
+} = {}) {
+  const reduced = useReducedMotion();
+  const canvasRef = useRef(null);
+  const nodeRefs = useRef(new Map());
+  const [nodes, setNodes] = useState(nodesProp);
+  useEffect(() => setNodes(nodesProp), [nodesProp]);
+  const [heights, setHeights] = useState({});
+  const [selected, setSelected] = useState(null);
+  const [view, setView] = useState({ x: 0, y: 0, z: 1 });
+  const [size, setSize] = useState({ w: 0, h: height });
+  const drag = useRef(null);
+
+  /* measure cards (their height depends on content) and the canvas */
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const measure = () => {
+      setSize({ w: canvas.clientWidth, h: canvas.clientHeight });
+      setHeights((prev) => {
+        const next = { ...prev };
+        let changed = false;
+        nodeRefs.current.forEach((el, id) => {
+          const h = el.offsetHeight;
+          if (h && Math.abs(h - (next[id] ?? 0)) > 0.5) { next[id] = h; changed = true; }
+        });
+        return changed ? next : prev;
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(canvas);
+    nodeRefs.current.forEach((el) => ro.observe(el));
+    return () => ro.disconnect();
+  }, [nodes]);
+
+  const hOf = (n) => heights[n.id] ?? FC_EST_H[n.kind];
+  const wOf = (n) => n.w ?? 280;
+  const anchors = (n) => ({ top: { x: n.x, y: n.y + FC_PILL }, bottom: { x: n.x, y: n.y + FC_PILL + hOf(n) } });
+  const path = (e) => {
+    const a = nodes.find((n) => n.id === e.from), b = nodes.find((n) => n.id === e.to);
+    if (!a || !b) return null;
+    const from = anchors(a).bottom, to = anchors(b).top;
+    const k = Math.min(Math.max(Math.abs(to.y - from.y) * 0.55, 24), 84);
+    return { d: `M ${from.x} ${from.y} C ${from.x} ${from.y + k}, ${to.x} ${to.y - k}, ${to.x} ${to.y}`, mid: { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 } };
+  };
+
+  /* fit every node into view */
+  const fit = () => {
+    if (!nodes.length || !size.w) return;
+    const xs = nodes.flatMap((n) => [n.x - wOf(n) / 2, n.x + wOf(n) / 2]);
+    const ys = nodes.flatMap((n) => [n.y, n.y + FC_PILL + hOf(n)]);
+    const bw = Math.max(...xs) - Math.min(...xs) + 48, bh = Math.max(...ys) - Math.min(...ys) + 48;
+    const z = Math.min(FC_MAX_ZOOM, Math.max(FC_MIN_ZOOM, Math.min(size.w / bw, size.h / bh)));
+    setView({ z, x: (size.w - bw * z) / 2 - (Math.min(...xs) - 24) * z, y: (size.h - bh * z) / 2 - (Math.min(...ys) - 24) * z });
+  };
+  const zoomBy = (factor, cx = size.w / 2, cy = size.h / 2) =>
+    setView((v) => {
+      const z = Math.min(FC_MAX_ZOOM, Math.max(FC_MIN_ZOOM, v.z * factor));
+      /* keep the point under the cursor still */
+      return { z, x: cx - ((cx - v.x) * z) / v.z, y: cy - ((cy - v.y) * z) / v.z };
+    });
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const onWheel = (event) => {
+      event.preventDefault();
+      const r = canvas.getBoundingClientRect();
+      if (event.ctrlKey || event.metaKey) zoomBy(event.deltaY < 0 ? 1.1 : 0.9, event.clientX - r.left, event.clientY - r.top);
+      else setView((v) => ({ ...v, x: v.x - event.deltaX, y: v.y - event.deltaY }));
+    };
+    canvas.addEventListener("wheel", onWheel, { passive: false });
+    return () => canvas.removeEventListener("wheel", onWheel);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [size.w, size.h]);
+
+  /* dragging: a card moves the node, the dots pan the view */
+  const down = (id) => (event) => {
+    if (event.target.closest("[data-ui], [role=menu]")) return;
+    if (id !== "canvas") event.stopPropagation();
+    const n = id === "canvas" ? null : nodes.find((x) => x.id === id);
+    drag.current = { id, sx: event.clientX, sy: event.clientY, bx: n ? n.x : view.x, by: n ? n.y : view.y, moved: false };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const move = (event) => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = event.clientX - d.sx, dy = event.clientY - d.sy;
+    if (!d.moved && Math.hypot(dx, dy) < 3) return;
+    d.moved = true;
+    if (d.id === "canvas") setView((v) => ({ ...v, x: d.bx + dx, y: d.by + dy }));
+    else {
+      const x = d.bx + dx / view.z, y = d.by + dy / view.z;
+      setNodes((ns) => ns.map((n) => (n.id === d.id ? { ...n, x, y } : n)));
+    }
+  };
+  const up = (event) => {
+    const d = drag.current;
+    if (!d) return;
+    if (d.id !== "canvas" && d.moved) {
+      const n = nodes.find((x) => x.id === d.id);
+      if (n) onMove?.(n.id, n.x, n.y);
+    }
+    drag.current = null;
+    if (!d.moved) select(d.id === "canvas" ? null : d.id);
+  };
+  const select = (id) => {
+    const next = selected === id ? null : id;
+    setSelected(next);
+    onSelect?.(next);
+  };
+  const rule = (nodeId, key, patch) =>
+    setNodes((ns) =>
+      ns.map((n) => {
+        if (n.id !== nodeId) return n;
+        const rules = (n.rules ?? []).map((r) => (r.key === key ? { ...r, ...patch } : r));
+        onRuleChange?.(nodeId, key, rules.find((r) => r.key === key));
+        return { ...n, rules };
+      }),
+    );
+  const lit = (e) => selected === e.from || selected === e.to;
+  const ease = reduced ? "none" : "transform 200ms var(--ease-out-quint)";
+  return (
+    <div
+      ref={canvasRef}
+      role="application"
+      aria-label="Flowchart"
+      onPointerDown={down("canvas")}
+      onPointerMove={move}
+      onPointerUp={up}
+      onKeyDown={(event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === "0") { event.preventDefault(); fit(); }
+        if ((event.metaKey || event.ctrlKey) && (event.key === "=" || event.key === "+")) { event.preventDefault(); zoomBy(1.2); }
+        if ((event.metaKey || event.ctrlKey) && event.key === "-") { event.preventDefault(); zoomBy(1 / 1.2); }
+      }}
+      tabIndex={0}
+      className={`relative w-full touch-none overflow-hidden rounded-card bg-canvas shadow-hairline select-none ${drag.current?.id === "canvas" ? "cursor-grabbing" : "cursor-grab"} ${className}`}
+      style={{
+        height,
+        backgroundImage: "radial-gradient(var(--line-strong) 1px, transparent 1.25px)",
+        backgroundSize: `${22 * view.z}px ${22 * view.z}px`,
+        backgroundPosition: `${view.x}px ${view.y}px`,
+      }}
+    >
+      {/* the moving layer */}
+      <div className="absolute top-0 left-0 origin-top-left" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.z})`, transition: drag.current ? "none" : ease }}>
+        <svg className="pointer-events-none absolute top-0 left-0 overflow-visible" width={1} height={1} aria-hidden>
+          {edges.map((e) => {
+            const p = path(e);
+            if (!p) return null;
+            return (
+              <g key={`${e.from}-${e.to}`}>
+                <path d={p.d} fill="none" stroke={lit(e) ? "var(--accent)" : "var(--line-strong)"} strokeWidth={1.5} className="transition-[stroke] duration-150" />
+                <circle cx={p.d.split(" ")[1]} cy={p.d.split(" ")[2]} r={3} fill={lit(e) ? "var(--accent)" : "var(--line-strong)"} />
+              </g>
+            );
+          })}
+        </svg>
+        {/* edge labels are HTML, so they keep the type ramp */}
+        {edges.map((e) => {
+          const p = path(e);
+          if (!p || !e.label) return null;
+          return (
+            <span key={`label-${e.from}-${e.to}`} className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full px-2 py-0.5 text-tiny font-medium ${lit(e) ? "bg-accent-tint text-accent" : "bg-inset text-ink-2"}`} style={{ left: p.mid.x, top: p.mid.y }}>
+              {e.label}
+            </span>
+          );
+        })}
+        {nodes.map((n) => {
+          const k = FC_KIND[n.kind];
+          const on = selected === n.id;
+          const body = n.kind === "condition" ? <FC_ConditionBody node={n} options={options} onRule={(key, patch) => rule(n.id, key, patch)} /> : <FC_StepBody node={n} />;
+          return (
+            <div
+              key={n.id}
+              ref={(el) => { if (el) nodeRefs.current.set(n.id, el); else nodeRefs.current.delete(n.id); }}
+              onPointerDown={down(n.id)}
+              className="absolute flex -translate-x-1/2 touch-none flex-col items-start gap-1.5"
+              style={{ left: n.x, top: n.y, width: wOf(n), zIndex: drag.current?.id === n.id ? 2 : 1, cursor: drag.current?.id === n.id ? "grabbing" : "grab" }}
+            >
+              <span className={`inline-flex h-6 items-center gap-1 rounded-sm px-2 text-tiny font-medium ${k.pill}`}>
+                <Icon name={k.icon} size={11} strokeWidth={2.4} />
+                {k.label}
+              </span>
+              <div
+                role="button"
+                tabIndex={0}
+                aria-pressed={on}
+                aria-label={n.title ?? k.label}
+                onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); select(n.id); } }}
+                className={`corner-smooth w-full rounded-card bg-surface text-left transition-shadow duration-150 ${on ? "shadow-[0_0_0_1.5px_var(--accent)]" : "shadow-card hover:shadow-overlay"}`}
+              >
+                {body}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {/* view controls */}
+      <div className="absolute right-2 bottom-2 flex items-center gap-0.5 rounded-control bg-surface p-0.5 shadow-card" data-ui onPointerDown={(e) => e.stopPropagation()}>
+        <Tooltip label="Zoom out"><IconButton label="Zoom out" onClick={() => zoomBy(1 / 1.2)} className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="minus" size={13} strokeWidth={2.2} /></IconButton></Tooltip>
+        <button type="button" onClick={fit} className="h-6 min-w-11 rounded-sm px-1.5 font-mono text-tiny text-ink-2 transition-colors duration-150 hover:bg-hover hover:text-ink" aria-label="Fit to view">{Math.round(view.z * 100)}%</button>
+        <Tooltip label="Zoom in"><IconButton label="Zoom in" onClick={() => zoomBy(1.2)} className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="plus" size={13} strokeWidth={2.2} /></IconButton></Tooltip>
+      </div>
+    </div>
   );
 }
 
