@@ -87,7 +87,7 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
 **Forms:** `Field`, `Input`, `Textarea`, `Select`, `Switch`, `Checkbox`, `FilterBar`, `Slider`, `OTPInput`, `FileDropzone`, `DatePicker`, `DateRangePicker`, `Calendar`, `ColorPicker`.
 **Overlays:** `Modal`, `Drawer`, `Toast`, `DropdownMenu`, `Popover`, `Tooltip`.
 **Feedback:** `Alert`, `Progress`, `Skeleton`, `LoadingState`, `ThinkingState`, `TaskRows`, `ToolChips`.
-**Conversation:** `ChatThread`, `StreamingText`, `Markdown`, `CodeBlock`, `SelectionActions`, `PromptBar`, `ChatComposer`, `ApprovalCard`, `ApprovalFlow`, `RecommendationCard`, `ContextCards`.
+**Conversation:** `ChatThread`, `StreamingText`, `Markdown`, `CodeBlock`, `SelectionActions`, `PromptBar`, `ChatComposer`, `ApprovalCard`, `ApprovalFlow`, `AskUserQuestions` (`questions[]` with `options`, `multiSelect`, `allowOther`, `freeText`, `skippable`; `onComplete(answers)`), `RecommendationCard`, `ContextCards`.
 **Dashboard:** `Panel` (titled card: `title`, `caption`, `actions`, `padding`), `StatCard` (`iconTone` "neutral" | "accent"), `MetricRow`, `Delta`, `BarChart` / `LineChart` (`fill` to take the panel's height, no width cap, `animate` default true), `DonutChart`, `Sparkline` (`smooth`, `animate`), `ChartLegend`, `CountUp`, `Gauge`, `BarList` (`charts.tsx`); `PrivacyScope`, `PrivacyToggle`, `Masked` (`Privacy.tsx`) mask figures until the eye is opened. `StatCard`'s `display` and `MetricRow`'s `value` accept a node, so `<CountUp>` and `<Masked>` slot straight in.
 **Data:** `RecordsTable`, `FilterTable`, `DiffTable`.
 **Structure:** `Accordion`, `Steps`, `Timeline`, card family (`cards.tsx`): `CardGroup` (`columns` 1..4 | `orientation="inline"`), `Card` + `CardHeader`, `CardMedia` (`icon` + `tone` neutral | accent, or `src`), `CardTitle`, `CardDescription`, `CardFooter`, `CardButton` (ghost in a row, secondary on a surface, `variant="accent"` for the one lead). Same markup in a grid and in an inline list.
@@ -97,7 +97,7 @@ All components ship demo content as prop defaults (`DEFAULT_*`); always pass rea
 
 ## Composition guidance
 
-Human-in-the-loop: `ApprovalCard` for a short, directly-controlled approval; `ApprovalFlow` when the run needs several questions in sequence (sliding stack, rolling counter, auto-advance on single choice).
+Human-in-the-loop: `ApprovalCard` for a short, directly-controlled approval; `ApprovalFlow` when the run needs several questions in sequence (sliding stack, rolling counter, auto-advance on single choice); `AskUserQuestions` when the agent must ask before it can continue (numbered options with 1 to 9 shortcuts, Other row, free text, Skip, answers returned in `onComplete`).
 
 Any page with a rail: `<div className="flex h-dvh"><AppSidebar … /><main className="min-w-0 flex-1 overflow-y-auto">…</main></div>` (`SidebarNav` for chat) — rails fill their parent, never give them a fixed height.
 

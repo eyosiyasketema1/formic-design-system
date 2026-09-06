@@ -140,7 +140,7 @@ When you receive one: save the JSON exactly as given to `src/formic/formic.confi
 **Controls and forms:** Button, Field, Input, Textarea, Select, Switch, Checkbox, FilterBar, Slider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker.
 **Overlays:** Modal, Drawer, Toast (`ToastProvider` at the root), DropdownMenu, Popover, Tooltip.
 **Feedback and agents:** Alert, Progress, Skeleton, LoadingState, ThinkingState, TaskRows, ToolChips.
-**Conversation:** ChatThread, MessageBubble, StreamingText, Markdown, CodeBlock, SelectionActions, PromptBar, ChatComposer, ApprovalCard, ApprovalFlow, RecommendationCard, ContextCards, ChatApp.
+**Conversation:** ChatThread, MessageBubble, StreamingText, Markdown, CodeBlock, SelectionActions, PromptBar, ChatComposer, ApprovalCard, ApprovalFlow, AskUserQuestions (a stepped question flow: numbered options, 1 to 9 shortcuts, single or multi-select, Other row, free text, Skip, `onComplete` with every answer), RecommendationCard, ContextCards, ChatApp.
 **Dashboard:** Panel (the titled card), StatCard, MetricRow, Delta, BarChart, LineChart, DonutChart, Sparkline, ChartLegend, CountUp, Gauge, BarList, PrivacyScope / PrivacyToggle / Masked.
 **Data and structure:** RecordsTable, FilterTable, DiffTable, Accordion, Steps, Timeline, and the card family in `cards.tsx`: CardGroup (`columns` 1 to 4, or `orientation="inline"` for one surface with hairline-divided rows) with Card + CardHeader, CardMedia (icon tile or picture), CardTitle, CardDescription, CardFooter, CardButton; the same markup is a stacked card in a grid and a row in a list.
 **Navigation:** Tabs (underline for page sections, segmented for views of one thing, subtle for filters), Pagination, Breadcrumbs, Menubar, AppSidebar (dashboard rail, expanded / rail, sub-menus), ProjectSidebar (workspace rail: switcher, search, groups, row menus, edge / inset), SidebarNav (chat rail), SearchList.
@@ -154,7 +154,7 @@ When you receive one: save the JSON exactly as given to `src/formic/formic.confi
 </div>
 ```
 
-Typical screens: a chat app is `SidebarNav` + `ChatThread` + `PromptBar` + `ToastProvider`; a dashboard is `AppSidebar` + a grid of `StatCard` and `Panel`s holding `BarChart` / `LineChart` / `BarList` (with `fill`) / `Gauge` and `MetricRow` breakdowns; an agent run is `ThinkingState` or `TaskRows` with `ApprovalCard` / `ApprovalFlow` for human-in-the-loop moments.
+Typical screens: a chat app is `SidebarNav` + `ChatThread` + `PromptBar` + `ToastProvider`; a dashboard is `AppSidebar` + a grid of `StatCard` and `Panel`s holding `BarChart` / `LineChart` / `BarList` (with `fill`) / `Gauge` and `MetricRow` breakdowns; an agent run is `ThinkingState` or `TaskRows` with `ApprovalCard` / `ApprovalFlow` for human-in-the-loop moments and `AskUserQuestions` when the agent needs a decision (which file, which approach, how far) before it continues.
 
 ## Data, not hardcoded content
 
