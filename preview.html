@@ -280,6 +280,11 @@
 .primitive-slider::-moz-range-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--slider-fill, 0%), var(--inset) var(--slider-fill, 0%)); box-shadow: 0 0 0 1px var(--line); }
 .primitive-slider::-moz-range-thumb { width: 13px; height: 13px; border: none; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn); }
 input[type="range"].primitive-slider:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.primitive-slider.is-layered { pointer-events: none; }
+.primitive-slider.is-layered::-webkit-slider-runnable-track { background: transparent; box-shadow: none; }
+.primitive-slider.is-layered::-moz-range-track { background: transparent; box-shadow: none; }
+.primitive-slider.is-layered::-webkit-slider-thumb { pointer-events: auto; }
+.primitive-slider.is-layered::-moz-range-thumb { pointer-events: auto; }
 /* Colour-picker hue strip — the same thumb as .primitive-slider, on a
    taller track whose background is the spectrum (set inline: it is the
    control's data, not styling). Native range, so keyboard is free. */
@@ -7026,6 +7031,130 @@ function Accordion({
 }
 
 /* ═══════════ Slider ═══════════ */
+/* ─────────────────────────────────────────────────────────
+ * SLIDER
+ * A native range input drawn with tokens (.primitive-slider):
+ * keyboard, ARIA and touch come from the platform. Fill percent
+ * feeds the track gradient via a CSS variable. Works inside
+ * Field (id / aria-describedby injected).
+ *
+ * On top of the plain control: `steps` snaps to a list of values
+ * and `showSteps` marks them with dots; `formatValue` shapes the
+ * readout; `editable` turns the readout into a number field on
+ * click (Enter commits, Escape cancels); `valuePosition="thumb"`
+ * shows the value in a chip above the thumb while dragging or
+ * focused instead of beside the track.
+ *
+ * RangeSlider is the two-thumb version (a pair of native inputs
+ * on one track, so each thumb is a real control with its own
+ * name), for a price band or a date window.
+ * ───────────────────────────────────────────────────────── */
+
+const nearest = (v, steps) => steps.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a), steps[0]);
+
+/* keyboard on a stepped slider walks the list, not the native step */
+const stepKey = (key, current, steps) => {
+  if (!steps?.length) return null;
+  const sorted = [...steps].sort((a, b) => a - b);
+  const i = sorted.indexOf(nearest(current, sorted));
+  if (key === "ArrowRight" || key === "ArrowUp" || key === "PageUp") return sorted[Math.min(sorted.length - 1, i + 1)];
+  if (key === "ArrowLeft" || key === "ArrowDown" || key === "PageDown") return sorted[Math.max(0, i - 1)];
+  if (key === "Home") return sorted[0];
+  if (key === "End") return sorted[sorted.length - 1];
+  return null;
+};
+
+/* the readout: a number, or a field when clicked (editable) */
+function Readout({
+  value,
+  min,
+  max,
+  step,
+  steps,
+  format,
+  editable,
+  disabled,
+  onCommit,
+  label,
+}) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState("");
+  const inputRef = useRef(null);
+  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+  const commit = () => {
+    const n = Number(text);
+    if (!Number.isNaN(n) && text.trim() !== "") {
+      const clamped = Math.min(max, Math.max(min, n));
+      onCommit(steps?.length ? nearest(clamped, steps) : Math.round((clamped - min) / step) * step + min);
+    }
+    setEditing(false);
+  };
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        inputMode="decimal"
+        min={min}
+        max={max}
+        step={step}
+        value={text}
+        aria-label={label ? `${label} value` : "Value"}
+        onChange={(event) => setText(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") { event.preventDefault(); commit(); }
+          if (event.key === "Escape") { event.preventDefault(); setEditing(false); }
+        }}
+        className="primitive-field corner-smooth h-7 w-16 shrink-0 rounded-control border border-line bg-field px-2 text-right text-caption text-ink outline-none tabular-nums"
+      />
+    );
+  }
+  if (!editable) {
+    return <span className="min-w-9 shrink-0 text-right text-caption tabular-nums text-ink-2">{format(value)}</span>;
+  }
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      aria-label={`Edit ${label ? `${label} ` : ""}value, ${format(value)}`}
+      onClick={() => { setText(String(value)); setEditing(true); }}
+      className="corner-smooth h-7 min-w-9 shrink-0 rounded-control px-1.5 text-right text-caption tabular-nums text-ink-2 transition-colors duration-150 hover:bg-hover hover:text-ink disabled:hover:bg-transparent"
+    >
+      {format(value)}
+    </button>
+  );
+}
+
+/* the chip above a thumb; `percent` places it, visible while active */
+function ThumbValue({ percent, text, show }) {
+  return (
+    <span
+      aria-hidden
+      className={`pointer-events-none absolute -top-7 -translate-x-1/2 rounded-chip px-1.5 py-0.5 font-mono text-tiny whitespace-nowrap transition-opacity duration-150 ${show ? "opacity-100" : "opacity-0"}`}
+      style={{ left: `calc(8px + (100% - 16px) * ${percent / 100})`, background: "var(--tooltip-bg)", color: "var(--tooltip-fg)" }}
+    >
+      {text}
+    </span>
+  );
+}
+
+/* step dots on the track; the thumb is 16px, so the dots sit on the thumb's travel */
+function StepDots({ steps, min, max, current }) {
+  const on = (v) => (Array.isArray(current) ? v >= current[0] && v <= current[1] : v <= current);
+  return (
+    <span aria-hidden className="pointer-events-none absolute inset-x-0 top-1/2 h-0 -translate-y-1/2">
+      {steps.map((v) => (
+        <span
+          key={v}
+          className={`absolute size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full transition-colors duration-150 ${on(v) ? "bg-canvas" : "bg-line-strong"}`}
+          style={{ left: `calc(8px + (100% - 16px) * ${max === min ? 0 : (v - min) / (max - min)})` }}
+        />
+      ))}
+    </span>
+  );
+}
+
 function Slider({
   min = 0,
   max = 100,
@@ -7035,37 +7164,132 @@ function Slider({
   onChange,
   label,
   showValue = false,
+  steps,
+  showSteps = false,
+  formatValue,
+  editable = false,
+  valuePosition = "right",
   disabled = false,
   className = "",
   id,
-  "aria-describedby": describedBy
+  "aria-describedby": describedBy,
 } = {}) {
   const [internal, setInternal] = useState(defaultValue ?? min);
-  const current = Math.min(max, Math.max(min, value !== void 0 ? value : internal));
-  const percent = max === min ? 0 : (current - min) / (max - min) * 100;
-  return <span className={`flex w-full items-center gap-3 ${className}`}>
-      <input
-    type="range"
-    id={id}
-    min={min}
-    max={max}
-    step={step}
-    value={current}
-    disabled={disabled}
-    aria-label={label}
-    aria-describedby={describedBy}
-    onChange={(event) => {
-      const next = Number(event.target.value);
-      if (value === void 0) setInternal(next);
-      onChange?.(next);
-    }}
-    className="primitive-slider w-full min-w-0 cursor-pointer disabled:cursor-default disabled:opacity-60"
-    style={{ "--slider-fill": `${percent}%` }}
-  />
-      {showValue && <span className="min-w-9 shrink-0 text-right text-caption tabular-nums text-ink-2">
-          {current}
-        </span>}
-    </span>;
+  const [active, setActive] = useState(false);
+  const current = Math.min(max, Math.max(min, value !== undefined ? value : internal));
+  const percent = max === min ? 0 : ((current - min) / (max - min)) * 100;
+  const format = formatValue ?? String;
+  const set = (raw) => {
+    const next = steps?.length ? nearest(raw, steps) : raw;
+    if (value === undefined) setInternal(next);
+    onChange?.(next);
+  };
+  return (
+    <span className={`flex w-full items-center gap-3 ${className}`}>
+      <span className="relative flex min-w-0 flex-1 items-center">
+        <input
+          type="range"
+          id={id}
+          min={min}
+          max={max}
+          step={step}
+          value={current}
+          disabled={disabled}
+          aria-label={label}
+          aria-valuetext={formatValue ? format(current) : undefined}
+          aria-describedby={describedBy}
+          onChange={(event) => set(Number(event.target.value))}
+          onKeyDown={(event) => { const v = stepKey(event.key, current, steps); if (v !== null) { event.preventDefault(); set(v); } }}
+          onPointerDown={() => setActive(true)}
+          onPointerUp={() => setActive(false)}
+          onFocus={() => setActive(true)}
+          onBlur={() => setActive(false)}
+          className="primitive-slider w-full min-w-0 cursor-pointer disabled:cursor-default disabled:opacity-60"
+          style={{ "--slider-fill": `${percent}%` }}
+        />
+        {showSteps && steps?.length ? <StepDots steps={steps} min={min} max={max} current={current} /> : null}
+        {valuePosition === "thumb" && <ThumbValue percent={percent} text={format(current)} show={active} />}
+      </span>
+      {(showValue || editable) && valuePosition === "right" && (
+        <Readout value={current} min={min} max={max} step={step} steps={steps} format={format} editable={editable} disabled={disabled} onCommit={set} label={label} />
+      )}
+    </span>
+  );
+}
+
+function RangeSlider({
+  min = 0,
+  max = 100,
+  step = 1,
+  value,
+  defaultValue,
+  onChange,
+  label = "Range",
+  showValue = false,
+  steps,
+  showSteps = false,
+  formatValue,
+  editable = false,
+  valuePosition = "right",
+  disabled = false,
+  className = "",
+} = {}) {
+  const [internal, setInternal] = useState(defaultValue ?? [min, max]);
+  const [active, setActive] = useState(null);
+  const [lo, hi] = value ?? internal;
+  const pct = (v) => (max === min ? 0 : ((v - min) / (max - min)) * 100);
+  const format = formatValue ?? String;
+  const set = (which, raw) => {
+    const v = steps?.length ? nearest(raw, steps) : raw;
+    const next = which === 0 ? [Math.min(v, hi), hi] : [lo, Math.max(v, lo)];
+    if (value === undefined) setInternal(next);
+    onChange?.(next);
+  };
+  const thumb = (which) => (
+    <input
+      type="range"
+      min={min}
+      max={max}
+      step={step}
+      value={which === 0 ? lo : hi}
+      disabled={disabled}
+      aria-label={`${label} ${which === 0 ? "minimum" : "maximum"}`}
+      aria-valuetext={formatValue ? format(which === 0 ? lo : hi) : undefined}
+      onChange={(event) => set(which, Number(event.target.value))}
+      onKeyDown={(event) => { const v = stepKey(event.key, which === 0 ? lo : hi, steps); if (v !== null) { event.preventDefault(); set(which, v); } }}
+      onPointerDown={() => setActive(which)}
+      onPointerUp={() => setActive(null)}
+      onFocus={() => setActive(which)}
+      onBlur={() => setActive(null)}
+      /* the thumb being moved sits on top so it can cross the other one */
+      className={`primitive-slider is-layered absolute inset-0 w-full min-w-0 cursor-pointer disabled:cursor-default disabled:opacity-60 ${active === which ? "z-20" : "z-10"}`}
+    />
+  );
+  return (
+    <span className={`flex w-full items-center gap-3 ${className}`}>
+      {(showValue || editable) && valuePosition === "right" && (
+        <Readout value={lo} min={min} max={hi} step={step} steps={steps} format={format} editable={editable} disabled={disabled} onCommit={(v) => set(0, v)} label={`${label} minimum`} />
+      )}
+      <span className="relative flex h-6 min-w-0 flex-1 items-center">
+        {/* the shared track: inset with the accent between the thumbs */}
+        <span aria-hidden className="absolute inset-x-0 h-1.5 rounded-full bg-inset shadow-hairline">
+          <span className="absolute inset-y-0 rounded-full bg-accent" style={{ left: `${pct(lo)}%`, right: `${100 - pct(hi)}%` }} />
+        </span>
+        {thumb(0)}
+        {thumb(1)}
+        {showSteps && steps?.length ? <StepDots steps={steps} min={min} max={max} current={[lo, hi]} /> : null}
+        {valuePosition === "thumb" && (
+          <>
+            <ThumbValue percent={pct(lo)} text={format(lo)} show={active === 0} />
+            <ThumbValue percent={pct(hi)} text={format(hi)} show={active === 1} />
+          </>
+        )}
+      </span>
+      {(showValue || editable) && valuePosition === "right" && (
+        <Readout value={hi} min={lo} max={max} step={step} steps={steps} format={format} editable={editable} disabled={disabled} onCommit={(v) => set(1, v)} label={`${label} maximum`} />
+      )}
+    </span>
+  );
 }
 
 /* ═══════════ OTPInput ═══════════ */
@@ -9982,9 +10206,25 @@ function Page_filedropzone() {
 }
 
 function Page_slider_otp() {
+  const [budget, setBudget] = useState([1200, 6400]);
   return (
     <>
       <GalleryCard label="Field-wrapped" wide><SliderOtpDemo /></GalleryCard>
+      <GalleryCard label="Steps · snaps to a list, dots on the track, editable readout" wide>
+        <Slider label="Quality" defaultValue={50} steps={[0, 25, 50, 75, 100]} showSteps editable showValue formatValue={(v) => `${v}%`} />
+      </GalleryCard>
+      <GalleryCard label="Value on the thumb · while dragging or focused" wide>
+        <Slider label="Opacity" defaultValue={64} valuePosition="thumb" formatValue={(v) => `${v}%`} />
+      </GalleryCard>
+      <GalleryCard label="RangeSlider · two thumbs, one track, editable ends" wide>
+        <div className="flex flex-col gap-3">
+          <RangeSlider label="Budget" min={0} max={10000} step={100} value={budget} onChange={setBudget} showValue editable formatValue={(v) => `$${v.toLocaleString()}`} />
+          <p className="text-caption text-ink-3">From ${budget[0].toLocaleString()} to ${budget[1].toLocaleString()} a month.</p>
+        </div>
+      </GalleryCard>
+      <GalleryCard label="RangeSlider · steps and thumb values" wide>
+        <RangeSlider label="Hours" min={0} max={24} steps={[0, 6, 9, 12, 15, 18, 21, 24]} showSteps defaultValue={[9, 18]} valuePosition="thumb" formatValue={(v) => `${v}:00`} />
+      </GalleryCard>
     </>
   );
 }
@@ -11128,7 +11368,7 @@ const PAGES = [
   { id: "filterbar", group: "Forms", title: "FilterBar", note: "The row above a list. A label at the start, the filters, then whatever sits at the end (a compare toggle, a view switch) and search \u2014 all in one wrapping row, so when it is full the next control goes to the next line instead of being clipped. Every control is sized through its width prop, and Clear appears only while something is applied. One filter per row, each full width, is the layout to avoid; so is an overflow-hidden row that cuts the last control off.", file: "components/FilterBar.tsx", Component: Page_filterbar },
   { id: "colorpicker", group: "Forms", title: "ColorPicker", note: "A Figma-style picker with no dependencies: saturation and brightness square, hue strip, hex field, eyedropper where the browser has one, and swatches. Hex only, no alpha — it picks brand colours, and a translucent accent would void every contrast guarantee.", file: "components/ColorPicker.tsx", Component: Page_colorpicker },
   { id: "filedropzone", group: "Forms", title: "FileDropzone", note: "Drag files onto the zone or click to browse \u2014 accept / size validation announces rejections, accepted files become chips with remove. Try dropping anything.", file: "components/FileDropzone.tsx", Component: Page_filedropzone },
-  { id: "slider-otp", group: "Forms", title: "Slider & OTP", note: "Two more Field-ready controls \u2014 Slider is a native range drawn with tokens (platform keyboard and touch for free); OTPInput distributes typing, paste, and one-time-code autofill across quiet field cells.", file: "components/Slider.tsx components/OTPInput.tsx", Component: Page_slider_otp },
+  { id: "slider-otp", group: "Forms", title: "Slider & OTP", note: "Two more Field-ready controls \u2014 Slider is a native range drawn with tokens (platform keyboard and touch for free), with steps that snap and show as dots, a formatted or editable readout, and a value chip on the thumb; RangeSlider is the two-thumb version on one track, each thumb a real control; OTPInput distributes typing, paste, and one-time-code autofill across quiet field cells.", file: "components/Slider.tsx components/OTPInput.tsx", Component: Page_slider_otp },
   { id: "datepicker", group: "Forms", title: "DatePicker", note: "A dependency-free month grid on the APG date pattern \u2014 arrows move by day, PageUp/Down by month, Home/End across the week. mode=range picks a span with a live preview band; DatePicker and DateRangePicker drop it behind the quiet field trigger.", file: "components/DatePicker.tsx components/DateRangePicker.tsx components/Calendar.tsx", Component: Page_datepicker },
   { id: "card", group: "Structure", title: "Card", note: "A card composed from parts: CardHeader, CardMedia (an icon tile or a picture), CardTitle, CardDescription, CardFooter, CardButton. CardGroup lays them out: a grid of surfaces in 1 to 4 columns, or inline, one surface with rows divided by hairlines where the media leads, the header fills the middle and the footer sits at the trailing edge. Same markup either way; the parts read the orientation. Tiles are ink on inset, accent only on the one card a view leads with.", file: "components/cards.tsx components/primitives.tsx", Component: Page_card },
   { id: "inputcopy", group: "Forms", title: "InputCopy", note: "A read-only value with the one action it needs: copy. The button becomes a check for a moment and says so to screen readers; a failed clipboard says that too. variant=\"button\" puts a labelled Copy button on the trailing edge for values people copy often: a key, a share link, an install command.", file: "components/InputCopy.tsx", Component: Page_inputcopy },

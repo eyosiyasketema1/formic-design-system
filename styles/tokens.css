@@ -288,6 +288,14 @@ input[type="range"].primitive-slider:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+/* RangeSlider: two native ranges on one drawn track. The inputs lose
+   their own track and take no pointer events; only the thumbs do, so
+   either thumb is grabbable wherever it sits. */
+.primitive-slider.is-layered { pointer-events: none; }
+.primitive-slider.is-layered::-webkit-slider-runnable-track { background: transparent; box-shadow: none; }
+.primitive-slider.is-layered::-moz-range-track { background: transparent; box-shadow: none; }
+.primitive-slider.is-layered::-webkit-slider-thumb { pointer-events: auto; }
+.primitive-slider.is-layered::-moz-range-thumb { pointer-events: auto; }
 /* Colour-picker hue strip — the same thumb as .primitive-slider, on a
    taller track whose background is the spectrum (set inline: it is the
    control's data, not styling). Native range, so keyboard is free. */
