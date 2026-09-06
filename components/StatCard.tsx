@@ -1,6 +1,6 @@
 "use client";
 import type { ReactNode } from "react";
-import { Card, Icon, type IconName } from "./primitives";
+import { Card, Icon, IconTile, type IconName, type IconTileTone } from "./primitives";
 import { Sparkline, compact, type ChartColor } from "./charts";
 import { FORMIC_CONFIG } from "./config";
 /* ─────────────────────────────────────────────────────────
@@ -41,14 +41,7 @@ export function Delta({ tone = "up", children }: { tone?: DeltaTone; children: R
   );
 }
 
-export type StatIconTone = "neutral" | "accent";
-/* Icons are furniture, not data: ink on inset by default, accent only on
- * the one tile a dashboard leads with. A different colour per card is the
- * surest sign of machine-made UI (rule 16 covers series, this covers icons). */
-const STAT_ICON_TINTS: Record<StatIconTone, string> = {
-  neutral: "bg-inset text-ink-2",
-  accent: "bg-accent-tint text-accent",
-};
+export type StatIconTone = IconTileTone;
 
 export function StatCard({
   label = "Total profit",
@@ -87,9 +80,7 @@ export function StatCard({
   return (
     <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${className}`}>
       {icon && (
-        <span className={`corner-smooth flex size-9 items-center justify-center rounded-control ${STAT_ICON_TINTS[iconTone]}`}>
-          <Icon name={icon} size={17} strokeWidth={2} />
-        </span>
+        <IconTile icon={icon} tone={iconTone} />
       )}
       <div className="min-w-0">
         <div className="truncate text-caption font-medium text-ink">{label}</div>

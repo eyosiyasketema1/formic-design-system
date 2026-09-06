@@ -1324,8 +1324,19 @@ const entrance = (name, index, { duration = 300, stagger = 80, delay = 0 } = {})
 });
 const fadeUp = (index = 0, opts) => entrance("fade-up", index, opts);
 const popIn = (index = 0, opts) => entrance("pop-in", index, opts);
+const CardGroupContext = createContext(null);
 function Card({ className = "", children, ...rest }) {
-  return <div className={`overflow-hidden rounded-card bg-surface shadow-card ${className}`} {...rest}>{children}</div>;
+  const group = useContext(CardGroupContext);
+  const chrome = !group ? "overflow-hidden rounded-card bg-surface shadow-card" : group.inline ? "flex w-full min-w-0 items-center gap-3 px-4 py-3" : "flex flex-col overflow-hidden rounded-card bg-surface shadow-card";
+  return <div className={`${chrome} ${className}`} {...rest}>{children}</div>;
+}
+const ICON_TILE_TONES = { neutral: "bg-inset text-ink-2", accent: "bg-accent-tint text-accent" };
+function IconTile({ icon, tone = "neutral", className = "" }) {
+  return (
+    <span aria-hidden className={`corner-smooth flex size-9 shrink-0 items-center justify-center rounded-control ${ICON_TILE_TONES[tone]} ${className}`}>
+      <Icon name={icon} size={17} strokeWidth={2} />
+    </span>
+  );
 }
 const BADGE_TONES = { green: "bg-green-tint text-green", red: "bg-red-tint text-red", neutral: "bg-inset text-ink-2" };
 function Badge({ tone = "neutral", free = false, className = "", style, children }) {
@@ -8628,10 +8639,6 @@ function BarList({
    churn and cost, and only the caller knows which. */
 const DELTA_TONES = { up: "bg-green-tint text-green", down: "bg-red-tint text-red", flat: "bg-inset text-ink-2" };
 const DELTA_ICONS = { up: "arrow-up", down: "arrow-up", flat: "minus" };
-const STAT_ICON_TINTS = {
-  neutral: "bg-inset text-ink-2",
-  accent: "bg-accent-tint text-accent",
-};
 function Delta({ tone = "up", children }) {
   return (
     <span className={`corner-smooth inline-flex h-5.5 shrink-0 items-center gap-0.5 rounded-chip px-1.5 text-tiny font-medium tabular-nums ${DELTA_TONES[tone]}`}>
@@ -8659,9 +8666,7 @@ function StatCard({
   return (
     <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${className}`}>
       {icon && (
-        <span className={`corner-smooth flex size-9 items-center justify-center rounded-control ${STAT_ICON_TINTS[iconTone]}`}>
-          <Icon name={icon} size={17} strokeWidth={2} />
-        </span>
+        <IconTile icon={icon} tone={iconTone} />
       )}
       <div className="min-w-0">
         <div className="truncate text-caption font-medium text-ink">{label}</div>
@@ -10420,6 +10425,74 @@ function Page_projectsidebar() {
 }
 
 /* one page for all three rails */
+function Page_card() {
+  const toast = useToast();
+  const integrations = [
+    { icon: "bolt", title: "Fluid motion", text: "Spring-tuned transitions across three tiers" },
+    { icon: "database", title: "Warehouse", text: "Sync tables nightly from the ledger" },
+    { icon: "cloud", title: "Object storage", text: "Assets served from the edge" },
+    { icon: "shield", title: "Single sign-on", text: "SAML and OIDC, enforced per workspace" },
+  ];
+  const tasks = [
+    { icon: "search", title: "Find critical bugs", text: "Analyze recent commits and flag regressions before release.", lead: true },
+    { icon: "code", title: "Refactor a module", text: "Split a file that grew past its purpose without changing behaviour." },
+    { icon: "clipboard", title: "Write the changelog", text: "Turn merged pull requests into notes people will read." },
+    { icon: "bug", title: "Reproduce an issue", text: "Build the smallest failing case from a report." },
+  ];
+  return (
+    <>
+      <GalleryCard label="Inline · one surface, rows divided by hairlines, a ghost action each" full>
+        <div className="w-full max-w-130">
+          <CardGroup orientation="inline">
+            {integrations.map((i) => (
+              <Card key={i.title}>
+                <CardMedia icon={i.icon} />
+                <CardHeader>
+                  <CardTitle>{i.title}</CardTitle>
+                  <CardDescription>{i.text}</CardDescription>
+                </CardHeader>
+                <CardFooter>
+                  <CardButton onClick={() => toast({ title: `Connect ${i.title}` })}>Connect</CardButton>
+                </CardFooter>
+              </Card>
+            ))}
+          </CardGroup>
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Grid · two columns, media in the header, one accent tile for the lead" full>
+        <CardGroup columns={2}>
+          {tasks.map((t) => (
+            <Card key={t.title}>
+              <CardHeader>
+                <CardMedia icon={t.icon} tone={t.lead ? "accent" : "neutral"} />
+                <CardTitle>{t.title}</CardTitle>
+                <CardDescription>{t.text}</CardDescription>
+              </CardHeader>
+            </Card>
+          ))}
+        </CardGroup>
+      </GalleryCard>
+      <GalleryCard label="Grid · three columns with a footer; the lead card carries the accent CTA" full>
+        <CardGroup columns={3}>
+          {tasks.slice(0, 3).map((t) => (
+            <Card key={t.title}>
+              <CardHeader>
+                <CardMedia icon={t.icon} tone={t.lead ? "accent" : "neutral"} />
+                <CardTitle>{t.title}</CardTitle>
+                <CardDescription>{t.text}</CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <CardButton variant={t.lead ? "accent" : undefined} onClick={() => toast({ title: t.title })}>Run</CardButton>
+                <CardButton variant="ghost">Details</CardButton>
+              </CardFooter>
+            </Card>
+          ))}
+        </CardGroup>
+      </GalleryCard>
+    </>
+  );
+}
+
 function Page_sidebar() {
   return (
     <>
@@ -10840,6 +10913,7 @@ const PAGES = [
   { id: "filedropzone", group: "Forms", title: "FileDropzone", note: "Drag files onto the zone or click to browse \u2014 accept / size validation announces rejections, accepted files become chips with remove. Try dropping anything.", file: "components/FileDropzone.tsx", Component: Page_filedropzone },
   { id: "slider-otp", group: "Forms", title: "Slider & OTP", note: "Two more Field-ready controls \u2014 Slider is a native range drawn with tokens (platform keyboard and touch for free); OTPInput distributes typing, paste, and one-time-code autofill across quiet field cells.", file: "components/Slider.tsx components/OTPInput.tsx", Component: Page_slider_otp },
   { id: "datepicker", group: "Forms", title: "DatePicker", note: "A dependency-free month grid on the APG date pattern \u2014 arrows move by day, PageUp/Down by month, Home/End across the week. mode=range picks a span with a live preview band; DatePicker and DateRangePicker drop it behind the quiet field trigger.", file: "components/DatePicker.tsx components/DateRangePicker.tsx components/Calendar.tsx", Component: Page_datepicker },
+  { id: "card", group: "Structure", title: "Card", note: "A card composed from parts: CardHeader, CardMedia (an icon tile or a picture), CardTitle, CardDescription, CardFooter, CardButton. CardGroup lays them out: a grid of surfaces in 1 to 4 columns, or inline, one surface with rows divided by hairlines where the media leads, the header fills the middle and the footer sits at the trailing edge. Same markup either way; the parts read the orientation. Tiles are ink on inset, accent only on the one card a view leads with.", file: "components/cards.tsx components/primitives.tsx", Component: Page_card },
   { id: "accordion", group: "Structure", title: "Accordion", note: "Stacked disclosure rows on Disclosure \u2014 single-open by default, closed content inert, house easing throughout.", file: "components/Accordion.tsx", Component: Page_accordion },
   { id: "steps", group: "Structure", title: "Steps", note: "Wizard progress \u2014 completed circles fill ink, the current step rings accent with aria-current, completed steps are clickable to go back.", file: "components/Steps.tsx", Component: Page_steps },
   { id: "timeline", group: "Structure", title: "Timeline", note: "Event history on a rail \u2014 toned dots, monospaced times, staggered entrance.", file: "components/Timeline.tsx", Component: Page_timeline },
@@ -11444,6 +11518,129 @@ function RailPanels({ page, pg, knobs, pgState, pgSet, pgReset }) {
         </RailPanel>
       )}
     </>
+  );
+}
+
+/* ═══════════ Card family (mirrors components/cards.tsx) ═══════════ */
+/* ─────────────────────────────────────────────────────────
+ * CARD FAMILY — compose a card from parts, lay cards out as a group
+ *
+ *   <CardGroup columns={2}>                    a grid of surfaces
+ *     <Card>
+ *       <CardHeader>
+ *         <CardMedia icon="search" />
+ *         <CardTitle>Find critical bugs</CardTitle>
+ *         <CardDescription>Analyze recent commits…</CardDescription>
+ *       </CardHeader>
+ *       <CardFooter><CardButton>Run</CardButton></CardFooter>
+ *     </Card>
+ *   </CardGroup>
+ *
+ *   <CardGroup orientation="inline">           one surface, rows divided by hairlines
+ *     <Card>
+ *       <CardMedia icon="bolt" />
+ *       <CardHeader>
+ *         <CardTitle>Fluid motion</CardTitle>
+ *         <CardDescription>…</CardDescription>
+ *       </CardHeader>
+ *       <CardFooter><CardButton>Connect</CardButton></CardFooter>
+ *     </Card>
+ *   </CardGroup>
+ *
+ * The parts read the group's orientation from context, so the same
+ * markup is a stacked card in a grid and a row in an inline list:
+ * media becomes a leading tile, the header takes the middle, the
+ * footer moves to the trailing edge. Card itself lives in
+ * primitives.tsx and does the same. Icons are furniture (IconTile):
+ * ink on inset, accent only on the one card a view leads with.
+ * ───────────────────────────────────────────────────────── */
+const COLUMNS = {
+  1: "grid-cols-1",
+  2: "grid-cols-1 sm:grid-cols-2",
+  3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+  4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
+};
+
+function CardGroup({
+  orientation = "grid",
+  columns = 2,
+  className = "",
+  children,
+}) {
+  const inline = orientation === "inline";
+  return (
+    <CardGroupContext.Provider value={{ inline }}>
+      <div
+        role={inline ? "list" : undefined}
+        className={
+          inline
+            ? `flex w-full flex-col divide-y divide-line overflow-hidden rounded-card bg-surface shadow-card ${className}`
+            : `grid w-full gap-3.5 ${COLUMNS[columns]} ${className}`
+        }
+      >
+        {children}
+      </div>
+    </CardGroupContext.Provider>
+  );
+}
+
+function useInline() {
+  return Boolean(useContext(CardGroupContext)?.inline);
+}
+
+/** title + description (+ media, in a grid) */
+function CardHeader({ className = "", children }) {
+  const inline = useInline();
+  return <div className={`${inline ? "flex min-w-0 flex-1 flex-col gap-0.5" : "flex flex-col gap-3 p-5"} ${className}`}>{children}</div>;
+}
+
+/** an icon tile, or a picture: full-bleed at the top of a grid card, a thumbnail in a row */
+function CardMedia({
+  icon,
+  tone = "neutral",
+  src,
+  alt = "",
+  className = "",
+}) {
+  const inline = useInline();
+  if (src) {
+    return inline ? (
+      <img src={src} alt={alt} className={`size-9 shrink-0 rounded-control object-cover ${className}`} />
+    ) : (
+      <img src={src} alt={alt} className={`-mx-5 -mt-5 mb-1 aspect-video w-[calc(100%+var(--spacing)*10)] max-w-none object-cover ${className}`} />
+    );
+  }
+  if (!icon) return null;
+  return <IconTile icon={icon} tone={tone} className={className} />;
+}
+
+function CardTitle({ className = "", children }) {
+  const inline = useInline();
+  return <h3 className={`${inline ? "truncate text-caption font-medium" : "text-body font-semibold"} text-ink ${className}`}>{children}</h3>;
+}
+
+function CardDescription({ className = "", children }) {
+  const inline = useInline();
+  return <p className={`${inline ? "truncate text-small" : "text-caption"} text-ink-3 ${className}`}>{children}</p>;
+}
+
+/** actions: at the bottom of a grid card, at the trailing edge of a row */
+function CardFooter({ className = "", children }) {
+  const inline = useInline();
+  return <div className={`${inline ? "ml-auto flex shrink-0 items-center gap-1" : "mt-auto flex items-center gap-2 px-5 pb-5"} ${className}`}>{children}</div>;
+}
+
+/** the quiet card action: ghost in a row, secondary on a surface; pass `variant` for the one accent CTA */
+function CardButton({
+  variant,
+  children,
+  ...rest
+}) {
+  const inline = useInline();
+  return (
+    <Button variant={variant ?? (inline ? "ghost" : "secondary")} size="sm" {...rest}>
+      {children}
+    </Button>
   );
 }
 

@@ -1,5 +1,5 @@
 "use client";
-import { cloneElement, isValidElement, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ElementType, type ReactElement, type ReactNode } from "react";
+import { cloneElement, createContext, isValidElement, useContext, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ElementType, type ReactElement, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
   IconAlertCircle, IconAlignLeft, IconArrowUp, IconArrowUpRight, IconCalendar, IconChartBar, IconCheck,
@@ -440,15 +440,42 @@ export function IconButton({
 }
 
 /* ── Card ──────────────────────────────────────────────── */
+/* Inside a CardGroup (cards.tsx) a Card knows its orientation: in an
+   inline group it becomes a borderless row on the group's one surface. */
+export const CardGroupContext = createContext<{ inline: boolean } | null>(null);
 export function Card({
   className = "",
   children,
   ...rest
 }: { className?: string; children: ReactNode } & Record<string, unknown>) {
+  const group = useContext(CardGroupContext);
+  const chrome = !group
+    ? "overflow-hidden rounded-card bg-surface shadow-card"
+    : group.inline
+      ? "flex w-full min-w-0 items-center gap-3 px-4 py-3"
+      : "flex flex-col overflow-hidden rounded-card bg-surface shadow-card";
   return (
-    <div className={`overflow-hidden rounded-card bg-surface shadow-card ${className}`} {...rest}>
+    <div className={`${chrome} ${className}`} {...rest}>
       {children}
     </div>
+  );
+}
+
+/* ── IconTile ──────────────────────────────────────────── */
+/* Icons are furniture, not data: ink on inset by default, accent only on
+ * the one tile a view leads with. A different colour per card is the surest
+ * sign of machine-made UI (rule 16 covers series, this covers icons).
+ * Shared by StatCard and CardMedia. */
+export type IconTileTone = "neutral" | "accent";
+export const ICON_TILE_TONES: Record<IconTileTone, string> = {
+  neutral: "bg-inset text-ink-2",
+  accent: "bg-accent-tint text-accent",
+};
+export function IconTile({ icon, tone = "neutral", className = "" }: { icon: IconName; tone?: IconTileTone; className?: string }) {
+  return (
+    <span aria-hidden className={`corner-smooth flex size-9 shrink-0 items-center justify-center rounded-control ${ICON_TILE_TONES[tone]} ${className}`}>
+      <Icon name={icon} size={17} strokeWidth={2} />
+    </span>
   );
 }
 
