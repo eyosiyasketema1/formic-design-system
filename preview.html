@@ -15481,6 +15481,10 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
   const starts = cfg.theme === mode;
   const [projectOpen, setProjectOpen] = useState(state === "expanded");
   useEffect(() => { setProjectOpen(state === "expanded"); }, [state, cfg.sidebar]);
+  /* Full view keeps its own collapse: the header control works in the
+     preview, and the choice only sets where it starts */
+  const [variant, setVariant] = useState(state);
+  useEffect(() => { setVariant(state); }, [state, cfg.sidebar]);
   useEffect(() => { czLoadFont(cfg.font); }, [cfg.font]);
   /* motion and the rail remount their subtrees so a change replays the
      entrance rather than waiting for the next data change */
@@ -15489,7 +15493,7 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
   const project = cfg.sidebar !== "full";
   const rail = project
     ? <ProjectSidebar key={k} open={projectOpen} user={me} layout={cfg.sidebar} active="northwind" onSelect={() => {}} />
-    : <AppSidebar key={k} variant={state} collapsible active="overview" onSelect={() => {}} user={me} />;
+    : <AppSidebar key={k} variant={variant} onVariantChange={setVariant} active="reports-sales" onSelect={() => {}} user={me} />;
   const content = (
     <div className="page-content flex min-w-0 flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
