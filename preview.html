@@ -10819,7 +10819,7 @@ function Page_panel() {
         </div>
       </GalleryCard>
       <GalleryCard label="Report panel · two centred heroes, a divider, a footer with the action" wide>
-        <Panel title="Delivery report" caption="Last month, 14 projects" actions={<IconButton label="More" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="dots-vertical" size={14} /></IconButton>} bodyClassName="flex flex-col">
+        <div><Panel title="Delivery report" caption="Last month, 14 projects" actions={<IconButton label="More" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="dots-vertical" size={14} /></IconButton>} bodyClassName="flex flex-col">
           <div className="grid flex-1 grid-cols-2 divide-x divide-line">
             <div className="pr-3"><StatCard align="center" icon="circle-check" iconTone="accent" label="On time" caption="This month" display="+82%" className="max-w-none p-0 shadow-none" /></div>
             <div className="pl-3"><StatCard align="center" icon="clock" label="Over budget" caption="This month" display="-24%" className="max-w-none p-0 shadow-none" /></div>
@@ -10828,25 +10828,25 @@ function Page_panel() {
             <div><p className="text-caption text-ink-3">Client satisfaction</p><p className="text-heading font-semibold text-ink tabular-nums">94%</p></div>
             <Button variant="secondary" size="sm">View report</Button>
           </div>
-        </Panel>
+        </Panel></div>
       </GalleryCard>
       <GalleryCard label="Headline panel · icon title, a big number, rows, then a chart that fills the rest" wide>
-        <Panel title={<span className="flex items-center gap-2"><IconTile icon="chart-line" tone="accent" className="size-7 [&_svg]:size-3.5" />Traffic today</span>} actions={<Button variant="secondary" size="xs">Details</Button>} bodyClassName="flex flex-col">
+        <div><Panel title={<span className="flex items-center gap-2"><IconTile icon="chart-line" tone="accent" className="size-7 [&_svg]:size-3.5" />Traffic today</span>} actions={<Button variant="secondary" size="xs">Details</Button>} bodyClassName="flex flex-col">
           <div className="flex items-center gap-2"><span className="text-display font-semibold text-ink tabular-nums">2,150</span><Delta tone="up">+5%</Delta></div>
           <div className="mt-3 flex flex-col border-b border-line pb-2">
             <MetricRow icon="globe" label="Website" value="1,420" delta="+12.6%" />
             <MetricRow icon="sparkles" label="Assistant" value="730" delta="-4.2%" deltaTone="down" />
           </div>
           <div className="mt-3 flex-1">
-            <LineChart labels={["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"]} series={[{ name: "Visits", values: [30, 62, 48, 26, 74, 88] }]} curve="step" backdrop points={false} area={false} fill height={140} />
+            <LineChart labels={["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"]} series={[{ name: "Visits", values: [30, 62, 48, 26, 74, 88] }]} curve="step" backdrop points={false} area={false} height={140} />
           </div>
-        </Panel>
+        </Panel></div>
       </GalleryCard>
       <GalleryCard label="Hero padding, no header" wide>
-        <Panel padding="lg">
-          <p className="text-display font-semibold text-ink tabular-nums">$1,437,500</p>
+        <div><Panel padding="lg">
+          <p className="text-display font-semibold text-ink tabular-nums">ETB 1,437,500</p>
           <p className="mt-1 text-caption text-ink-3">Invoiced this month</p>
-        </Panel>
+        </Panel></div>
       </GalleryCard>
     </>
   );
