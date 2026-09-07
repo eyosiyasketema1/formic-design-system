@@ -226,7 +226,7 @@ if m0:
         line = m0.group(1)[: mm.start()].count("\n") + 1
         fails.append(f"preview.html: script line {line}: '{mm.group(1)}' in the inline Babel script white-screens the gallery (a mirror kept its module syntax)")
     # TypeScript generics on hooks survive a careless mirror regen and stop Babel cold
-    for mm in re.finditer(r"\b(useState|useRef|useMemo|useCallback|createContext)<", m0.group(1)):
+    for mm in re.finditer(r"\b(use[A-Z]\w*|createContext)<(?=[A-Za-z\[{(])", m0.group(1)):
         line = m0.group(1)[: mm.start()].count("\n") + 1
         fails.append(f"preview.html: script line {line}: '{mm.group(1)}<...>' is TypeScript; the inline Babel script is plain JSX (strip the generic)")
 

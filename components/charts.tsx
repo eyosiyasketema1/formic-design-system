@@ -38,7 +38,7 @@ const toneOf = (color: ChartColor | undefined, index: number): ChartColor =>
  * Bars get it as a per-series minimum, points as a padded hit area. */
 const HIT = 24;
 
-export type Series = { name: string; color?: ChartColor; values: number[] };
+export type Series = { name: string; color?: ChartColor; values: number[]; /** dashed: a comparison line (last period, the target) behind the real one */ style?: "solid" | "dashed" };
 
 /* ── compact number formatting ─────────────────────────── */
 export function compact(n: number): string {
@@ -125,7 +125,9 @@ export function ChartLegend({ series }: { series: Series[] }) {
     <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
       {series.map((s, i) => (
         <span key={`${s.name}-${i}`} className="flex items-center gap-1.5 text-tiny text-ink-2">
-          <span className={`size-2 shrink-0 rounded-full ${SERIES_BG[toneOf(s.color, i)]}`} />
+          {s.style === "dashed"
+            ? <span aria-hidden className="w-3.5 shrink-0 border-t border-dashed border-ink-3" />
+            : <span className={`size-2 shrink-0 rounded-full ${SERIES_BG[toneOf(s.color, i)]}`} />}
           {s.name}
         </span>
       ))}
@@ -319,6 +321,7 @@ export function LineChart({
   axis = false,
   floor = true,
   format = compact,
+  endMarker = false,
   className = "",
 }: {
   labels?: string[];
@@ -347,6 +350,8 @@ export function LineChart({
   floor?: boolean;
   /** how the axis prints a value, e.g. (n) => `$${compact(n)}` */
   format?: (n: number) => string;
+  /** a ringed dot on the last value of every solid series: "this is now" */
+  endMarker?: boolean;
   className?: string;
 }) {
   const gradientId = useId();
@@ -430,8 +435,8 @@ export function LineChart({
               /* The colour class goes on the <g>, not the path: a gradient
                  stop resolves currentColor from its OWN inherited colour, so
                  putting it on the sibling path leaves the fill ambient ink. */
-              <g key={`${s.name}-${si}`} className={SERIES_TEXT[tone]}>
-                {area && (
+              <g key={`${s.name}-${si}`} className={s.style === "dashed" ? "text-ink-3" : SERIES_TEXT[tone]}>
+                {area && s.style !== "dashed" && (
                   <>
                     <defs>
                       <linearGradient id={`${gradientId}-${si}`} x1="0" y1="0" x2="0" y2="1">
@@ -443,16 +448,29 @@ export function LineChart({
                   </>
                 )}
                 <path
-                  d={d} fill="none" strokeWidth="2"
+                  d={d} fill="none" strokeWidth={s.style === "dashed" ? "1.5" : "2"}
                   strokeLinecap="round" strokeLinejoin="round"
                   vectorEffect="non-scaling-stroke"
-                  className={SERIES_STROKE[tone]}
+                  strokeDasharray={s.style === "dashed" ? "5 5" : undefined}
+                  className={s.style === "dashed" ? "stroke-ink-3" : SERIES_STROKE[tone]}
                 />
               </g>
             );
           })}
         </svg>
 
+        {endMarker && series.filter((s) => s.style !== "dashed" && s.values.length).map((s, si) => {
+          const i = s.values.length - 1;
+          return (
+            <span
+              key={`end-${s.name}-${si}`} aria-hidden
+              className={`pointer-events-none absolute size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-surface ${SERIES_TEXT[toneOf(s.color, si)]} border-current`}
+              style={{ left: `${(i / Math.max(slots - 1, 1)) * 100}%`, top: `${(yOf(s.values[i]) / H) * 100}%`, opacity: settled ? 1 : 0, transition: drawing ? "opacity 400ms var(--ease-out-quint) 1300ms" : undefined }}
+            >
+              <span className="absolute inset-0.5 rounded-full bg-current" />
+            </span>
+          );
+        })}
         {/* Dots live in HTML, not SVG: the stretched viewBox would turn
             circles into ellipses, and they need to be real focus targets.
             The button is a 24px hit area; the visible dot is the inner span.
@@ -613,18 +631,23 @@ export function DonutChart({
       aria-label={`${label}: ${value.toLocaleString()} of ${max.toLocaleString()}, ${Math.round(pct * 100)}%`}
     >
       <svg viewBox="0 0 100 100" className="size-full -rotate-90">
-        <circle cx="50" cy="50" r={r} fill="none" strokeWidth="11" className="stroke-chart-track" />
+        <circle cx="50" cy="50" r={r} fill="none" strokeWidth={size < 80 ? 7 : 11} className="stroke-chart-track" />
         <circle
-          cx="50" cy="50" r={r} fill="none" strokeWidth="11" strokeLinecap="round"
+          cx="50" cy="50" r={r} fill="none" strokeWidth={size < 80 ? 7 : 11} strokeLinecap="round"
           className={SERIES_STROKE[color]}
           strokeDasharray={`${shown * C} ${C}`}
           style={{ transition: `stroke-dasharray ${drawing ? 1100 : 520}ms var(--ease-out-quint)` }}
         />
       </svg>
-      <span className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-        <span className="text-title font-semibold text-ink tabular-nums">{drawing ? <CountUp value={value} format={compact} duration={1100} /> : compact(value)}</span>
-        <span className="text-tiny text-ink-3">{label}</span>
-      </span>
+      {/* under 80px there is room for the number alone, and only in small type */}
+      {size < 80 ? (
+        <span className="absolute inset-0 flex items-center justify-center text-tiny font-semibold text-ink tabular-nums">{format(value)}</span>
+      ) : (
+        <span className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+          <span className="text-title font-semibold text-ink tabular-nums">{drawing ? <CountUp value={value} format={compact} duration={1100} /> : compact(value)}</span>
+          <span className="text-tiny text-ink-3">{label}</span>
+        </span>
+      )}
     </div>
   );
 }
@@ -744,6 +767,72 @@ export function RadarChart({
         <ChartTip tip={tip} />
       </div>
       {legend && series.length > 1 && <ChartLegend series={series} />}
+    </div>
+  );
+}
+
+/* ═══════════ ShareBar ═══════════ */
+/* One bar split into its parts — where the week went, what the fleet
+ * is doing — each part named on a tick above with its share, in the
+ * categorical ramp, a tooltip and an aria-label per part. The share
+ * is printed on the tick rather than inside the part: ink on a chart
+ * colour does not reach 4.5:1 in every mode (rule 5), a tick does. */
+export type SharePart = { name: string; value: number; color?: ChartColor };
+const DEFAULT_SHARES: SharePart[] = [
+  { name: "Design", value: 38 }, { name: "Client calls", value: 22 }, { name: "Reviews", value: 21 }, { name: "Admin", value: 19 },
+];
+export function ShareBar({
+  parts = DEFAULT_SHARES,
+  labels = true,
+  format = (share: number) => `${Math.round(share)}%`,
+  height = 40,
+  animate = FORMIC_CONFIG.motion,
+  className = "",
+}: {
+  parts?: SharePart[];
+  /** the names and shares on ticks above the bar; off when rows under the bar already carry them */
+  labels?: boolean;
+  /** how a share (0–100) prints */
+  format?: (share: number) => string;
+  height?: number;
+  animate?: boolean;
+  className?: string;
+}) {
+  const { tip, show, hide } = useTip();
+  const { settled, drawing } = useEntrance(animate);
+  const total = parts.reduce((n, p) => n + p.value, 0) || 1;
+  const shares = parts.map((p) => (p.value / total) * 100);
+  return (
+    <div className={`flex w-full flex-col gap-2 ${className}`} onMouseLeave={hide}>
+      {labels && (
+        <div aria-hidden className="flex">
+          {parts.map((p, i) => (
+            <span key={`${p.name}-${i}`} className="flex min-w-0 flex-col gap-1 pr-2" style={{ width: `${shares[i]}%` }}>
+              <span className="truncate text-small text-ink-3"><span className="font-medium text-ink-2">{format(shares[i])}</span> {p.name}</span>
+              <span className="h-1.5 w-px bg-ink-3" />
+            </span>
+          ))}
+        </div>
+      )}
+      <div role="group" aria-label={parts.map((p, i) => `${p.name} ${format(shares[i])}`).join(", ")} className="flex w-full gap-0.5 overflow-hidden rounded-control" style={{ height }}>
+        {parts.map((p, i) => {
+          const tone = toneOf(p.color, i);
+          const text = `${p.name} · ${format(shares[i])}`;
+          return (
+            <button
+              key={`${p.name}-${i}`}
+              type="button"
+              aria-label={`${p.name}: ${format(shares[i])}`}
+              onMouseEnter={(e) => { const [x, y] = anchorOf(e); show(x, y, text); }}
+              onFocus={(e) => { const [x, y] = anchorOf(e); show(x, y, text); }}
+              onBlur={hide}
+              className={`min-w-0 transition-opacity duration-150 hover:opacity-85 ${SERIES_BG[tone]}`}
+              style={{ width: `${shares[i]}%`, minWidth: HIT, transform: settled ? "scaleX(1)" : "scaleX(0)", transformOrigin: "left", transition: drawing ? `transform 900ms var(--ease-out-quint) ${i * 80}ms` : undefined }}
+            />
+          );
+        })}
+      </div>
+      <ChartTip tip={tip} />
     </div>
   );
 }
