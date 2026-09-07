@@ -163,6 +163,7 @@ export default function ProjectSidebar({
   userMenu?: MenuEntry[];
   onUserAction?: (key: string) => void;
   /** the two quiet footer actions; omit either to hide it */
+  /** Settings chosen from the account menu (there is no separate gear: one place for it) */
   onSettings?: () => void;
   onTheme?: () => void;
   theme?: "light" | "dark";
@@ -370,20 +371,13 @@ export default function ProjectSidebar({
       {/* footer: account menu + two quiet actions */}
       {user && (
         <div className="flex items-center gap-1 border-t border-line pt-2">
-          <DropdownMenu align="start" menuWidth={240} items={userMenu} onSelect={(key) => onUserAction?.(key)}>
+          <DropdownMenu align="start" menuWidth={240} items={userMenu} onSelect={(key) => { if (key === "settings") onSettings?.(); onUserAction?.(key); }}>
             <button type="button" aria-label="Open account menu" className={`${ROW} ${ROW_REST} corner-smooth min-w-0 flex-1`}>
               <Avatar name={user.name} src={user.src} kind={user.kind ?? FORMIC_CONFIG.avatar} size="sm" className="-ml-0.5" />
               <span className="min-w-0 flex-1 truncate text-left font-medium text-ink">{user.name}</span>
               <Icon name="sort" size={14} strokeWidth={2} className="shrink-0 text-ink-3" />
             </button>
           </DropdownMenu>
-          {onSettings && (
-            <Tooltip label="Settings">
-              <IconButton label="Settings" onClick={onSettings} className="text-ink-3 hover:bg-hover hover:text-ink">
-                <Icon name="gear" size={15} strokeWidth={1.8} />
-              </IconButton>
-            </Tooltip>
-          )}
           {onTheme && (
             <Tooltip label={theme === "dark" ? "Light mode" : "Dark mode"}>
               <IconButton label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={onTheme} className="text-ink-3 hover:bg-hover hover:text-ink">

@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { FORMIC_CONFIG } from "./config";
 import { createPortal } from "react-dom";
-import { GlideMenu, Icon, type IconName } from "./primitives";
+import { Avatar, GlideMenu, Icon, type AvatarKind, type IconName } from "./primitives";
+import { FormicMark } from "./brand";
 /* ─────────────────────────────────────────────────────────
  * SIDEBAR NAV
  * Shared by the design-system preview and the harness shell:
@@ -13,19 +14,12 @@ import { GlideMenu, Icon, type IconName } from "./primitives";
  * Fills its parent: mount it inside a `flex h-dvh` shell next to a
  * `min-w-0 flex-1 overflow-y-auto` main column.
  * ───────────────────────────────────────────────────────── */
-/* workspace logo — an illustrative mark, kept local like brand SVGs */
-const LOGO = (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M8 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
-    <path d="M12 15v7M9.5 6v4" />
-  </svg>
-);
-export type SidebarWorkspace = { name: string; monogram: string };
-const DEFAULT_WORKSPACE: SidebarWorkspace = { name: "Creamery Ops", monogram: "C" };
+export type SidebarWorkspace = { name: string; monogram: string; /** replaces the Formic mark */ logo?: ReactNode };
+const DEFAULT_WORKSPACE: SidebarWorkspace = { name: "Formic Studio", monogram: "F" };
 export type SidebarNavItem = { key: string; label: string; icon: IconName; count?: string };
 const DEFAULT_NAV_ITEMS: SidebarNavItem[] = [
-  { key: "home", label: "Home", icon: "home" },
-  { key: "invite", label: "Invite users", icon: "user-add", count: "3/10" },
+  { key: "projects", label: "Projects", icon: "folder", count: "6" },
+  { key: "agents", label: "Agents", icon: "sparkles" },
 ];
 export type SidebarRecent = {
   id: string;
@@ -33,14 +27,14 @@ export type SidebarRecent = {
   prompt?: string;
 };
 const DEFAULT_RECENTS: SidebarRecent[] = [
-  { id: "suppliers", label: "Supplier records" },
-  { id: "todos", label: "Urgent to-dos this morning" },
-  { id: "flavor", label: "Flavor page ticket" },
-  { id: "workload", label: "Workload summary" },
-  { id: "offboarding", label: "Off-board a supplier" },
-  { id: "restock", label: "Batch restock function" },
-  { id: "edits", label: "Propose flavor edits" },
-  { id: "subway", label: "Subway surfing" },
+  { id: "northwind", label: "Northwind pitch deck" },
+  { id: "report", label: "Annual report copy pass" },
+  { id: "creamery", label: "Creamery menu board sizes" },
+  { id: "brand", label: "Brand book 2026 outline" },
+  { id: "invoice", label: "Invoice reminder to Selam Coffee" },
+  { id: "hours", label: "Hours by team, this month" },
+  { id: "alt", label: "Alt text for the annual report" },
+  { id: "agent", label: "Copywriter agent prompts" },
 ];
 type SidebarNavProps = {
   /** start collapsed to the icon rail; defaults to formic.config.json's sidebarState */
@@ -54,14 +48,15 @@ type SidebarNavProps = {
   /** controlled primary-nav selection (e.g. "home" | "invite") */
   activeNav?: string;
   onNavigate?: (key: string) => void;
-  /** footer call-to-action — defaults to the demo "Upgrade" button */
-  footerLabel?: string;
-  footerIcon?: ReactNode;
+  /** the account row at the foot; the avatar follows formic.config.json */
+  user?: { name: string; src?: string; kind?: AvatarKind };
+  /** the account row was pressed */
   onFooterClick?: () => void;
   workspace?: SidebarWorkspace;
   navItems?: SidebarNavItem[];
   recents?: SidebarRecent[];
 };
+const DEFAULT_USER = { name: "Eyosiyas Ketema" };
 const SIDEBAR_MOTION = {
   expandedWidth: 224,
   collapsedWidth: 52,
@@ -118,7 +113,7 @@ function RailButton({
       <span className={`flex size-5 shrink-0 items-center justify-center ${active ? "text-ink" : "text-ink-2"}`}>
         {icon}
       </span>
-      <span className={`sidebar-copy ml-1.5 min-w-0 flex-1 truncate text-lead font-medium ${active ? "text-ink" : "text-ink-2"}`}>
+      <span className={`sidebar-copy ml-1.5 min-w-0 flex-1 truncate text-caption ${active ? "font-medium text-ink" : "text-ink-2"}`}>
         {label}
       </span>
       {count && (
@@ -202,8 +197,7 @@ export default function SidebarNav({
   onPick,
   activeNav,
   onNavigate,
-  footerLabel = "Upgrade",
-  footerIcon,
+  user = DEFAULT_USER,
   onFooterClick,
   workspace = DEFAULT_WORKSPACE,
   navItems = DEFAULT_NAV_ITEMS,
@@ -291,10 +285,10 @@ export default function SidebarNav({
             }}
             className="sidebar-workspace-control absolute left-2 top-1 flex h-8 w-[164px] items-center rounded-control px-2 text-left hover:bg-hover-2 active:scale-[0.99]"
           >
-            <span className="sidebar-logo flex size-5 shrink-0 items-center justify-center text-ink">
-              {LOGO}
+            <span className="sidebar-logo flex size-5 shrink-0 items-center justify-center text-accent">
+              {workspace.logo ?? <FormicMark size={18} className="text-accent" />}
             </span>
-            <span className="sidebar-copy ml-1.5 min-w-0 flex-1 truncate text-lead font-medium text-ink-2">
+            <span className="sidebar-copy ml-1.5 min-w-0 flex-1 truncate text-caption font-medium text-ink">
               {workspace.name}
             </span>
             <span className="sidebar-copy ml-1 flex shrink-0 text-ink-3">
@@ -348,11 +342,11 @@ export default function SidebarNav({
           <div className="sidebar-copy relative mx-2 mb-1 h-8">
             <div
               aria-hidden={searchOpen}
-              className={`absolute inset-0 flex items-center gap-1.5 px-2 text-caption font-medium text-ink-3 transition-[opacity,transform] ${searchOpen ? "pointer-events-none -translate-x-1 opacity-0" : "translate-x-0 opacity-100"}`}
+              className={`absolute inset-0 flex items-center gap-1 px-2 font-mono text-micro tracking-wide text-ink-3 uppercase transition-[opacity,transform] ${searchOpen ? "pointer-events-none -translate-x-1 opacity-0" : "translate-x-0 opacity-100"}`}
               style={{ transitionDuration: `${CHAT_SEARCH_MOTION.duration}ms`, transitionTimingFunction: CHAT_SEARCH_MOTION.easing }}
             >
-              <Icon name="chevron" size={16} strokeWidth={2} />
               <span>Chats</span>
+              <Icon name="chevron" size={12} strokeWidth={2} />
             </div>
             <button
               ref={searchTriggerRef}
@@ -388,7 +382,7 @@ export default function SidebarNav({
                 }}
                 placeholder="Search chats"
                 aria-label="Search chat history"
-                className="ml-1.5 min-w-0 flex-1 bg-transparent text-body font-medium text-ink outline-none placeholder:text-ink-3"
+                className="ml-1.5 min-w-0 flex-1 bg-transparent text-caption text-ink outline-none placeholder:text-ink-3"
               />
               <button
                 type="button"
@@ -422,7 +416,7 @@ export default function SidebarNav({
                     active ? "bg-hover-2 group-hover/glide:bg-transparent" : ""
                   }`}
                 >
-                  <span className={`sidebar-copy min-w-0 flex-1 truncate text-lead font-medium ${active ? "text-ink" : "text-ink-2"}`}>
+                  <span className={`sidebar-copy min-w-0 flex-1 truncate text-caption ${active ? "font-medium text-ink" : "text-ink-2"}`}>
                     {item.label}
                   </span>
                 </button>
@@ -433,16 +427,16 @@ export default function SidebarNav({
             )}
           </GlideGroup>
         </div>
-        <div className="sidebar-copy mx-2 mt-3 w-[208px] border-t border-line pt-3">
+        <div className="mx-2 mt-3 w-[208px] border-t border-line pt-2">
           <button
             type="button"
-            aria-hidden={collapsed}
-            tabIndex={collapsed ? -1 : 0}
-            onClick={onFooterClick ?? onNewChat}
-            className="flex h-8 w-full items-center justify-center gap-1.5 rounded-control bg-hover-2 text-caption font-medium text-ink transition-[background-color,transform] duration-150 hover:bg-line-strong active:scale-[0.98]"
+            aria-label="Open account menu"
+            onClick={onFooterClick}
+            className="flex h-8 w-full items-center gap-2 rounded-control px-2 text-left transition-colors duration-150 hover:bg-hover"
           >
-            {footerIcon}
-            {footerLabel}
+            <Avatar name={user.name} src={user.src} kind={user.kind ?? FORMIC_CONFIG.avatar} size="sm" className="shrink-0" />
+            <span className="sidebar-copy min-w-0 flex-1 truncate text-caption font-medium text-ink">{user.name}</span>
+            <span className="sidebar-copy shrink-0 text-ink-3"><Icon name="sort" size={14} strokeWidth={2} /></span>
           </button>
         </div>
       </div>
