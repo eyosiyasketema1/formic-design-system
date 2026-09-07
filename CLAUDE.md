@@ -35,6 +35,8 @@ Rules for any AI agent (or human) working in this repo. These exist because past
 
 22. **References are for shapes, never for content or placement.** When a screenshot or a third-party component comes in, take the *shape* it proves (a layout, an interaction) and rebuild it on our tokens and primitives; never carry its labels, numbers, names or copy into the system. Demo content is Formic's own world (a design studio and its clients, proposals, invoices, site traffic, agents) in `DEFAULT_*` constants and gallery demos. And every new capability is shown on the page of the component that owns it (a new StatCard layout on StatCard & MetricRow, a new curve on Charts, a composed panel on Panel); the Dashboard widgets page composes pieces from those pages into one screen and adds nothing of its own. One page holding everything is a defect. A composed screen gets its own layout too: a page header, a few headlines with room, then panels in a grid that suits the content, sections `gap-6` apart; never the reference's grid re-drawn tile for tile.
 
+23. **Nothing on a screen without a reason.** Every gallery demo and every composed screen is built the way we tell agents to build (AGENTS.md → Composition intelligence): a brief (reader, question, action, register), a register kept, each element admitted because the data has its shape and the reader needs it, budgets on figures, charts and accent, real empty states. `scripts/compose_check.py` catches the mechanical tells; the reviewer judges the rest against the brief. A demo that shows a component is exempt from the brief, but a demo that shows a screen is not.
+
 ## Extraction rule
 
 After every piece of work, look for extractable pieces and extract them:

@@ -132,10 +132,18 @@ export default function App() {
 }
 EOF
   cat > "$APP/src/pages/Dashboard.tsx" <<'EOF'
+/* Brief
+   Reader:   the studio owner, first thing in the morning, on a laptop
+   Question: is new business coming in, and where is it coming from?
+   Action:   open a lead or a region that needs attention
+   Register: analytical
+*/
 /* Demo page — the reference layout. Every piece is a Formic component from
    src/formic: an AppSidebar shell, StatCards, and Panels whose bodies fill.
    Replace the numbers with real data through props, then ask your agent for
-   the next page: "Use Formic (src/formic). Read AGENTS.md first, then build ..." */
+   the next page: "Use Formic (src/formic). Read AGENTS.md first, then build ..."
+   Every screen starts with a Brief like the one above; scripts/compose_check.py
+   insists on it. */
 import { useState } from "react";
 import AppSidebar from "../formic/components/AppSidebar";
 import Button from "../formic/components/Button";
@@ -259,6 +267,8 @@ cp -R "$TMP/formic/components" "$DEST/components"
 mkdir -p "$DEST/scripts"
 cp "$TMP/formic/scripts/set_accent.py" "$DEST/scripts/set_accent.py"
 cp "$TMP/formic/scripts/apply_config.py" "$DEST/scripts/apply_config.py"
+cp "$TMP/formic/scripts/palette.py" "$DEST/scripts/palette.py"
+cp "$TMP/formic/scripts/compose_check.py" "$DEST/scripts/compose_check.py"
 printf 'formic-design-system %s\nhttps://github.com/eyosiyasketema1/formic-design-system\nre-run install.sh to update\n' "$SHA" > "$DEST/VERSION"
 say "$DEST/styles, $DEST/components and $DEST/scripts (commit $SHA)"
 

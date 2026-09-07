@@ -47,6 +47,8 @@ import { StatCard, MetricRow } from "@/formic/components/StatCard";
 
 **Step 5: self-check before you finish.** Grep your own output. Any hit is a bug:
 
+**Step 6: composition check.** `python3 src/formic/scripts/compose_check.py src/` must pass, then read the screen against its brief (next section) and remove whatever does not serve it. A page that passes every token rule and still carries a chart nobody asked a question of is not done.
+
 ```
 #[0-9a-fA-F]{3,6}     hardcoded colour      -> use text-ink, bg-surface, border-line, text-accent, ...
 text-\[[0-9]+px\]     arbitrary font size   -> use the ramp: text-small, text-caption, text-body, text-title, ...
@@ -58,6 +60,79 @@ bg-(gray|slate|zinc|blue|green|red)-  raw Tailwind palette -> tokens only
 ```
 
 Also confirm at least one import from `src/formic/components` exists in every new UI file. If none does, the result is not Formic.
+
+## Composition intelligence: nothing on a screen without a reason
+
+Formic can render anything; the system's value is in what it leaves out. AI-built screens fail in one recognisable way: the same four KPI cards with made-up deltas, a chart because a dashboard "has charts", an icon per card, a donut for two numbers, a table where a sentence would do. Every one of those is an element placed by habit, not by intent. The rules below are the procedure that prevents it. They are as binding as the design rules; a screen that breaks them is wrong even when every token is right. The thinking behind them is old and settled: Tufte's data-ink ratio and chartjunk (ink that tells the reader nothing new is removed), Few's dashboard discipline (one screen, the few things that matter, nothing decorative), Abela's chart chooser (the question decides the chart), and progressive disclosure (details on demand, not on arrival).
+
+### 1. Write the brief before the markup
+
+Before the first component, put a four-line comment at the top of the screen's file and keep it there:
+
+```
+/* Brief
+   Reader:   the studio lead, Monday morning, on a laptop
+   Question: are we on track this month, and what needs me today?
+   Action:   open the invoice or project that needs a decision
+   Register: analytical (numbers first, a chart only for the one trend, a list of what needs action)
+*/
+```
+
+If a line cannot be filled honestly, the screen is not ready to build; ask, or make the smallest screen that answers what is known. The brief is what the reviewer reads first, and what every element is tested against.
+
+### 2. Pick the register, then stay in it
+
+The register is how much the screen reads versus how much it shows. Four exist, and a screen has one:
+
+| Register | The reader wants | Lead with | Allowed | Not allowed |
+|---|---|---|---|---|
+| **Text** | to understand something (a settings page, a document, a policy, an answer, an onboarding step) | prose in `Markdown` / plain type, `Field`s, `Accordion` | one small figure if it settles a point; `Steps`; `Alert` | any chart, StatCards, tiles, icons per row |
+| **Balanced** | to see the state of one thing and act (a project page, an account, a record, a client) | a header (name, status `Badge`, the one action), then facts as `MetricRow`s or a two-column key-value list | one `Panel` with a chart **if** there is a trend to show; `DataTable` for the thing's children; an `Activity` list | a row of StatCards; more than one chart; decorative sparklines |
+| **Analytical** | to compare, spot, decide across many things (an overview, a report, finance, traffic) | the 3 to 5 figures that answer the question (`StatStrip` or `StatCard`s), then the one chart that carries the trend, then the table or list to act on | a second chart only if it answers a different question; `Delta` on every figure that has a prior period | figures without a period; charts of unrelated things side by side; a gauge for a number that is not a rate toward a target |
+| **Visual** | to browse and pick (a gallery, templates, people, integrations, files) | `CardGroup` of `Card`s with `CardMedia`, or `AvatarGroup`s | a `FilterBar` and search; a `DataTable` toggle for the same items | figures, charts, a hero number |
+
+A chat surface is its own thing: `ChatThread` + `PromptBar`, with the assistant's answers in the **Text** register unless the answer *is* numbers (then `InsightCards`, one card per insight, never a dashboard inside a bubble).
+
+Mixed pages exist, but the mix is by section, not by whim: a client page is Balanced at the top (who, status, action) and Analytical in one panel (the trend) and Visual at the foot (their sites). Each section declares its register the same way a page does.
+
+### 3. The admission test for every element
+
+An element goes on the screen only if all four are true. Write the answer in a comment when it is not obvious.
+
+1. **It answers the brief's question or enables its action.** A traffic chart on an invoices page fails even if the data exists.
+2. **The data has the shape the element needs.**
+   - `StatCard` / `StatStrip` figure: one number the reader would say out loud, with its period; a `delta` only when there is a real prior period to compare against (never `+12%` invented for symmetry).
+   - `Sparkline` / `MiniBars` on a tile: at least 6 points of the *same* figure over time. A tile whose trend is decorative shows none.
+   - `LineChart`: a series over an ordered axis (time, steps), at least 5 points, one to three series. Two series with different units is two charts or a table.
+   - `BarChart`: up to ~12 categories compared on one measure; stacked only when the parts add to a meaningful whole.
+   - `DonutChart` with `segments` / `ShareBar`: parts of one whole, 3 to 6 parts; two parts is a sentence ("64% billable"); more than 6 is a `BarList`.
+   - `BarList`: a ranking of one measure, 3 to 10 rows.
+   - `Gauge` / progress `ring`: a rate toward a known target, never a plain count.
+   - `RadarChart`: 4 to 8 axes on the same scale, for a profile, not a comparison of magnitudes.
+   - `ScatterChart`: two measures per thing where the relationship is the point.
+   - `ActivityCalendar`: a count per day over months.
+   - `DataTable`: many things with the same fields where the reader scans, sorts, selects; under 4 rows it is a list of `MetricRow`s or a sentence.
+   - `MetricRow`: one fact, name and value, in a list of facts about one thing.
+   - Prose: anything that needs a because. Numbers that need explaining get a sentence next to them, not another chart.
+3. **It is not already said.** A number in a StatCard and again as the chart's last point and again in a table row is said three times; keep the one that lets the reader act.
+4. **Removing it would cost the reader something.** If the answer is "it would look empty", the fix is a smaller page or a better hierarchy, never filler.
+
+### 4. Budgets (per screen, at a normal laptop width)
+
+- Headline figures: 0 in Text, at most 1 in Balanced, 3 to 5 in Analytical, 0 in Visual. Never a 2×2 grid of cards to make a square.
+- Charts: 0 in Text and Visual, at most 1 in Balanced, 1 to 3 in Analytical, each answering a different question.
+- Accent: one accent Button and, if any, one `iconTone="accent"` tile. Chart series follow the categorical ramp (rule 16), which is not a licence to add series.
+- Icons: on navigation, buttons, tiles and statuses where they say what the label says (`iconFor`). Never one per card for decoration, never a different colour per card.
+- Empty and loading: real states (`Skeleton`, `LoadingState`, the `DataTable` `empty` text), never fake numbers. If data does not exist yet, the screen says so in one line and offers the action that creates it.
+- Words: labels are the reader's words (Invoiced, not Revenue KPI); captions say the period; a chart has a title that is the question it answers ("Where the week went"), not the chart type.
+
+### 5. Density and the fold
+
+Rank the brief's answers. The first screenful holds the answer to the question and the action; everything else sits below, in panels the reader can skip. Sections are `gap-6` apart; inside a section the pieces that belong together are `gap-3` or `gap-4`. If the reader has to scroll to find out whether things are fine, the hierarchy is wrong, not the content.
+
+### 6. Run the lint, then review against the brief
+
+`python3 src/formic/scripts/compose_check.py src/` reads the screens and flags the mechanical tells: figures without a period, sparklines with too few points, donuts with two parts, several accent tiles, more than five headline figures, charts in a file whose brief says Text, and files with no brief at all. It cannot see whether a chart answers the question; that is the reviewer's job, and the brief is the rubric: read it, then read the screen, and remove whatever does not serve it.
 
 ## Layout and composition rules (the ones agents break most)
 
