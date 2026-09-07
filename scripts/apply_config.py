@@ -16,8 +16,8 @@ edited by hand. Every key is optional; a missing key keeps the system default.
       "size":    "default",        default | comfortable | spacious
       "theme":   "light",          light | dark   (the app's starting theme)
       "avatar":  "initials",       initials | doodle | photo   (people without a src)
-      "sidebar": "app",            app | project | chat   (which rail the app uses)
-      "sidebarState": "expanded",  expanded | rail        (how it first opens)
+      "sidebar": "full",           full | inset | edge   (the three rails on the Sidebar page)
+      "sidebarState": "expanded",  expanded | rail       (full: expanded or icon rail; inset / edge: shown or hidden)
       "font":    "Urbanist",       a face from the approved Google list (below)
       "layout":  "compact",        compact | full   (content column or edge to edge)
       "motion":  true              charts animate in
@@ -61,7 +61,7 @@ DEFAULTS = {
     "size": "default",
     "theme": "light",
     "avatar": "initials",
-    "sidebar": "app",
+    "sidebar": "full",
     "sidebarState": "expanded",
     "font": "Urbanist",
     "layout": "compact",
@@ -78,6 +78,23 @@ FONTS = {
     "Outfit": "Outfit:wght@300..800",
     "Figtree": "Figtree:wght@300..800",
     "Sora": "Sora:wght@300..800",
+    "Geist": "Geist:wght@300..800",
+    "Onest": "Onest:wght@300..800",
+    "Public Sans": "Public+Sans:wght@300..800",
+    "Nunito Sans": "Nunito+Sans:wght@300..800",
+    "Work Sans": "Work+Sans:wght@300..800",
+    "Rubik": "Rubik:wght@300..800",
+    "Lexend": "Lexend:wght@300..800",
+    "Albert Sans": "Albert+Sans:wght@300..800",
+    "Hanken Grotesk": "Hanken+Grotesk:wght@300..800",
+    "Montserrat": "Montserrat:wght@300..800",
+    "Jost": "Jost:wght@300..800",
+    "Karla": "Karla:wght@300..800",
+    "Archivo": "Archivo:wght@300..800",
+    "Mulish": "Mulish:wght@300..800",
+    "Raleway": "Raleway:wght@300..800",
+    "Bricolage Grotesque": "Bricolage+Grotesque:wght@300..800",
+    "Host Grotesk": "Host+Grotesk:wght@300..800",
 }
 CHOICES = {
     "palette": ("paper", "sage", "twilight", "clay", "ocean"),
@@ -85,7 +102,7 @@ CHOICES = {
     "size": ("default", "comfortable", "spacious"),
     "theme": ("light", "dark"),
     "avatar": ("initials", "doodle", "photo"),
-    "sidebar": ("app", "project", "chat"),
+    "sidebar": ("full", "inset", "edge"),
     "sidebarState": ("expanded", "rail"),
     "font": tuple(FONTS),
     "layout": ("compact", "full"),
@@ -105,10 +122,13 @@ def load(path):
             print(f"  note: unknown key {k!r} ignored")
             continue
         cfg[k] = v
-    # the first config format said sidebar: expanded | rail, meaning AppSidebar's state
+    # earlier config formats: sidebar: expanded | rail (AppSidebar's state), then app | project | chat
     if cfg["sidebar"] in ("expanded", "rail"):
-        cfg["sidebarState"], cfg["sidebar"] = cfg["sidebar"], "app"
-        print(f"  note: sidebar {cfg['sidebarState']!r} read as sidebar \"app\" + sidebarState {cfg['sidebarState']!r} (older format)")
+        cfg["sidebarState"], cfg["sidebar"] = cfg["sidebar"], "full"
+        print(f"  note: sidebar {cfg['sidebarState']!r} read as sidebar \"full\" + sidebarState {cfg['sidebarState']!r} (older format)")
+    elif cfg["sidebar"] in ("app", "project", "chat"):
+        cfg["sidebar"] = {"app": "full", "project": "inset", "chat": "full"}[cfg["sidebar"]]
+        print(f"  note: sidebar read as {cfg['sidebar']!r} (older format)")
     for k, opts in CHOICES.items():
         if cfg[k] not in opts:
             raise SystemExit(f"{path}: {k} must be one of {', '.join(opts)} (got {cfg[k]!r})")

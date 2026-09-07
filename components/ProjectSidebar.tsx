@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import DropdownMenu, { type MenuEntry } from "./DropdownMenu";
-import { Avatar, Disclosure, Icon, IconButton, Tooltip, type AvatarKind, type IconName } from "./primitives";
+import { Avatar, Disclosure, Icon, IconButton, Tooltip, type AvatarKind, type IconName, Shortcut } from "./primitives";
 import { FORMIC_CONFIG } from "./config";
 import { FormicMark } from "./brand";
 /* ─────────────────────────────────────────────────────────
@@ -99,14 +99,6 @@ const STATUS: Record<ProjectStatus, { dot: string; text: string }> = {
 const ROW = "group/row relative flex h-8 w-full min-w-0 items-center gap-2 rounded-control pr-1.5 pl-2 text-caption transition-colors duration-150";
 const ROW_REST = "text-ink-2 hover:bg-hover hover:text-ink";
 const ROW_ON = "bg-hover-2 font-medium text-ink";
-/* a shortcut chip that appears on hover / focus of its row */
-function Kbd({ children }: { children: ReactNode }) {
-  return (
-    <kbd className="pointer-events-none font-mono text-tiny text-ink-3 opacity-0 transition-opacity duration-150 group-hover/row:opacity-100 group-focus-within/row:opacity-100 [@media(hover:none)]:opacity-100">
-      {children}
-    </kbd>
-  );
-}
 
 export function ProjectSidebarTrigger({ open, toggle, className = "" }: { open: boolean; toggle: () => void; className?: string }) {
   return (
@@ -243,12 +235,12 @@ export default function ProjectSidebar({
               aria-label="Search"
               className="min-w-0 flex-1 bg-transparent text-caption text-ink outline-none placeholder:text-ink-3"
             />
-            <Kbd>⌘K</Kbd>
+            <Shortcut keys={["⌘", "K"]} quiet />
           </label>
           <button type="button" onClick={onNew} className={`${ROW} ${ROW_REST} corner-smooth`}>
             <Icon name="plus" size={16} strokeWidth={1.8} className="shrink-0" />
             <span className="min-w-0 flex-1 truncate text-left">{newLabel}</span>
-            <Kbd>⇧⌘N</Kbd>
+            <Shortcut keys={["⇧", "⌘", "N"]} quiet />
           </button>
         </div>
       </div>

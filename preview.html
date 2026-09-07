@@ -867,7 +867,7 @@ tfoot .records-sticky-cell { z-index: 5; }
 const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useId, cloneElement, isValidElement, createContext, useContext, Children, Fragment } = React;
 /* mirror of components/config.ts — the defaults an app chooses at
    formicai.dev/customize (apply_config.py writes the real one) */
-const FORMIC_CONFIG = { avatar: "initials", sidebar: "app", sidebarState: "expanded", motion: true };
+const FORMIC_CONFIG = { avatar: "initials", sidebar: "full", sidebarState: "expanded", motion: true };
 
 /* ═══════════ Primitives ═══════════ */
 /* Icons: real projects use @tabler/icons-react through the Icon wrapper in
@@ -1534,6 +1534,18 @@ function useDoodle(seed, enabled = true) {
  * the one place the semantic warm colour reads as "stars", not a
  * warning. The number, if you want it, sits beside as text: the
  * stars are aria-hidden and the score is on the wrapper's label. */
+function Shortcut({ keys, quiet = false, className = "" }) {
+  return (
+    <span
+      aria-label={`Shortcut ${keys.join(" ")}`}
+      className={`inline-flex shrink-0 items-center gap-0.5 ${quiet ? "pointer-events-none opacity-0 transition-opacity duration-150 group-hover/row:opacity-100 group-focus-within/row:opacity-100 [@media(hover:none)]:opacity-100" : ""} ${className}`}
+    >
+      {keys.map((k, i) => (
+        <kbd key={i} className="flex h-4.5 min-w-4.5 items-center justify-center rounded-[4px] bg-inset px-1 font-sans text-micro font-medium text-ink-3 shadow-hairline">{k}</kbd>
+      ))}
+    </span>
+  );
+}
 function Rating({
   value = 4.5,
   max = 5,
@@ -11108,6 +11120,7 @@ function Page_primitives() {
       <Separator />
       <span className="text-small text-ink-3">Separator above — the one divider, horizontal or vertical.</span>
       <div className="flex items-center gap-3"><Rating value={4.5} /><span className="text-caption text-ink-2">Rating · 4.5 of 5, a half star clipped from a full one</span></div>
+      <div className="flex items-center gap-3"><Shortcut keys={["⇧", "⌘", "N"]} /><Shortcut keys={["Esc"]} /><span className="text-caption text-ink-2">Shortcut · keycaps, one per key; `quiet` shows it on its row's hover</span></div>
     </div>
   </GalleryCard>
   <GalleryCard label="StreamText" wide>
@@ -15001,13 +15014,6 @@ const ROW = "group/row relative flex h-8 w-full min-w-0 items-center gap-2 round
 const ROW_REST = "text-ink-2 hover:bg-hover hover:text-ink";
 const ROW_ON = "bg-hover-2 font-medium text-ink";
 /* a shortcut chip that appears on hover / focus of its row */
-function Kbd({ children }) {
-  return (
-    <kbd className="pointer-events-none font-mono text-tiny text-ink-3 opacity-0 transition-opacity duration-150 group-hover/row:opacity-100 group-focus-within/row:opacity-100 [@media(hover:none)]:opacity-100">
-      {children}
-    </kbd>
-  );
-}
 
 function ProjectSidebarTrigger({ open, toggle, className = "" }) {
   return (
@@ -15117,12 +15123,12 @@ function ProjectSidebar({
               aria-label="Search"
               className="min-w-0 flex-1 bg-transparent text-caption text-ink outline-none placeholder:text-ink-3"
             />
-            <Kbd>⌘K</Kbd>
+            <Shortcut keys={["⌘", "K"]} quiet />
           </label>
           <button type="button" onClick={onNew} className={`${ROW} ${ROW_REST} corner-smooth`}>
             <Icon name="plus" size={16} strokeWidth={1.8} className="shrink-0" />
             <span className="min-w-0 flex-1 truncate text-left">{newLabel}</span>
-            <Kbd>⇧⌘N</Kbd>
+            <Shortcut keys={["⇧", "⌘", "N"]} quiet />
           </button>
         </div>
       </div>
@@ -15296,7 +15302,7 @@ function useProjectSidebar(defaultOpen = true) {
    the live stylesheet, so they cannot drift. State lives in the URL,
    so a designer can send the link to a developer. */
 const CZ_KEYS = ["accent", "palette", "radius", "size", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"];
-const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", radius: "default", size: "default", theme: "light", avatar: "initials", sidebar: "app", sidebarState: "expanded", font: "Urbanist", layout: "compact", motion: true };
+const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", radius: "default", size: "default", theme: "light", avatar: "initials", sidebar: "full", sidebarState: "expanded", font: "Urbanist", layout: "compact", motion: true };
 /* the approved faces (mirror of FONTS in scripts/apply_config.py): variable
    weight through 300–800 on Google Fonts, a full x-height range, tabular figures */
 const CZ_FONTS = [
@@ -15308,6 +15314,23 @@ const CZ_FONTS = [
   { id: "Outfit", query: "Outfit:wght@300..800", note: "geometric, display-leaning" },
   { id: "Figtree", query: "Figtree:wght@300..800", note: "compact, clear at small sizes" },
   { id: "Sora", query: "Sora:wght@300..800", note: "technical, wide counters" },
+  { id: "Geist", query: "Geist:wght@300..800" },
+  { id: "Onest", query: "Onest:wght@300..800" },
+  { id: "Public Sans", query: "Public+Sans:wght@300..800" },
+  { id: "Nunito Sans", query: "Nunito+Sans:wght@300..800" },
+  { id: "Work Sans", query: "Work+Sans:wght@300..800" },
+  { id: "Rubik", query: "Rubik:wght@300..800" },
+  { id: "Lexend", query: "Lexend:wght@300..800" },
+  { id: "Albert Sans", query: "Albert+Sans:wght@300..800" },
+  { id: "Hanken Grotesk", query: "Hanken+Grotesk:wght@300..800" },
+  { id: "Montserrat", query: "Montserrat:wght@300..800" },
+  { id: "Jost", query: "Jost:wght@300..800" },
+  { id: "Karla", query: "Karla:wght@300..800" },
+  { id: "Archivo", query: "Archivo:wght@300..800" },
+  { id: "Mulish", query: "Mulish:wght@300..800" },
+  { id: "Raleway", query: "Raleway:wght@300..800" },
+  { id: "Bricolage Grotesque", query: "Bricolage+Grotesque:wght@300..800" },
+  { id: "Host Grotesk", query: "Host+Grotesk:wght@300..800" },
 ];
 const CZ_CHOICES = {
   palette: PALETTES.map((p) => p.id),
@@ -15315,7 +15338,7 @@ const CZ_CHOICES = {
   size: SIZES,
   theme: ["light", "dark"],
   avatar: ["initials", "doodle", "photo"],
-  sidebar: ["app", "project", "chat"],
+  sidebar: ["full", "inset", "edge"],
   sidebarState: ["expanded", "rail"],
   font: CZ_FONTS.map((f) => f.id),
   layout: ["compact", "full"],
@@ -15327,9 +15350,9 @@ const CZ_HELP = {
   size: "Control heights, padding and gaps move together. Type never scales.",
   theme: "Where the app starts. Users can still switch.",
   avatar: "People without a photo of their own: initials, a drawn face derived from the name, or a placeholder photo until real ones exist.",
-  sidebar: "Which rail the app is built on: the app sidebar (sections and a user), the project sidebar (workspaces, groups, nested pages) or the chat rail (recents and a new chat).",
-  sidebarState: "How the rail first opens. Users can collapse either way; the project sidebar hides behind its trigger.",
-  font: "Every face here is variable through 300 to 800 on Google Fonts, so the weight ramp stays real. The type scale never changes.",
+  sidebar: "The three rails on the Sidebar page. Full view: expanded with a sub-menu open, collapse in the header. Inset: the page is a surface card beside the rail; the trigger hides and shows it. Edge: hairline on the right, same page.",
+  sidebarState: "How the rail first opens. Full view collapses to an icon rail; Inset and Edge hide behind their trigger.",
+  font: "Every face on the list is variable through 300 to 800 on Google Fonts, so the weight ramp stays real. The type scale never changes.",
   layout: "Compact keeps page content to a readable column (64rem) and centres it. Full lets it run edge to edge. Rails and headers are outside either.",
   motion: "Charts and sparklines animate in once. Reduced motion always wins.",
 };
@@ -15340,7 +15363,7 @@ function czLoadFont(id) {
   const link = document.createElement("link");
   link.id = `cz-font-${f.query}`;
   link.rel = "stylesheet";
-  link.href = `https://fonts.googleapis.com/css2?family=${f.query}&display=swap`;
+  link.href = `https://fonts.googleapis.com/css2?family=Urbanist:wght@300..800&display=swap`;
   document.head.appendChild(link);
 }
 const czStack = (font) => `"${font}", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
@@ -15463,16 +15486,15 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
      entrance rather than waiting for the next data change */
   const k = `${cfg.motion}-${cfg.sidebar}-${state}`;
   const me = { name: "Eyosiyas Ketema", detail: "Admin", kind: cfg.avatar };
-  const rail = cfg.sidebar === "project"
-    ? <ProjectSidebar key={k} open={projectOpen} user={me} layout="edge" active="northwind" onSelect={() => {}} />
-    : cfg.sidebar === "chat"
-      ? <SidebarNav key={k} defaultCollapsed={state === "rail"} fill activeTitle="Northwind pitch" />
-      : <AppSidebar key={k} variant={state} collapsible={false} active="overview" onSelect={() => {}} user={me} />;
+  const project = cfg.sidebar !== "full";
+  const rail = project
+    ? <ProjectSidebar key={k} open={projectOpen} user={me} layout={cfg.sidebar} active="northwind" onSelect={() => {}} />
+    : <AppSidebar key={k} variant={state} collapsible active="overview" onSelect={() => {}} user={me} />;
   const content = (
     <div className="page-content flex min-w-0 flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
-          {cfg.sidebar === "project" && <ProjectSidebarTrigger open={projectOpen} toggle={() => setProjectOpen((o) => !o)} />}
+          {project && <ProjectSidebarTrigger open={projectOpen} toggle={() => setProjectOpen((o) => !o)} />}
           <div className="min-w-0">
             <h2 className="text-title font-semibold tracking-tight text-ink">Overview</h2>
             <p className="text-small text-ink-3">Last 30 days</p>
@@ -15542,11 +15564,11 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
         </span>
         {narrow && cfg.sidebarState === "expanded" && <span className="basis-full text-small text-ink-3">Rail shown at this width; the app opens expanded.</span>}
       </div>
-      <div className="flex min-w-0">
+      <div className={`flex min-w-0 ${cfg.sidebar === "inset" ? "bg-sidebar" : ""}`}>
         {rail}
-        <div className="@container flex min-w-0 flex-1 flex-col overflow-hidden p-4">
-          {content}
-        </div>
+        {cfg.sidebar === "inset"
+          ? <ProjectInset className="@container min-w-0 flex-1 overflow-hidden p-4">{content}</ProjectInset>
+          : <div className="@container flex min-w-0 flex-1 flex-col overflow-hidden p-4">{content}</div>}
       </div>
     </section>
   );
@@ -15615,8 +15637,7 @@ function CustomizeApp() {
     }
   };
   const same = variants.light === variants.dark;
-  const fontOptions = CZ_FONTS.map((f) => ({ id: f.id, label: f.id, style: { fontFamily: czStack(f.id) } }));
-  useEffect(() => { CZ_FONTS.forEach((f) => czLoadFont(f.id)); }, []); // the picker shows each face in itself
+  const fontOptions = CZ_FONTS.map((f) => ({ value: f.id, label: f.id }));
   return (
     <div className="flex h-dvh flex-col">
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-line bg-sidebar px-5 py-3">
@@ -15651,13 +15672,18 @@ function CustomizeApp() {
             {!same && <p className="mt-1.5 text-small text-ink-3">Two values from one colour: {cfg.accent.toUpperCase()} as typed would fail in at least one mode, so each mode gets the nearest shade that passes.</p>}
           </div>
           <CzChoice label="Palette" help={CZ_HELP.palette} value={cfg.palette} options={PALETTES} onChange={(v) => set("palette", v)} />
-          <CzChoice label="Font" help={CZ_HELP.font} value={cfg.font} options={fontOptions} onChange={(v) => set("font", v)} />
+          <div>
+            <p className="mb-1.5 text-caption font-medium text-ink">Font</p>
+            <Select value={cfg.font} onChange={(v) => set("font", v)} options={fontOptions} size="sm" />
+            <p className="mt-1.5 text-small text-ink-3">{CZ_HELP.font}</p>
+            <p className="mt-2 text-display-lg leading-none font-semibold text-ink" style={{ fontFamily: czStack(cfg.font) }} aria-hidden>Aa <span className="font-light">Bb</span> <span className="font-medium">Cc</span> <span className="text-title tabular-nums">0123</span></p>
+          </div>
           <CzChoice label="Radius" help={CZ_HELP.radius} value={cfg.radius} options={RADII} onChange={(v) => set("radius", v)} />
           <CzChoice label="Size" help={CZ_HELP.size} value={cfg.size} options={SIZES} onChange={(v) => set("size", v)} />
           <CzChoice label="Content layout" help={CZ_HELP.layout} value={cfg.layout} options={CZ_CHOICES.layout} onChange={(v) => set("layout", v)} />
           <CzChoice label="Starting theme" help={CZ_HELP.theme} value={cfg.theme} options={CZ_CHOICES.theme} onChange={(v) => set("theme", v)} />
-          <CzChoice label="Sidebar" help={CZ_HELP.sidebar} value={cfg.sidebar} options={[{ id: "app", label: "App" }, { id: "project", label: "Project" }, { id: "chat", label: "Chat" }]} onChange={(v) => set("sidebar", v)} />
-          <CzChoice label="Sidebar opens" help={CZ_HELP.sidebarState} value={cfg.sidebarState} options={[{ id: "expanded", label: "Expanded" }, { id: "rail", label: cfg.sidebar === "project" ? "Hidden" : "Rail" }]} onChange={(v) => set("sidebarState", v)} />
+          <CzChoice label="Sidebar" help={CZ_HELP.sidebar} value={cfg.sidebar} options={[{ id: "full", label: "Full view" }, { id: "inset", label: "Inset" }, { id: "edge", label: "Edge" }]} onChange={(v) => set("sidebar", v)} />
+          <CzChoice label="Sidebar opens" help={CZ_HELP.sidebarState} value={cfg.sidebarState} options={[{ id: "expanded", label: "Expanded" }, { id: "rail", label: cfg.sidebar === "full" ? "Rail" : "Hidden" }]} onChange={(v) => set("sidebarState", v)} />
           <CzChoice label="Avatar" help={CZ_HELP.avatar} value={cfg.avatar} options={CZ_CHOICES.avatar} onChange={(v) => set("avatar", v)} />
           <div className="flex items-start justify-between gap-3">
             <div>

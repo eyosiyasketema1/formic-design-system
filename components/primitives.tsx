@@ -747,6 +747,24 @@ export function Progress({
   );
 }
 
+/* ── Shortcut ──────────────────────────────────────────── */
+/* A keyboard shortcut as keycaps: one small chip per key, so ⇧ ⌘ N
+ * reads as three keys rather than a run of symbols in a mono face
+ * that has no glyph for them. `quiet` keeps it hidden until its
+ * `group/row` is hovered or focused, the way a rail shows shortcuts. */
+export function Shortcut({ keys, quiet = false, className = "" }: { keys: string[]; /** appear on hover / focus of the enclosing group/row */ quiet?: boolean; className?: string }) {
+  return (
+    <span
+      aria-label={`Shortcut ${keys.join(" ")}`}
+      className={`inline-flex shrink-0 items-center gap-0.5 ${quiet ? "pointer-events-none opacity-0 transition-opacity duration-150 group-hover/row:opacity-100 group-focus-within/row:opacity-100 [@media(hover:none)]:opacity-100" : ""} ${className}`}
+    >
+      {keys.map((k, i) => (
+        <kbd key={i} className="flex h-4.5 min-w-4.5 items-center justify-center rounded-[4px] bg-inset px-1 font-sans text-micro font-medium text-ink-3 shadow-hairline">{k}</kbd>
+      ))}
+    </span>
+  );
+}
+
 /* ── Rating ────────────────────────────────────────────── */
 /* Stars for a score out of five (or `max`). Full, half and empty
  * stars are the same Tabler glyph: filled via CSS, the half one a
