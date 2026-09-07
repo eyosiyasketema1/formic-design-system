@@ -11154,6 +11154,126 @@ function ColorPicker({
 
 /* ═══════════ Pages — one per component, extracted from the old scroll ═══════════ */
 
+function Page_composition() {
+  /* the same facts about one month, once per register: what changes is
+     how much the screen reads and how much it shows */
+  const facts = { invoiced: "ETB 2.4M", collected: "ETB 1.9M", clients: 24, hours: "184h" };
+  const months = ["Apr", "May", "Jun", "Jul", "Aug", "Sep"];
+  const invoiced = [1_650_000, 1_820_000, 1_760_000, 2_050_000, 2_210_000, 2_400_000];
+  return (
+    <>
+      <Section id="brief" title="The brief comes first" note="Four lines at the top of every screen file, kept there. The reviewer reads them before the screen; every element is tested against them.">
+        <GalleryCard label="The comment every screen carries" full>
+          <CodeBlock language="ts" code={`/* Brief
+   Reader:   the studio lead, Monday morning, on a laptop
+   Question: are we on track this month, and what needs me today?
+   Action:   open the invoice or project that needs a decision
+   Register: analytical
+*/`} />
+        </GalleryCard>
+      </Section>
+      <Section id="registers" title="One month, four registers" note="Same facts. The register decides how much the screen reads and how much it shows; a screen has one, and mixed pages mix by section.">
+        <GalleryCard label="Text · the reader wants to understand: prose carries it, one figure settles a point, no chart" full>
+          <div className="max-w-2xl">
+            <Markdown content={`September closed at **${facts.invoiced} invoiced** against ${facts.collected} collected, the best month this year. Two things need you: the Northwind retainer renews on the 15th and has not been countersigned, and Creamery's menu board has been in review for nine days.\n\nHours were normal (${facts.hours} across the team), so the growth is rate, not overtime.`} />
+          </div>
+        </GalleryCard>
+        <GalleryCard label="Balanced · one thing's page: a header with its state and the one action, the facts as rows, one panel if there is a trend" full>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <Avatar name="Northwind Bank" kind="initials" size="lg" tone={0} />
+                <span className="min-w-0">
+                  <span className="flex items-center gap-2"><span className="truncate text-title font-semibold text-ink">Northwind Bank</span><Badge tone="green">Retainer</Badge></span>
+                  <span className="block truncate text-caption text-ink-3">Brand and site · since March 2025</span>
+                </span>
+              </div>
+              <Button variant="accent" size="sm" icon={<Icon name="send" size={14} />}>Send renewal</Button>
+            </div>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+              <div className="lg:col-span-2"><Panel title="This year">
+                <div className="flex flex-col">
+                  <MetricRow label="Invoiced" value="ETB 724k" />
+                  <MetricRow label="Collected" value="ETB 690k" meta="95%" />
+                  <MetricRow label="Open proposals" value="2" />
+                  <MetricRow label="Renews" value="15 Sep" />
+                </div>
+              </Panel></div>
+              <div className="lg:col-span-3"><Panel title="Invoiced by month" caption="The one trend this page has" bodyClassName="flex flex-col">
+                <LineChart fill height={160} labels={months} series={[{ name: "Invoiced", values: [98000, 120000, 110000, 132000, 128000, 136000] }]} format={(n) => `ETB ${compact(n)}`} points="hover" curve="smooth" />
+              </Panel></div>
+            </div>
+          </div>
+        </GalleryCard>
+        <GalleryCard label="Analytical · compare and decide: the figures that answer the question, the one chart that carries the trend, then the list to act on" full>
+          <div className="flex flex-col gap-6">
+            <StatStrip items={[
+              { icon: "receipt", label: "Invoiced this month", display: facts.invoiced },
+              { icon: "wallet", label: "Collected", display: facts.collected },
+              { icon: "users", label: "Active clients", value: facts.clients },
+              { icon: "clock", label: "Hours", display: facts.hours },
+            ]} />
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+              <div className="lg:col-span-3"><Panel title="Invoiced, six months" caption="Are we on track?" bodyClassName="flex flex-col">
+                <LineChart fill height={180} axis labels={months} series={[{ name: "Invoiced", values: invoiced }]} format={(n) => `ETB ${compact(n)}`} points="hover" curve="smooth" />
+              </Panel></div>
+              <div className="lg:col-span-2"><Panel title="Needs you" caption="Two decisions">
+                <div className="flex flex-col">
+                  <MetricRow label="Northwind retainer" detail="Renews 15 Sep, not countersigned" delta="9d" deltaTone="flat" />
+                  <MetricRow label="Creamery menu board" detail="In review nine days" delta="9d" deltaTone="down" />
+                </div>
+              </Panel></div>
+            </div>
+          </div>
+        </GalleryCard>
+        <GalleryCard label="Visual · browse and pick: cards with a picture or a mark, a filter, no figures" full>
+          <CardGroup columns={3}>
+            {[["Northwind Bank", "Brand and site", "figma"], ["Creamery", "Menu board app", "react"], ["Selam Coffee", "Packaging", "notion"]].map(([name, kind, logo]) => (
+              <Card key={name}>
+                <CardMedia icon="folder" />
+                <CardTitle>{name}</CardTitle>
+                <CardDescription>{kind}</CardDescription>
+                <CardFooter><CardButton>Open</CardButton></CardFooter>
+              </Card>
+            ))}
+          </CardGroup>
+        </GalleryCard>
+      </Section>
+      <Section id="tells" title="The tells" note="Each of these is an element placed by habit. scripts/compose_check.py flags the mechanical ones; the brief catches the rest.">
+        <GalleryCard label="A delta with no period is decoration · left: invented; right: honest" full>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <StatCard label="Revenue" display="$88.5k" delta="+12%" className="max-w-none opacity-60" />
+            <StatCard label="Invoiced" display="ETB 2.4M" delta="+12%" caption="vs August" className="max-w-none" />
+          </div>
+        </GalleryCard>
+        <GalleryCard label="Two parts is a sentence, not a donut · left: a chart for one fact; right: the fact" full>
+          <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-2">
+            <div className="opacity-60"><DonutChart size={120} label="Hours" format={(n) => `${n}h`} segments={[{ name: "Billable", value: 118 }, { name: "Internal", value: 66 }]} /></div>
+            <p className="text-lead text-ink"><span className="font-semibold">64% billable</span> this month, 118 of 184 hours.</p>
+          </div>
+        </GalleryCard>
+        <GalleryCard label="A sparkline under six points is a shape · left: three points drawn; right: the number alone" full>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <StatCard label="Proposals out" display="9" trend={[7, 11, 9]} className="max-w-none opacity-60" />
+            <StatCard label="Proposals out" display="9" caption="3 waiting on a reply" className="max-w-none" />
+          </div>
+        </GalleryCard>
+        <GalleryCard label="An icon per card is furniture · left: a colour each; right: ink on inset, one accent where the page leads" full>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-2 opacity-60">
+              <StatCard size="sm" icon="receipt" iconTone="accent" label="Invoiced" display="2.4M" />
+              <StatCard size="sm" icon="users" iconTone="accent" label="Clients" display="24" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <StatCard size="sm" icon="receipt" iconTone="accent" label="Invoiced" display="2.4M" />
+              <StatCard size="sm" icon="users" label="Clients" display="24" />
+            </div>
+          </div>
+        </GalleryCard>
+      </Section>
+    </>
+  );
+}
 function Page_colors() {
   return (
     <>
@@ -13326,6 +13446,7 @@ function Page_colorpicker() {
 }
 
 const PAGES = [
+  { id: "composition", group: "Foundations", title: "Composition", note: "Nothing on a screen without a reason. A brief (reader, question, action, register) comes before markup; the register decides how much a screen reads and how much it shows; every element passes an admission test; scripts/compose_check.py flags the mechanical tells. Formic's value is in what it leaves out.", file: "AGENTS.md scripts/compose_check.py", Component: Page_composition },
   { id: "colors", group: "Foundations", title: "Colors", note: "The token palette. Every value lives in styles/tokens.css and re-resolves live \u2014 switch theme or palette to watch the whole page follow.", file: "styles/tokens.css", Component: Page_colors },
   { id: "typography", group: "Foundations", title: "Typography", note: "Urbanist (variable, 300\u2013800). One standard ramp \u2014 14px base, integer steps, 10 to 48 \u2014 plus the true weight ramp. text-nano (8px) stays reserved for mini-badge letters.", file: "styles/tokens.css", Component: Page_typography },
   { id: "shape-motion", group: "Foundations", title: "Shape & motion", note: "Six radii; one easing \u2014 var(--ease-out-quint) \u2014 drives every entrance and transition. Replay to see the house motion.", file: "styles/tokens.css", Component: Page_shape_motion },

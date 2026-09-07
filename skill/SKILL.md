@@ -36,10 +36,21 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
    @import "./formic/styles/formic.css";   /* tokens, palettes, Tailwind bridge, component sheets */
    ```
    Peer deps: `react >=18`, `react-dom >=18`, `@tabler/icons-react >=3`; `@dicebear/core` + `@dicebear/notionists` ^9 only if doodle avatars are used (loaded on demand). `formic.css` already includes the `sidebar.css` / `records.css` component sheets. Wrap the app in `<ToastProvider>` if toasts are used.
-3. **Read before writing.** Open `src/formic/styles/tokens.css` and list `src/formic/components/`. Never write a component that already exists.
+3. **Read before writing.** Open `src/formic/styles/tokens.css` and list `src/formic/components/`. Never write a component that already exists. Then write the screen's brief (next section) before any markup.
 4. **Import, don't re-create.** Buttons, inputs, cards, chips, tables, charts, modals, chat surfaces, dashboard tiles all come from `src/formic/components/`. Pass props; never copy markup into a page or edit a component's internals for a one-off.
 5. **New patterns compose primitives** from `src/formic/components/primitives.tsx` plus token utilities. No raw `<svg>` icons, no second icon package, no chart libraries, no UI kits.
 6. **Self-check before finishing.** Any hit in your output is a bug: hex colours, `text-[Npx]` or Tailwind's `text-sm/lg` family, `font-bold`, `shadow-sm/md/lg`, `cubic-bezier(`, `rounded-lg/xl`, raw palette classes like `bg-gray-100` / `text-blue-600`. Every new UI file imports at least one thing from `src/formic/components`, or it is not Formic.
+7. **Composition check.** `python3 src/formic/scripts/compose_check.py src/` must pass, then reread the screen against its brief and remove what does not serve it.
+
+## Composition intelligence (before any markup)
+
+Formic's value is in what it leaves out. Nothing goes on a screen by habit: no row of KPI cards because dashboards have them, no chart for a single number, no icon per card, no invented deltas. Do this, in order, for every screen:
+
+1. **Write the brief** as a comment at the top of the file and keep it: `Reader` (who, when, on what), `Question` (the one thing the screen answers), `Action` (what they do next), `Register` (Text | Balanced | Analytical | Visual). No honest brief, no screen.
+2. **Stay in the register.** Text (settings, documents, answers): prose, fields, steps; no charts or figures. Balanced (one thing's page): header with status and the one action, facts as `MetricRow`s, at most one chart, a `DataTable` for its children. Analytical (overviews, reports, finance): 3 to 5 figures that answer the question, the one chart that carries the trend, then the table to act on; a second chart only for a different question. Visual (browse and pick): `CardGroup`s, no figures. Mixed pages mix by section, each section declaring its register.
+3. **Admit each element** only if it answers the question or enables the action, the data has the shape it needs (a figure has a period; a sparkline has 6+ points of one measure; a line has 5+ points; a donut has 3 to 6 parts; a gauge is a rate toward a target; a table has 4+ rows), it is not already said elsewhere, and removing it would cost the reader something. "It would look empty" is never a reason; a smaller page is.
+4. **Budgets:** figures 0 / 1 / 3–5 / 0 by register; charts 0 / 1 / 1–3 / 0; one accent button and at most one accent tile; icons only where they say what the label says; real empty and loading states, never fake numbers; labels in the reader's words, captions with the period, chart titles that are the question they answer.
+5. **Lint, then review against the brief:** `python3 src/formic/scripts/compose_check.py src/` flags the mechanical tells (no brief, register broken, too many figures, deltas without a period, short sparklines, two-part donuts, several accent tiles, placeholder copy). Then read the brief and the screen together and remove whatever does not serve it.
 
 ## Non-negotiable conventions
 

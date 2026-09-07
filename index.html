@@ -1195,9 +1195,11 @@ Then build a settings page with a SidebarNav, a form of Field + Input + Switch, 
               <div class="lcode">
                 <div class="lcode-head">Terminal · both lines: first shows imports, second prints nothing</div>
                 <pre>grep -rn "formic/components" src --include=*.tsx | grep -v "^src/formic"
-grep -rnE "#[0-9a-fA-F]{6}|text-sm|text-lg|bg-gray|shadow-lg|font-bold" src --include=*.tsx | grep -v "^src/formic"</pre>
+grep -rnE "#[0-9a-fA-F]{6}|text-sm|text-lg|bg-gray|shadow-lg|font-bold" src --include=*.tsx | grep -v "^src/formic"
+python3 src/formic/scripts/compose_check.py src</pre>
               </div>
             </details>
+            <p>The third line is Formic's composition check. Looking right is half of it; the other half is that nothing is on the screen by habit. Every screen the agent builds starts with a four-line brief (who reads it, what question it answers, what they do next, whether it reads or shows), and the check refuses the usual tells: KPI cards with invented deltas, a chart for one number, a donut for two, an icon per card, placeholder copy. The system knows when a page should be prose, when it should be one panel, and when it earns a chart.</p>
           </li>
           <li>
             <div class="ai-step-title">Make it yours, once</div>
