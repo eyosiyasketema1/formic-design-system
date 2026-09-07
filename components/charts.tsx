@@ -1012,6 +1012,8 @@ export function BarList({
   format = (n: number) => n.toLocaleString(),
   stagger = 90,
   fill = false,
+  rank = false,
+  axis = false,
   animate = FORMIC_CONFIG.motion,
   className = "",
 }: {
@@ -1023,12 +1025,17 @@ export function BarList({
   stagger?: number;
   /** spread the rows over the parent's height — inside a Panel body this fills the card */
   fill?: boolean;
+  /** a position number before each label: 1, 2, 3… */
+  rank?: boolean;
+  /** dotted guides at 0 / 25 / 50 / 75 / 100% of `max` with a tick row under the bars, for a list of shares */
+  axis?: boolean;
   /** bars grow in once, staggered; off for live-updating lists */
   animate?: boolean;
   className?: string;
 }) {
   const { settled: on, drawing } = useEntrance(animate);
   const ceiling = max ?? Math.max(1, ...items.map((i) => i.value));
+  const ticks = [0, 0.25, 0.5, 0.75, 1];
   return (
     <div className={`flex w-full flex-col gap-2.5 ${fill ? "h-full justify-between" : ""} ${className}`}>
       {items.map((item, i) => {
@@ -1036,10 +1043,14 @@ export function BarList({
         const leader = i === 0;
         return (
           <div key={`${item.label}-${i}`} className="flex items-center gap-3">
+            {rank && <span className="w-4 shrink-0 text-right text-tiny text-ink-3 tabular-nums">{i + 1}</span>}
             <span className={`w-28 shrink-0 truncate text-caption sm:w-36 ${leader ? "font-medium text-ink" : "text-ink-2"}`} title={item.label}>
               {item.label}
             </span>
-            <div className="relative h-2.5 min-w-0 flex-1 overflow-hidden rounded-sm bg-chart-track">
+            <div className={`relative h-2.5 min-w-0 flex-1 rounded-sm ${axis ? "" : "overflow-hidden bg-chart-track"}`}>
+              {axis && ticks.map((t) => (
+                <span key={t} aria-hidden className="absolute -inset-y-1 border-l border-dashed border-chart-track" style={{ left: `${t * 100}%` }} />
+              ))}
               {/* scaleX composites on the GPU; animating width relays out every frame */}
               <div
                 className={`absolute inset-y-0 left-0 origin-left rounded-sm ${leader ? "bg-accent" : "bg-ink-3"}`}
@@ -1054,6 +1065,18 @@ export function BarList({
           </div>
         );
       })}
+      {axis && (
+        <div aria-hidden className="flex items-center gap-3">
+          {rank && <span className="w-4 shrink-0" />}
+          <span className="w-28 shrink-0 sm:w-36" />
+          <div className="relative h-4 min-w-0 flex-1">
+            {ticks.map((t) => (
+              <span key={t} className={`absolute top-0 text-tiny text-ink-3 tabular-nums ${t === 0 ? "" : t === 1 ? "-translate-x-full" : "-translate-x-1/2"}`} style={{ left: `${t * 100}%` }}>{format(ceiling * t)}</span>
+            ))}
+          </div>
+          <span className="w-14 shrink-0" />
+        </div>
+      )}
     </div>
   );
 }
