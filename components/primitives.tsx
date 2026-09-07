@@ -481,10 +481,11 @@ export function IconTile({ icon, tone = "neutral", className = "" }: { icon: Ico
 }
 
 /* ── Badge ─────────────────────────────────────────────── */
-export type BadgeTone = "green" | "red" | "neutral";
+export type BadgeTone = "green" | "red" | "orange" | "neutral";
 const BADGE_TONES: Record<BadgeTone, string> = {
   green: "bg-green-tint text-green",
   red: "bg-red-tint text-red",
+  orange: "bg-orange-tint text-orange",
   neutral: "bg-inset text-ink-2",
 };
 export function Badge({

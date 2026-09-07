@@ -58,6 +58,19 @@ function niceMax(v: number): number {
   return Math.ceil(v / (mag / 2)) * (mag / 2);
 }
 
+/* Tick values a human would pick between two ends: a step of 1, 2, 2.5
+ * or 5 × 10ⁿ, so an axis from -14 to 20 reads -10, 0, 10, 20 rather than
+ * -14, -5.5, 3, 11.5. Zero is always on it when the range crosses zero. */
+function niceTicks(min: number, max: number, target = 4): number[] {
+  const span = max - min || 1;
+  const raw = span / target;
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((v) => v >= raw) ?? mag * 10;
+  const out: number[] = [];
+  for (let v = Math.ceil(min / step) * step; v <= max + step / 1000; v += step) out.push(Math.round(v * 1000) / 1000);
+  return out;
+}
+
 /* ── shared hover tip ──────────────────────────────────── */
 /* Positioned inside the chart's own relative box rather than
  * portalled to the viewport: charts sit inside cards, so local
@@ -155,6 +168,7 @@ export function BarChart({
   valuePosition = "top",
   axis = false,
   thin = false,
+  horizontal = false,
   format = compact,
   animate = FORMIC_CONFIG.motion,
   className = "",
@@ -174,6 +188,8 @@ export function BarChart({
   axis?: boolean;
   /** narrow bars centred in their columns, for a month-by-month stack */
   thin?: boolean;
+  /** bars run left to right, one row per label, the axis along the bottom — for a few named things compared on one quantity (won and lost per source) */
+  horizontal?: boolean;
   /** how the axis prints a value, e.g. (n) => `${n}h` */
   format?: (n: number) => string;
   /** bars grow in from the baseline once, column by column; off for live-updating charts */
@@ -192,21 +208,74 @@ export function BarChart({
       : Math.max(0, ...series.map((s) => s.values[i] ?? 0)),
   );
   const max = niceMax(Math.max(0, ...columnPeak));
+  /* grouped bars may go below zero (a month's net): the baseline then
+     sits inside the plot and bars hang from it */
+  const minV = stacked ? 0 : Math.min(0, ...series.flatMap((s) => s.values));
+  const span = max - minV || 1;
+  const zeroPct = (max / span) * 100;
 
   /* A headline number over the column only means something when it
    * represents the whole column. Grouped multi-series has no such
    * number — printing the tallest series would read as the total. An
    * axis already says how tall a column is, so it switches them off. */
   const labelValues = showValues && !axis && (stacked || series.length === 1);
-  /* as many gridlines as divide the ceiling into round numbers: 350 → 5 steps of 70, not 4 of 87.5 */
-  const divisions = [4, 5, 2, 3].find((d) => Number.isInteger(max / d)) ?? 4;
-  const grid = Array.from({ length: divisions + 1 }, (_, i) => i / divisions);
+  /* gridlines at round values between the floor and the ceiling, zero among them */
+  const tickValues = niceTicks(minV, max);
+  const grid = tickValues.map((v) => (max - v) / span);
   const columnMin = stacked ? HIT : series.length * HIT;
 
   const onEnter = (event: React.MouseEvent | React.FocusEvent, node: ReactNode) => {
     const [x, y] = anchorOf(event);
     show(x, y, node);
   };
+
+  if (horizontal) {
+    return (
+      <div className={`flex w-full flex-col ${fill ? "h-full min-h-0 justify-between" : ""} ${className}`} onMouseLeave={hide}>
+        <div className={`flex flex-col gap-2.5 ${fill ? "flex-1 justify-around" : ""}`}>
+          {labels.map((label, i) => (
+            <div key={`${label}-${i}`} className="flex items-center gap-3">
+              <span className="w-20 shrink-0 truncate text-right text-caption text-ink-2 sm:w-24" title={label}>{label}</span>
+              <div className={`relative min-w-0 flex-1 ${stacked ? "flex h-6 overflow-hidden rounded-sm" : "flex flex-col gap-0.5"}`}>
+                {axis && tickValues.map((v) => (
+                  <span key={v} aria-hidden className="pointer-events-none absolute inset-y-0 border-l border-dashed border-chart-track" style={{ left: `${(v / max) * 100}%` }} />
+                ))}
+                {series.map((s, si) => {
+                  const value = s.values[i] ?? 0;
+                  const tone = toneOf(s.color, si);
+                  const text = `${s.name} · ${format(value)}`;
+                  return (
+                    <button
+                      key={`${s.name}-${si}`}
+                      type="button"
+                      aria-label={`${s.name}, ${label}: ${value.toLocaleString()}`}
+                      onMouseEnter={(e) => onEnter(e, text)}
+                      onFocus={(e) => onEnter(e, text)}
+                      onBlur={hide}
+                      className={`origin-left transition-opacity duration-150 hover:opacity-80 ${SERIES_BG[tone]} ${stacked ? "h-full" : "h-4 rounded-sm"}`}
+                      style={{ width: `${(value / max) * 100}%`, transform: settled ? "scaleX(1)" : "scaleX(0)", transition: drawing ? `transform 900ms var(--ease-out-quint) ${i * 60}ms` : undefined }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+        {axis && (
+          <div aria-hidden className="mt-2 flex items-center gap-3">
+            <span className="w-20 shrink-0 sm:w-24" />
+            <div className="relative h-4 min-w-0 flex-1">
+              {tickValues.map((v) => (
+                <span key={v} className={`absolute top-0 text-tiny text-ink-3 tabular-nums ${v === 0 ? "" : v === max ? "-translate-x-full" : "-translate-x-1/2"}`} style={{ left: `${(v / max) * 100}%` }}>{format(v)}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        {series.length > 1 && <div className="mt-3 flex justify-center"><ChartLegend series={series} /></div>}
+        <ChartTip tip={tip} />
+      </div>
+    );
+  }
 
   return (
     <div className={`flex w-full flex-col ${fill ? "h-full min-h-0" : ""} ${className}`}>
@@ -227,13 +296,15 @@ export function BarChart({
             spans only the bars row, so its top and bottom meet the gridlines */}
         <div className={`grid grid-cols-[auto_1fr] grid-rows-[minmax(0,1fr)_auto] ${fill ? "absolute inset-0" : ""}`} style={fill ? undefined : { height: height + 20 }}>
           {axis ? (
-            <div aria-hidden className="flex flex-col justify-between pr-2 text-right text-tiny text-ink-3 tabular-nums">
-              {grid.map((t) => <span key={t} className="leading-none">{format(max - t * max)}</span>)}
+            <div aria-hidden className="relative w-10 pr-2 text-right text-tiny text-ink-3 tabular-nums">
+              {/* labels slide from their top edge at the ceiling to their bottom edge at the floor, so none is cut off */}
+              {tickValues.map((v, i) => <span key={v} className="absolute right-2 leading-none" style={{ top: `${grid[i] * 100}%`, transform: `translateY(-${grid[i] * 100}%)` }}>{format(v)}</span>)}
             </div>
           ) : <span />}
           <div className="relative flex min-h-0 items-end gap-1.5">
-            {axis && grid.map((t) => (
-              <span key={t} aria-hidden className="pointer-events-none absolute inset-x-0 border-t border-dashed border-chart-track" style={{ top: `${t * 100}%` }} />
+            {minV < 0 && <span aria-hidden className="pointer-events-none absolute inset-x-0 border-t border-line-strong" style={{ top: `${zeroPct}%` }} />}
+            {axis && grid.map((t, i) => (
+              <span key={tickValues[i]} aria-hidden className="pointer-events-none absolute inset-x-0 border-t border-dashed border-chart-track" style={{ top: `${t * 100}%` }} />
             ))}
             {labels.map((label, i) => (
               <div
@@ -274,9 +345,12 @@ export function BarChart({
                         onMouseEnter={(e) => onEnter(e, text)}
                         onFocus={(e) => onEnter(e, text)}
                         onBlur={hide}
-                        className={`w-full origin-bottom transition-opacity duration-150 hover:opacity-80 ${thin ? "max-w-3 rounded-[2px]" : "rounded-sm"} ${SERIES_BG[tone]} ${dimmed ? "opacity-25" : ""}`}
+                        className={`w-full transition-opacity duration-150 hover:opacity-80 ${value < 0 ? "origin-top" : "origin-bottom"} ${thin ? "max-w-3 rounded-[2px]" : "rounded-sm"} ${value < 0 ? "bg-ink-3" : SERIES_BG[tone]} ${dimmed ? "opacity-25" : ""}`}
                         style={{
-                          height: `${(value / max) * 100}%`,
+                          height: `${(Math.abs(value) / span) * 100}%`,
+                          /* below zero the bar hangs from the baseline: pushed down by the
+                             positive room above it, in muted ink so the sign reads at a glance */
+                          marginBottom: minV < 0 ? `${((Math.min(value, 0) - minV) / span) * 100}%` : undefined,
                           /* scaleY composites on the GPU; animating height relays out every frame */
                           transform: settled ? "scaleY(1)" : "scaleY(0)",
                           transition: drawing ? `transform 900ms var(--ease-out-quint) ${i * 60}ms` : undefined,
@@ -322,6 +396,7 @@ export function LineChart({
   floor = true,
   format = compact,
   endMarker = false,
+  tooltip = "point",
   className = "",
 }: {
   labels?: string[];
@@ -352,9 +427,13 @@ export function LineChart({
   format?: (n: number) => string;
   /** a ringed dot on the last value of every solid series: "this is now" */
   endMarker?: boolean;
+  /** point: each dot is its own target. shared: one target per label, the tip lists every series at that label under a crosshair */
+  tooltip?: "point" | "shared";
   className?: string;
 }) {
   const gradientId = useId();
+  const [cross, setCross] = useState<number | null>(null);
+  const shared = tooltip === "shared";
   const { tip, show, hide } = useTip();
   const { settled, drawing } = useEntrance(animate);
   const W = 100, H = 40;                      // viewBox units; CSS does the sizing
@@ -397,7 +476,7 @@ export function LineChart({
       <div
         className={`relative ${fill ? "min-h-0" : ""}`}
         style={fill ? { minHeight: height } : undefined}
-        onMouseLeave={hide}
+        onMouseLeave={() => { hide(); setCross(null); }}
       >
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -416,6 +495,9 @@ export function LineChart({
           {guides && labels.map((l, i) => (
             <line key={`g-${l}-${i}`} x1={i * step} x2={i * step} y1="0" y2={H} className="stroke-chart-track" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
           ))}
+          {shared && cross !== null && (
+            <line x1={cross * step} x2={cross * step} y1="0" y2={H} className="stroke-ink-3" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+          )}
           {backdrop && series[0] && series[0].values.map((v, i) => (
             <rect key={`b-${i}`} x={i * step - step * 0.28} width={step * 0.56} y={yOf(v)} height={Math.max(0, zeroY - yOf(v))} className="fill-chart-track" opacity="0.6" />
           ))}
@@ -477,9 +559,45 @@ export function LineChart({
             points="hover" keeps the targets but shows the dot only while it
             is hovered or focused — for a long series where 50 dots would
             bead the line. */}
+        {shared && Array.from({ length: slots }, (_, i) => {
+          const node = (
+            <span className="flex flex-col gap-1">
+              <span className="font-medium text-ink">{labels[i] ?? i + 1}</span>
+              {series.map((s, si) => (
+                <span key={`${s.name}-${si}`} className="flex items-center gap-1.5">
+                  {s.style === "dashed" ? <span className="w-2.5 border-t border-dashed border-ink-3" /> : <span className={`size-2 rounded-full ${SERIES_BG[toneOf(s.color, si)]}`} />}
+                  <span className="text-ink-2">{s.name}</span>
+                  <span className="ml-auto pl-3 font-medium tabular-nums">{format(s.values[i] ?? 0)}</span>
+                </span>
+              ))}
+            </span>
+          );
+          const enter = (e: React.MouseEvent | React.FocusEvent) => { setCross(i); const r = (e.currentTarget as Element).getBoundingClientRect(); show(r.left + r.width / 2, r.top, node); };
+          const leave = () => { setCross(null); hide(); };
+          return (
+            <button
+              key={`slot-${i}`}
+              type="button"
+              aria-label={`${labels[i] ?? i + 1}: ${series.map((s) => `${s.name} ${format(s.values[i] ?? 0)}`).join(", ")}`}
+              onMouseEnter={enter}
+              onFocus={enter}
+              onMouseLeave={leave}
+              onBlur={leave}
+              className="absolute inset-y-0 -translate-x-1/2 rounded-sm"
+              style={{ left: `${(i / Math.max(slots - 1, 1)) * 100}%`, width: `max(${HIT}px, ${100 / Math.max(slots, 1)}%)` }}
+            />
+          );
+        })}
         {points && series.map((s, si) => {
           const tone = toneOf(s.color, si);
-          return s.values.map((v, i) => (
+          if (s.style === "dashed") return null;
+          return s.values.map((v, i) => shared ? (
+            <span
+              key={`${s.name}-${si}-${i}`} aria-hidden
+              className={`pointer-events-none absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface transition-transform duration-150 ${SERIES_BG[tone]} ${points === "hover" && cross !== i ? "scale-0" : ""}`}
+              style={{ left: `${(i / Math.max(slots - 1, 1)) * 100}%`, top: `${(yOf(v) / H) * 100}%`, opacity: settled ? 1 : 0, transition: drawing ? `opacity 400ms var(--ease-out-quint) ${900 + i * 40}ms` : undefined }}
+            />
+          ) : (
             <button
               key={`${s.name}-${si}-${i}`}
               type="button"
@@ -534,6 +652,7 @@ export function DonutChart({
   size = 116,
   segments,
   legend = true,
+  center,
   format = compact,
   animate = FORMIC_CONFIG.motion,
   className = "",
@@ -545,8 +664,10 @@ export function DonutChart({
   size?: number;
   /** parts of a whole, largest first; replaces `value`/`max` */
   segments?: DonutSegment[];
-  /** with `segments`: the legend under the ring, each row a value */
-  legend?: boolean;
+  /** with `segments`: true for a wrapped legend under the ring; "list" for rows beside it with each count and share, the ring empty in the middle */
+  legend?: boolean | "list";
+  /** with `segments`: what the middle shows instead of the leading part — a total, say */
+  center?: ReactNode;
   /** how a value prints in the centre and the legend */
   format?: (n: number) => string;
   /** the arc sweeps from zero to its value once; off for live-updating charts */
@@ -568,8 +689,27 @@ export function DonutChart({
     });
     const lead = arcs[active ?? 0];
     const sweep = settled ? 1 : 0;
+    const list = legend === "list";
+    const rowFor = ({ seg, i, tone }: typeof arcs[number]) => (
+      <li key={`${seg.name}-${i}`} className={list ? "w-full" : undefined}>
+        {/* a row is a button so the keyboard can bring each part to the centre */}
+        <button
+          type="button"
+          aria-label={`${seg.name}: ${format(seg.value)}, ${Math.round((seg.value / total) * 100)}%`}
+          onMouseEnter={() => setActive(i)}
+          onFocus={() => setActive(i)}
+          onBlur={() => setActive(null)}
+          className={`flex items-center gap-1.5 rounded-sm px-1 transition-colors duration-150 ${list ? "h-7 w-full gap-2.5 text-caption" : "h-6 text-tiny"} ${active === i ? "text-ink" : "text-ink-2"}`}
+        >
+          <span className={`size-2 shrink-0 rounded-full ${SERIES_BG[tone]}`} />
+          <span className={list ? "min-w-0 flex-1 truncate text-left" : undefined}>{seg.name}</span>
+          {list && <span className="w-10 shrink-0 text-right font-medium text-ink tabular-nums">{format(seg.value)}</span>}
+          <span className={`text-ink-3 tabular-nums ${list ? "w-10 shrink-0 text-right text-small" : ""}`}>{Math.round((seg.value / total) * 100)}%</span>
+        </button>
+      </li>
+    );
     return (
-      <div className={`flex w-full flex-col items-center gap-4 ${className}`}>
+      <div className={`flex w-full ${list ? "flex-wrap items-center justify-center gap-6" : "flex-col items-center gap-4"} ${className}`}>
         <div
           className="relative shrink-0"
           style={{ width: size, height: size, maxWidth: "100%" }}
@@ -590,31 +730,19 @@ export function DonutChart({
               />
             ))}
           </svg>
-          <span className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-4 text-center">
-            <span className="text-title font-semibold text-ink tabular-nums">{format(lead.seg.value)}</span>
-            <span className="max-w-full truncate text-tiny text-ink-2">{lead.seg.name}</span>
-            {lead.seg.detail && <span className="max-w-full truncate text-tiny text-ink-3">{lead.seg.detail}</span>}
-          </span>
+          {center !== undefined && active === null ? (
+            <span className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center">{center}</span>
+          ) : (
+            <span className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-4 text-center">
+              <span className="text-title font-semibold text-ink tabular-nums">{format(lead.seg.value)}</span>
+              <span className="max-w-full truncate text-tiny text-ink-2">{lead.seg.name}</span>
+              {lead.seg.detail && <span className="max-w-full truncate text-tiny text-ink-3">{lead.seg.detail}</span>}
+            </span>
+          )}
         </div>
         {legend && (
-          <ul className="flex w-full flex-wrap justify-center gap-x-3.5 gap-y-1.5">
-            {arcs.map(({ seg, i, tone }) => (
-              <li key={`${seg.name}-${i}`}>
-                {/* a row is a button so the keyboard can bring each part to the centre */}
-                <button
-                  type="button"
-                  aria-label={`${seg.name}: ${format(seg.value)}, ${Math.round((seg.value / total) * 100)}%`}
-                  onMouseEnter={() => setActive(i)}
-                  onFocus={() => setActive(i)}
-                  onBlur={() => setActive(null)}
-                  className={`flex h-6 items-center gap-1.5 rounded-sm px-1 text-tiny transition-colors duration-150 ${active === i ? "text-ink" : "text-ink-2"}`}
-                >
-                  <span className={`size-2 shrink-0 rounded-full ${SERIES_BG[tone]}`} />
-                  {seg.name}
-                  <span className="text-ink-3 tabular-nums">{Math.round((seg.value / total) * 100)}%</span>
-                </button>
-              </li>
-            ))}
+          <ul className={list ? "flex min-w-44 flex-1 flex-col gap-0.5" : "flex w-full flex-wrap justify-center gap-x-3.5 gap-y-1.5"}>
+            {arcs.map(rowFor)}
           </ul>
         )}
       </div>
@@ -767,6 +895,111 @@ export function RadarChart({
         <ChartTip tip={tip} />
       </div>
       {legend && series.length > 1 && <ChartLegend series={series} />}
+    </div>
+  );
+}
+
+/* ═══════════ ScatterChart ═══════════ */
+/* Two quantities per thing, a third as the mark's size — deal size
+ * against days to close, bubble for how many. SVG axes and guides, the
+ * marks as HTML buttons (real targets, real tooltips with every field
+ * as text), a dashed crosshair to the hovered mark. One colour per
+ * point in the ramp with a legend, because the points are categories. */
+export type ScatterPoint = { name: string; x: number; y: number; size?: number; color?: ChartColor };
+const DEFAULT_POINTS: ScatterPoint[] = [
+  { name: "Referrals", x: 184_000, y: 31, size: 22 }, { name: "Website", x: 96_000, y: 48, size: 34 },
+  { name: "Repeat clients", x: 212_000, y: 19, size: 15 }, { name: "Events", x: 58_000, y: 62, size: 9 }, { name: "Directories", x: 41_000, y: 74, size: 6 },
+];
+export function ScatterChart({
+  points = DEFAULT_POINTS,
+  xLabel = "Average project value",
+  yLabel = "Days to sign",
+  sizeLabel = "Projects",
+  formatX = (n: number) => `ETB ${compact(n)}`,
+  formatY = (n: number) => `${n}d`,
+  height = 220,
+  legend = true,
+  animate = FORMIC_CONFIG.motion,
+  className = "",
+}: {
+  points?: ScatterPoint[];
+  xLabel?: string;
+  yLabel?: string;
+  /** what `size` counts, for the tooltip */
+  sizeLabel?: string;
+  formatX?: (n: number) => string;
+  formatY?: (n: number) => string;
+  height?: number;
+  legend?: boolean;
+  animate?: boolean;
+  className?: string;
+}) {
+  const { tip, show, hide } = useTip();
+  const { settled, drawing } = useEntrance(animate);
+  const [cross, setCross] = useState<number | null>(null);
+  const maxX = niceMax(Math.max(0, ...points.map((p) => p.x)));
+  const maxY = niceMax(Math.max(0, ...points.map((p) => p.y)));
+  const maxS = Math.max(1, ...points.map((p) => p.size ?? 1));
+  const xTicks = niceTicks(0, maxX), yTicks = niceTicks(0, maxY);
+  const px = (p: ScatterPoint) => (p.x / maxX) * 100;
+  const py = (p: ScatterPoint) => 100 - (p.y / maxY) * 100;
+  const r = (p: ScatterPoint) => 6 + Math.sqrt((p.size ?? 1) / maxS) * 10;
+  return (
+    <div className={`flex w-full flex-col gap-3 ${className}`}>
+      <div className="grid grid-cols-[auto_1fr] grid-rows-[auto_auto]">
+        <div aria-hidden className="relative w-12 pr-2 text-right text-tiny text-ink-3 tabular-nums">
+          {yTicks.map((v) => <span key={v} className="absolute right-2 leading-none" style={{ top: `${100 - (v / maxY) * 100}%`, transform: `translateY(-${100 - (v / maxY) * 100}%)` }}>{formatY(v)}</span>)}
+        </div>
+        <div className="relative" style={{ height }} onMouseLeave={() => { hide(); setCross(null); }}>
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full overflow-visible" role="img" aria-label={`${yLabel} against ${xLabel}. ${points.map((p) => `${p.name}: ${formatX(p.x)}, ${formatY(p.y)}${p.size !== undefined ? `, ${sizeLabel} ${p.size}` : ""}`).join(". ")}`}>
+            {yTicks.map((v) => <line key={`h${v}`} x1="0" x2="100" y1={100 - (v / maxY) * 100} y2={100 - (v / maxY) * 100} className="stroke-chart-track" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />)}
+            {xTicks.map((v) => <line key={`v${v}`} x1={(v / maxX) * 100} x2={(v / maxX) * 100} y1="0" y2="100" className="stroke-chart-track" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />)}
+            {cross !== null && points[cross] && (
+              <>
+                <line x1={px(points[cross])} x2={px(points[cross])} y1="0" y2="100" className="stroke-ink-3" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+                <line x1="0" x2="100" y1={py(points[cross])} y2={py(points[cross])} className="stroke-ink-3" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+              </>
+            )}
+          </svg>
+          {points.map((p, i) => {
+            const tone = toneOf(p.color, i);
+            const node = (
+              <span className="flex flex-col gap-0.5">
+                <span className="font-medium text-ink">{p.name}</span>
+                <span className="text-ink-2">{xLabel}: <span className="text-ink tabular-nums">{formatX(p.x)}</span></span>
+                <span className="text-ink-2">{yLabel}: <span className="text-ink tabular-nums">{formatY(p.y)}</span></span>
+                {p.size !== undefined && <span className="text-ink-2">{sizeLabel}: <span className="text-ink tabular-nums">{p.size}</span></span>}
+              </span>
+            );
+            const enter = (e: React.MouseEvent | React.FocusEvent) => { setCross(i); const [x, y] = anchorOf(e); show(x, y, node); };
+            return (
+              <button
+                key={`${p.name}-${i}`}
+                type="button"
+                aria-label={`${p.name}: ${xLabel} ${formatX(p.x)}, ${yLabel} ${formatY(p.y)}${p.size !== undefined ? `, ${sizeLabel} ${p.size}` : ""}`}
+                onMouseEnter={enter}
+                onFocus={enter}
+                onBlur={() => { setCross(null); hide(); }}
+                className="group absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full"
+                style={{ left: `${px(p)}%`, top: `${py(p)}%`, width: Math.max(HIT, r(p) * 2), height: Math.max(HIT, r(p) * 2) }}
+              >
+                <span
+                  className={`rounded-full transition-transform duration-150 group-hover:scale-110 ${SERIES_BG[tone]} ${cross !== null && cross !== i ? "opacity-50" : ""}`}
+                  style={{ width: r(p) * 2, height: r(p) * 2, transform: settled ? "scale(1)" : "scale(0)", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 80}ms` : undefined }}
+                />
+              </button>
+            );
+          })}
+          <ChartTip tip={tip} />
+        </div>
+        <span />
+        <div aria-hidden className="relative mt-2 h-4">
+          {xTicks.map((v) => (
+            <span key={v} className={`absolute top-0 text-tiny text-ink-3 tabular-nums ${v === 0 ? "" : v === maxX ? "-translate-x-full" : "-translate-x-1/2"}`} style={{ left: `${(v / maxX) * 100}%` }}>{formatX(v)}</span>
+          ))}
+        </div>
+      </div>
+      {legend && <ChartLegend series={points.map((p, i) => ({ name: p.name, color: toneOf(p.color, i), values: [] }))} />}
     </div>
   );
 }
