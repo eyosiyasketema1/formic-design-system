@@ -1426,8 +1426,18 @@ function Switch({ on, onToggle, label, size = "md", disabled = false, className 
 function Separator({ vertical = false, className = "" }) {
   return <div role="separator" aria-orientation={vertical ? "vertical" : undefined} className={`shrink-0 bg-line ${vertical ? "w-px" : "h-px w-full"} ${className}`} />;
 }
-function Progress({ value = 0, max = 100, label, tone = "accent", indeterminate = false, className = "" }) {
+function Progress({ value = 0, max = 100, label, tone = "accent", indeterminate = false, segments, className = "" }) {
   const percent = Math.min(100, Math.max(0, (value / max) * 100));
+  if (segments && !indeterminate) {
+    const lit = Math.round((percent / 100) * segments);
+    return (
+      <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={max} aria-valuenow={Math.round(Math.min(max, Math.max(0, value)))} className={`flex h-6 w-full gap-1 ${className}`}>
+        {Array.from({ length: segments }, (_, i) => (
+          <span key={i} className={`h-full min-w-0 flex-1 rounded-full transition-colors duration-300 ${i < lit ? (tone === "green" ? "bg-green" : "bg-accent") : "bg-inset shadow-hairline"}`} style={{ transitionDelay: `${i * 20}ms` }} />
+        ))}
+      </div>
+    );
+  }
   return (
     <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={max} aria-valuenow={indeterminate ? undefined : Math.round(Math.min(max, Math.max(0, value)))}
       className={`h-1.5 w-full overflow-hidden rounded-full bg-inset shadow-hairline ${className}`}>
@@ -9076,6 +9086,7 @@ function StatCard({
   align = "start",
   ring,
   chart: chartProp,
+  size = "md",
   className = "",
 }) {
   const centred = align === "center";
@@ -9098,6 +9109,39 @@ function StatCard({
         : <MiniBars values={trend} split={trendKind === "stacked" ? trendSplit : undefined} track={trendKind === "bars"} color={trendTone} animate={trendAnimate} />
       : null);
   const body = layout === "value-first" ? <>{number}{copy}</> : layout === "chart-middle" ? <>{copy}{chart}{number}</> : <>{copy}{number}</>;
+  if (size === "sm") {
+    return (
+      <div className={`flex w-full items-center gap-3 rounded-control bg-inset p-3 shadow-hairline ${className}`}>
+        {icon && <IconTile icon={icon} tone={iconTone} />}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-small text-ink-3">{label}</span>
+          <span className="block truncate text-lead font-semibold text-ink tabular-nums">{display ?? compact(value)}</span>
+        </span>
+        {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+      </div>
+    );
+  }
+  if (layout === "inline") {
+    return (
+      <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${className}`}>
+        <div className="flex items-center gap-3">
+          {icon && <IconTile icon={icon} tone={iconTone} />}
+          <span className="text-display font-semibold text-ink tabular-nums">{display ?? compact(value)}</span>
+        </div>
+        <div className="min-w-0">
+          <div className="truncate text-caption font-medium text-ink">{label}</div>
+          {(delta || caption) && (
+            <div className="mt-0.5 truncate text-small text-ink-3">
+              {delta && <span className={`font-medium ${deltaTone === "down" ? "text-red" : deltaTone === "flat" ? "text-ink-2" : "text-green"}`}>{delta}</span>}
+              {delta && caption ? " " : ""}
+              {caption}
+            </div>
+          )}
+        </div>
+        {chart}
+      </Card>
+    );
+  }
   return (
     <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${centred ? "items-center" : ""} ${className}`}>
       {icon && <IconTile icon={icon} tone={iconTone} />}
@@ -9118,16 +9162,45 @@ function MetricRow({
   value,
   delta,
   deltaTone = "up",
+  leading,
+  progress,
+  big = false,
+  trend,
 }) {
+  if (big) {
+    return (
+      <div className="flex w-full items-center gap-4 border-t border-line py-3 first:border-t-0">
+        {leading}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-small text-ink-3">{label}</span>
+          <span className="mt-0.5 block text-display font-semibold text-ink tabular-nums">{value}</span>
+          {detail && <span className="mt-0.5 block truncate text-small text-ink-3">{detail}</span>}
+        </span>
+        {trend && <span className="w-24 shrink-0"><MiniBars values={trend} track={false} height={40} /></span>}
+        {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+      </div>
+    );
+  }
   return (
-    <div className={`flex w-full items-center gap-2.5 border-t border-line first:border-t-0 ${detail ? "py-3" : "py-2.5"}`}>
-      {icon && <Icon name={icon} size={15} strokeWidth={2} className="shrink-0 text-ink-3" />}
+    <div className={`flex w-full items-center gap-2.5 border-t border-line first:border-t-0 ${detail || leading ? "py-3" : "py-2.5"}`}>
+      {leading}
+      {icon && !leading && <Icon name={icon} size={15} strokeWidth={2} className="shrink-0 text-ink-3" />}
       <span className="min-w-0 flex-1">
         <span className={`block truncate text-caption ${detail ? "font-medium text-ink" : "text-ink-2"}`}>{label}</span>
         {detail && <span className="block truncate text-small text-ink-3">{detail}</span>}
       </span>
-      {value != null && <span className="shrink-0 text-caption font-medium text-ink tabular-nums">{value}</span>}
-      {delta ? <Delta tone={deltaTone}>{delta}</Delta> : detail ? <span className="text-caption text-ink-3">—</span> : null}
+      {progress !== undefined ? (
+        <span className="flex w-36 shrink-0 flex-col items-end gap-1.5">
+          {value != null && <span className="text-caption font-medium text-ink tabular-nums">{value}</span>}
+          <Progress value={Math.round(progress * 100)} label={`${label} progress`} className="h-1" />
+        </span>
+      ) : (
+        <>
+          {trend && <span className="w-16 shrink-0"><MiniBars values={trend} track={false} height={24} /></span>}
+          {value != null && <span className="shrink-0 text-caption font-medium text-ink tabular-nums">{value}</span>}
+        </>
+      )}
+      {delta ? <Delta tone={deltaTone}>{delta}</Delta> : detail && progress === undefined && !leading ? <span className="text-caption text-ink-3">—</span> : null}
     </div>
   );
 }
@@ -10616,6 +10689,21 @@ function Page_statcard() {
           <StatCard layout="chart-middle" label="Storage" caption="Assets on the CDN" display="212 GB" chart={<MiniBars values={[40, 52, 61, 70, 84, 96]} track={false} />} />
         </div>
       </GalleryCard>
+      <GalleryCard label="Inline · icon and number on one row, the delta as text before the caption" full>
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+          <StatCard layout="inline" icon="send" label="Proposals sent" display="42" delta="+18.2%" caption="than last week" className="max-w-none" />
+          <StatCard layout="inline" icon="alert" label="Revisions requested" display="8" delta="-8.7%" deltaTone="down" caption="than last week" className="max-w-none" />
+          <StatCard layout="inline" icon="calendar" label="Missed deadlines" display="3" delta="+1" deltaTone="down" caption="than last week" className="max-w-none" />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Compact · size=&quot;sm&quot;: four tiles on inset inside a panel" wide>
+        <div className="grid grid-cols-2 gap-2">
+          <StatCard size="sm" icon="chart-line" label="Pipeline" display="ETB 1.15M" />
+          <StatCard size="sm" icon="tag" label="Discounts given" display="ETB 132k" />
+          <StatCard size="sm" icon="wallet" label="Net profit" display="ETB 736k" />
+          <StatCard size="sm" icon="receipt" label="Invoices" display="248" />
+        </div>
+      </GalleryCard>
       <GalleryCard label="Ring · a progress ring beside the copy" wide>
         <StatCard label="Client reach" caption="People who opened a proposal" display="1,280" delta="+12%" ring={{ value: 640, max: 900, label: "Opened", color: 3 }} />
       </GalleryCard>
@@ -10630,6 +10718,18 @@ function Page_statcard() {
           <MetricRow icon="globe" label="Website" value="ETB 620k" delta="+12.6%" />
           <MetricRow icon="users" label="Referrals" value="ETB 410k" delta="-4.2%" deltaTone="down" />
           <MetricRow icon="building" label="Retainers" value="ETB 380k" delta="0.0%" deltaTone="flat" />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="MetricRow · big: label over a display number, a bar sparkline trailing" wide>
+        <div className="flex flex-col">
+          <MetricRow big label="People reached" value="21,153" trend={[12, 18, 15, 24, 22, 30]} />
+          <MetricRow big label="Proposals opened" value="2,123" trend={[6, 9, 7, 11, 10, 8]} />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="MetricRow · a leading tile, a detail line and a progress bar toward the target" wide>
+        <div className="flex flex-col">
+          <MetricRow leading={<span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-inset shadow-hairline"><BrandLogo name="figma" size={20} /></span>} label="Northwind Bank" detail="Brand and site" value="ETB 724k" progress={0.78} />
+          <MetricRow leading={<span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-inset shadow-hairline"><BrandLogo name="react" size={20} /></span>} label="Creamery" detail="Menu board app" value="ETB 289k" progress={0.31} />
         </div>
       </GalleryCard>
     </>
@@ -10839,6 +10939,64 @@ function Page_panel() {
           </div>
           <div className="mt-3 flex-1">
             <LineChart labels={["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"]} series={[{ name: "Visits", values: [30, 62, 48, 26, 74, 88] }]} curve="step" backdrop points={false} area={false} height={140} />
+          </div>
+        </Panel></div>
+      </GalleryCard>
+      <GalleryCard label="Media header · a thumbnail in the actions slot, then two big rows" wide>
+        <div><Panel title="Case study" caption="Published 12 May 2026, 6:10 PM" actions={<img src="https://picsum.photos/seed/formic-case/160/112" alt="" width={80} height={56} className="size-auto h-14 w-20 rounded-control object-cover shadow-hairline" />}>
+          <div className="mt-2 flex flex-col border-t border-line">
+            <MetricRow big label="People reached" value="21,153" trend={[12, 18, 15, 24, 22, 30]} />
+            <MetricRow big label="Proposals opened" value="2,123" trend={[6, 9, 7, 11, 10, 8]} />
+          </div>
+        </Panel></div>
+      </GalleryCard>
+      <GalleryCard label="Account panel · a who, a grid of compact tiles, a goal with a footer line" full>
+        <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-5">
+          <div className="lg:col-span-3">
+            <Panel title="Client account">
+              <div className="flex items-center gap-3">
+                <Avatar name="Northwind Bank" kind="initials" size="lg" tone={0} />
+                <span className="min-w-0">
+                  <span className="block truncate text-title font-semibold text-ink">Northwind Bank</span>
+                  <span className="block truncate text-caption text-ink-3">accounts@northwind.et</span>
+                </span>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <StatCard size="sm" icon="chart-line" label="Pipeline" display="ETB 1.15M" />
+                <StatCard size="sm" icon="tag" label="Discounts given" display="ETB 132k" />
+                <StatCard size="sm" icon="wallet" label="Net profit" display="ETB 736k" />
+                <StatCard size="sm" icon="receipt" label="Invoices" display="248" />
+              </div>
+            </Panel>
+          </div>
+          <div className="lg:col-span-2">
+            <Panel title="Revenue goal" bodyClassName="flex flex-col items-center">
+              <DonutChart value={560} max={1000} label="of ETB 1M" color={2} size={148} />
+              <div className="mt-4 flex w-full items-center justify-between border-t border-line pt-3">
+                <span className="text-caption text-ink-2">Plan completed</span>
+                <span className="text-title font-semibold text-ink tabular-nums">56%</span>
+              </div>
+            </Panel>
+          </div>
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Statement panel · one giant number with its sentence, beside a note and a segmented plan" full>
+        <div><Panel>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+            <div className="md:border-r md:border-line md:pr-6">
+              <p className="text-caption font-medium text-ink">Margin</p>
+              <p className="mt-2 text-display-xl font-semibold tracking-tight text-ink tabular-nums">54%</p>
+              <p className="mt-2 text-small text-ink-3">Profit as a share of everything invoiced this quarter.</p>
+            </div>
+            <div className="md:col-span-3">
+              <p className="text-body font-medium text-ink">Retention by cohort</p>
+              <p className="mt-1 max-w-2xl text-caption text-ink-2">Clients grouped by the quarter they signed, followed over the year: how many are still on a retainer twelve months later.</p>
+              <div className="mt-3 flex flex-wrap gap-4">
+                <Button variant="link" size="sm" icon={<Icon name="chart" size={14} />}>Open the numbers</Button>
+                <Button variant="link" size="sm" icon={<Icon name="chart-line" size={14} />}>Change over time</Button>
+              </div>
+              <div className="mt-4"><Progress value={58} label="Quarter plan" segments={24} /></div>
+            </div>
           </div>
         </Panel></div>
       </GalleryCard>
@@ -11241,6 +11399,7 @@ function Page_progress() {
             <Progress value={24} label="Indexing" />
             <Progress value={62} label="Churning" tone="green" />
             <Progress value={100} label="Done" tone="green" />
+            <Progress value={58} label="Quarter plan" segments={24} />
           </div>
         </GalleryCard>
         <GalleryCard label="Indeterminate" wide>

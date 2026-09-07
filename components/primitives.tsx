@@ -680,6 +680,7 @@ export function Progress({
   label,
   tone = "accent",
   indeterminate = false,
+  segments,
   className = "",
 }: {
   value?: number;
@@ -689,9 +690,21 @@ export function Progress({
   tone?: "accent" | "green";
   /** unknown duration — animated sweep instead of a fill */
   indeterminate?: boolean;
+  /** draw the track as this many pill segments that fill one by one, for a plan or a quota */
+  segments?: number;
   className?: string;
 }) {
   const percent = Math.min(100, Math.max(0, (value / max) * 100));
+  if (segments && !indeterminate) {
+    const lit = Math.round((percent / 100) * segments);
+    return (
+      <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={max} aria-valuenow={Math.round(Math.min(max, Math.max(0, value)))} className={`flex h-6 w-full gap-1 ${className}`}>
+        {Array.from({ length: segments }, (_, i) => (
+          <span key={i} className={`h-full min-w-0 flex-1 rounded-full transition-colors duration-300 ${i < lit ? (tone === "green" ? "bg-green" : "bg-accent") : "bg-inset shadow-hairline"}`} style={{ transitionDelay: `${i * 20}ms` }} />
+        ))}
+      </div>
+    );
+  }
   return (
     <div
       role="progressbar"

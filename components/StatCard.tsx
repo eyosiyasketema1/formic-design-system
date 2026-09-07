@@ -1,6 +1,6 @@
 "use client";
 import type { ReactNode } from "react";
-import { Card, Icon, IconTile, type IconName, type IconTileTone } from "./primitives";
+import { Card, Icon, IconTile, Progress, type IconName, type IconTileTone } from "./primitives";
 import { DonutChart, MiniBars, Sparkline, compact, type ChartColor } from "./charts";
 import { FORMIC_CONFIG } from "./config";
 /* ─────────────────────────────────────────────────────────
@@ -72,6 +72,7 @@ export function StatCard({
   align = "start",
   ring,
   chart: chartProp,
+  size = "md",
   className = "",
 }: {
   label?: string;
@@ -93,8 +94,11 @@ export function StatCard({
   /** line (sparkline), bars (capsule columns on tracks) or stacked (two series, `trendSplit` on top) */
   trendKind?: "line" | "bars" | "stacked";
   trendSplit?: number[];
-  /** label-first (default), value-first (the number leads, the label under it) or chart-middle (label, chart, then the number) */
-  layout?: "label-first" | "value-first" | "chart-middle";
+  /** label-first (default), value-first (the number leads, the label under it), chart-middle (label, chart, then the number)
+   *  or inline (the icon tile and the number on one row, the label under, the delta as text before the caption) */
+  layout?: "label-first" | "value-first" | "chart-middle" | "inline";
+  /** sm: a compact tile on inset, icon tile left, label and value right; for a grid of four inside a panel */
+  size?: "md" | "sm";
   /** centre everything: the hero halves of a report panel */
   align?: "start" | "center";
   /** a progress ring beside the copy, with its own centre label */
@@ -123,6 +127,39 @@ export function StatCard({
         : <MiniBars values={trend} split={trendKind === "stacked" ? trendSplit : undefined} track={trendKind === "bars"} color={trendTone} animate={trendAnimate} />
       : null);
   const body = layout === "value-first" ? <>{number}{copy}</> : layout === "chart-middle" ? <>{copy}{chart}{number}</> : <>{copy}{number}</>;
+  if (size === "sm") {
+    return (
+      <div className={`flex w-full items-center gap-3 rounded-control bg-inset p-3 shadow-hairline ${className}`}>
+        {icon && <IconTile icon={icon} tone={iconTone} />}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-small text-ink-3">{label}</span>
+          <span className="block truncate text-lead font-semibold text-ink tabular-nums">{display ?? compact(value)}</span>
+        </span>
+        {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+      </div>
+    );
+  }
+  if (layout === "inline") {
+    return (
+      <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${className}`}>
+        <div className="flex items-center gap-3">
+          {icon && <IconTile icon={icon} tone={iconTone} />}
+          <span className="text-display font-semibold text-ink tabular-nums">{display ?? compact(value)}</span>
+        </div>
+        <div className="min-w-0">
+          <div className="truncate text-caption font-medium text-ink">{label}</div>
+          {(delta || caption) && (
+            <div className="mt-0.5 truncate text-small text-ink-3">
+              {delta && <span className={`font-medium ${deltaTone === "down" ? "text-red" : deltaTone === "flat" ? "text-ink-2" : "text-green"}`}>{delta}</span>}
+              {delta && caption ? " " : ""}
+              {caption}
+            </div>
+          )}
+        </div>
+        {chart}
+      </Card>
+    );
+  }
   return (
     <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${centred ? "items-center" : ""} ${className}`}>
       {icon && <IconTile icon={icon} tone={iconTone} />}
@@ -149,6 +186,10 @@ export function MetricRow({
   value,
   delta,
   deltaTone = "up",
+  leading,
+  progress,
+  big = false,
+  trend,
 }: {
   icon?: IconName;
   label: string;
@@ -158,16 +199,49 @@ export function MetricRow({
   value?: ReactNode;
   delta?: string;
   deltaTone?: DeltaTone;
+  /** a tile before the label: a BrandLogo, an Avatar, an IconTile */
+  leading?: ReactNode;
+  /** 0 to 1, a thin bar under the value: how far this row is toward its target */
+  progress?: number;
+  /** the value in display type under the label, for a two-row summary */
+  big?: boolean;
+  /** a small bar sparkline on the trailing edge */
+  trend?: number[];
 }) {
+  if (big) {
+    return (
+      <div className="flex w-full items-center gap-4 border-t border-line py-3 first:border-t-0">
+        {leading}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-small text-ink-3">{label}</span>
+          <span className="mt-0.5 block text-display font-semibold text-ink tabular-nums">{value}</span>
+          {detail && <span className="mt-0.5 block truncate text-small text-ink-3">{detail}</span>}
+        </span>
+        {trend && <span className="w-24 shrink-0"><MiniBars values={trend} track={false} height={40} /></span>}
+        {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+      </div>
+    );
+  }
   return (
-    <div className={`flex w-full items-center gap-2.5 border-t border-line first:border-t-0 ${detail ? "py-3" : "py-2.5"}`}>
-      {icon && <Icon name={icon} size={15} strokeWidth={2} className="shrink-0 text-ink-3" />}
+    <div className={`flex w-full items-center gap-2.5 border-t border-line first:border-t-0 ${detail || leading ? "py-3" : "py-2.5"}`}>
+      {leading}
+      {icon && !leading && <Icon name={icon} size={15} strokeWidth={2} className="shrink-0 text-ink-3" />}
       <span className="min-w-0 flex-1">
         <span className={`block truncate text-caption ${detail ? "font-medium text-ink" : "text-ink-2"}`}>{label}</span>
         {detail && <span className="block truncate text-small text-ink-3">{detail}</span>}
       </span>
-      {value != null && <span className="shrink-0 text-caption font-medium text-ink tabular-nums">{value}</span>}
-      {delta ? <Delta tone={deltaTone}>{delta}</Delta> : detail ? <span className="text-caption text-ink-3">—</span> : null}
+      {progress !== undefined ? (
+        <span className="flex w-36 shrink-0 flex-col items-end gap-1.5">
+          {value != null && <span className="text-caption font-medium text-ink tabular-nums">{value}</span>}
+          <Progress value={Math.round(progress * 100)} label={`${label} progress`} className="h-1" />
+        </span>
+      ) : (
+        <>
+          {trend && <span className="w-16 shrink-0"><MiniBars values={trend} track={false} height={24} /></span>}
+          {value != null && <span className="shrink-0 text-caption font-medium text-ink tabular-nums">{value}</span>}
+        </>
+      )}
+      {delta ? <Delta tone={deltaTone}>{delta}</Delta> : detail && progress === undefined && !leading ? <span className="text-caption text-ink-3">—</span> : null}
     </div>
   );
 }
