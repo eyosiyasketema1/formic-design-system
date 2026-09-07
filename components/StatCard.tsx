@@ -18,6 +18,9 @@ import { FORMIC_CONFIG } from "./config";
  *   ring={{ value, max }}  a progress ring beside the copy (user reach)
  *   align="center"         icon tile, caption and a big number centred,
  *                          for the two halves of a report panel
+ *   StatStrip              one bar of headline figures divided by
+ *                          hairlines, an icon tile per figure, for the
+ *                          top of a finance screen
  * ───────────────────────────────────────────────────────── */
 
 /* Direction is explicit rather than inferred from the sign, because
@@ -246,5 +249,58 @@ export function MetricRow({
       )}
       {delta ? <Delta tone={deltaTone}>{delta}</Delta> : detail && progress === undefined && !leading ? <span className="text-caption text-ink-3">—</span> : null}
     </div>
+  );
+}
+
+/* ── StatStrip ─────────────────────────────────────────── */
+/* The one-row headline bar: three or four figures on a single card,
+ * separated by hairlines, each with an icon tile on the left and the
+ * number over its label on the right. `tone` colours the number the way
+ * Delta colours a change, for a gain or a loss that IS the figure (a
+ * day's result), never for decoration. Wraps to two columns on narrow
+ * screens, dividers becoming rules between rows. */
+export type StatStripItem = {
+  icon: IconName;
+  label: string;
+  value?: number;
+  /** formatted value, or a node such as <CountUp> */
+  display?: ReactNode;
+  /** neutral (ink), up (green) or down (red): the sign of a result, not a change */
+  tone?: DeltaTone | "neutral";
+  iconTone?: StatIconTone;
+};
+const DEFAULT_STRIP: StatStripItem[] = [
+  { icon: "receipt", label: "Billed this year", display: "ETB 4.2M" },
+  { icon: "wallet", label: "Outstanding", display: "ETB 612k" },
+  { icon: "arrow-up", label: "Collected today", display: "+ETB 48k", tone: "up" },
+  { icon: "chart-line", label: "Margin this year", display: "+ETB 1.1M", tone: "up" },
+];
+const STRIP_TONES: Record<DeltaTone | "neutral", string> = {
+  neutral: "text-ink", up: "text-green", down: "text-red", flat: "text-ink-2",
+};
+const STRIP_COLUMNS: Record<number, string> = {
+  1: "grid-cols-1", 2: "grid-cols-1 sm:grid-cols-2", 3: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3", 4: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-4",
+};
+
+export function StatStrip({ items = DEFAULT_STRIP, className = "" }: { items?: StatStripItem[]; className?: string }) {
+  const cols = STRIP_COLUMNS[Math.min(4, Math.max(1, items.length))];
+  return (
+    <Card className={`grid w-full ${cols} ${className}`}>
+      {items.map((item, i) => (
+        <div
+          key={`${item.label}-${i}`}
+          /* dividers: a rule on the left of every column but the first, and
+             above every row but the first — one column on phones, two from
+             sm, one row from xl */
+          className={`flex items-center gap-3 border-line px-4 py-3 ${i > 0 ? "border-t" : ""} ${i % 2 === 1 ? "sm:border-l" : ""} ${i === 1 ? "sm:border-t-0" : ""} ${i > 0 ? "xl:border-t-0 xl:border-l" : ""}`}
+        >
+          <IconTile icon={item.icon} tone={item.iconTone ?? "neutral"} />
+          <span className="min-w-0 flex-1 text-right">
+            <span className={`block truncate text-heading font-semibold tabular-nums ${STRIP_TONES[item.tone ?? "neutral"]}`}>{item.display ?? compact(item.value ?? 0)}</span>
+            <span className="block truncate text-small text-ink-3">{item.label}</span>
+          </span>
+        </div>
+      ))}
+    </Card>
   );
 }

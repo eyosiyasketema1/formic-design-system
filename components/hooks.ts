@@ -223,3 +223,19 @@ export function useReducedMotion(): boolean {
   }, []);
   return reduced;
 }
+
+/* The measured width of an element, live through ResizeObserver, so a
+ * chart can decide how many of its labels fit rather than truncating
+ * every one to "O…". 0 until measured (and on the server). */
+export function useWidth<T extends HTMLElement>(): [RefObject<T | null>, number] {
+  const ref = useRef<T | null>(null);
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, width];
+}
