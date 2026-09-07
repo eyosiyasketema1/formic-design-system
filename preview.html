@@ -11320,44 +11320,62 @@ function Page_dashboard() {
   const hours = ["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
   return (
     <>
-      <GalleryCard label="Studio overview · the tiles and panels from their own pages, composed into one screen" full>
-        <div className="flex flex-col gap-3.5">
-          <div className="grid grid-cols-2 gap-3.5 md:grid-cols-3 xl:grid-cols-6">
-            <StatCard layout="value-first" label="Margin this month" display="42%" delta="+3.1%" trend={[120, 140, 95, 160, 130]} trendSplit={[80, 90, 70, 100, 85]} trendKind="stacked" className="max-w-none" />
+      <GalleryCard label="Studio overview · pieces from their own pages, laid out the way a page is: a header, four headlines, then panels with room" full>
+        <div className="flex flex-col gap-6 p-1">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-heading font-semibold tracking-tight text-ink">Studio overview</h2>
+              <p className="mt-0.5 text-caption text-ink-3">Formic Studio · September 2026</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Tabs variant="subtle" tabs={[{ key: "m", label: "Month" }, { key: "q", label: "Quarter" }, { key: "y", label: "Year" }]} />
+              <Button variant="secondary" size="sm" icon={<Icon name="download" size={14} />}>Export</Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="Invoiced" caption="This month" display="ETB 1.44M" delta="+31%" icon="receipt" iconTone="accent" trend={[6, 9, 8, 12, 11, 15, 14, 19]} trendSmooth className="max-w-none" />
             <StatCard layout="chart-middle" label="Billable hours" caption="This week" display="146" delta="-9%" deltaTone="down" trend={[38, 41, 35, 32, 44, 39, 36]} trendKind="bars" className="max-w-none" />
-            <StatCard layout="chart-middle" label="Leads" caption="Daily" display="38" delta="+12%" chart={<LineChart labels={["", "", "", "", ""]} series={[{ name: "Leads", values: [4, 9, 6, 11, 8] }]} area={false} guides height={72} />} className="max-w-none" />
-            <StatCard layout="chart-middle" label="Delivery" caption="This quarter" display="18 of 24" delta="+3" chart={<div className="flex justify-center"><DonutChart value={18} max={24} label="done" color={2} size={96} /></div>} className="max-w-none" />
-            <StatCard label="Invoiced" caption="This month" display="ETB 1.44M" delta="+31%" icon="receipt" iconTone="accent" className="max-w-none" />
-            <StatCard label="Spent" caption="This month" display="ETB 410k" delta="-6%" deltaTone="down" icon="wallet" className="max-w-none" />
+            <StatCard layout="value-first" label="Margin" caption="Revenue over cost, last five projects" display="42%" delta="+3.1%" trend={[120, 140, 95, 160, 130]} trendSplit={[80, 90, 70, 100, 85]} trendKind="stacked" className="max-w-none" />
+            <StatCard label="Delivery" caption="This quarter" display="18 of 24" delta="+3" ring={{ value: 18, max: 24, label: "done", color: 2 }} className="max-w-none" />
           </div>
           <div className="grid grid-cols-1 gap-3.5 xl:grid-cols-3">
-            <div className="grid grid-cols-1 gap-3.5 md:grid-cols-5 xl:col-span-2">
-              <div className="md:col-span-3">
-                <Panel title="Invoices" caption="By month, this year" actions={<IconButton label="More" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="dots-vertical" size={14} /></IconButton>}>
-                  <BarChart labels={["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"]} series={[{ name: "Invoices", values: [38, 52, 32, 12, 35, 28, 33, 25] }]} highlight={1} valuePosition="bar" fill />
-                </Panel>
-              </div>
-              <div className="md:col-span-2">
-                <Panel title="Delivery report" caption="Last month, 14 projects" actions={<IconButton label="More" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="dots-vertical" size={14} /></IconButton>} bodyClassName="flex flex-col">
-                  <div className="grid flex-1 grid-cols-2 divide-x divide-line">
-                    <div className="pr-3"><StatCard align="center" icon="circle-check" iconTone="accent" label="On time" display="+82%" className="max-w-none p-0 shadow-none" /></div>
-                    <div className="pl-3"><StatCard align="center" icon="clock" label="Over budget" display="-24%" className="max-w-none p-0 shadow-none" /></div>
-                  </div>
-                  <div className="mt-4 flex items-end justify-between gap-3 border-t border-line pt-4">
-                    <div><p className="text-caption text-ink-3">Client satisfaction</p><p className="text-heading font-semibold text-ink tabular-nums">94%</p></div>
-                    <Button variant="secondary" size="sm">View report</Button>
-                  </div>
-                </Panel>
-              </div>
+            <div className="xl:col-span-2">
+              <Panel title="Invoices" caption="By month, this year" actions={<Button variant="ghost" size="xs">ETB</Button>}>
+                <BarChart labels={["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"]} series={[{ name: "Invoices", values: [38, 52, 32, 12, 35, 28, 33, 25] }]} highlight={1} valuePosition="bar" fill height={240} />
+              </Panel>
             </div>
             <Panel title={<span className="flex items-center gap-2"><IconTile icon="chart-line" tone="accent" className="size-7 [&_svg]:size-3.5" />Traffic today</span>} actions={<Button variant="secondary" size="xs">Details</Button>} bodyClassName="flex flex-col">
               <div className="flex items-center gap-2"><span className="text-display font-semibold text-ink tabular-nums">2,150</span><Delta tone="up">+5%</Delta></div>
-              <div className="mt-3 flex flex-col border-b border-line pb-2">
+              <div className="mt-3 flex flex-col">
                 <MetricRow icon="globe" label="Website" value="1,420" delta="+12.6%" />
                 <MetricRow icon="sparkles" label="Assistant" value="730" delta="-4.2%" deltaTone="down" />
               </div>
+              <div className="mt-4 flex-1">
+                <LineChart labels={hours} series={[{ name: "Visits", values: [30, 62, 48, 26, 74, 88] }]} curve="step" backdrop points={false} area={false} fill height={120} />
+              </div>
+            </Panel>
+          </div>
+          <div className="grid grid-cols-1 gap-3.5 xl:grid-cols-3">
+            <Panel title="Delivery report" caption="Last month, 14 projects" bodyClassName="flex flex-col">
+              <div className="grid flex-1 grid-cols-2 divide-x divide-line py-2">
+                <div className="pr-3"><StatCard align="center" icon="circle-check" iconTone="accent" label="On time" display="+82%" className="max-w-none p-0 shadow-none" /></div>
+                <div className="pl-3"><StatCard align="center" icon="clock" label="Over budget" display="-24%" className="max-w-none p-0 shadow-none" /></div>
+              </div>
+              <div className="mt-4 flex items-end justify-between gap-3 border-t border-line pt-4">
+                <div><p className="text-caption text-ink-3">Client satisfaction</p><p className="text-heading font-semibold text-ink tabular-nums">94%</p></div>
+                <Button variant="secondary" size="sm">View report</Button>
+              </div>
+            </Panel>
+            <Panel title="Top clients" caption="Invoiced this quarter">
+              <BarList fill format={(n) => `ETB ${Math.round(n / 1000)}k`} items={[
+                { label: "Northwind Bank", value: 724000 }, { label: "Creamery", value: 289000 },
+                { label: "Ministry of Health", value: 194000 }, { label: "Sunrise Coffee", value: 156000 }, { label: "Abyssinia Air", value: 119500 },
+              ]} />
+            </Panel>
+            <Panel title="Leads" caption="Daily, last five days" actions={<Badge tone="green">Live</Badge>} bodyClassName="flex flex-col">
+              <div className="flex items-center gap-2"><span className="text-display font-semibold text-ink tabular-nums">38</span><Delta tone="up">+12%</Delta></div>
               <div className="mt-3 flex-1">
-                <LineChart labels={hours} series={[{ name: "Visits", values: [30, 62, 48, 26, 74, 88] }]} curve="step" backdrop points={false} area={false} fill height={140} />
+                <LineChart labels={["Mon", "Tue", "Wed", "Thu", "Fri"]} series={[{ name: "Leads", values: [4, 9, 6, 11, 8] }]} guides area={false} fill height={120} />
               </div>
             </Panel>
           </div>
