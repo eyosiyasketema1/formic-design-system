@@ -266,21 +266,24 @@ try:
     if _dark_tokens.get("--accent", "").lower() != _pair["dark"]:
         fails.append(f"config: tokens.css dark --accent is {_dark_tokens.get('--accent')} but formic.config.json accent {_cfg['accent']} derives {_pair['dark']} (run scripts/apply_config.py)")
     _ts = (ROOT / "components" / "config.ts").read_text()
-    _ts_vals = dict(re.findall(r"^\s+(avatar|sidebar|motion):\s*\"?([\w]+)\"?,", _ts, re.M))
+    _ts_vals = dict(re.findall(r"^\s+(avatar|sidebarState|sidebar|motion):\s*\"?([\w]+)\"?,", _ts, re.M))
     _pv_m = re.search(r"const FORMIC_CONFIG = \{([^}]*)\}", preview)
-    _pv_vals = dict(re.findall(r"(avatar|sidebar|motion):\s*\"?([\w]+)\"?", _pv_m.group(1))) if _pv_m else {}
+    _pv_vals = dict(re.findall(r"(avatar|sidebarState|sidebar|motion):\s*\"?([\w]+)\"?", _pv_m.group(1))) if _pv_m else {}
     _cz_m = re.search(r"const CZ_DEFAULTS = \{([^}]*)\}", preview)
-    _cz_vals = dict(re.findall(r"(\w+):\s*\"?([#\w]+)\"?", _cz_m.group(1))) if _cz_m else {}
-    for k in ("avatar", "sidebar", "motion"):
+    _cz_vals = dict(re.findall(r"(\w+):\s*\"?([#\w ]+?)\"?(?:,|$)", _cz_m.group(1))) if _cz_m else {}
+    for k in ("avatar", "sidebar", "sidebarState", "motion"):
         want = str(_cfg[k]).lower()
         if _ts_vals.get(k) != want:
             fails.append(f"config: components/config.ts {k} is {_ts_vals.get(k)} but formic.config.json says {want} (run scripts/apply_config.py)")
         if _pv_vals.get(k) != want:
             fails.append(f"config: preview.html FORMIC_CONFIG {k} is {_pv_vals.get(k)} but formic.config.json says {want} (rule 9)")
-    for k in ("accent", "palette", "radius", "size", "theme", "avatar", "sidebar", "motion"):
+    for k in ("accent", "palette", "radius", "size", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"):
         want = str(_cfg[k]).lower()
-        if _cz_vals.get(k, "").lower() != want:
+        if _cz_vals.get(k, "").strip().lower() != want:
             fails.append(f"config: customizer CZ_DEFAULTS {k} is {_cz_vals.get(k)} but formic.config.json says {want}")
+    _fs = re.search(r'--font-sans:\s*"([^"]+)"', (ROOT / "styles" / "tokens.css").read_text())
+    if not _fs or _fs.group(1) != _cfg.get("font", "Urbanist"):
+        fails.append(f"config: tokens.css --font-sans is {_fs.group(1) if _fs else None} but formic.config.json font is {_cfg.get('font')} (run scripts/apply_config.py)")
 except FileNotFoundError as e:
     fails.append(f"config: {e.filename} missing (rule 21)")
 

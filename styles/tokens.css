@@ -181,6 +181,14 @@
 :root[data-size="comfortable"] { --spacing: 0.28rem; }
 :root[data-size="spacious"] { --spacing: 0.3125rem; }
 
+/* Content layout: compact keeps a page's content to a readable column,
+ * full lets it run edge to edge. Wrap page content in .page-content;
+ * rails and headers stay outside it. formic.config.json's `layout`
+ * sets the attribute. */
+:root { --content-max: 64rem; }
+:root[data-layout="full"] { --content-max: none; }
+.page-content { width: 100%; max-width: var(--content-max); margin-inline: auto; }
+
 /* ── Base ──────────────────────────────────────────────── */
 body { font-family: var(--font-sans); background: var(--canvas); color: var(--ink); }
 

@@ -14,14 +14,20 @@ export type FormicConfig = {
    *  (DiceBear notionists, generated from the name), or a placeholder
    *  photo (pravatar, picked by the name) until real photos exist */
   avatar: "initials" | "doodle" | "photo";
-  /** AppSidebar's starting variant */
-  sidebar: "expanded" | "rail";
+  /** which of the three rails on the Sidebar page the app is built on:
+   *  full (AppSidebar, sections with sub-menus, collapse in the header),
+   *  inset (ProjectSidebar, the page a surface card beside it) or
+   *  edge (ProjectSidebar with a hairline edge, the page flat beside it) */
+  sidebar: "full" | "inset" | "edge";
+  /** how that rail first opens: full collapses to an icon rail, inset and edge hide behind their trigger */
+  sidebarState: "expanded" | "rail";
   /** charts and sparklines animate in (reduced-motion still wins) */
   motion: boolean;
 };
 
 export const FORMIC_CONFIG: FormicConfig = {
   avatar: "initials",
-  sidebar: "expanded",
+  sidebar: "full",
+  sidebarState: "expanded",
   motion: true,
 };

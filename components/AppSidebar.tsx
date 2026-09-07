@@ -73,7 +73,7 @@ export default function AppSidebar({
   active,
   onSelect,
   variant,
-  defaultVariant = FORMIC_CONFIG.sidebar,
+  defaultVariant = FORMIC_CONFIG.sidebarState,
   onVariantChange,
   collapsible = true,
   submenus = "nested",

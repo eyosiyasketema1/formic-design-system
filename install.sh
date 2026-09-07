@@ -277,7 +277,7 @@ if [ -f "$DEST/formic.config.json" ]; then
 else
   # First install: start from the stock choices, but read what the app's
   # index.html already says (data-theme, data-palette, data-radius,
-  # data-size) so the file describes the app as it is, then apply it —
+  # data-size, data-layout) so the file describes the app as it is, then apply it —
   # a fresh install and an update must leave the same files behind.
   cp "$TMP/formic/formic.config.json" "$DEST/formic.config.json"
   if command -v python3 >/dev/null 2>&1; then
@@ -288,8 +288,8 @@ cfg_path = Path(sys.argv[1]); cfg = json.loads(cfg_path.read_text())
 html = Path("index.html")
 if html.exists() and 'id="root"' in html.read_text():
     tag = re.search(r"<html\b([^>]*)>", html.read_text())
-    attrs = dict(re.findall(r'data-(theme|palette|radius|size)="([^"]+)"', tag.group(1) if tag else ""))
-    for k in ("theme", "palette", "radius", "size"):
+    attrs = dict(re.findall(r'data-(theme|palette|radius|size|layout)="([^"]+)"', tag.group(1) if tag else ""))
+    for k in ("theme", "palette", "radius", "size", "layout"):
         if k in attrs:
             cfg[k] = attrs[k]
 cfg_path.write_text(json.dumps(cfg, indent=2) + "\n")
