@@ -756,7 +756,7 @@ export function Shortcut({ keys, quiet = false, className = "" }: { keys: string
   return (
     <span
       aria-label={`Shortcut ${keys.join(" ")}`}
-      className={`inline-flex shrink-0 items-center gap-0.5 ${quiet ? "pointer-events-none opacity-0 transition-opacity duration-150 group-hover/row:opacity-100 group-focus-within/row:opacity-100 [@media(hover:none)]:opacity-100" : ""} ${className}`}
+      className={`inline-flex shrink-0 items-center gap-1 ${quiet ? "pointer-events-none opacity-0 transition-opacity duration-150 group-hover/row:opacity-100 group-focus-within/row:opacity-100 [@media(hover:none)]:opacity-100" : ""} ${className}`}
     >
       {keys.map((k, i) => (
         <kbd key={i} className="flex h-4.5 min-w-4.5 items-center justify-center rounded-[4px] bg-inset px-1 font-sans text-micro font-medium text-ink-3 shadow-hairline">{k}</kbd>

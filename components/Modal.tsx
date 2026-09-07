@@ -10,11 +10,12 @@ import { Icon, IconButton } from "./primitives";
  * scrolling, and Escape / backdrop click dismiss (unless
  * dismissible is off — e.g. a required decision).
  * ───────────────────────────────────────────────────────── */
-export type ModalSize = "sm" | "md" | "lg";
+export type ModalSize = "sm" | "md" | "lg" | "xl";
 const MODAL_WIDTHS: Record<ModalSize, string> = {
   sm: "max-w-80",
   md: "max-w-105",
   lg: "max-w-130",
+  xl: "max-w-170",
 };
 export default function Modal({
   open,
