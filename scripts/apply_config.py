@@ -14,13 +14,14 @@ edited by hand. Every key is optional; a missing key keeps the system default.
       "palette": "paper",          paper | sage | twilight | clay | ocean | slate | sand | rose | plum | forest | custom
       "paletteColor": "#7C3AED",   with palette "custom": the colour the neutrals are tinted toward (scripts/palette.py)
       "radius":  "default",        sharp | default | rounded | full
-      "size":    "default",        default | comfortable | spacious
+      "size":    "default",        default | comfortable | spacious   (control density)
+      "type":    "base",           base | lg | xl   (the type ramp: 14, 15 or 16px base)
       "theme":   "light",          light | dark   (the app's starting theme)
       "avatar":  "initials",       initials | doodle | photo   (people without a src)
       "sidebar": "full",           full | inset | edge   (the three rails on the Sidebar page)
       "sidebarState": "expanded",  expanded | rail       (full: expanded or icon rail; inset / edge: shown or hidden)
       "font":    "Urbanist",       a face from the approved Google list (below)
-      "layout":  "compact",        compact | full   (content column or edge to edge)
+      "layout":  "compact",        compact | medium | full   (64rem, 80rem, or edge to edge)
       "motion":  true              charts animate in
     }
 
@@ -30,7 +31,7 @@ What it writes, deterministically:
               styles/tokens.css, each fitted to AA for its own surfaces
   font     -> --font-sans in styles/tokens.css and the Google Fonts @import in
               styles/fonts.css (the gallery's <link> tags in the repo)
-  palette, radius, size, theme, layout
+  palette, radius, size, type, theme, layout
            -> data-* attributes on the <html> tag of the app's index.html
               (the nearest index.html with a #root above the formic folder).
               Inside the design-system repo there is no app, so this step is
@@ -62,6 +63,7 @@ DEFAULTS = {
     "paletteColor": None,
     "radius": "default",
     "size": "default",
+    "type": "base",
     "theme": "light",
     "avatar": "initials",
     "sidebar": "full",
@@ -103,12 +105,13 @@ CHOICES = {
     "palette": ("paper", "sage", "twilight", "clay", "ocean", "slate", "sand", "rose", "plum", "forest", "custom"),
     "radius": ("sharp", "default", "rounded", "full"),
     "size": ("default", "comfortable", "spacious"),
+    "type": ("base", "lg", "xl"),
     "theme": ("light", "dark"),
     "avatar": ("initials", "doodle", "photo"),
     "sidebar": ("full", "inset", "edge"),
     "sidebarState": ("expanded", "rail"),
     "font": tuple(FONTS),
-    "layout": ("compact", "full"),
+    "layout": ("compact", "medium", "full"),
 }
 
 
@@ -176,7 +179,7 @@ def write_preview_mirrors(cfg):
     src = path.read_text()
     fc = f'const FORMIC_CONFIG = {{ avatar: "{cfg["avatar"]}", sidebar: "{cfg["sidebar"]}", sidebarState: "{cfg["sidebarState"]}", motion: {"true" if cfg["motion"] else "false"} }};'
     cz = (f'const CZ_DEFAULTS = {{ accent: "{(cfg["accent"] or DEFAULTS_ACCENT).lower()}", palette: "{cfg["palette"]}", paletteColor: "{(cfg["paletteColor"] or cfg["accent"] or DEFAULTS_ACCENT).lower()}", radius: "{cfg["radius"]}", '
-          f'size: "{cfg["size"]}", theme: "{cfg["theme"]}", avatar: "{cfg["avatar"]}", sidebar: "{cfg["sidebar"]}", sidebarState: "{cfg["sidebarState"]}", '
+          f'size: "{cfg["size"]}", type: "{cfg["type"]}", theme: "{cfg["theme"]}", avatar: "{cfg["avatar"]}", sidebar: "{cfg["sidebar"]}", sidebarState: "{cfg["sidebarState"]}", '
           f'font: "{cfg["font"]}", layout: "{cfg["layout"]}", motion: {"true" if cfg["motion"] else "false"} }};')
     new, n1 = re.subn(r"const FORMIC_CONFIG = \{[^}]*\};", fc, src, count=1)
     new, n2 = re.subn(r"const CZ_DEFAULTS = \{[^}]*\};", cz, new, count=1)
@@ -207,7 +210,7 @@ def write_html_attrs(path, cfg):
     if not m:
         raise SystemExit(f"{path}: no <html> tag")
     attrs = m.group(1)
-    attrs = re.sub(r'\s+data-(theme|palette|radius|size|layout)="[^"]*"', "", attrs)
+    attrs = re.sub(r'\s+data-(theme|palette|radius|size|type|layout)="[^"]*"', "", attrs)
     add = []
     if cfg["theme"] == "dark":
         add.append('data-theme="dark"')
@@ -217,6 +220,8 @@ def write_html_attrs(path, cfg):
         add.append(f'data-radius="{cfg["radius"]}"')
     if cfg["size"] != "default":
         add.append(f'data-size="{cfg["size"]}"')
+    if cfg["type"] != "base":
+        add.append(f'data-type="{cfg["type"]}"')
     if cfg["layout"] != "compact":
         add.append(f'data-layout="{cfg["layout"]}"')
     tag = "<html" + attrs.rstrip() + ("" if not add else " " + " ".join(add)) + ">"
@@ -261,7 +266,8 @@ def write_custom_palette(cfg):
 
 
 FONT_LINE = re.compile(r'(--font-sans:\s*)"[^"]+"')
-FONT_URL = re.compile(r"https://fonts\.googleapis\.com/css2\?family=[^\"')&]+")
+# only the page's own <link href="…"> and fonts.css's @import url("…"), never a URL a script assembles
+FONT_URL = re.compile(r"(?<=[\"'])https://fonts\.googleapis\.com/css2\?family=[^\"')&]+")
 
 
 def write_font(cfg):
@@ -328,7 +334,7 @@ def main():
 
     # html attributes
     idx = app_index()
-    attrs = [f"{k}={cfg[k]}" for k in ("theme", "palette", "radius", "size", "layout")]
+    attrs = [f"{k}={cfg[k]}" for k in ("theme", "palette", "radius", "size", "type", "layout")]
     if idx:
         added = write_html_attrs(idx, cfg)
         print(f"  html     {', '.join(attrs)} -> <html {' '.join(added) if added else '(defaults, no attributes)'}> in {idx.name}")

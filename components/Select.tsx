@@ -11,7 +11,7 @@ import { Icon, Popover } from "./primitives";
  * Works inside Field, which injects id / aria-describedby /
  * invalid.
  * ───────────────────────────────────────────────────────── */
-export type SelectOption = { value: string; label: string };
+export type SelectOption = { value: string; label: string; /** a colour dot before the label (a palette, a status) */ swatch?: string };
 export type SelectSize = "sm" | "md";
 const SELECT_HEIGHTS: Record<SelectSize, string> = { sm: "h-8", md: "h-9" };
 const DEFAULT_OPTIONS: SelectOption[] = [
@@ -129,6 +129,7 @@ export default function Select({
         onKeyDown={onKeyDown}
         className={`primitive-field flex ${width} items-center gap-2 rounded-control border border-line bg-field px-3 text-left transition-opacity duration-150 disabled:opacity-60 ${SELECT_HEIGHTS[size]} ${className}`}
       >
+        {selected?.swatch && <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ background: selected.swatch }} />}
         <span className={`min-w-0 flex-1 truncate text-body ${selected ? "text-ink" : "text-ink-3"}`}>
           {selected ? selected.label : placeholder}
         </span>
@@ -164,6 +165,7 @@ export default function Select({
                 index === active ? "bg-hover" : ""
               }`}
             >
+              {option.swatch && <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ background: option.swatch }} />}
               <span className="min-w-0 flex-1 truncate">{option.label}</span>
               {option.value === selectedValue && (
                 <Icon name="check" size={14} strokeWidth={2.2} className="shrink-0 text-ink" />

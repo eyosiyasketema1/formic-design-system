@@ -186,7 +186,20 @@
  * rails and headers stay outside it. formic.config.json's `layout`
  * sets the attribute. */
 :root { --content-max: 64rem; }
+:root[data-layout="medium"] { --content-max: 80rem; }
 :root[data-layout="full"] { --content-max: none; }
+
+/* Type size: the whole ramp one or two steps up, still integer pixels.
+ * base is 14px; lg reads at 15, xl at 16. Controls do not move (rule 11);
+ * only the letters grow. formic.config.json's `type` sets the attribute. */
+:root[data-type="lg"] {
+  --text-micro: 11px; --text-tiny: 12px; --text-small: 13px; --text-caption: 14px; --text-body: 15px;
+  --text-lead: 17px; --text-title: 19px; --text-heading: 22px; --text-display: 26px; --text-display-lg: 34px; --text-display-xl: 52px;
+}
+:root[data-type="xl"] {
+  --text-micro: 11px; --text-tiny: 13px; --text-small: 14px; --text-caption: 15px; --text-body: 16px;
+  --text-lead: 18px; --text-title: 20px; --text-heading: 23px; --text-display: 28px; --text-display-lg: 36px; --text-display-xl: 56px;
+}
 .page-content { width: 100%; max-width: var(--content-max); margin-inline: auto; }
 
 /* ── Base ──────────────────────────────────────────────── */
