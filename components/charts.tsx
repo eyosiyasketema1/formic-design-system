@@ -1004,6 +1004,148 @@ export function ScatterChart({
   );
 }
 
+/* ═══════════ ActivityCalendar ═══════════ */
+/* A year of days as a grid of squares, one column per week, the shade
+ * of each the count for that day — deliveries shipped, agent runs,
+ * commits. One quantity, so one hue: the accent at four strengths over
+ * the track (rule 16). The grid is a single keyboard stop: arrows walk
+ * the days and the tip follows, so a 12px cell never has to be a 24px
+ * target; the total and the scale are text under it. Scrolls inside
+ * its own box on a phone rather than shrinking the cells (rule 15). */
+export type ActivityDay = { date: string; value: number };
+const DAY_MS = 86_400_000;
+const isoDay = (d: Date) => d.toISOString().slice(0, 10);
+/* deterministic demo data: quieter weekends, a busy spring */
+export function seedActivity(days = 364, end = new Date("2026-09-06T00:00:00Z")): ActivityDay[] {
+  const out: ActivityDay[] = [];
+  for (let i = days - 1; i >= 0; i -= 1) {
+    const d = new Date(end.getTime() - i * DAY_MS);
+    const dow = d.getUTCDay();
+    const h = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+    const season = 1 + 0.6 * Math.sin(((d.getUTCMonth() + 1) / 12) * Math.PI * 2);
+    const base = dow === 0 || dow === 6 ? 0.25 : 1;
+    out.push({ date: isoDay(d), value: h < 0.18 ? 0 : Math.round(h * 8 * base * season) });
+  }
+  return out;
+}
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const LEVEL_CLASS = ["bg-chart-track", "bg-accent opacity-30", "bg-accent opacity-55", "bg-accent opacity-80", "bg-accent"];
+
+export function ActivityCalendar({
+  data,
+  weeks = 52,
+  end,
+  label = "Deliveries",
+  format = (n: number) => `${n} ${n === 1 ? "delivery" : "deliveries"}`,
+  weekStart = 1,
+  animate = FORMIC_CONFIG.motion,
+  className = "",
+}: {
+  /** one entry per day with a count; missing days count as zero */
+  data?: ActivityDay[];
+  /** how many weeks back from `end` */
+  weeks?: number;
+  /** the last day shown; defaults to the last day in `data`, else today */
+  end?: string;
+  /** what the squares count, for the summary line */
+  label?: string;
+  /** how a day's count reads in the tip: (n) => `${n} runs` */
+  format?: (n: number) => string;
+  /** 0 Sunday or 1 Monday at the top */
+  weekStart?: 0 | 1;
+  animate?: boolean;
+  className?: string;
+}) {
+  const { tip, show, hide } = useTip();
+  const { settled, drawing } = useEntrance(animate);
+  const [active, setActive] = useState<number | null>(null);
+  const days = data ?? seedActivity(weeks * 7);
+  const byDate = new Map(days.map((d) => [d.date, d.value]));
+  const last = new Date(`${end ?? days[days.length - 1]?.date ?? isoDay(new Date())}T00:00:00Z`);
+  /* the grid ends on the week that holds `last`; earlier cells past `last` stay blank */
+  const tailPad = ((7 + last.getUTCDay() - weekStart) % 7);
+  const total = weeks * 7;
+  const first = new Date(last.getTime() - (total - 1 - (6 - tailPad)) * DAY_MS);
+  const cells = Array.from({ length: total }, (_, i) => {
+    const d = new Date(first.getTime() + i * DAY_MS);
+    const future = d.getTime() > last.getTime();
+    const key = isoDay(d);
+    return { key, date: d, value: future ? -1 : (byDate.get(key) ?? 0) };
+  });
+  const peak = Math.max(1, ...cells.map((c) => c.value));
+  const levelOf = (v: number) => (v <= 0 ? 0 : Math.min(4, Math.ceil((v / peak) * 4)));
+  const sum = cells.reduce((n, c) => n + Math.max(0, c.value), 0);
+  const months = cells.map((c, i) => (i % 7 === 0 && (i === 0 || c.date.getUTCMonth() !== cells[i - 7].date.getUTCMonth()) ? { col: i / 7, name: MONTHS_SHORT[c.date.getUTCMonth()] } : null)).filter((m): m is { col: number; name: string } => !!m && m.col < weeks - 2);
+  const dayNames = weekStart === 1 ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const nice = (d: Date) => `${dayNames[(7 + d.getUTCDay() - weekStart) % 7]}, ${d.getUTCDate()} ${MONTHS_SHORT[d.getUTCMonth()]}`;
+  const CELL = 11, GAP = 3;
+  const tipFor = (i: number, el: Element) => {
+    const c = cells[i];
+    if (c.value < 0) { hide(); return; }
+    const r = el.getBoundingClientRect();
+    show(r.left + r.width / 2, r.top, <span className="flex flex-col gap-0.5"><span className="font-medium text-ink">{format(c.value)}</span><span className="text-ink-3">{nice(c.date)}</span></span>);
+  };
+  const onKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const step: Record<string, number> = { ArrowRight: 7, ArrowLeft: -7, ArrowDown: 1, ArrowUp: -1 };
+    if (!(e.key in step)) return;
+    e.preventDefault();
+    let next = (active ?? total - 1 - (6 - tailPad)) + step[e.key];
+    next = Math.max(0, Math.min(total - 1, next));
+    if (cells[next].value < 0) next = total - 1 - (6 - tailPad);
+    setActive(next);
+    const el = e.currentTarget.querySelector<HTMLElement>(`[data-i="${next}"]`);
+    if (el) tipFor(next, el);
+  };
+  return (
+    <div className={`flex w-full flex-col gap-3 ${className}`}>
+      <div className="overflow-x-auto" onMouseLeave={() => { hide(); setActive(null); }}>
+        <div
+          role="img"
+          tabIndex={0}
+          aria-label={`${label} by day, ${cells.filter((c) => c.value >= 0).length} days: ${format(sum)} in total. Use the arrow keys to read a day.`}
+          onKeyDown={onKey}
+          onBlur={() => { hide(); setActive(null); }}
+          /* fluid columns: the squares shrink to the panel, down to a floor
+             where the box scrolls instead */
+          className="grid w-full rounded-sm"
+          style={{ gridTemplateColumns: `auto repeat(${weeks}, minmax(0, 1fr))`, gap: GAP, minWidth: weeks * (CELL - 2) }}
+        >
+          <span />
+          {/* month names sit on the first column of the month they start in */}
+          {Array.from({ length: weeks }, (_, col) => {
+            const m = months.find((x) => x.col === col);
+            return <span key={col} aria-hidden className="relative h-4 text-tiny text-ink-3">{m && <span className="absolute left-0 whitespace-nowrap">{m.name}</span>}</span>;
+          })}
+          {Array.from({ length: 7 }, (_, row) => (
+            <span key={`d${row}`} aria-hidden className="self-center pr-1.5 text-right text-tiny leading-none text-ink-3" style={{ gridColumn: 1, gridRow: row + 2 }}>{row % 2 === 0 ? dayNames[row] : ""}</span>
+          ))}
+          {cells.map((c, i) => {
+            const col = Math.floor(i / 7), row = i % 7;
+            const lvl = levelOf(c.value);
+            return (
+              <span
+                key={c.key}
+                data-i={i}
+                aria-hidden
+                onMouseEnter={(e) => { setActive(i); tipFor(i, e.currentTarget); }}
+                className={`aspect-square w-full rounded-[2px] transition-opacity duration-150 ${c.value < 0 ? "" : LEVEL_CLASS[lvl]} ${active === i ? "ring-1 ring-ink" : ""}`}
+                style={{ gridColumn: col + 2, gridRow: row + 2, opacity: settled ? undefined : 0, transition: drawing ? `opacity 400ms var(--ease-out-quint) ${col * 12}ms` : undefined }}
+              />
+            );
+          })}
+        </div>
+        <ChartTip tip={tip} />
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-tiny text-ink-3">
+        <span>{format(sum)} in the last {weeks === 52 ? "year" : `${weeks} weeks`}</span>
+        <span aria-hidden className="flex items-center gap-1">Less
+          {LEVEL_CLASS.map((cls, i) => <span key={i} className={`size-2.5 rounded-[2px] ${cls}`} />)}
+        More</span>
+      </div>
+    </div>
+  );
+}
+
 /* ═══════════ ShareBar ═══════════ */
 /* One bar split into its parts — where the week went, what the fleet
  * is doing — each part named on a tick above with its share, in the
