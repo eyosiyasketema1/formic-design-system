@@ -12274,9 +12274,6 @@ function Page_charts() {
       <GalleryCard label="ActivityCalendar · a year of days, one column a week, the accent at four strengths for how much shipped; hover a square, or focus the grid and walk it with the arrow keys" full>
         <ActivityCalendar />
       </GalleryCard>
-      <GalleryCard label="ActivityCalendar · 26 weeks of agent runs, Sunday first" full>
-        <ActivityCalendar weeks={26} label="Agent runs" weekStart={0} format={(n) => `${n} ${n === 1 ? "run" : "runs"}`} data={seedActivity(26 * 7)} />
-      </GalleryCard>
     </>
   );
 }
