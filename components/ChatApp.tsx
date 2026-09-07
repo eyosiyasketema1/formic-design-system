@@ -124,7 +124,7 @@ export default function ChatApp({
         </div>
         <div className="shrink-0 border-t border-line px-4 py-3">
           <div className="mx-auto w-full max-w-2xl">
-            <PromptBar demo={false} placeholder="Message Creamery Ops…" onSend={send} />
+            <PromptBar demo={false} placeholder="Message Formic Studio…" onSend={send} />
           </div>
         </div>
       </div>
