@@ -298,10 +298,28 @@ try:
 except Exception as e:  # esbuild unavailable — warn, don't fail
     print(f"note: compile check skipped ({e})")
 
+# ── 4b. The gallery's inline script parses ──────────────────
+# Babel compiles it in the browser, so a stray TypeScript cast or a mangled
+# line white-screens the whole gallery with no CI signal. esbuild parses the
+# same JSX in a fraction of a second.
+try:
+    _script = re.search(r'<script type="text/babel"[^>]*>(.*?)</script>', preview, re.S)
+    if _script:
+        _tmp = Path("/tmp/ds-qa-preview.jsx")
+        _tmp.write_text(_script.group(1))
+        r = subprocess.run(["npx", "-y", "esbuild", "--loader:.jsx=jsx", "--jsx=preserve", "--log-level=error", "--outfile=/tmp/ds-qa-preview.out.js", str(_tmp)],
+                           capture_output=True, text=True, timeout=120)
+        if r.returncode != 0:
+            _err = next((ln for ln in r.stderr.splitlines() if "ERROR" in ln or "error" in ln.lower()), r.stderr.strip().splitlines()[-1])
+            _m = re.search(r":(\d+):(\d+): ERROR: (.*)", r.stderr)
+            fails.append(f"preview.html: inline script does not parse — {_m.group(3)} (script line {_m.group(1)})" if _m else f"preview.html: inline script does not parse — {_err}")
+except Exception as e:
+    print(f"note: preview parse check skipped ({e})")
+
 # ── Result ──────────────────────────────────────────────────
 if fails:
     print(f"QA FAILED — {len(fails)} issue(s):")
     for f in fails:
         print("  ✗", f)
     sys.exit(1)
-print("QA PASSED — forbidden patterns, contrast (all modes × palettes), drift, compile: all clean")
+print("QA PASSED — forbidden patterns, contrast (all modes × palettes), drift, compile, gallery script: all clean")

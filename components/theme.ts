@@ -149,3 +149,81 @@ export function setAccent(color: string | null): { light: string; dark: string }
   if (!existing) document.head.appendChild(element);
   return variants;
 }
+
+/* ─────────────────────────────────────────────────────────
+ * derivePalette — a whole palette from one colour
+ * The JavaScript twin of scripts/palette.py: paper's neutrals keep
+ * their lightness and take a little chroma in the colour's hue (more
+ * in the mid tones, almost none on white); the accent is the colour,
+ * fitted for each mode on this palette's own surface. Keep the two in
+ * step. setPalette() applies the result at runtime as
+ * [data-palette="custom"] rules, the way the built-ins are written.
+ * ───────────────────────────────────────────────────────── */
+const PAPER_NEUTRALS = {
+  light: { ink: "#1a1a1a", "ink-2": "#5c5c5c", "ink-3": "#6f6f6f", line: "#e5e5e5", "line-strong": "#cfcfcf", hover: "#f2f2f2", "hover-2": "#ececec", inset: "#e9e9e9", canvas: "#f7f7f7", surface: "#fdfdfd", field: "#f5f5f5" },
+  dark: { ink: "#f0efec", "ink-2": "#b0aeaa", "ink-3": "#8d8b86", line: "#2a2a29", "line-strong": "#3f3e3c", hover: "#232322", "hover-2": "#292928", inset: "#232322", canvas: "#131312", surface: "#1c1c1b", field: "#232322" },
+} as const;
+const PALETTE_CHROMA: Record<string, number> = { ink: 0.012, "ink-2": 0.016, "ink-3": 0.016, line: 0.01, "line-strong": 0.014, hover: 0.008, "hover-2": 0.01, inset: 0.01, canvas: 0.006, surface: 0.003, field: 0.008 };
+const lin = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+const gam = (c: number) => { c = Math.max(0, Math.min(1, c)); return c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055; };
+function hexToOklch(hex: string): { L: number; C: number; H: number } {
+  const { r, g, b } = hexToRgb(hex)!;
+  const [R, G, B] = [lin(r / 255), lin(g / 255), lin(b / 255)];
+  const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B);
+  const m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B);
+  const s = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B);
+  const L = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s;
+  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
+  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+  return { L, C: Math.hypot(a, bb), H: ((Math.atan2(bb, a) * 180) / Math.PI + 360) % 360 };
+}
+function oklchToHex(L: number, C: number, H: number): string {
+  const a = C * Math.cos((H * Math.PI) / 180), bb = C * Math.sin((H * Math.PI) / 180);
+  const l = (L + 0.3963377774 * a + 0.2158037573 * bb) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * bb) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * bb) ** 3;
+  const r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+  const g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+  const b = -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s;
+  return toHex({ r: Math.round(gam(r) * 255), g: Math.round(gam(g) * 255), b: Math.round(gam(b) * 255) });
+}
+function fitAccentOn(accent: string, surface: string, direction: -1 | 1): string {
+  const rgb = hexToRgb(accent)!, surf = hexToRgb(surface)!;
+  const { h, s, l } = rgbToHsl(rgb);
+  for (let step = 0; step <= 100; step += 1) {
+    const c = hslToRgb({ h, s, l: Math.min(1, Math.max(0, l + direction * step * 0.01)) });
+    const cand = { r: Math.round(c.r), g: Math.round(c.g), b: Math.round(c.b) };
+    if (contrast(cand, surf) >= MIN_CONTRAST && contrast(cand, mixRgb(cand, surf, 0.1)) >= MIN_CONTRAST) return toHex(cand);
+  }
+  return accent;
+}
+export type PaletteTokens = Record<string, string>;
+export function derivePalette(color: string): { light: PaletteTokens; dark: PaletteTokens } | null {
+  if (!hexToRgb(color)) return null;
+  const { H } = hexToOklch(color);
+  const accents = deriveAccentVariants(color)!;
+  const build = (mode: "light" | "dark"): PaletteTokens => {
+    const out: PaletteTokens = {};
+    for (const [name, hex] of Object.entries(PAPER_NEUTRALS[mode])) out[name] = oklchToHex(hexToOklch(hex).L, PALETTE_CHROMA[name], H);
+    out.accent = fitAccentOn(accents[mode], out.surface, mode === "light" ? -1 : 1);
+    return out;
+  };
+  return { light: build("light"), dark: build("dark") };
+}
+export function paletteCss(pal: { light: PaletteTokens; dark: PaletteTokens }, selector = ':root[data-palette="custom"]'): string {
+  const decl = (t: PaletteTokens) => Object.entries(t).map(([k, v]) => `--${k}: ${v};`).join(" ");
+  return `${selector} { ${decl(pal.light)} }\n${selector}[data-theme="dark"] { ${decl(pal.dark)} }\n`;
+}
+/** Apply (or clear, with null) a runtime custom palette; pair with <html data-palette="custom">. */
+export function setPalette(color: string | null): ReturnType<typeof derivePalette> {
+  if (typeof document === "undefined") return null;
+  const id = "ds-palette-custom";
+  const existing = document.getElementById(id);
+  if (!color) { existing?.remove(); return null; }
+  const pal = derivePalette(color);
+  if (!pal) return null;
+  const el = existing ?? Object.assign(document.createElement("style"), { id });
+  el.textContent = paletteCss(pal);
+  if (!existing) document.head.appendChild(el);
+  return pal;
+}

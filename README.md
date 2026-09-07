@@ -4,7 +4,7 @@ A token-driven React + Tailwind v4 design system for AI product interfaces: chat
 
 **[Live site](https://formicai.dev/)** · **[Component gallery](https://formicai.dev/preview.html)**
 
-- 50+ components, 5 palettes x light/dark
+- 50+ components, 10 palettes x light/dark, plus a custom palette from any colour
 - Tokens only: no hardcoded colors, sizes, radii, shadows, or easings
 - WCAG AA verified by script across every mode and palette
 - Flat elevation (hairline borders, no drop shadows), one easing curve
