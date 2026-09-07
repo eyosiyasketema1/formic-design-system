@@ -9301,11 +9301,14 @@ function BarList({
   format = (n) => n.toLocaleString(),
   stagger = 90,
   fill = false,
+  rank = false,
+  axis = false,
   animate = FORMIC_CONFIG.motion,
   className = "",
 }) {
   const { settled: on, drawing } = useEntrance(animate);
   const ceiling = max ?? Math.max(1, ...items.map((i) => i.value));
+  const ticks = [0, 0.25, 0.5, 0.75, 1];
   return (
     <div className={`flex w-full flex-col gap-2.5 ${fill ? "h-full justify-between" : ""} ${className}`}>
       {items.map((item, i) => {
@@ -9313,10 +9316,14 @@ function BarList({
         const leader = i === 0;
         return (
           <div key={`${item.label}-${i}`} className="flex items-center gap-3">
+            {rank && <span className="w-4 shrink-0 text-right text-tiny text-ink-3 tabular-nums">{i + 1}</span>}
             <span className={`w-28 shrink-0 truncate text-caption sm:w-36 ${leader ? "font-medium text-ink" : "text-ink-2"}`} title={item.label}>
               {item.label}
             </span>
-            <div className="relative h-2.5 min-w-0 flex-1 overflow-hidden rounded-sm bg-chart-track">
+            <div className={`relative h-2.5 min-w-0 flex-1 rounded-sm ${axis ? "" : "overflow-hidden bg-chart-track"}`}>
+              {axis && ticks.map((t) => (
+                <span key={t} aria-hidden className="absolute -inset-y-1 border-l border-dashed border-chart-track" style={{ left: `${t * 100}%` }} />
+              ))}
               {/* scaleX composites on the GPU; animating width relays out every frame */}
               <div
                 className={`absolute inset-y-0 left-0 origin-left rounded-sm ${leader ? "bg-accent" : "bg-ink-3"}`}
@@ -9331,6 +9338,18 @@ function BarList({
           </div>
         );
       })}
+      {axis && (
+        <div aria-hidden className="flex items-center gap-3">
+          {rank && <span className="w-4 shrink-0" />}
+          <span className="w-28 shrink-0 sm:w-36" />
+          <div className="relative h-4 min-w-0 flex-1">
+            {ticks.map((t) => (
+              <span key={t} className={`absolute top-0 text-tiny text-ink-3 tabular-nums ${t === 0 ? "" : t === 1 ? "-translate-x-full" : "-translate-x-1/2"}`} style={{ left: `${t * 100}%` }}>{format(ceiling * t)}</span>
+            ))}
+          </div>
+          <span className="w-14 shrink-0" />
+        </div>
+      )}
     </div>
   );
 }
@@ -9369,6 +9388,7 @@ function StatCard({
   align = "start",
   ring,
   chart: chartProp,
+  period,
   size = "md",
   className = "",
 }) {
@@ -9402,6 +9422,23 @@ function StatCard({
         </span>
         {delta && <Delta tone={deltaTone}>{delta}</Delta>}
       </div>
+    );
+  }
+  if (layout === "tile") {
+    return (
+      <Card className={`flex w-full max-w-95 flex-col gap-4 p-4 ${className}`}>
+        <div className="flex items-center justify-between gap-3">
+          {icon ? <IconTile icon={icon} tone={iconTone} /> : <span />}
+          {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+        </div>
+        <div className="min-w-0">
+          <div className="text-display font-semibold text-ink tabular-nums">{display ?? compact(value)}</div>
+          <div className="mt-0.5 truncate text-caption text-ink-2">{label}</div>
+          {caption && <div className="mt-0.5 truncate text-small text-ink-3">{caption}</div>}
+        </div>
+        {chart}
+        {period && <div className="mt-auto"><Chip tone="inset" size="sm">{period}</Chip></div>}
+      </Card>
     );
   }
   if (layout === "inline") {
@@ -9449,6 +9486,7 @@ function MetricRow({
   progress,
   big = false,
   trend,
+  trendKind = "bars",
 }) {
   if (big) {
     return (
@@ -9459,8 +9497,11 @@ function MetricRow({
           <span className="mt-0.5 block text-display font-semibold text-ink tabular-nums">{value}</span>
           {detail && <span className="mt-0.5 block truncate text-small text-ink-3">{detail}</span>}
         </span>
-        {trend && <span className="w-24 shrink-0"><MiniBars values={trend} track={false} height={40} /></span>}
-        {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+        {delta && trendKind === "line" && <Delta tone={deltaTone}>{delta}</Delta>}
+        {trend && (trendKind === "line"
+          ? <span className="w-36 shrink-0 sm:w-44"><Sparkline values={trend} smooth className="h-12" /></span>
+          : <span className="w-24 shrink-0"><MiniBars values={trend} track={false} height={40} /></span>)}
+        {delta && trendKind !== "line" && <Delta tone={deltaTone}>{delta}</Delta>}
       </div>
     );
   }
@@ -11021,6 +11062,13 @@ function Page_statcard() {
           <StatCard layout="inline" icon="calendar" label="Missed deadlines" display="3" delta="+1" deltaTone="down" caption="than last week" className="max-w-none" />
         </div>
       </GalleryCard>
+      <GalleryCard label="Tile · icon tile and the delta on the top row, the number and label under, a period chip at the foot" full>
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+          <StatCard layout="tile" icon="receipt" iconTone="accent" label="Invoices paid" display="128" delta="+22%" period="Last 4 months" className="max-w-none" />
+          <StatCard layout="tile" icon="wallet" label="Retainer income" display="ETB 890k" delta="-6%" deltaTone="down" period="Last year" className="max-w-none" />
+          <StatCard layout="tile" icon="bookmark" label="Saved proposals" display="1,200" delta="+38%" period="Last 6 months" className="max-w-none" />
+        </div>
+      </GalleryCard>
       <GalleryCard label="Compact · size=&quot;sm&quot;: four tiles on inset inside a panel" wide>
         <div className="grid grid-cols-2 gap-2">
           <StatCard size="sm" icon="chart-line" label="Pipeline" display="ETB 1.15M" />
@@ -11049,6 +11097,14 @@ function Page_statcard() {
         <div className="flex flex-col">
           <MetricRow big label="People reached" value="21,153" trend={[12, 18, 15, 24, 22, 30]} />
           <MetricRow big label="Proposals opened" value="2,123" trend={[6, 9, 7, 11, 10, 8]} />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="MetricRow · big with a line trend: a rate, its change, and the last weeks drawn beside it" wide>
+        <div className="flex flex-col">
+          <MetricRow big label="Proposal win rate" value="64%" delta="+4.1%" trend={[48, 52, 50, 58, 55, 61, 60, 64]} trendKind="line" />
+          <MetricRow label="Sent" detail="41 proposals this quarter" delta="+12%" />
+          <MetricRow label="Shortlisted" detail="29 went to a second round" delta="+6%" />
+          <MetricRow label="Won" detail="26 signed" delta="-2%" deltaTone="down" />
         </div>
       </GalleryCard>
       <GalleryCard label="MetricRow · a leading tile, a detail line and a progress bar toward the target" wide>
@@ -11989,6 +12045,12 @@ function Page_dashboard() {
       </GalleryCard>
       <GalleryCard label="BarList · top services" full>
         <BarList />
+      </GalleryCard>
+      <GalleryCard label="BarList · ranked with a percent axis: shares of a whole, still one hue because the ranking is the message" full>
+        <BarList rank axis max={100} format={(n) => `${n}%`} items={[
+          { label: "Brand identity", value: 96 }, { label: "Websites", value: 88 }, { label: "Product design", value: 74 },
+          { label: "Motion", value: 61 }, { label: "Print", value: 48 }, { label: "Naming", value: 37 },
+        ]} />
       </GalleryCard>
       <GalleryCard label="BarList · top clients by spend" full>
         <BarList format={(n) => `ETB ${(n / 1000).toFixed(0)}k`} items={[

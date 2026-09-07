@@ -1,6 +1,6 @@
 "use client";
 import type { ReactNode } from "react";
-import { Card, Icon, IconTile, Progress, type IconName, type IconTileTone } from "./primitives";
+import { Card, Chip, Icon, IconTile, Progress, type IconName, type IconTileTone } from "./primitives";
 import { DonutChart, MiniBars, Sparkline, compact, type ChartColor } from "./charts";
 import { FORMIC_CONFIG } from "./config";
 /* ─────────────────────────────────────────────────────────
@@ -18,6 +18,9 @@ import { FORMIC_CONFIG } from "./config";
  *   ring={{ value, max }}  a progress ring beside the copy (user reach)
  *   align="center"         icon tile, caption and a big number centred,
  *                          for the two halves of a report panel
+ *   layout="tile"          icon tile and the delta on the top row, the
+ *                          number and label under, a `period` chip at
+ *                          the foot ("Last 4 months")
  *   StatStrip              one bar of headline figures divided by
  *                          hairlines, an icon tile per figure, for the
  *                          top of a finance screen
@@ -76,6 +79,7 @@ export function StatCard({
   align = "start",
   ring,
   chart: chartProp,
+  period,
   size = "md",
   className = "",
 }: {
@@ -102,7 +106,7 @@ export function StatCard({
   trendNames?: [string, string];
   /** label-first (default), value-first (the number leads, the label under it), chart-middle (label, chart, then the number)
    *  or inline (the icon tile and the number on one row, the label under, the delta as text before the caption) */
-  layout?: "label-first" | "value-first" | "chart-middle" | "inline";
+  layout?: "label-first" | "value-first" | "chart-middle" | "inline" | "tile";
   /** sm: a compact tile on inset, icon tile left, label and value right; for a grid of four inside a panel */
   size?: "md" | "sm";
   /** centre everything: the hero halves of a report panel */
@@ -111,6 +115,8 @@ export function StatCard({
   ring?: { value: number; max: number; label?: string; color?: ChartColor };
   /** any chart in the trend slot (a small LineChart with guides, a BarList…) instead of `trend` */
   chart?: ReactNode;
+  /** the window the figure covers, as a chip at the foot of the tile: "Last 4 months" */
+  period?: string;
   className?: string;
 }) {
   const centred = align === "center";
@@ -143,6 +149,23 @@ export function StatCard({
         </span>
         {delta && <Delta tone={deltaTone}>{delta}</Delta>}
       </div>
+    );
+  }
+  if (layout === "tile") {
+    return (
+      <Card className={`flex w-full max-w-95 flex-col gap-4 p-4 ${className}`}>
+        <div className="flex items-center justify-between gap-3">
+          {icon ? <IconTile icon={icon} tone={iconTone} /> : <span />}
+          {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+        </div>
+        <div className="min-w-0">
+          <div className="text-display font-semibold text-ink tabular-nums">{display ?? compact(value)}</div>
+          <div className="mt-0.5 truncate text-caption text-ink-2">{label}</div>
+          {caption && <div className="mt-0.5 truncate text-small text-ink-3">{caption}</div>}
+        </div>
+        {chart}
+        {period && <div className="mt-auto"><Chip tone="inset" size="sm">{period}</Chip></div>}
+      </Card>
     );
   }
   if (layout === "inline") {
@@ -196,6 +219,7 @@ export function MetricRow({
   progress,
   big = false,
   trend,
+  trendKind = "bars",
 }: {
   icon?: IconName;
   label: string;
@@ -213,6 +237,8 @@ export function MetricRow({
   big?: boolean;
   /** a small bar sparkline on the trailing edge */
   trend?: number[];
+  /** with `big`: capsule bars (default) or a smooth line with its area, for a rate over time */
+  trendKind?: "bars" | "line";
 }) {
   if (big) {
     return (
@@ -223,8 +249,11 @@ export function MetricRow({
           <span className="mt-0.5 block text-display font-semibold text-ink tabular-nums">{value}</span>
           {detail && <span className="mt-0.5 block truncate text-small text-ink-3">{detail}</span>}
         </span>
-        {trend && <span className="w-24 shrink-0"><MiniBars values={trend} track={false} height={40} /></span>}
-        {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+        {delta && trendKind === "line" && <Delta tone={deltaTone}>{delta}</Delta>}
+        {trend && (trendKind === "line"
+          ? <span className="w-36 shrink-0 sm:w-44"><Sparkline values={trend} smooth className="h-12" /></span>
+          : <span className="w-24 shrink-0"><MiniBars values={trend} track={false} height={40} /></span>)}
+        {delta && trendKind !== "line" && <Delta tone={deltaTone}>{delta}</Delta>}
       </div>
     );
   }
