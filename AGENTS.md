@@ -106,7 +106,7 @@ It keeps the hue and saturation, darkens for light mode until the colour holds 4
 
 ## App configuration: `formic.config.json` is the source of truth
 
-The app's choices live in one file, `src/formic/formic.config.json`: `accent`, `palette`, `radius`, `size`, `theme` (starting theme), `avatar` (people without a `src`: `initials`, `doodle`, or `photo`, a placeholder picture until real ones exist), `sidebar` (`expanded` or `rail`) and `motion`. Users make them at https://formicai.dev/customize and paste a block that looks like this:
+The app's choices live in one file, `src/formic/formic.config.json`: `accent`, `palette`, `radius`, `size`, `theme` (starting theme), `avatar` (people without a `src`: `initials`, `doodle`, or `photo`, a placeholder picture until real ones exist), `sidebar` (which rail the app is built on: `app` = AppSidebar, `project` = ProjectSidebar, `chat` = SidebarNav), `sidebarState` (`expanded` or `rail`, how it first opens), `font` (one of the approved Google faces: Urbanist, Inter, Manrope, Plus Jakarta Sans, DM Sans, Outfit, Figtree, Sora), `layout` (`compact` keeps page content in a 64rem column, `full` runs edge to edge; wrap page content in `.page-content`, rails and headers stay outside) and `motion`. Users make them at https://formicai.dev/customize and paste a block that looks like this:
 
 ```
 Apply this Formic configuration and keep it as the source of truth:
@@ -115,7 +115,7 @@ save it as src/formic/formic.config.json, then run
 { "accent": "#29E0C2", "palette": "paper", "radius": "rounded", ... }
 ```
 
-When you receive one: save the JSON exactly as given to `src/formic/formic.config.json`, run the script, restart the dev server, and reply with the ratios it printed. The script does everything deterministically: it fits the accent for both modes (through `set_accent.py`), writes the `data-*` attributes on `<html>` in the app's `index.html`, and writes `components/config.ts`, which `Avatar`, `AppSidebar` and the charts read as their prop defaults. Do none of that by hand, and do not undo it inline: no `doodle={false}` because you prefer initials, no `defaultVariant="expanded"` when the config says `rail`, no second accent. A user who says "make the corners rounder" or "start in dark mode" is asking for a config change: edit the JSON, run the script. Re-running the installer keeps the config and re-applies it.
+When you receive one: save the JSON exactly as given to `src/formic/formic.config.json`, run the script, restart the dev server, and reply with the ratios it printed. The script does everything deterministically: it fits the accent for both modes (through `set_accent.py`), swaps the font in `tokens.css` and `fonts.css`, writes the `data-*` attributes on `<html>` in the app's `index.html`, and writes `components/config.ts`, which `Avatar`, the rails and the charts read as their prop defaults. Build the app on the rail the config names, and wrap each page's content in `.page-content` so `layout` holds. Do none of that by hand, and do not undo it inline: no `doodle={false}` because you prefer initials, no `defaultVariant="expanded"` when the config says `rail`, no second accent. A user who says "make the corners rounder" or "start in dark mode" is asking for a config change: edit the JSON, run the script. Re-running the installer keeps the config and re-applies it.
 
 ## Demo content is ours
 

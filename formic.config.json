@@ -5,6 +5,9 @@
   "size": "default",
   "theme": "light",
   "avatar": "initials",
-  "sidebar": "expanded",
+  "sidebar": "app",
+  "sidebarState": "expanded",
+  "font": "Urbanist",
+  "layout": "compact",
   "motion": true
 }

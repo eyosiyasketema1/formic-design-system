@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { FORMIC_CONFIG } from "./config";
 import { createPortal } from "react-dom";
 import { GlideMenu, Icon, type IconName } from "./primitives";
 /* ─────────────────────────────────────────────────────────
@@ -42,6 +43,8 @@ const DEFAULT_RECENTS: SidebarRecent[] = [
   { id: "subway", label: "Subway surfing" },
 ];
 type SidebarNavProps = {
+  /** start collapsed to the icon rail; defaults to formic.config.json's sidebarState */
+  defaultCollapsed?: boolean;
   activeTitle?: string | null;
   className?: string;
   /** stretch to the parent's height (default). `false` gives a fixed 600px demo height for galleries. */
@@ -205,8 +208,9 @@ export default function SidebarNav({
   workspace = DEFAULT_WORKSPACE,
   navItems = DEFAULT_NAV_ITEMS,
   recents = DEFAULT_RECENTS,
+  defaultCollapsed = FORMIC_CONFIG.sidebarState === "rail",
 }: SidebarNavProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [internalNav, setInternalNav] = useState("chats");
   const currentNav = activeNav ?? internalNav;
   const selectNav = (key: string) => {

@@ -14,14 +14,17 @@ export type FormicConfig = {
    *  (DiceBear notionists, generated from the name), or a placeholder
    *  photo (pravatar, picked by the name) until real photos exist */
   avatar: "initials" | "doodle" | "photo";
-  /** AppSidebar's starting variant */
-  sidebar: "expanded" | "rail";
+  /** which rail the app uses: AppSidebar, ProjectSidebar or the chat SidebarNav */
+  sidebar: "app" | "project" | "chat";
+  /** how that rail first opens */
+  sidebarState: "expanded" | "rail";
   /** charts and sparklines animate in (reduced-motion still wins) */
   motion: boolean;
 };
 
 export const FORMIC_CONFIG: FormicConfig = {
   avatar: "initials",
-  sidebar: "expanded",
+  sidebar: "app",
+  sidebarState: "expanded",
   motion: true,
 };

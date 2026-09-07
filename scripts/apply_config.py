@@ -16,7 +16,10 @@ edited by hand. Every key is optional; a missing key keeps the system default.
       "size":    "default",        default | comfortable | spacious
       "theme":   "light",          light | dark   (the app's starting theme)
       "avatar":  "initials",       initials | doodle | photo   (people without a src)
-      "sidebar": "expanded",       expanded | rail     (AppSidebar's first variant)
+      "sidebar": "app",            app | project | chat   (which rail the app uses)
+      "sidebarState": "expanded",  expanded | rail        (how it first opens)
+      "font":    "Urbanist",       a face from the approved Google list (below)
+      "layout":  "compact",        compact | full   (content column or edge to edge)
       "motion":  true              charts animate in
     }
 
@@ -24,13 +27,15 @@ What it writes, deterministically:
 
   accent   -> scripts/set_accent.py: --accent in the light and dark blocks of
               styles/tokens.css, each fitted to AA for its own surfaces
-  palette, radius, size, theme
+  font     -> --font-sans in styles/tokens.css and the Google Fonts @import in
+              styles/fonts.css (the gallery's <link> tags in the repo)
+  palette, radius, size, theme, layout
            -> data-* attributes on the <html> tag of the app's index.html
               (the nearest index.html with a #root above the formic folder).
               Inside the design-system repo there is no app, so this step is
               reported and skipped.
-  avatar, sidebar, motion
-           -> components/config.ts, which Avatar, AppSidebar and the charts
+  avatar, sidebar, sidebarState, motion
+           -> components/config.ts, which Avatar, the rails and the charts
               read as their prop defaults
 
 The agent's job is: save the json, run this, done. Never write --accent or
@@ -56,8 +61,23 @@ DEFAULTS = {
     "size": "default",
     "theme": "light",
     "avatar": "initials",
-    "sidebar": "expanded",
+    "sidebar": "app",
+    "sidebarState": "expanded",
+    "font": "Urbanist",
+    "layout": "compact",
     "motion": True,
+}
+# Faces that meet the type rules: variable weight through 300–800 on Google
+# Fonts, a full x-height range, tabular figures. name -> css2 family query.
+FONTS = {
+    "Urbanist": "Urbanist:wght@300..800",
+    "Inter": "Inter:wght@300..800",
+    "Manrope": "Manrope:wght@300..800",
+    "Plus Jakarta Sans": "Plus+Jakarta+Sans:wght@300..800",
+    "DM Sans": "DM+Sans:wght@300..800",
+    "Outfit": "Outfit:wght@300..800",
+    "Figtree": "Figtree:wght@300..800",
+    "Sora": "Sora:wght@300..800",
 }
 CHOICES = {
     "palette": ("paper", "sage", "twilight", "clay", "ocean"),
@@ -65,7 +85,10 @@ CHOICES = {
     "size": ("default", "comfortable", "spacious"),
     "theme": ("light", "dark"),
     "avatar": ("initials", "doodle", "photo"),
-    "sidebar": ("expanded", "rail"),
+    "sidebar": ("app", "project", "chat"),
+    "sidebarState": ("expanded", "rail"),
+    "font": tuple(FONTS),
+    "layout": ("compact", "full"),
 }
 
 
@@ -82,6 +105,10 @@ def load(path):
             print(f"  note: unknown key {k!r} ignored")
             continue
         cfg[k] = v
+    # the first config format said sidebar: expanded | rail, meaning AppSidebar's state
+    if cfg["sidebar"] in ("expanded", "rail"):
+        cfg["sidebarState"], cfg["sidebar"] = cfg["sidebar"], "app"
+        print(f"  note: sidebar {cfg['sidebarState']!r} read as sidebar \"app\" + sidebarState {cfg['sidebarState']!r} (older format)")
     for k, opts in CHOICES.items():
         if cfg[k] not in opts:
             raise SystemExit(f"{path}: {k} must be one of {', '.join(opts)} (got {cfg[k]!r})")
@@ -101,6 +128,7 @@ def write_config_ts(cfg):
         "export const FORMIC_CONFIG: FormicConfig = {\n"
         f"  avatar: \"{cfg['avatar']}\",\n"
         f"  sidebar: \"{cfg['sidebar']}\",\n"
+        f"  sidebarState: \"{cfg['sidebarState']}\",\n"
         f"  motion: {'true' if cfg['motion'] else 'false'},\n"
         "};\n"
     )
@@ -119,9 +147,10 @@ def write_preview_mirrors(cfg):
     if not path.exists():
         return None
     src = path.read_text()
-    fc = f'const FORMIC_CONFIG = {{ avatar: "{cfg["avatar"]}", sidebar: "{cfg["sidebar"]}", motion: {"true" if cfg["motion"] else "false"} }};'
+    fc = f'const FORMIC_CONFIG = {{ avatar: "{cfg["avatar"]}", sidebar: "{cfg["sidebar"]}", sidebarState: "{cfg["sidebarState"]}", motion: {"true" if cfg["motion"] else "false"} }};'
     cz = (f'const CZ_DEFAULTS = {{ accent: "{(cfg["accent"] or DEFAULTS_ACCENT).lower()}", palette: "{cfg["palette"]}", radius: "{cfg["radius"]}", '
-          f'size: "{cfg["size"]}", theme: "{cfg["theme"]}", avatar: "{cfg["avatar"]}", sidebar: "{cfg["sidebar"]}", motion: {"true" if cfg["motion"] else "false"} }};')
+          f'size: "{cfg["size"]}", theme: "{cfg["theme"]}", avatar: "{cfg["avatar"]}", sidebar: "{cfg["sidebar"]}", sidebarState: "{cfg["sidebarState"]}", '
+          f'font: "{cfg["font"]}", layout: "{cfg["layout"]}", motion: {"true" if cfg["motion"] else "false"} }};')
     new, n1 = re.subn(r"const FORMIC_CONFIG = \{[^}]*\};", fc, src, count=1)
     new, n2 = re.subn(r"const CZ_DEFAULTS = \{[^}]*\};", cz, new, count=1)
     if new != src:
@@ -151,7 +180,7 @@ def write_html_attrs(path, cfg):
     if not m:
         raise SystemExit(f"{path}: no <html> tag")
     attrs = m.group(1)
-    attrs = re.sub(r'\s+data-(theme|palette|radius|size)="[^"]*"', "", attrs)
+    attrs = re.sub(r'\s+data-(theme|palette|radius|size|layout)="[^"]*"', "", attrs)
     add = []
     if cfg["theme"] == "dark":
         add.append('data-theme="dark"')
@@ -161,11 +190,42 @@ def write_html_attrs(path, cfg):
         add.append(f'data-radius="{cfg["radius"]}"')
     if cfg["size"] != "default":
         add.append(f'data-size="{cfg["size"]}"')
+    if cfg["layout"] != "compact":
+        add.append(f'data-layout="{cfg["layout"]}"')
     tag = "<html" + attrs.rstrip() + ("" if not add else " " + " ".join(add)) + ">"
     new = src[: m.start()] + tag + src[m.end():]
     if new != src:
         path.write_text(new)
     return add
+
+
+FONT_LINE = re.compile(r'(--font-sans:\s*)"[^"]+"')
+FONT_URL = re.compile(r"https://fonts\.googleapis\.com/css2\?family=[^\"')&]+")
+
+
+def write_font(cfg):
+    """--font-sans in tokens.css and the Google Fonts request wherever this
+    copy loads it: styles/fonts.css in an app, the <link> tags of the gallery
+    and landing page in the repo. The fallback stack stays."""
+    fam = cfg["font"]
+    query = FONTS[fam]
+    touched = []
+    tok = ROOT / "styles" / "tokens.css"
+    src = tok.read_text()
+    new = FONT_LINE.sub(lambda m: f'{m.group(1)}"{fam}"', src, count=1)
+    if new != src:
+        tok.write_text(new); touched.append("tokens.css")
+    for p in (ROOT / "styles" / "fonts.css", ROOT / "preview.html", ROOT / "index.html"):
+        if not p.exists():
+            continue
+        src = p.read_text()
+        new = FONT_URL.sub(f"https://fonts.googleapis.com/css2?family={query}", src)
+        if p.suffix == ".html":
+            # the gallery and landing page name the face in their body rule too
+            new = re.sub(r'(font-family:\s*)"[^"]+"(, ui-sans-serif)', lambda m: f'{m.group(1)}"{fam}"{m.group(2)}', new)
+        if new != src:
+            p.write_text(new); touched.append(p.name)
+    return touched
 
 
 def main():
@@ -194,9 +254,13 @@ def main():
     else:
         print("  accent   unchanged (no accent in config)")
 
+    # font
+    t = write_font(cfg)
+    print(f"  font     {cfg['font']} -> {', '.join(t) if t else 'unchanged'}")
+
     # html attributes
     idx = app_index()
-    attrs = [f"{k}={cfg[k]}" for k in ("theme", "palette", "radius", "size")]
+    attrs = [f"{k}={cfg[k]}" for k in ("theme", "palette", "radius", "size", "layout")]
     if idx:
         added = write_html_attrs(idx, cfg)
         print(f"  html     {', '.join(attrs)} -> <html {' '.join(added) if added else '(defaults, no attributes)'}> in {idx.name}")
@@ -211,7 +275,7 @@ def main():
             print("  ! doodle avatars need two packages this app does not list yet — run: npm i @dicebear/core @dicebear/notionists"
                   "\n    (until then people show initials, and the console says why)")
     p = write_config_ts(cfg)
-    print(f"  defaults avatar={cfg['avatar']} sidebar={cfg['sidebar']} motion={str(cfg['motion']).lower()} -> {p.relative_to(ROOT)}")
+    print(f"  defaults avatar={cfg['avatar']} sidebar={cfg['sidebar']} sidebarState={cfg['sidebarState']} motion={str(cfg['motion']).lower()} -> {p.relative_to(ROOT)}")
     if write_preview_mirrors(cfg):
         print("  mirrors  preview.html FORMIC_CONFIG and CZ_DEFAULTS")
 

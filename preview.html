@@ -409,6 +409,14 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 :root[data-size="comfortable"] { --spacing: 0.28rem; }
 :root[data-size="spacious"] { --spacing: 0.3125rem; }
 
+/* Content layout: compact keeps a page's content to a readable column,
+ * full lets it run edge to edge. Wrap page content in .page-content;
+ * rails and headers stay outside it. formic.config.json's `layout`
+ * sets the attribute. */
+:root { --content-max: 64rem; }
+:root[data-layout="full"] { --content-max: none; }
+.page-content { width: 100%; max-width: var(--content-max); margin-inline: auto; }
+
 body { background: var(--canvas); color: var(--ink); font-family: "Urbanist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; transition: background-color 250ms ease, color 250ms ease; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 /* ─────────────────────────────────────────────────────────
@@ -859,7 +867,7 @@ tfoot .records-sticky-cell { z-index: 5; }
 const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useId, cloneElement, isValidElement, createContext, useContext, Children, Fragment } = React;
 /* mirror of components/config.ts — the defaults an app chooses at
    formicai.dev/customize (apply_config.py writes the real one) */
-const FORMIC_CONFIG = { avatar: "initials", sidebar: "expanded", motion: true };
+const FORMIC_CONFIG = { avatar: "initials", sidebar: "app", sidebarState: "expanded", motion: true };
 
 /* ═══════════ Primitives ═══════════ */
 /* Icons: real projects use @tabler/icons-react through the Icon wrapper in
@@ -4950,9 +4958,10 @@ function SidebarNav({
   onFooterClick,
   workspace = SN_WORKSPACE,
   navItems = SN_NAV_ITEMS,
-  recents = SN_RECENTS
+  recents = SN_RECENTS,
+  defaultCollapsed = FORMIC_CONFIG.sidebarState === "rail"
 }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [internalNav, setInternalNav] = useState("chats");
   const currentNav = activeNav ?? internalNav;
   const selectNav = (key) => {
@@ -10138,7 +10147,7 @@ function AppSidebar({
   active,
   onSelect,
   variant,
-  defaultVariant = FORMIC_CONFIG.sidebar,
+  defaultVariant = FORMIC_CONFIG.sidebarState,
   onVariantChange,
   collapsible = true,
   submenus = "nested",
@@ -15286,15 +15295,30 @@ function useProjectSidebar(defaultOpen = true) {
    two panes are scoped copies of the real token blocks, built from
    the live stylesheet, so they cannot drift. State lives in the URL,
    so a designer can send the link to a developer. */
-const CZ_KEYS = ["accent", "palette", "radius", "size", "theme", "avatar", "sidebar", "motion"];
-const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", radius: "default", size: "default", theme: "light", avatar: "initials", sidebar: "expanded", motion: true };
+const CZ_KEYS = ["accent", "palette", "radius", "size", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"];
+const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", radius: "default", size: "default", theme: "light", avatar: "initials", sidebar: "app", sidebarState: "expanded", font: "Urbanist", layout: "compact", motion: true };
+/* the approved faces (mirror of FONTS in scripts/apply_config.py): variable
+   weight through 300–800 on Google Fonts, a full x-height range, tabular figures */
+const CZ_FONTS = [
+  { id: "Urbanist", query: "Urbanist:wght@300..800", note: "the default; symmetric metrics, geometric" },
+  { id: "Inter", query: "Inter:wght@300..800", note: "the neutral workhorse" },
+  { id: "Manrope", query: "Manrope:wght@300..800", note: "rounder, a little warmer" },
+  { id: "Plus Jakarta Sans", query: "Plus+Jakarta+Sans:wght@300..800", note: "wide and friendly" },
+  { id: "DM Sans", query: "DM+Sans:wght@300..800", note: "low contrast, quiet" },
+  { id: "Outfit", query: "Outfit:wght@300..800", note: "geometric, display-leaning" },
+  { id: "Figtree", query: "Figtree:wght@300..800", note: "compact, clear at small sizes" },
+  { id: "Sora", query: "Sora:wght@300..800", note: "technical, wide counters" },
+];
 const CZ_CHOICES = {
   palette: PALETTES.map((p) => p.id),
   radius: RADII,
   size: SIZES,
   theme: ["light", "dark"],
   avatar: ["initials", "doodle", "photo"],
-  sidebar: ["expanded", "rail"],
+  sidebar: ["app", "project", "chat"],
+  sidebarState: ["expanded", "rail"],
+  font: CZ_FONTS.map((f) => f.id),
+  layout: ["compact", "full"],
 };
 const CZ_HELP = {
   accent: "Bring the brand colour. Light and dark each get their own value, fitted to AA on their surfaces.",
@@ -15303,9 +15327,23 @@ const CZ_HELP = {
   size: "Control heights, padding and gaps move together. Type never scales.",
   theme: "Where the app starts. Users can still switch.",
   avatar: "People without a photo of their own: initials, a drawn face derived from the name, or a placeholder photo until real ones exist.",
-  sidebar: "How the app sidebar first opens. Users can collapse either way.",
+  sidebar: "Which rail the app is built on: the app sidebar (sections and a user), the project sidebar (workspaces, groups, nested pages) or the chat rail (recents and a new chat).",
+  sidebarState: "How the rail first opens. Users can collapse either way; the project sidebar hides behind its trigger.",
+  font: "Every face here is variable through 300 to 800 on Google Fonts, so the weight ramp stays real. The type scale never changes.",
+  layout: "Compact keeps page content to a readable column (64rem) and centres it. Full lets it run edge to edge. Rails and headers are outside either.",
   motion: "Charts and sparklines animate in once. Reduced motion always wins.",
 };
+/* fonts load on demand, one <link> per face, so the page never pays for eight */
+function czLoadFont(id) {
+  const f = CZ_FONTS.find((x) => x.id === id);
+  if (!f || document.getElementById(`cz-font-${f.query}`)) return;
+  const link = document.createElement("link");
+  link.id = `cz-font-${f.query}`;
+  link.rel = "stylesheet";
+  link.href = `https://fonts.googleapis.com/css2?family=${f.query}&display=swap`;
+  document.head.appendChild(link);
+}
+const czStack = (font) => `"${font}", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
 function czIsCustomize() {
   return /\/customize\/?$/.test(location.pathname) || /^#\/?customize$/.test(location.hash);
 }
@@ -15412,76 +15450,102 @@ function useCzNarrow() {
   }, []);
   return narrow;
 }
-function CzPane({ cfg, mode, accent, ratio, ready }) {
+function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
   const narrow = useCzNarrow();
-  const sidebar = narrow ? "rail" : cfg.sidebar;
+  const state = narrow ? "rail" : cfg.sidebarState;
   /* two people have photos of their own; the rest show the chosen kind */
   const people = CZ_PEOPLE.map((p) => (p.src ? { name: p.name, src: p.src } : { name: p.name, kind: cfg.avatar }));
   const starts = cfg.theme === mode;
-  /* motion and sidebar remount their subtrees so a change replays the
+  const [projectOpen, setProjectOpen] = useState(state === "expanded");
+  useEffect(() => { setProjectOpen(state === "expanded"); }, [state, cfg.sidebar]);
+  useEffect(() => { czLoadFont(cfg.font); }, [cfg.font]);
+  /* motion and the rail remount their subtrees so a change replays the
      entrance rather than waiting for the next data change */
-  const k = `${cfg.motion}-${sidebar}`;
+  const k = `${cfg.motion}-${cfg.sidebar}-${state}`;
+  const me = { name: "Eyosiyas Ketema", detail: "Admin", kind: cfg.avatar };
+  const rail = cfg.sidebar === "project"
+    ? <ProjectSidebar key={k} open={projectOpen} user={me} layout="edge" active="northwind" onSelect={() => {}} />
+    : cfg.sidebar === "chat"
+      ? <SidebarNav key={k} defaultCollapsed={state === "rail"} fill activeTitle="Northwind pitch" />
+      : <AppSidebar key={k} variant={state} collapsible={false} active="overview" onSelect={() => {}} user={me} />;
+  const content = (
+    <div className="page-content flex min-w-0 flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          {cfg.sidebar === "project" && <ProjectSidebarTrigger open={projectOpen} toggle={() => setProjectOpen((o) => !o)} />}
+          <div className="min-w-0">
+            <h2 className="text-title font-semibold tracking-tight text-ink">Overview</h2>
+            <p className="text-small text-ink-3">Last 30 days</p>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button variant="ghost" size="sm" icon={<Icon name="download" size={14} />}>Export</Button>
+          <Button variant="accent" size="sm" icon={<Icon name="plus" size={14} />}>New report</Button>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-3 @min-[360px]:grid-cols-2 @min-[720px]:grid-cols-4">
+        <StatCard key={k + "a"} label="Invoiced" display="ETB 2.4M" delta="+12.4%" icon="receipt" iconTone="accent" trend={CZ_TREND_A} trendAnimate={cfg.motion} className="max-w-none" />
+        <StatCard key={k + "b"} label="Active clients" display="24" delta="+3.1%" icon="users" trend={CZ_TREND_B} trendAnimate={cfg.motion} className="max-w-none" />
+        <StatCard key={k + "c"} label="Proposals out" display="9" delta="-2" deltaTone="down" icon="send" trend={CZ_TREND_B} trendAnimate={cfg.motion} className="max-w-none" />
+        <StatCard key={k + "d"} label="Hours this week" display="184h" delta="+6%" icon="clock" trend={CZ_TREND_A} trendAnimate={cfg.motion} className="max-w-none" />
+      </div>
+      <div className="grid grid-cols-1 gap-3 @min-[520px]:h-72 @min-[520px]:grid-cols-5">
+        <div className="min-h-0 min-w-0 @min-[520px]:col-span-3">
+          <Panel title="Invoices" caption="By month" bodyClassName="min-h-0">
+            <BarChart key={k + "e"} fill showValues={false} animate={cfg.motion} height={160} />
+          </Panel>
+        </div>
+        <div className="min-h-0 min-w-0 @min-[520px]:col-span-2">
+          <Panel title="Team" actions={<AvatarGroup people={people} size="sm" max={3} ring="surface" />} bodyClassName="min-h-0 overflow-hidden">
+            <ul className="flex flex-col">
+              {people.slice(0, 4).map((p, i) => (
+                <li key={p.name} className="flex items-center gap-2.5 border-t border-line py-2 first:border-t-0">
+                  <Avatar {...p} size="sm" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-caption font-medium text-ink">{p.name}</span>
+                    <span className="block truncate text-small text-ink-3">{CZ_PEOPLE[i].role}</span>
+                  </span>
+                  <Switch on={i < 2} onToggle={() => {}} label={`${p.name} active`} size="sm" />
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        </div>
+      </div>
+      <Panel title="Recent invoices" caption="This quarter">
+        <div className="flex flex-col">
+          <MetricRow leading={<Avatar name="Northwind Bank" kind="initials" size="lg" tone={0} />} label="Northwind Bank" detail="Brand and site" value="ETB 724k" progress={0.78} />
+          <MetricRow leading={<Avatar name="Creamery" kind="initials" size="lg" tone={2} />} label="Creamery" detail="Menu board app" value="ETB 289k" progress={0.31} />
+        </div>
+      </Panel>
+    </div>
+  );
   return (
     <section
       aria-label={`${cap(mode)} mode preview`}
-      className={`cz-scope flex min-w-0 flex-col overflow-hidden rounded-card bg-canvas text-ink shadow-card transition-opacity duration-150 ${ready ? "" : "opacity-0"}`}
+      className={`cz-scope flex min-w-0 shrink-0 flex-col overflow-hidden rounded-card bg-canvas text-ink shadow-card transition-opacity duration-150 ${ready ? "" : "opacity-0"}`}
       data-theme={mode}
       data-palette={cfg.palette !== "paper" ? cfg.palette : undefined}
       data-radius={cfg.radius !== "default" ? cfg.radius : undefined}
       data-size={cfg.size !== "default" ? cfg.size : undefined}
-      style={{ "--accent": accent, colorScheme: mode }}
+      data-layout={cfg.layout !== "compact" ? cfg.layout : undefined}
+      style={{ "--accent": accent, "--font-sans": czStack(cfg.font), fontFamily: "var(--font-sans)", colorScheme: mode }}
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-line bg-surface px-4 py-2">
-        <span className="flex items-center gap-2 text-caption font-medium text-ink">
-          {cap(mode)}
-          {starts && <Badge>Starts here</Badge>}
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-line bg-surface px-3 py-2">
+        <div className="flex items-center gap-2">
+          <Tabs variant="segmented" value={mode} onChange={onMode} tabs={[{ key: "light", label: "Light", icon: "sun" }, { key: "dark", label: "Dark", icon: "moon" }]} />
+          {starts && <Badge className="whitespace-nowrap">Starts here</Badge>}
+        </div>
         <span className="flex items-center gap-2 font-mono text-micro whitespace-nowrap text-ink-3">
           <span aria-hidden className="size-3 shrink-0 rounded-full bg-accent" />
           --accent {accent} · {ratio.toFixed(2)}:1 {mode === "light" ? "on its tint" : "on dark"}
         </span>
-        {narrow && cfg.sidebar === "expanded" && <span className="basis-full text-small text-ink-3">Rail shown at this width; the app opens expanded.</span>}
+        {narrow && cfg.sidebarState === "expanded" && <span className="basis-full text-small text-ink-3">Rail shown at this width; the app opens expanded.</span>}
       </div>
-      <div className="flex min-h-140 min-w-0">
-        <AppSidebar key={k} variant={sidebar} collapsible={false} active="overview" onSelect={() => {}} user={{ name: "Eyosiyas Ketema", detail: "Admin", kind: cfg.avatar }} />
-        <div className="@container flex min-w-0 flex-1 flex-col gap-3 overflow-hidden p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="min-w-0">
-              <h2 className="text-title font-semibold tracking-tight text-ink">Overview</h2>
-              <p className="text-small text-ink-3">Last 30 days</p>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <Button variant="ghost" size="sm" icon={<Icon name="download" size={14} />}>Export</Button>
-              <Button variant="accent" size="sm" icon={<Icon name="plus" size={14} />}>New report</Button>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-3 @min-[360px]:grid-cols-2">
-            <StatCard key={k + "a"} label="Revenue" display="$128.4k" delta="+12.4%" icon="chart" iconTone="accent" trend={CZ_TREND_A} trendAnimate={cfg.motion} />
-            <StatCard key={k + "b"} label="Active users" display="8,214" delta="+3.1%" icon="user-add" trend={CZ_TREND_B} trendAnimate={cfg.motion} />
-          </div>
-          <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 @min-[520px]:grid-cols-5">
-            <div className="min-h-0 min-w-0 @min-[520px]:col-span-3">
-              <Panel title="Invoices" caption="By month" bodyClassName="min-h-0">
-                <BarChart key={k + "c"} fill showValues={false} animate={cfg.motion} />
-              </Panel>
-            </div>
-            <div className="min-h-0 min-w-0 @min-[520px]:col-span-2">
-              <Panel title="Team" actions={<AvatarGroup people={people} size="sm" max={3} ring="surface" />} bodyClassName="min-h-0 overflow-hidden">
-                <ul className="flex flex-col">
-                  {people.slice(0, 4).map((p, i) => (
-                    <li key={p.name} className="flex items-center gap-2.5 border-t border-line py-2 first:border-t-0">
-                      <Avatar {...p} size="sm" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-caption font-medium text-ink">{p.name}</span>
-                        <span className="block truncate text-small text-ink-3">{CZ_PEOPLE[i].role}</span>
-                      </span>
-                      <Switch on={i < 2} onToggle={() => {}} label={`${p.name} active`} size="sm" />
-                    </li>
-                  ))}
-                </ul>
-              </Panel>
-            </div>
-          </div>
+      <div className="flex min-w-0">
+        {rail}
+        <div className="@container flex min-w-0 flex-1 flex-col overflow-hidden p-4">
+          {content}
         </div>
       </div>
     </section>
@@ -15510,7 +15574,7 @@ function CzChoice({ label, help, value, options, onChange }) {
             <button key={v} type="button" role="radio" aria-checked={on} tabIndex={on ? 0 : -1} onClick={() => onChange(v)}
               className={`corner-smooth flex h-7 items-center gap-1.5 rounded-control px-2.5 text-caption transition-colors duration-150 ${on ? "bg-hover-2 font-medium text-ink" : "text-ink-2 hover:bg-hover hover:text-ink"}`}>
               {o.swatch && <span aria-hidden className="size-2.5 rounded-full" style={{ background: o.swatch }} />}
-              <span className="optical-text">{typeof o === "string" ? cap(o) : o.label}</span>
+              <span className="optical-text" style={o.style}>{typeof o === "string" ? cap(o) : o.label}</span>
             </button>
           );
         })}
@@ -15527,6 +15591,10 @@ function CustomizeApp() {
     document.title = "Customize · Formic AI Design System";
     requestAnimationFrame(() => document.getElementById("page-title")?.focus({ preventScroll: true }));
   }, []);
+  /* the preview shows the starting theme, and follows it when it changes;
+     the toggle on the pane peeks at the other mode without changing the choice */
+  const [mode, setMode] = useState(cfg.theme);
+  useEffect(() => { setMode(cfg.theme); }, [cfg.theme]);
   const ready = useCzScope();
   const toast = useToast();
   const variants = useMemo(() => deriveAccentVariants(cfg.accent) || deriveAccentVariants(CZ_DEFAULTS.accent), [cfg.accent]);
@@ -15547,9 +15615,11 @@ function CustomizeApp() {
     }
   };
   const same = variants.light === variants.dark;
+  const fontOptions = CZ_FONTS.map((f) => ({ id: f.id, label: f.id, style: { fontFamily: czStack(f.id) } }));
+  useEffect(() => { CZ_FONTS.forEach((f) => czLoadFont(f.id)); }, []); // the picker shows each face in itself
   return (
-    <div className="min-h-screen">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-sidebar px-5 py-3">
+    <div className="flex h-dvh flex-col">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-line bg-sidebar px-5 py-3">
         <div className="flex items-center gap-1">
           <BackToSite />
           <a href="./preview.html" className="corner-smooth inline-flex h-7 items-center rounded-control px-2 text-caption text-ink-3 transition-colors duration-150 hover:bg-hover hover:text-ink">Gallery</a>
@@ -15561,11 +15631,14 @@ function CustomizeApp() {
           <Button variant="accent" size="sm" icon={<Icon name="copy" size={14} />} onClick={copy}>Copy for your AI tool</Button>
         </div>
       </header>
-      <div className="flex flex-col gap-6 px-5 py-6 lg:flex-row lg:items-start">
-        <aside className="flex w-full shrink-0 flex-col gap-5 lg:sticky lg:top-6 lg:w-72" aria-label="Choices">
+      {/* two columns that scroll on their own: the choices stay reachable
+          however far the preview runs, and the preview stays put while
+          the list of choices is read to the end */}
+      <div className="flex min-h-0 flex-1 flex-col lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
+        <aside className="flex w-full shrink-0 flex-col gap-5 border-b border-line px-5 py-6 lg:min-h-0 lg:overflow-y-auto lg:border-r lg:border-b-0" aria-label="Choices">
           <div>
             <h1 id="page-title" tabIndex={-1} className="text-display font-semibold tracking-tight text-ink outline-none">Customize</h1>
-            <p className="mt-1 text-body text-ink-2">Make the choices once. Both modes update as you go; copy the result into the AI tool you build with and it keeps them.</p>
+            <p className="mt-1 text-body text-ink-2">Make the choices once. The preview updates as you go; copy the result into the AI tool you build with and it keeps them.</p>
           </div>
           <div>
             <p className="mb-1.5 text-caption font-medium text-ink">Accent</p>
@@ -15578,11 +15651,14 @@ function CustomizeApp() {
             {!same && <p className="mt-1.5 text-small text-ink-3">Two values from one colour: {cfg.accent.toUpperCase()} as typed would fail in at least one mode, so each mode gets the nearest shade that passes.</p>}
           </div>
           <CzChoice label="Palette" help={CZ_HELP.palette} value={cfg.palette} options={PALETTES} onChange={(v) => set("palette", v)} />
+          <CzChoice label="Font" help={CZ_HELP.font} value={cfg.font} options={fontOptions} onChange={(v) => set("font", v)} />
           <CzChoice label="Radius" help={CZ_HELP.radius} value={cfg.radius} options={RADII} onChange={(v) => set("radius", v)} />
           <CzChoice label="Size" help={CZ_HELP.size} value={cfg.size} options={SIZES} onChange={(v) => set("size", v)} />
+          <CzChoice label="Content layout" help={CZ_HELP.layout} value={cfg.layout} options={CZ_CHOICES.layout} onChange={(v) => set("layout", v)} />
           <CzChoice label="Starting theme" help={CZ_HELP.theme} value={cfg.theme} options={CZ_CHOICES.theme} onChange={(v) => set("theme", v)} />
+          <CzChoice label="Sidebar" help={CZ_HELP.sidebar} value={cfg.sidebar} options={[{ id: "app", label: "App" }, { id: "project", label: "Project" }, { id: "chat", label: "Chat" }]} onChange={(v) => set("sidebar", v)} />
+          <CzChoice label="Sidebar opens" help={CZ_HELP.sidebarState} value={cfg.sidebarState} options={[{ id: "expanded", label: "Expanded" }, { id: "rail", label: cfg.sidebar === "project" ? "Hidden" : "Rail" }]} onChange={(v) => set("sidebarState", v)} />
           <CzChoice label="Avatar" help={CZ_HELP.avatar} value={cfg.avatar} options={CZ_CHOICES.avatar} onChange={(v) => set("avatar", v)} />
-          <CzChoice label="Sidebar" help={CZ_HELP.sidebar} value={cfg.sidebar} options={CZ_CHOICES.sidebar} onChange={(v) => set("sidebar", v)} />
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-caption font-medium text-ink">Motion</p>
@@ -15591,20 +15667,13 @@ function CustomizeApp() {
             <Switch on={cfg.motion} onToggle={() => set("motion", !cfg.motion)} label="Charts animate in" />
           </div>
         </aside>
-        <main className="@container flex min-w-0 flex-1 flex-col gap-5">
-          {/* side by side only when each pane keeps a real dashboard width:
-              a rail needs ~560px, an expanded sidebar ~720px; below that
-              the two stack at full width rather than squeeze. The query
-              reads <main>, the container, not the grid itself. */}
-          <div className={`grid min-w-0 grid-cols-1 gap-5 ${cfg.sidebar === "rail" ? "@min-[1160px]:grid-cols-2" : "@min-[1480px]:grid-cols-2"}`}>
-            <CzPane cfg={cfg} mode="light" accent={variants.light} ratio={ratios.light} ready={ready} />
-            <CzPane cfg={cfg} mode="dark" accent={variants.dark} ratio={ratios.dark} ready={ready} />
-          </div>
-          <section aria-labelledby="cz-how" className="rounded-card bg-surface p-5 shadow-card">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 px-5 py-6 lg:overflow-y-auto">
+          <CzPane cfg={cfg} mode={mode} onMode={setMode} accent={variants[mode]} ratio={ratios[mode]} ready={ready} />
+          <section aria-labelledby="cz-how" className="shrink-0 rounded-card bg-surface p-5 shadow-card">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <h2 id="cz-how" className="text-title font-semibold text-ink">Then, in your AI tool</h2>
-                <p className="mt-1 max-w-2xl text-body text-ink-2">Copy the block and paste it into Claude Code, Cursor, Copilot or whichever agent builds your app. It saves <code className="font-mono text-caption text-ink">formic.config.json</code> next to the vendored system and runs <code className="font-mono text-caption text-ink">apply_config.py</code>, which fits the accent for both modes, sets the html attributes and the component defaults. From then on every prompt inherits these choices.</p>
+                <p className="mt-1 max-w-2xl text-body text-ink-2">Copy the block and paste it into Claude Code, Cursor, Copilot or whichever agent builds your app. It saves <code className="font-mono text-caption text-ink">formic.config.json</code> next to the vendored system and runs <code className="font-mono text-caption text-ink">apply_config.py</code>, which fits the accent for both modes, loads the font, sets the html attributes and the component defaults. From then on every prompt inherits these choices.</p>
               </div>
               <Button variant="primary" size="sm" icon={<Icon name="copy" size={14} />} onClick={copy}>Copy</Button>
             </div>
