@@ -8562,6 +8562,7 @@ function BarChart({
   height = 168,
   fill = false,
   showValues = true,
+  valuePosition = "top",
   animate = FORMIC_CONFIG.motion,
   className = "",
 }) {
@@ -8610,14 +8611,26 @@ function BarChart({
               className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1"
               style={{ minWidth: stacked ? HIT : series.length * HIT }}
             >
-              {labelValues && (
+              {labelValues && valuePosition === "top" && (
                 <span className="text-center text-tiny font-medium text-ink tabular-nums">
                   {compact(columnPeak[i])}
                 </span>
               )}
+              {labelValues && valuePosition === "bar" && (
+                /* a spacer keeps the plot below the tallest possible label */
+                <span aria-hidden className="h-4" />
+              )}
               {/* column-reverse makes the BOTTOM the main-start edge, so a
                   stack anchors with justify-start; justify-center would float it. */}
-              <div className={`flex h-full gap-0.5 ${stacked ? "flex-col-reverse items-center justify-start" : "items-end justify-center"}`}>
+              <div className={`relative flex h-full gap-0.5 ${stacked ? "flex-col-reverse items-center justify-start" : "items-end justify-center"}`}>
+                {labelValues && valuePosition === "bar" && (
+                  <span
+                    className="pointer-events-none absolute inset-x-0 text-center text-tiny font-medium text-ink tabular-nums"
+                    style={{ bottom: `calc(${(columnPeak[i] / max) * 100}% + 4px)`, opacity: settled ? 1 : 0, transition: drawing ? `opacity 400ms var(--ease-out-quint) ${600 + i * 60}ms` : undefined }}
+                  >
+                    {compact(columnPeak[i])}
+                  </span>
+                )}
                 {series.map((s, si) => {
                   const value = s.values[i] ?? 0;
                   const tone = toneOf(s.color, si);
@@ -8661,6 +8674,9 @@ function LineChart({
   fill = false,
   animate = FORMIC_CONFIG.motion,
   legend = true,
+  curve = "linear",
+  backdrop = false,
+  guides = false,
   className = "",
 }) {
   const gradientId = useId();
@@ -8708,9 +8724,20 @@ function LineChart({
               className="stroke-chart-track" strokeWidth="1" vectorEffect="non-scaling-stroke"
             />
           ))}
+          {guides && labels.map((l, i) => (
+            <line key={`g-${l}-${i}`} x1={i * step} x2={i * step} y1="0" y2={H} className="stroke-chart-track" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+          ))}
+          {backdrop && series[0] && series[0].values.map((v, i) => (
+            <rect key={`b-${i}`} x={i * step - step * 0.28} width={step * 0.56} y={yOf(v)} height={Math.max(0, zeroY - yOf(v))} className="fill-chart-track" opacity="0.6" />
+          ))}
           {series.map((s, si) => {
             const tone = toneOf(s.color, si);
-            const d = s.values.map((v, i) => `${i ? "L" : "M"}${i * step} ${yOf(v)}`).join(" ");
+            /* step: each value is a plateau centred on its label; consecutive
+               plateaus join with a straight slant */
+            const plateau = step * 0.3;
+            const d = curve === "step"
+              ? s.values.map((v, i) => `${i ? "L" : "M"}${Math.max(0, i * step - plateau)} ${yOf(v)} L${Math.min(W, i * step + plateau)} ${yOf(v)}`).join(" ")
+              : s.values.map((v, i) => `${i ? "L" : "M"}${i * step} ${yOf(v)}`).join(" ");
             return (
               /* The colour class goes on the <g>, not the path: a gradient
                  stop resolves currentColor from its OWN inherited colour, so
@@ -8871,6 +8898,45 @@ function Sparkline({
   );
 }
 
+/* ═══════════ MiniBars ═══════════ */
+/* The bar sparkline: a row of capsule columns inside a tile. Two looks:
+ * `track` draws each column's full height in the track colour with the
+ * value filled from the bottom (the Order tile), and `split` stacks a
+ * second series on top of the first in the next chart colour (profit
+ * over cost). Same entrance as the bars: they grow from the baseline. */
+function MiniBars({
+  values = [12, 18, 9, 22, 16, 25, 14],
+  split,
+  track = true,
+  color = 1,
+  height = 64,
+  animate = FORMIC_CONFIG.motion,
+  className = "",
+}) {
+  const { settled, drawing } = useEntrance(animate);
+  const max = niceMax(Math.max(1, ...values.map((v, i) => v + (split?.[i] ?? 0))));
+  const second = (color % 5 + 1);
+  return (
+    <div role="img" aria-label={values.map((v, i) => split ? `${v} and ${split[i] ?? 0}` : String(v)).join(", ")} className={`flex w-full items-end gap-1.5 ${className}`} style={{ height }}>
+      {values.map((v, i) => {
+        const top = split?.[i] ?? 0;
+        return (
+          <span key={i} className={`relative flex h-full min-w-0 flex-1 flex-col justify-end overflow-hidden rounded-full ${track ? "bg-chart-track" : ""}`}>
+            {split ? (
+              <>
+                <span className={`w-full rounded-t-full ${SERIES_BG[second]}`} style={{ height: `${(top / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+                <span className={`w-full rounded-b-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+              </>
+            ) : (
+              <span className={`w-full rounded-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+            )}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 function CountUp({
   value,
   duration = 1400,
@@ -9004,24 +9070,44 @@ function StatCard({
   trendTone = 1,
   trendSmooth = false,
   trendAnimate = FORMIC_CONFIG.motion,
+  trendKind = "line",
+  trendSplit,
+  layout = "label-first",
+  align = "start",
+  ring,
+  chart: chartProp,
   className = "",
 }) {
+  const centred = align === "center";
+  const copy = (
+    <div className={`min-w-0 ${centred ? "text-center" : ""}`}>
+      <div className="truncate text-caption font-medium text-ink">{label}</div>
+      {caption && <div className="mt-0.5 truncate text-small text-ink-3">{caption}</div>}
+    </div>
+  );
+  const number = (
+    <div className={`flex flex-wrap items-center gap-2 ${centred ? "justify-center" : ""}`}>
+      <span className="text-display font-semibold text-ink tabular-nums">{display ?? compact(value)}</span>
+      {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+    </div>
+  );
+  const chart = chartProp ??
+    (trend && trend.length > 1
+      ? trendKind === "line"
+        ? <Sparkline values={trend} color={trendTone} smooth={trendSmooth} animate={trendAnimate} />
+        : <MiniBars values={trend} split={trendKind === "stacked" ? trendSplit : undefined} track={trendKind === "bars"} color={trendTone} animate={trendAnimate} />
+      : null);
+  const body = layout === "value-first" ? <>{number}{copy}</> : layout === "chart-middle" ? <>{copy}{chart}{number}</> : <>{copy}{number}</>;
   return (
-    <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${className}`}>
-      {icon && (
-        <IconTile icon={icon} tone={iconTone} />
-      )}
-      <div className="min-w-0">
-        <div className="truncate text-caption font-medium text-ink">{label}</div>
-        {caption && <div className="mt-0.5 truncate text-small text-ink-3">{caption}</div>}
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-display font-semibold text-ink tabular-nums">
-          {display ?? compact(value)}
-        </span>
-        {delta && <Delta tone={deltaTone}>{delta}</Delta>}
-      </div>
-      {trend && trend.length > 1 && <Sparkline values={trend} color={trendTone} smooth={trendSmooth} animate={trendAnimate} />}
+    <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${centred ? "items-center" : ""} ${className}`}>
+      {icon && <IconTile icon={icon} tone={iconTone} />}
+      {ring ? (
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-3">{body}</div>
+          <DonutChart value={ring.value} max={ring.max} label={ring.label ?? ""} color={ring.color ?? 1} size={96} animate={trendAnimate} className="shrink-0" />
+        </div>
+      ) : body}
+      {layout !== "chart-middle" && chart}
     </Card>
   );
 }
@@ -11164,8 +11250,52 @@ function Page_dashboard() {
      a conversion gauge and two ranked lists. Everything below is composed
      from StatCard, CountUp, Sparkline, Gauge, BarList, MetricRow and Privacy. */
   const etb = (n) => `ETB ${n.toLocaleString()}`;
+  const hours = ["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
   return (
     <>
+      <GalleryCard label="A finance overview · six tile shapes, three panels, all from StatCard, Panel and the charts" full>
+        <div className="flex flex-col gap-3.5">
+          <div className="grid grid-cols-2 gap-3.5 md:grid-cols-3 xl:grid-cols-6">
+            <StatCard layout="value-first" label="Total profit" display="$88.5k" delta="-18%" deltaTone="down" trend={[14, 10, 16, 15, 9]} trendSplit={[8, 6, 9, 10, 5]} trendKind="stacked" className="max-w-none" />
+            <StatCard layout="chart-middle" label="Order" caption="Last week" display="124K" delta="+12.6%" trend={[8, 22, 14, 17, 26, 15, 18]} trendKind="bars" className="max-w-none" />
+            <StatCard layout="chart-middle" label="Profit" caption="Last month" display="624K" delta="+12.6%" chart={<LineChart labels={["", "", "", "", ""]} series={[{ name: "Profit", values: [20, 55, 100, 60, 120] }]} area={false} guides height={72} />} className="max-w-none" />
+            <StatCard layout="chart-middle" label="User reach" caption="Last week" display="32K" delta="+12%" chart={<div className="flex justify-center"><DonutChart value={500} max={720} label="Visitors" color={3} size={96} /></div>} className="max-w-none" />
+            <StatCard label="Total income" caption="Last week" display="$4,673" delta="+25.2%" icon="wallet" iconTone="accent" className="max-w-none" />
+            <StatCard label="Total expense" caption="Last month" display="$1.28K" delta="-12.2%" deltaTone="down" icon="credit-card" className="max-w-none" />
+          </div>
+          <div className="grid grid-cols-1 gap-3.5 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3.5 md:grid-cols-5 xl:col-span-2">
+              <div className="md:col-span-3">
+                <Panel title="Total transaction" caption="Weekly overview" actions={<IconButton label="More" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="dots-vertical" size={14} /></IconButton>}>
+                  <BarChart labels={["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"]} series={[{ name: "Transactions", values: [38, 52, 32, 12, 35, 28, 33, 25] }]} highlight={1} valuePosition="bar" fill />
+                </Panel>
+              </div>
+              <div className="md:col-span-2">
+                <Panel title="Report" caption="Last month transactions $23.4K" actions={<IconButton label="More" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="dots-vertical" size={14} /></IconButton>} bodyClassName="flex flex-col">
+                  <div className="grid flex-1 grid-cols-2 divide-x divide-line">
+                    <div className="pr-3"><StatCard align="center" icon="wallet" iconTone="accent" label="This week" display="+82.46%" className="max-w-none border-0 bg-transparent p-0 shadow-none" /></div>
+                    <div className="pl-3"><StatCard align="center" icon="credit-card" label="This week" display="-24.8%" className="max-w-none border-0 bg-transparent p-0 shadow-none" /></div>
+                  </div>
+                  <div className="mt-4 flex items-end justify-between gap-3 border-t border-line pt-4">
+                    <div><p className="text-caption text-ink-3">Performance</p><p className="text-heading font-semibold text-ink tabular-nums">+94.13%</p></div>
+                    <Button variant="secondary" size="sm">View report</Button>
+                  </div>
+                </Panel>
+              </div>
+            </div>
+            <Panel title={<span className="flex items-center gap-2"><IconTile icon="chart-line" tone="accent" className="size-7 [&_svg]:size-3.5" />Total sales</span>} actions={<Button variant="secondary" size="xs">Details</Button>} bodyClassName="flex flex-col">
+              <div className="flex items-center gap-2"><span className="text-display font-semibold text-ink tabular-nums">$2,150.00</span><Delta tone="up">+5%</Delta></div>
+              <div className="mt-3 flex flex-col border-b border-line pb-2">
+                <MetricRow icon="globe" label="Online store" value="$20k" delta="+12.6%" />
+                <MetricRow icon="building" label="Offline store" value="$20k" delta="-4.2%" deltaTone="down" />
+              </div>
+              <div className="mt-3 flex-1">
+                <LineChart labels={hours} series={[{ name: "Sales", values: [30, 62, 48, 26, 74, 88] }]} curve="step" backdrop points={false} area={false} fill height={140} />
+              </div>
+            </Panel>
+          </div>
+        </div>
+      </GalleryCard>
       <GalleryCard label="Headline tiles · CountUp + smooth animated Sparkline" full>
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="New leads" caption="This month" display={<CountUp value={128} />} delta="+24%" icon="user-add" iconTone="accent" trend={[6, 9, 7, 12, 10, 15, 13, 19]} trendSmooth trendAnimate />

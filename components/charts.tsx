@@ -150,6 +150,7 @@ export function BarChart({
   height = 168,
   fill = false,
   showValues = true,
+  valuePosition = "top",
   animate = FORMIC_CONFIG.motion,
   className = "",
 }: {
@@ -162,6 +163,8 @@ export function BarChart({
   /** stretch to the parent's height — inside a Panel body this fills the card */
   fill?: boolean;
   showValues?: boolean;
+  /** top: one row of values above the plot. bar: each value rides just above its own bar */
+  valuePosition?: "top" | "bar";
   /** bars grow in from the baseline once, column by column; off for live-updating charts */
   animate?: boolean;
   className?: string;
@@ -211,14 +214,26 @@ export function BarChart({
               className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1"
               style={{ minWidth: stacked ? HIT : series.length * HIT }}
             >
-              {labelValues && (
+              {labelValues && valuePosition === "top" && (
                 <span className="text-center text-tiny font-medium text-ink tabular-nums">
                   {compact(columnPeak[i])}
                 </span>
               )}
+              {labelValues && valuePosition === "bar" && (
+                /* a spacer keeps the plot below the tallest possible label */
+                <span aria-hidden className="h-4" />
+              )}
               {/* column-reverse makes the BOTTOM the main-start edge, so a
                   stack anchors with justify-start; justify-center would float it. */}
-              <div className={`flex h-full gap-0.5 ${stacked ? "flex-col-reverse items-center justify-start" : "items-end justify-center"}`}>
+              <div className={`relative flex h-full gap-0.5 ${stacked ? "flex-col-reverse items-center justify-start" : "items-end justify-center"}`}>
+                {labelValues && valuePosition === "bar" && (
+                  <span
+                    className="pointer-events-none absolute inset-x-0 text-center text-tiny font-medium text-ink tabular-nums"
+                    style={{ bottom: `calc(${(columnPeak[i] / max) * 100}% + 4px)`, opacity: settled ? 1 : 0, transition: drawing ? `opacity 400ms var(--ease-out-quint) ${600 + i * 60}ms` : undefined }}
+                  >
+                    {compact(columnPeak[i])}
+                  </span>
+                )}
                 {series.map((s, si) => {
                   const value = s.values[i] ?? 0;
                   const tone = toneOf(s.color, si);
@@ -267,6 +282,9 @@ export function LineChart({
   fill = false,
   animate = FORMIC_CONFIG.motion,
   legend = true,
+  curve = "linear",
+  backdrop = false,
+  guides = false,
   className = "",
 }: {
   labels?: string[];
@@ -282,6 +300,12 @@ export function LineChart({
   fill?: boolean;
   /** the line reveals left to right once, points follow; off for live-updating charts */
   animate?: boolean;
+  /** linear: point to point. step: a plateau per label with slanted joins, for hourly or daily totals */
+  curve?: "linear" | "step";
+  /** faint columns under the line at every label, the way a sales-by-hour chart shows volume behind the trend */
+  backdrop?: boolean;
+  /** dashed vertical guide at every label */
+  guides?: boolean;
   className?: string;
 }) {
   const gradientId = useId();
@@ -329,9 +353,20 @@ export function LineChart({
               className="stroke-chart-track" strokeWidth="1" vectorEffect="non-scaling-stroke"
             />
           ))}
+          {guides && labels.map((l, i) => (
+            <line key={`g-${l}-${i}`} x1={i * step} x2={i * step} y1="0" y2={H} className="stroke-chart-track" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+          ))}
+          {backdrop && series[0] && series[0].values.map((v, i) => (
+            <rect key={`b-${i}`} x={i * step - step * 0.28} width={step * 0.56} y={yOf(v)} height={Math.max(0, zeroY - yOf(v))} className="fill-chart-track" opacity="0.6" />
+          ))}
           {series.map((s, si) => {
             const tone = toneOf(s.color, si);
-            const d = s.values.map((v, i) => `${i ? "L" : "M"}${i * step} ${yOf(v)}`).join(" ");
+            /* step: each value is a plateau centred on its label; consecutive
+               plateaus join with a straight slant */
+            const plateau = step * 0.3;
+            const d = curve === "step"
+              ? s.values.map((v, i) => `${i ? "L" : "M"}${Math.max(0, i * step - plateau)} ${yOf(v)} L${Math.min(W, i * step + plateau)} ${yOf(v)}`).join(" ")
+              : s.values.map((v, i) => `${i ? "L" : "M"}${i * step} ${yOf(v)}`).join(" ");
             return (
               /* The colour class goes on the <g>, not the path: a gradient
                  stop resolves currentColor from its OWN inherited colour, so
@@ -514,6 +549,55 @@ export function Sparkline({
         strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"
       />
     </svg>
+  );
+}
+
+/* ═══════════ MiniBars ═══════════ */
+/* The bar sparkline: a row of capsule columns inside a tile. Two looks:
+ * `track` draws each column's full height in the track colour with the
+ * value filled from the bottom (the Order tile), and `split` stacks a
+ * second series on top of the first in the next chart colour (profit
+ * over cost). Same entrance as the bars: they grow from the baseline. */
+export function MiniBars({
+  values = [12, 18, 9, 22, 16, 25, 14],
+  split,
+  track = true,
+  color = 1,
+  height = 64,
+  animate = FORMIC_CONFIG.motion,
+  className = "",
+}: {
+  values?: number[];
+  /** a second series stacked on top of `values`, one entry per column */
+  split?: number[];
+  /** draw the column's full height in the track colour behind the value */
+  track?: boolean;
+  color?: ChartColor;
+  height?: number;
+  animate?: boolean;
+  className?: string;
+}) {
+  const { settled, drawing } = useEntrance(animate);
+  const max = niceMax(Math.max(1, ...values.map((v, i) => v + (split?.[i] ?? 0))));
+  const second: ChartColor = (color % 5 + 1) as ChartColor;
+  return (
+    <div role="img" aria-label={values.map((v, i) => split ? `${v} and ${split[i] ?? 0}` : String(v)).join(", ")} className={`flex w-full items-end gap-1.5 ${className}`} style={{ height }}>
+      {values.map((v, i) => {
+        const top = split?.[i] ?? 0;
+        return (
+          <span key={i} className={`relative flex h-full min-w-0 flex-1 flex-col justify-end overflow-hidden rounded-full ${track ? "bg-chart-track" : ""}`}>
+            {split ? (
+              <>
+                <span className={`w-full rounded-t-full ${SERIES_BG[second]}`} style={{ height: `${(top / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+                <span className={`w-full rounded-b-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+              </>
+            ) : (
+              <span className={`w-full rounded-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+            )}
+          </span>
+        );
+      })}
+    </div>
   );
 }
 

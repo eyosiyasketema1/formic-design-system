@@ -1,7 +1,7 @@
 "use client";
 import type { ReactNode } from "react";
 import { Card, Icon, IconTile, type IconName, type IconTileTone } from "./primitives";
-import { Sparkline, compact, type ChartColor } from "./charts";
+import { DonutChart, MiniBars, Sparkline, compact, type ChartColor } from "./charts";
 import { FORMIC_CONFIG } from "./config";
 /* ─────────────────────────────────────────────────────────
  * STAT CARD / METRIC ROW
@@ -9,6 +9,15 @@ import { FORMIC_CONFIG } from "./config";
  * number that matters, and how it moved. Everything past the
  * value is optional, so the same component covers a bare KPI
  * and a tile with an icon, a caption and a trend line.
+ *
+ * Shapes a dashboard needs, all one component:
+ *   layout="value-first"   number and delta on top, the label under
+ *                          them, a trend below (the profit tile)
+ *   trendKind="bars"       capsule columns on tracks instead of a line
+ *   trendKind="stacked"    two series stacked, `trendSplit` on top
+ *   ring={{ value, max }}  a progress ring beside the copy (user reach)
+ *   align="center"         icon tile, caption and a big number centred,
+ *                          for the two halves of a report panel
  * ───────────────────────────────────────────────────────── */
 
 /* Direction is explicit rather than inferred from the sign, because
@@ -57,6 +66,12 @@ export function StatCard({
   trendTone = 1,
   trendSmooth = false,
   trendAnimate = FORMIC_CONFIG.motion,
+  trendKind = "line",
+  trendSplit,
+  layout = "label-first",
+  align = "start",
+  ring,
+  chart: chartProp,
   className = "",
 }: {
   label?: string;
@@ -75,24 +90,49 @@ export function StatCard({
   trendSmooth?: boolean;
   /** reveal the sparkline once on mount (default); false for tiles that re-render often */
   trendAnimate?: boolean;
+  /** line (sparkline), bars (capsule columns on tracks) or stacked (two series, `trendSplit` on top) */
+  trendKind?: "line" | "bars" | "stacked";
+  trendSplit?: number[];
+  /** label-first (default), value-first (the number leads, the label under it) or chart-middle (label, chart, then the number) */
+  layout?: "label-first" | "value-first" | "chart-middle";
+  /** centre everything: the hero halves of a report panel */
+  align?: "start" | "center";
+  /** a progress ring beside the copy, with its own centre label */
+  ring?: { value: number; max: number; label?: string; color?: ChartColor };
+  /** any chart in the trend slot (a small LineChart with guides, a BarList…) instead of `trend` */
+  chart?: ReactNode;
   className?: string;
 }) {
+  const centred = align === "center";
+  const copy = (
+    <div className={`min-w-0 ${centred ? "text-center" : ""}`}>
+      <div className="truncate text-caption font-medium text-ink">{label}</div>
+      {caption && <div className="mt-0.5 truncate text-small text-ink-3">{caption}</div>}
+    </div>
+  );
+  const number = (
+    <div className={`flex flex-wrap items-center gap-2 ${centred ? "justify-center" : ""}`}>
+      <span className="text-display font-semibold text-ink tabular-nums">{display ?? compact(value)}</span>
+      {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+    </div>
+  );
+  const chart = chartProp ??
+    (trend && trend.length > 1
+      ? trendKind === "line"
+        ? <Sparkline values={trend} color={trendTone} smooth={trendSmooth} animate={trendAnimate} />
+        : <MiniBars values={trend} split={trendKind === "stacked" ? trendSplit : undefined} track={trendKind === "bars"} color={trendTone} animate={trendAnimate} />
+      : null);
+  const body = layout === "value-first" ? <>{number}{copy}</> : layout === "chart-middle" ? <>{copy}{chart}{number}</> : <>{copy}{number}</>;
   return (
-    <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${className}`}>
-      {icon && (
-        <IconTile icon={icon} tone={iconTone} />
-      )}
-      <div className="min-w-0">
-        <div className="truncate text-caption font-medium text-ink">{label}</div>
-        {caption && <div className="mt-0.5 truncate text-small text-ink-3">{caption}</div>}
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-display font-semibold text-ink tabular-nums">
-          {display ?? compact(value)}
-        </span>
-        {delta && <Delta tone={deltaTone}>{delta}</Delta>}
-      </div>
-      {trend && trend.length > 1 && <Sparkline values={trend} color={trendTone} smooth={trendSmooth} animate={trendAnimate} />}
+    <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${centred ? "items-center" : ""} ${className}`}>
+      {icon && <IconTile icon={icon} tone={iconTone} />}
+      {ring ? (
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-3">{body}</div>
+          <DonutChart value={ring.value} max={ring.max} label={ring.label ?? ""} color={ring.color ?? 1} size={96} animate={trendAnimate} className="shrink-0" />
+        </div>
+      ) : body}
+      {layout !== "chart-middle" && chart}
     </Card>
   );
 }
