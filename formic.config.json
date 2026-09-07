@@ -3,6 +3,7 @@
   "palette": "paper",
   "radius": "default",
   "size": "default",
+  "type": "base",
   "theme": "light",
   "avatar": "initials",
   "sidebar": "full",

@@ -489,7 +489,20 @@ input:focus-visible, textarea:focus-visible { outline: none; }
  * rails and headers stay outside it. formic.config.json's `layout`
  * sets the attribute. */
 :root { --content-max: 64rem; }
+:root[data-layout="medium"] { --content-max: 80rem; }
 :root[data-layout="full"] { --content-max: none; }
+
+/* Type size: the whole ramp one or two steps up, still integer pixels.
+ * base is 14px; lg reads at 15, xl at 16. Controls do not move (rule 11);
+ * only the letters grow. formic.config.json's `type` sets the attribute. */
+:root[data-type="lg"] {
+  --text-micro: 11px; --text-tiny: 12px; --text-small: 13px; --text-caption: 14px; --text-body: 15px;
+  --text-lead: 17px; --text-title: 19px; --text-heading: 22px; --text-display: 26px; --text-display-lg: 34px; --text-display-xl: 52px;
+}
+:root[data-type="xl"] {
+  --text-micro: 11px; --text-tiny: 13px; --text-small: 14px; --text-caption: 15px; --text-body: 16px;
+  --text-lead: 18px; --text-title: 20px; --text-heading: 23px; --text-display: 28px; --text-display-lg: 36px; --text-display-xl: 56px;
+}
 .page-content { width: 100%; max-width: var(--content-max); margin-inline: auto; }
 
 body { background: var(--canvas); color: var(--ink); font-family: "Urbanist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; transition: background-color 250ms ease, color 250ms ease; }
@@ -6077,6 +6090,7 @@ function Select({
     onKeyDown={onKeyDown}
     className={`primitive-field flex ${width} items-center gap-2 rounded-control border border-line bg-field px-3 text-left transition-opacity duration-150 disabled:opacity-60 ${SEL_SELECT_HEIGHTS[size]} ${className}`}
   >
+        {selected?.swatch && <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ background: selected.swatch }} />}
         <span className={`min-w-0 flex-1 truncate text-body ${selected ? "text-ink" : "text-ink-3"}`}>
           {selected ? selected.label : placeholder}
         </span>
@@ -6107,6 +6121,7 @@ function Select({
     onClick={() => choose(option)}
     className={`flex h-8 cursor-pointer items-center gap-2 rounded-sm px-2 text-body text-ink transition-colors duration-150 ${index === active ? "bg-hover" : ""}`}
   >
+              {option.swatch && <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ background: option.swatch }} />}
               <span className="min-w-0 flex-1 truncate">{option.label}</span>
               {option.value === selectedValue && <Icon name="check" size={14} strokeWidth={2.2} className="shrink-0 text-ink" />}
             </div>)}
@@ -15446,8 +15461,8 @@ function useProjectSidebar(defaultOpen = true) {
    two panes are scoped copies of the real token blocks, built from
    the live stylesheet, so they cannot drift. State lives in the URL,
    so a designer can send the link to a developer. */
-const CZ_KEYS = ["accent", "palette", "paletteColor", "radius", "size", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"];
-const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", paletteColor: "#a5e12a", radius: "default", size: "default", theme: "light", avatar: "initials", sidebar: "full", sidebarState: "expanded", font: "Urbanist", layout: "compact", motion: true };
+const CZ_KEYS = ["accent", "palette", "paletteColor", "radius", "size", "type", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"];
+const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", paletteColor: "#a5e12a", radius: "default", size: "default", type: "base", theme: "light", avatar: "initials", sidebar: "full", sidebarState: "expanded", font: "Urbanist", layout: "compact", motion: true };
 /* the approved faces (mirror of FONTS in scripts/apply_config.py): variable
    weight through 300–800 on Google Fonts, a full x-height range, tabular figures */
 const CZ_FONTS = [
@@ -15481,24 +15496,26 @@ const CZ_CHOICES = {
   palette: [...PALETTES.map((p) => p.id), "custom"],
   radius: RADII,
   size: SIZES,
+  type: ["base", "lg", "xl"],
   theme: ["light", "dark"],
   avatar: ["initials", "doodle", "photo"],
   sidebar: ["full", "inset", "edge"],
   sidebarState: ["expanded", "rail"],
   font: CZ_FONTS.map((f) => f.id),
-  layout: ["compact", "full"],
+  layout: ["compact", "medium", "full"],
 };
 const CZ_HELP = {
   accent: "Bring the brand colour. Light and dark each get their own value, fitted to AA on their surfaces.",
   palette: "The neutral family under everything: canvas, surfaces, lines, ink. Custom tints paper's neutrals toward a colour you bring, every pair still passing AA.",
   radius: "One scale for every corner, from controls to cards.",
-  size: "Control heights, padding and gaps move together. Type never scales.",
+  size: "Control heights, padding and gaps move together. Type does not follow; that is the next choice.",
+  type: "The whole type ramp one or two steps up, still integer pixels: base reads at 14, lg at 15, xl at 16. Controls keep their heights.",
   theme: "Where the app starts. Users can still switch.",
   avatar: "People without a photo of their own: initials, a drawn face derived from the name, or a placeholder photo until real ones exist.",
   sidebar: "The three rails on the Sidebar page. Full view: expanded with a sub-menu open, collapse in the header. Inset: the page is a surface card beside the rail; the trigger hides and shows it. Edge: hairline on the right, same page.",
   sidebarState: "How the rail first opens. Full view collapses to an icon rail; Inset and Edge hide behind their trigger.",
   font: "Every face on the list is variable through 300 to 800 on Google Fonts, so the weight ramp stays real. The type scale never changes.",
-  layout: "Compact keeps page content to a readable column (64rem) and centres it. Full lets it run edge to edge. Rails and headers are outside either.",
+  layout: "Compact keeps page content to a column of 64rem, Medium 80rem, both centred. Full lets it run edge to edge. Rails and headers are outside all three.",
   motion: "Charts and sparklines animate in once. Reduced motion always wins.",
 };
 /* fonts load on demand, one <link> per face, so the page never pays for eight */
@@ -15508,7 +15525,9 @@ function czLoadFont(id) {
   const link = document.createElement("link");
   link.id = `cz-font-${f.query}`;
   link.rel = "stylesheet";
-  link.href = `https://fonts.googleapis.com/css2?family=Urbanist:wght@300..800&display=swap`;
+  /* assembled, not written out: apply_config rewrites the page's literal
+     Google Fonts URLs to the configured face, and must not touch this one */
+  link.href = ["https://fonts.googleapis.com", "/css2?family=", f.query, "&display=swap"].join("");
   document.head.appendChild(link);
 }
 const czStack = (font) => `"${font}", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
@@ -15712,6 +15731,7 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
       data-palette={cfg.palette !== "paper" ? cfg.palette : undefined}
       data-radius={cfg.radius !== "default" ? cfg.radius : undefined}
       data-size={cfg.size !== "default" ? cfg.size : undefined}
+      data-type={cfg.type !== "base" ? cfg.type : undefined}
       data-layout={cfg.layout !== "compact" ? cfg.layout : undefined}
       style={{ "--accent": accent, "--font-sans": czStack(cfg.font), fontFamily: "var(--font-sans)", colorScheme: mode }}
     >
@@ -15835,7 +15855,7 @@ function CustomizeApp() {
           </div>
           <div>
             <p className="mb-1.5 text-caption font-medium text-ink">Palette</p>
-            <Select value={cfg.palette} onChange={(v) => set("palette", v)} options={[...PALETTES.map((p) => ({ value: p.id, label: `${p.label} · ${p.note}` })), { value: "custom", label: "Custom · from a colour" }]} size="sm" />
+            <Select value={cfg.palette} onChange={(v) => set("palette", v)} options={[...PALETTES.map((p) => ({ value: p.id, label: `${p.label} · ${p.note}`, swatch: p.swatch })), { value: "custom", label: "Custom · from a colour", swatch: cfg.paletteColor }]} size="sm" />
             <div className="mt-2 flex flex-wrap gap-1.5" aria-hidden>
               {(cfg.palette === "custom" ? Object.values((derivePalette(cfg.paletteColor) || derivePalette(CZ_DEFAULTS.paletteColor))[mode]).slice(0, 11).reverse() : null)?.map((hex, i) => <span key={i} className="size-4 rounded-[3px] shadow-hairline" style={{ background: hex }} />)}
             </div>
@@ -15855,6 +15875,7 @@ function CustomizeApp() {
           </div>
           <CzChoice label="Radius" help={CZ_HELP.radius} value={cfg.radius} options={RADII} onChange={(v) => set("radius", v)} />
           <CzChoice label="Size" help={CZ_HELP.size} value={cfg.size} options={SIZES} onChange={(v) => set("size", v)} />
+          <CzChoice label="Type size" help={CZ_HELP.type} value={cfg.type} options={[{ id: "base", label: "Base" }, { id: "lg", label: "LG" }, { id: "xl", label: "XL" }]} onChange={(v) => set("type", v)} />
           <CzChoice label="Content layout" help={CZ_HELP.layout} value={cfg.layout} options={CZ_CHOICES.layout} onChange={(v) => set("layout", v)} />
           <CzChoice label="Starting theme" help={CZ_HELP.theme} value={cfg.theme} options={CZ_CHOICES.theme} onChange={(v) => set("theme", v)} />
           <CzChoice label="Sidebar" help={CZ_HELP.sidebar} value={cfg.sidebar} options={[{ id: "full", label: "Full view" }, { id: "inset", label: "Inset" }, { id: "edge", label: "Edge" }]} onChange={(v) => set("sidebar", v)} />
