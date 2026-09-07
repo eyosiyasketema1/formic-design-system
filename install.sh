@@ -204,18 +204,18 @@ export default function Dashboard() {
             </Panel>
             <Panel title="Revenue by location" caption="Top purchasing regions" className="lg:col-span-2">
               <BarList fill format={(n) => `$${n.toLocaleString()}`} items={[
-                { label: "United States", value: 72400 }, { label: "United Kingdom", value: 28900 },
-                { label: "Germany", value: 19400 }, { label: "Canada", value: 15600 }, { label: "Australia", value: 11950 },
+                { label: "Addis Ababa", value: 72400 }, { label: "Nairobi", value: 28900 },
+                { label: "Dubai", value: 19400 }, { label: "London", value: 15600 }, { label: "Berlin", value: 11950 },
               ]} />
             </Panel>
           </div>
 
           <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
-            <Panel title="Revenue progression" caption="Grouped monthly sales by category">
+            <Panel title="Revenue by service" caption="Stacked by month">
               <BarChart fill variant="stacked" labels={["Jan", "Feb", "Mar", "Apr", "May", "Jun"]} series={[
-                { name: "Electronics", values: [38, 52, 32, 41, 35, 48] },
-                { name: "Apparel", color: 3, values: [11, 9, 15, 12, 18, 14] },
-                { name: "Home", color: 5, values: [7, 13, 9, 16, 11, 19] },
+                { name: "Design", values: [38, 52, 32, 41, 35, 48] },
+                { name: "Build", color: 3, values: [11, 9, 15, 12, 18, 14] },
+                { name: "Retainers", color: 5, values: [7, 13, 9, 16, 11, 19] },
               ]} />
             </Panel>
             <Panel title="Funnel" caption="From first visit to signed" bodyClassName="justify-between">

@@ -8552,7 +8552,7 @@ function ChartLegend({ series }) {
   );
 }
 const CHART_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"];
-const BAR_SERIES_DEFAULT = [{ name: "Transactions", values: [38, 52, 32, 12, 35, 28, 33, 25] }];
+const BAR_SERIES_DEFAULT = [{ name: "Invoices", values: [38, 52, 32, 12, 35, 28, 33, 25] }];
 function BarChart({
   labels = CHART_MONTHS,
   series = BAR_SERIES_DEFAULT,
@@ -8562,6 +8562,7 @@ function BarChart({
   height = 168,
   fill = false,
   showValues = true,
+  valuePosition = "top",
   animate = FORMIC_CONFIG.motion,
   className = "",
 }) {
@@ -8610,14 +8611,26 @@ function BarChart({
               className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1"
               style={{ minWidth: stacked ? HIT : series.length * HIT }}
             >
-              {labelValues && (
+              {labelValues && valuePosition === "top" && (
                 <span className="text-center text-tiny font-medium text-ink tabular-nums">
                   {compact(columnPeak[i])}
                 </span>
               )}
+              {labelValues && valuePosition === "bar" && (
+                /* a spacer keeps the plot below the tallest possible label */
+                <span aria-hidden className="h-4" />
+              )}
               {/* column-reverse makes the BOTTOM the main-start edge, so a
                   stack anchors with justify-start; justify-center would float it. */}
-              <div className={`flex h-full gap-0.5 ${stacked ? "flex-col-reverse items-center justify-start" : "items-end justify-center"}`}>
+              <div className={`relative flex h-full gap-0.5 ${stacked ? "flex-col-reverse items-center justify-start" : "items-end justify-center"}`}>
+                {labelValues && valuePosition === "bar" && (
+                  <span
+                    className="pointer-events-none absolute inset-x-0 text-center text-tiny font-medium text-ink tabular-nums"
+                    style={{ bottom: `calc(${(columnPeak[i] / max) * 100}% + 4px)`, opacity: settled ? 1 : 0, transition: drawing ? `opacity 400ms var(--ease-out-quint) ${600 + i * 60}ms` : undefined }}
+                  >
+                    {compact(columnPeak[i])}
+                  </span>
+                )}
                 {series.map((s, si) => {
                   const value = s.values[i] ?? 0;
                   const tone = toneOf(s.color, si);
@@ -8661,6 +8674,9 @@ function LineChart({
   fill = false,
   animate = FORMIC_CONFIG.motion,
   legend = true,
+  curve = "linear",
+  backdrop = false,
+  guides = false,
   className = "",
 }) {
   const gradientId = useId();
@@ -8708,9 +8724,20 @@ function LineChart({
               className="stroke-chart-track" strokeWidth="1" vectorEffect="non-scaling-stroke"
             />
           ))}
+          {guides && labels.map((l, i) => (
+            <line key={`g-${l}-${i}`} x1={i * step} x2={i * step} y1="0" y2={H} className="stroke-chart-track" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+          ))}
+          {backdrop && series[0] && series[0].values.map((v, i) => (
+            <rect key={`b-${i}`} x={i * step - step * 0.28} width={step * 0.56} y={yOf(v)} height={Math.max(0, zeroY - yOf(v))} className="fill-chart-track" opacity="0.6" />
+          ))}
           {series.map((s, si) => {
             const tone = toneOf(s.color, si);
-            const d = s.values.map((v, i) => `${i ? "L" : "M"}${i * step} ${yOf(v)}`).join(" ");
+            /* step: each value is a plateau centred on its label; consecutive
+               plateaus join with a straight slant */
+            const plateau = step * 0.3;
+            const d = curve === "step"
+              ? s.values.map((v, i) => `${i ? "L" : "M"}${Math.max(0, i * step - plateau)} ${yOf(v)} L${Math.min(W, i * step + plateau)} ${yOf(v)}`).join(" ")
+              : s.values.map((v, i) => `${i ? "L" : "M"}${i * step} ${yOf(v)}`).join(" ");
             return (
               /* The colour class goes on the <g>, not the path: a gradient
                  stop resolves currentColor from its OWN inherited colour, so
@@ -8871,6 +8898,45 @@ function Sparkline({
   );
 }
 
+/* ═══════════ MiniBars ═══════════ */
+/* The bar sparkline: a row of capsule columns inside a tile. Two looks:
+ * `track` draws each column's full height in the track colour with the
+ * value filled from the bottom (the Order tile), and `split` stacks a
+ * second series on top of the first in the next chart colour (profit
+ * over cost). Same entrance as the bars: they grow from the baseline. */
+function MiniBars({
+  values = [12, 18, 9, 22, 16, 25, 14],
+  split,
+  track = true,
+  color = 1,
+  height = 64,
+  animate = FORMIC_CONFIG.motion,
+  className = "",
+}) {
+  const { settled, drawing } = useEntrance(animate);
+  const max = niceMax(Math.max(1, ...values.map((v, i) => v + (split?.[i] ?? 0))));
+  const second = (color % 5 + 1);
+  return (
+    <div role="img" aria-label={values.map((v, i) => split ? `${v} and ${split[i] ?? 0}` : String(v)).join(", ")} className={`flex w-full items-end justify-between gap-1.5 ${className}`} style={{ height }}>
+      {values.map((v, i) => {
+        const top = split?.[i] ?? 0;
+        return (
+          <span key={i} className={`relative flex h-full w-full max-w-4 min-w-1.5 flex-col justify-end overflow-hidden rounded-full ${track ? "bg-chart-track" : ""}`}>
+            {split ? (
+              <>
+                <span className={`w-full rounded-t-full ${SERIES_BG[second]}`} style={{ height: `${(top / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+                <span className={`w-full rounded-b-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+              </>
+            ) : (
+              <span className={`w-full rounded-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+            )}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 function CountUp({
   value,
   duration = 1400,
@@ -8991,8 +9057,8 @@ function Delta({ tone = "up", children }) {
   );
 }
 function StatCard({
-  label = "Total profit",
-  value = 88_500,
+  label = "Invoiced",
+  value = 1_437_500,
   /** pass a string to control formatting yourself, e.g. "$88.5k" */
   display,
   caption,
@@ -9004,24 +9070,44 @@ function StatCard({
   trendTone = 1,
   trendSmooth = false,
   trendAnimate = FORMIC_CONFIG.motion,
+  trendKind = "line",
+  trendSplit,
+  layout = "label-first",
+  align = "start",
+  ring,
+  chart: chartProp,
   className = "",
 }) {
+  const centred = align === "center";
+  const copy = (
+    <div className={`min-w-0 ${centred ? "text-center" : ""}`}>
+      <div className="truncate text-caption font-medium text-ink">{label}</div>
+      {caption && <div className="mt-0.5 truncate text-small text-ink-3">{caption}</div>}
+    </div>
+  );
+  const number = (
+    <div className={`flex flex-wrap items-center gap-2 ${centred ? "justify-center" : ""}`}>
+      <span className="text-display font-semibold text-ink tabular-nums">{display ?? compact(value)}</span>
+      {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+    </div>
+  );
+  const chart = chartProp ??
+    (trend && trend.length > 1
+      ? trendKind === "line"
+        ? <Sparkline values={trend} color={trendTone} smooth={trendSmooth} animate={trendAnimate} />
+        : <MiniBars values={trend} split={trendKind === "stacked" ? trendSplit : undefined} track={trendKind === "bars"} color={trendTone} animate={trendAnimate} />
+      : null);
+  const body = layout === "value-first" ? <>{number}{copy}</> : layout === "chart-middle" ? <>{copy}{chart}{number}</> : <>{copy}{number}</>;
   return (
-    <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${className}`}>
-      {icon && (
-        <IconTile icon={icon} tone={iconTone} />
-      )}
-      <div className="min-w-0">
-        <div className="truncate text-caption font-medium text-ink">{label}</div>
-        {caption && <div className="mt-0.5 truncate text-small text-ink-3">{caption}</div>}
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-display font-semibold text-ink tabular-nums">
-          {display ?? compact(value)}
-        </span>
-        {delta && <Delta tone={deltaTone}>{delta}</Delta>}
-      </div>
-      {trend && trend.length > 1 && <Sparkline values={trend} color={trendTone} smooth={trendSmooth} animate={trendAnimate} />}
+    <Card className={`flex w-full max-w-95 flex-col gap-3 p-4 ${centred ? "items-center" : ""} ${className}`}>
+      {icon && <IconTile icon={icon} tone={iconTone} />}
+      {ring ? (
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-3">{body}</div>
+          <DonutChart value={ring.value} max={ring.max} label={ring.label ?? ""} color={ring.color ?? 1} size={96} animate={trendAnimate} className="shrink-0" />
+        </div>
+      ) : body}
+      {layout !== "chart-middle" && chart}
     </Card>
   );
 }
@@ -10506,19 +10592,44 @@ function Page_chatcomposer() {
 function Page_statcard() {
   return (
     <>
-      <GalleryCard label="Stat tiles" full>
+      <GalleryCard label="Label first · the default tile, with and without an icon" full>
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Total profit" display="$88.5k" caption="All time" delta="-18%" deltaTone="down" trend={[9, 7, 8, 5, 6, 4, 5, 3]} trendTone={5} />
-          <StatCard label="Total income" caption="Last week" display="$4,673" delta="+25.2%" icon="chart" iconTone="accent" trend={[3, 6, 4, 9, 7, 11, 10, 14]} trendTone={2} />
-          <StatCard label="Total expense" caption="Last month" display="$1.28K" delta="-12.2%" deltaTone="down" icon="layers" />
-          <StatCard label="Sessions" value={124000} caption="Last week" delta="0.0%" deltaTone="flat" />
+          <StatCard label="Invoiced" caption="This month" display="ETB 1.44M" delta="+31%" icon="receipt" iconTone="accent" trend={[6, 9, 8, 12, 11, 15, 14, 19]} />
+          <StatCard label="Proposals sent" caption="Last 30 days" display="27" delta="+8%" icon="file" trend={[2, 3, 3, 5, 4, 6, 5, 7]} trendTone={2} />
+          <StatCard label="Retainers" caption="Active clients" display="9" delta="0.0%" deltaTone="flat" icon="users" />
+          <StatCard label="Overdue" caption="Invoices past 30 days" display="3" delta="-2" deltaTone="down" icon="clock" />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Value first · the number leads, the label sits under it" full>
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard layout="value-first" label="Margin" display="42%" delta="+3.1%" />
+          <StatCard layout="value-first" label="Billable hours" caption="This week" display="146" delta="-9%" deltaTone="down" trend={[38, 41, 35, 32]} trendKind="bars" />
+          <StatCard layout="value-first" label="Revenue vs cost" caption="Per project, last five" display="ETB 812k" delta="+14%" trend={[120, 140, 95, 160, 130]} trendSplit={[80, 90, 70, 100, 85]} trendKind="stacked" />
+          <StatCard layout="value-first" label="Net promoter" display="61" delta="+4" />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Chart middle · label, the chart, then the number; any small chart fits the slot" full>
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard layout="chart-middle" label="Site visits" caption="Last week" display="12.4k" delta="+8.2%" trend={[9, 14, 11, 16, 13, 18, 21]} trendKind="bars" />
+          <StatCard layout="chart-middle" label="Leads" caption="Daily, last five days" display="38" delta="+12%" chart={<LineChart labels={["", "", "", "", ""]} series={[{ name: "Leads", values: [4, 9, 6, 11, 8] }]} area={false} guides height={72} />} />
+          <StatCard layout="chart-middle" label="Delivery" caption="Milestones this quarter" display="18 of 24" delta="+3" chart={<div className="flex justify-center"><DonutChart value={18} max={24} label="done" color={2} size={96} /></div>} />
+          <StatCard layout="chart-middle" label="Storage" caption="Assets on the CDN" display="212 GB" chart={<MiniBars values={[40, 52, 61, 70, 84, 96]} track={false} />} />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Ring · a progress ring beside the copy" wide>
+        <StatCard label="Client reach" caption="People who opened a proposal" display="1,280" delta="+12%" ring={{ value: 640, max: 900, label: "Opened", color: 3 }} />
+      </GalleryCard>
+      <GalleryCard label="Centred · the hero halves of a report panel" wide>
+        <div className="grid grid-cols-2 divide-x divide-line rounded-card bg-surface p-2 shadow-card">
+          <div className="pr-2"><StatCard align="center" icon="receipt" iconTone="accent" label="Collected" caption="This week" display="+82%" className="max-w-none p-3 shadow-none" /></div>
+          <div className="pl-2"><StatCard align="center" icon="wallet" label="Spent" caption="This week" display="-24%" className="max-w-none p-3 shadow-none" /></div>
         </div>
       </GalleryCard>
       <GalleryCard label="MetricRow breakdown" wide>
         <div className="flex flex-col">
-          <MetricRow icon="globe" label="Online store" value="$20k" delta="+12.6%" />
-          <MetricRow icon="home" label="Offline store" value="$20k" delta="-4.2%" deltaTone="down" />
-          <MetricRow icon="layers" label="Wholesale" value="$8.4k" delta="0.0%" deltaTone="flat" />
+          <MetricRow icon="globe" label="Website" value="ETB 620k" delta="+12.6%" />
+          <MetricRow icon="users" label="Referrals" value="ETB 410k" delta="-4.2%" deltaTone="down" />
+          <MetricRow icon="building" label="Retainers" value="ETB 380k" delta="0.0%" deltaTone="flat" />
         </div>
       </GalleryCard>
     </>
@@ -10546,6 +10657,24 @@ function Page_charts() {
           { name: "This week", values: [12, 19, 15, 27, 22, 31, 28] },
           { name: "Last week", color: 2, values: [9, 14, 18, 16, 24, 21, 25] },
         ]} />
+      </GalleryCard>
+      <GalleryCard label="BarChart · values ride their own bars, the lead month highlighted" full>
+        <BarChart labels={["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"]} series={[{ name: "Invoices", values: [38, 52, 32, 12, 35, 28, 33, 25] }]} highlight={1} valuePosition="bar" />
+      </GalleryCard>
+      <GalleryCard label="LineChart · step curve with columns behind, for totals by hour" full>
+        <LineChart curve="step" backdrop points={false} area={false} labels={["09:00", "11:00", "13:00", "15:00", "17:00", "19:00"]} series={[{ name: "Enquiries", values: [12, 31, 24, 13, 37, 44] }]} />
+      </GalleryCard>
+      <GalleryCard label="LineChart · dashed guides, and a series that goes below zero" full>
+        <LineChart guides labels={["W1", "W2", "W3", "W4", "W5", "W6"]} series={[
+          { name: "Margin change", values: [1.2, -0.8, -2.1, 0.4, 1.9, 2.6] },
+          { name: "Cost change", color: 2, values: [-0.5, 0.9, 1.4, -0.2, -1.1, -0.6] },
+        ]} />
+      </GalleryCard>
+      <GalleryCard label="MiniBars · capsule columns on tracks, and a two-series stack" wide>
+        <div className="flex w-full max-w-80 flex-col gap-4">
+          <MiniBars values={[8, 22, 14, 17, 26, 15, 18]} />
+          <MiniBars values={[120, 140, 95, 160, 130]} split={[80, 90, 70, 100, 85]} track={false} />
+        </div>
       </GalleryCard>
       <GalleryCard label="DonutChart">
         <div className="flex items-center gap-5">
@@ -10672,28 +10801,52 @@ function Page_panel() {
           </Panel>
           <Panel title="Revenue by location" caption="Top purchasing regions" className="lg:col-span-2">
             <BarList fill format={(n) => `$${n.toLocaleString()}`} items={[
-              { label: "United States", value: 72400 }, { label: "United Kingdom", value: 28900 },
-              { label: "Germany", value: 19400 }, { label: "Canada", value: 15600 }, { label: "Australia", value: 11950 },
+              { label: "Addis Ababa", value: 72400 }, { label: "Nairobi", value: 28900 },
+              { label: "Dubai", value: 19400 }, { label: "London", value: 15600 }, { label: "Berlin", value: 11950 },
             ]} />
           </Panel>
         </div>
       </GalleryCard>
       <GalleryCard label="Bar chart filling a panel" full>
         <div className="h-72">
-          <Panel title="Revenue progression" caption="Grouped monthly sales by category" actions={<Badge tone="neutral">Monthly</Badge>}>
+          <Panel title="Revenue by service" caption="Stacked by month" actions={<Badge tone="neutral">Monthly</Badge>}>
             <BarChart fill variant="stacked" series={[
-              { name: "Electronics", values: [38, 52, 32, 41, 35, 48, 44, 56] },
-              { name: "Apparel", color: 3, values: [11, 9, 15, 12, 18, 14, 9, 16] },
-              { name: "Home", color: 5, values: [7, 13, 9, 16, 11, 19, 14, 10] },
+              { name: "Design", values: [38, 52, 32, 41, 35, 48, 44, 56] },
+              { name: "Build", color: 3, values: [11, 9, 15, 12, 18, 14, 9, 16] },
+              { name: "Retainers", color: 5, values: [7, 13, 9, 16, 11, 19, 14, 10] },
             ]} />
           </Panel>
         </div>
       </GalleryCard>
+      <GalleryCard label="Report panel · two centred heroes, a divider, a footer with the action" wide>
+        <div><Panel title="Delivery report" caption="Last month, 14 projects" actions={<IconButton label="More" className="text-ink-3 hover:bg-hover hover:text-ink"><Icon name="dots-vertical" size={14} /></IconButton>} bodyClassName="flex flex-col">
+          <div className="grid flex-1 grid-cols-2 divide-x divide-line">
+            <div className="pr-3"><StatCard align="center" icon="circle-check" iconTone="accent" label="On time" caption="This month" display="+82%" className="max-w-none p-0 shadow-none" /></div>
+            <div className="pl-3"><StatCard align="center" icon="clock" label="Over budget" caption="This month" display="-24%" className="max-w-none p-0 shadow-none" /></div>
+          </div>
+          <div className="mt-4 flex items-end justify-between gap-3 border-t border-line pt-4">
+            <div><p className="text-caption text-ink-3">Client satisfaction</p><p className="text-heading font-semibold text-ink tabular-nums">94%</p></div>
+            <Button variant="secondary" size="sm">View report</Button>
+          </div>
+        </Panel></div>
+      </GalleryCard>
+      <GalleryCard label="Headline panel · icon title, a big number, rows, then a chart that fills the rest" wide>
+        <div><Panel title={<span className="flex items-center gap-2"><IconTile icon="chart-line" tone="accent" className="size-7 [&_svg]:size-3.5" />Traffic today</span>} actions={<Button variant="secondary" size="xs">Details</Button>} bodyClassName="flex flex-col">
+          <div className="flex items-center gap-2"><span className="text-display font-semibold text-ink tabular-nums">2,150</span><Delta tone="up">+5%</Delta></div>
+          <div className="mt-3 flex flex-col border-b border-line pb-2">
+            <MetricRow icon="globe" label="Website" value="1,420" delta="+12.6%" />
+            <MetricRow icon="sparkles" label="Assistant" value="730" delta="-4.2%" deltaTone="down" />
+          </div>
+          <div className="mt-3 flex-1">
+            <LineChart labels={["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"]} series={[{ name: "Visits", values: [30, 62, 48, 26, 74, 88] }]} curve="step" backdrop points={false} area={false} height={140} />
+          </div>
+        </Panel></div>
+      </GalleryCard>
       <GalleryCard label="Hero padding, no header" wide>
-        <Panel padding="lg">
-          <p className="text-display font-semibold text-ink tabular-nums">$1,437,500</p>
+        <div><Panel padding="lg">
+          <p className="text-display font-semibold text-ink tabular-nums">ETB 1,437,500</p>
           <p className="mt-1 text-caption text-ink-3">Invoiced this month</p>
-        </Panel>
+        </Panel></div>
       </GalleryCard>
     </>
   );
@@ -11164,8 +11317,70 @@ function Page_dashboard() {
      a conversion gauge and two ranked lists. Everything below is composed
      from StatCard, CountUp, Sparkline, Gauge, BarList, MetricRow and Privacy. */
   const etb = (n) => `ETB ${n.toLocaleString()}`;
+  const hours = ["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
   return (
     <>
+      <GalleryCard label="Studio overview · pieces from their own pages, laid out the way a page is: a header, four headlines, then panels with room" full>
+        <div className="flex flex-col gap-6 p-1">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-heading font-semibold tracking-tight text-ink">Studio overview</h2>
+              <p className="mt-0.5 text-caption text-ink-3">Formic Studio · September 2026</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Tabs variant="subtle" tabs={[{ key: "m", label: "Month" }, { key: "q", label: "Quarter" }, { key: "y", label: "Year" }]} />
+              <Button variant="secondary" size="sm" icon={<Icon name="download" size={14} />}>Export</Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="Invoiced" caption="This month" display="ETB 1.44M" delta="+31%" icon="receipt" iconTone="accent" trend={[6, 9, 8, 12, 11, 15, 14, 19]} trendSmooth className="max-w-none" />
+            <StatCard layout="chart-middle" label="Billable hours" caption="This week" display="146" delta="-9%" deltaTone="down" trend={[38, 41, 35, 32, 44, 39, 36]} trendKind="bars" className="max-w-none" />
+            <StatCard layout="value-first" label="Margin" caption="Revenue over cost, last five projects" display="42%" delta="+3.1%" trend={[120, 140, 95, 160, 130]} trendSplit={[80, 90, 70, 100, 85]} trendKind="stacked" className="max-w-none" />
+            <StatCard label="Delivery" caption="This quarter" display="18 of 24" delta="+3" ring={{ value: 18, max: 24, label: "done", color: 2 }} className="max-w-none" />
+          </div>
+          <div className="grid grid-cols-1 gap-3.5 xl:grid-cols-3">
+            <div className="xl:col-span-2">
+              <Panel title="Invoices" caption="By month, this year" actions={<Button variant="ghost" size="xs">ETB</Button>}>
+                <BarChart labels={["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"]} series={[{ name: "Invoices", values: [38, 52, 32, 12, 35, 28, 33, 25] }]} highlight={1} valuePosition="bar" fill height={240} />
+              </Panel>
+            </div>
+            <Panel title={<span className="flex items-center gap-2"><IconTile icon="chart-line" tone="accent" className="size-7 [&_svg]:size-3.5" />Traffic today</span>} actions={<Button variant="secondary" size="xs">Details</Button>} bodyClassName="flex flex-col">
+              <div className="flex items-center gap-2"><span className="text-display font-semibold text-ink tabular-nums">2,150</span><Delta tone="up">+5%</Delta></div>
+              <div className="mt-3 flex flex-col">
+                <MetricRow icon="globe" label="Website" value="1,420" delta="+12.6%" />
+                <MetricRow icon="sparkles" label="Assistant" value="730" delta="-4.2%" deltaTone="down" />
+              </div>
+              <div className="mt-4 flex-1">
+                <LineChart labels={hours} series={[{ name: "Visits", values: [30, 62, 48, 26, 74, 88] }]} curve="step" backdrop points={false} area={false} fill height={120} />
+              </div>
+            </Panel>
+          </div>
+          <div className="grid grid-cols-1 gap-3.5 xl:grid-cols-3">
+            <Panel title="Delivery report" caption="Last month, 14 projects" bodyClassName="flex flex-col">
+              <div className="grid flex-1 grid-cols-2 divide-x divide-line py-2">
+                <div className="pr-3"><StatCard align="center" icon="circle-check" iconTone="accent" label="On time" display="+82%" className="max-w-none p-0 shadow-none" /></div>
+                <div className="pl-3"><StatCard align="center" icon="clock" label="Over budget" display="-24%" className="max-w-none p-0 shadow-none" /></div>
+              </div>
+              <div className="mt-4 flex items-end justify-between gap-3 border-t border-line pt-4">
+                <div><p className="text-caption text-ink-3">Client satisfaction</p><p className="text-heading font-semibold text-ink tabular-nums">94%</p></div>
+                <Button variant="secondary" size="sm">View report</Button>
+              </div>
+            </Panel>
+            <Panel title="Top clients" caption="Invoiced this quarter">
+              <BarList fill format={(n) => `ETB ${Math.round(n / 1000)}k`} items={[
+                { label: "Northwind Bank", value: 724000 }, { label: "Creamery", value: 289000 },
+                { label: "Ministry of Health", value: 194000 }, { label: "Sunrise Coffee", value: 156000 }, { label: "Abyssinia Air", value: 119500 },
+              ]} />
+            </Panel>
+            <Panel title="Leads" caption="Daily, last five days" actions={<Badge tone="green">Live</Badge>} bodyClassName="flex flex-col">
+              <div className="flex items-center gap-2"><span className="text-display font-semibold text-ink tabular-nums">38</span><Delta tone="up">+12%</Delta></div>
+              <div className="mt-3 flex-1">
+                <LineChart labels={["Mon", "Tue", "Wed", "Thu", "Fri"]} series={[{ name: "Leads", values: [4, 9, 6, 11, 8] }]} guides area={false} fill height={120} />
+              </div>
+            </Panel>
+          </div>
+        </div>
+      </GalleryCard>
       <GalleryCard label="Headline tiles · CountUp + smooth animated Sparkline" full>
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="New leads" caption="This month" display={<CountUp value={128} />} delta="+24%" icon="user-add" iconTone="accent" trend={[6, 9, 7, 12, 10, 15, 13, 19]} trendSmooth trendAnimate />
@@ -11716,7 +11931,7 @@ const PLAYGROUNDS = {
     render: (p) => (
       <div className="h-80 w-full max-w-120">
         <Panel title={p.title} caption={p.caption} padding={p.padding} actions={p.actions ? <Button variant="ghost" size="xs">USD</Button> : undefined}>
-          <BarList fill={p.fill} items={[{ label: "United States", value: 72 }, { label: "United Kingdom", value: 29 }, { label: "Germany", value: 19 }, { label: "Canada", value: 16 }]} />
+          <BarList fill={p.fill} items={[{ label: "Addis Ababa", value: 72 }, { label: "Nairobi", value: 29 }, { label: "Dubai", value: 19 }, { label: "London", value: 16 }]} />
         </Panel>
       </div>
     ),
@@ -11738,19 +11953,20 @@ const PLAYGROUNDS = {
   },
   statcard: {
     schema: [
-      { key: "label", label: "Label", type: "text", value: "Total income" },
-      { key: "display", label: "Value", type: "text", value: "$4,673" },
-      { key: "caption", label: "Caption", type: "text", value: "Last week" },
-      { key: "delta", label: "Delta", type: "text", value: "+25.2%" },
+      { key: "label", label: "Label", type: "text", value: "Invoiced" },
+      { key: "display", label: "Value", type: "text", value: "ETB 1.44M" },
+      { key: "caption", label: "Caption", type: "text", value: "This month" },
+      { key: "delta", label: "Delta", type: "text", value: "+31%" },
       { key: "deltaTone", label: "Direction", type: "select", value: "up", options: ["up", "down", "flat"] },
+      { key: "layout", label: "Layout", type: "select", value: "label-first", options: ["label-first", "value-first", "chart-middle"] },
       { key: "icon", label: "Icon", type: "toggle", value: true },
       { key: "iconTone", label: "Icon tone", type: "select", value: "neutral", options: ["neutral", "accent"] },
-      { key: "trend", label: "Sparkline", type: "toggle", value: true },
-      { key: "trendSmooth", label: "Smooth trend", type: "toggle", value: false },
+      { key: "trendKind", label: "Trend", type: "select", value: "line", options: ["none", "line", "bars", "stacked"] },
+      { key: "trendSmooth", label: "Smooth line", type: "toggle", value: false },
     ],
     render: (p) => (
-      <StatCard label={p.label} display={p.display} caption={p.caption} delta={p.delta} deltaTone={p.deltaTone}
-        icon={p.icon ? "chart" : undefined} iconTone={p.iconTone} trend={p.trend ? [3, 6, 4, 9, 7, 11, 10, 14] : undefined} trendTone={p.iconTone} trendSmooth={p.trendSmooth} />
+      <StatCard label={p.label} display={p.display} caption={p.caption} delta={p.delta} deltaTone={p.deltaTone} layout={p.layout}
+        icon={p.icon ? "receipt" : undefined} iconTone={p.iconTone} trend={p.trendKind === "none" ? undefined : [3, 6, 4, 9, 7, 11, 10, 14]} trendKind={p.trendKind === "none" ? "line" : p.trendKind} trendSplit={[2, 3, 2, 5, 4, 6, 5, 7]} trendSmooth={p.trendSmooth} />
     ),
   },
   charts: {
@@ -13717,7 +13933,7 @@ function CzPane({ cfg, mode, accent, ratio, ready }) {
           </div>
           <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 @min-[520px]:grid-cols-5">
             <div className="min-h-0 min-w-0 @min-[520px]:col-span-3">
-              <Panel title="Sales" caption="Transactions by month" bodyClassName="min-h-0">
+              <Panel title="Invoices" caption="By month" bodyClassName="min-h-0">
                 <BarChart key={k + "c"} fill showValues={false} animate={cfg.motion} />
               </Panel>
             </div>
