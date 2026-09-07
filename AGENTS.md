@@ -117,6 +117,10 @@ save it as src/formic/formic.config.json, then run
 
 When you receive one: save the JSON exactly as given to `src/formic/formic.config.json`, run the script, restart the dev server, and reply with the ratios it printed. The script does everything deterministically: it fits the accent for both modes (through `set_accent.py`), writes the `data-*` attributes on `<html>` in the app's `index.html`, and writes `components/config.ts`, which `Avatar`, `AppSidebar` and the charts read as their prop defaults. Do none of that by hand, and do not undo it inline: no `doodle={false}` because you prefer initials, no `defaultVariant="expanded"` when the config says `rail`, no second accent. A user who says "make the corners rounder" or "start in dark mode" is asking for a config change: edit the JSON, run the script. Re-running the installer keeps the config and re-applies it.
 
+## Demo content is ours
+
+When you build a page or a demo, the content is Formic's world: a design studio and its clients, proposals, invoices, retainers, site traffic, agents. Never carry a reference's labels, numbers or copy into a screen, and never invent generic filler ("Lorem", "Product A", "User 1"). A reference is used for the shape it proves, then the content is replaced.
+
 ## The rules that matter most
 
 1. **Tokens only.** No hardcoded colors, font sizes, radii, shadows, or easings. Use the generated utilities: `text-ink`, `text-ink-2`, `text-ink-3`, `bg-canvas`, `bg-surface`, `bg-field`, `bg-hover`, `bg-hover-2`, `bg-inset`, `bg-sidebar`, `border-line`, `border-line-strong`, `text-accent`, `text-green`, `text-red`, `text-orange`, the `*-tint` backgrounds, and the categorical chart ramp `chart-1..5` plus `chart-track` (for data series only — never colour a series with green or red, those carry meaning). If a value has no token, add the token first.

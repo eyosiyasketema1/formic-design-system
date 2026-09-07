@@ -136,7 +136,7 @@ export function ChartLegend({ series }: { series: Series[] }) {
 /* ═══════════ BarChart ═══════════ */
 const DEFAULT_BAR_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"];
 const DEFAULT_BAR_SERIES: Series[] = [
-  { name: "Transactions", values: [38, 52, 32, 12, 35, 28, 33, 25] },
+  { name: "Invoices", values: [38, 52, 32, 12, 35, 28, 33, 25] },
 ];
 
 export type BarVariant = "grouped" | "stacked";
@@ -581,11 +581,11 @@ export function MiniBars({
   const max = niceMax(Math.max(1, ...values.map((v, i) => v + (split?.[i] ?? 0))));
   const second: ChartColor = (color % 5 + 1) as ChartColor;
   return (
-    <div role="img" aria-label={values.map((v, i) => split ? `${v} and ${split[i] ?? 0}` : String(v)).join(", ")} className={`flex w-full items-end gap-1.5 ${className}`} style={{ height }}>
+    <div role="img" aria-label={values.map((v, i) => split ? `${v} and ${split[i] ?? 0}` : String(v)).join(", ")} className={`flex w-full items-end justify-between gap-1.5 ${className}`} style={{ height }}>
       {values.map((v, i) => {
         const top = split?.[i] ?? 0;
         return (
-          <span key={i} className={`relative flex h-full min-w-0 flex-1 flex-col justify-end overflow-hidden rounded-full ${track ? "bg-chart-track" : ""}`}>
+          <span key={i} className={`relative flex h-full w-full max-w-4 min-w-1.5 flex-col justify-end overflow-hidden rounded-full ${track ? "bg-chart-track" : ""}`}>
             {split ? (
               <>
                 <span className={`w-full rounded-t-full ${SERIES_BG[second]}`} style={{ height: `${(top / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />

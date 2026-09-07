@@ -53,8 +53,8 @@ export function Delta({ tone = "up", children }: { tone?: DeltaTone; children: R
 export type StatIconTone = IconTileTone;
 
 export function StatCard({
-  label = "Total profit",
-  value = 88_500,
+  label = "Invoiced",
+  value = 1_437_500,
   /** pass a string to control formatting yourself, e.g. "$88.5k" */
   display,
   caption,
