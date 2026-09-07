@@ -220,6 +220,8 @@ export function MetricRow({
   big = false,
   trend,
   trendKind = "bars",
+  progressLayout = "trailing",
+  meta,
 }: {
   icon?: IconName;
   label: string;
@@ -239,7 +241,23 @@ export function MetricRow({
   trend?: number[];
   /** with `big`: capsule bars (default) or a smooth line with its area, for a rate over time */
   trendKind?: "bars" | "line";
+  /** trailing (default): value and bar on the right. under: label and value on one row, a full-width bar beneath */
+  progressLayout?: "trailing" | "under";
+  /** muted text after the value: the share this row is of the whole ("33%") */
+  meta?: string;
 }) {
+  if (progress !== undefined && progressLayout === "under") {
+    return (
+      <div className="flex w-full flex-col gap-2 border-t border-line py-3 first:border-t-0">
+        <div className="flex items-center justify-between gap-3">
+          <span className="min-w-0 truncate text-caption font-medium text-ink">{label}</span>
+          {value != null && <span className="shrink-0 text-caption text-ink-2 tabular-nums">{value}</span>}
+        </div>
+        <Progress value={Math.round(progress * 100)} label={`${label} progress`} tone="ink" />
+        {detail && <span className="block truncate text-small text-ink-3">{detail}</span>}
+      </div>
+    );
+  }
   if (big) {
     return (
       <div className="flex w-full items-center gap-4 border-t border-line py-3 first:border-t-0">
@@ -274,6 +292,7 @@ export function MetricRow({
         <>
           {trend && <span className="w-16 shrink-0"><MiniBars values={trend} track={false} height={24} /></span>}
           {value != null && <span className="shrink-0 text-caption font-medium text-ink tabular-nums">{value}</span>}
+          {meta && <span className="w-10 shrink-0 text-right text-small text-ink-3 tabular-nums">{meta}</span>}
         </>
       )}
       {delta ? <Delta tone={deltaTone}>{delta}</Delta> : detail && progress === undefined && !leading ? <span className="text-caption text-ink-3">—</span> : null}

@@ -681,26 +681,41 @@ export function Progress({
   tone = "accent",
   indeterminate = false,
   segments,
+  vertical = false,
   className = "",
 }: {
   value?: number;
   max?: number;
   /** accessible name — what is progressing */
   label?: string;
-  tone?: "accent" | "green";
+  /** accent (default), green for done, ink for a neutral quantity beside others */
+  tone?: "accent" | "green" | "ink";
   /** unknown duration — animated sweep instead of a fill */
   indeterminate?: boolean;
   /** draw the track as this many pill segments that fill one by one, for a plan or a quota */
   segments?: number;
+  /** with `segments`: stack them as a ladder that lights from the bottom, for a score beside its number */
+  vertical?: boolean;
   className?: string;
 }) {
   const percent = Math.min(100, Math.max(0, (value / max) * 100));
   if (segments && !indeterminate) {
     const lit = Math.round((percent / 100) * segments);
+    const on = tone === "green" ? "bg-green" : tone === "ink" ? "bg-ink" : "bg-accent";
+    if (vertical) {
+      /* column-reverse: the first segment is the bottom rung */
+      return (
+        <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={max} aria-valuenow={Math.round(Math.min(max, Math.max(0, value)))} aria-orientation="vertical" className={`flex w-full flex-col-reverse gap-1.5 ${className}`}>
+          {Array.from({ length: segments }, (_, i) => (
+            <span key={i} className={`h-2 w-full rounded-full transition-colors duration-300 ${i < lit ? on : "bg-inset shadow-hairline"}`} style={{ transitionDelay: `${i * 20}ms` }} />
+          ))}
+        </div>
+      );
+    }
     return (
       <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={max} aria-valuenow={Math.round(Math.min(max, Math.max(0, value)))} className={`flex h-6 w-full gap-1 ${className}`}>
         {Array.from({ length: segments }, (_, i) => (
-          <span key={i} className={`h-full min-w-0 flex-1 rounded-full transition-colors duration-300 ${i < lit ? (tone === "green" ? "bg-green" : "bg-accent") : "bg-inset shadow-hairline"}`} style={{ transitionDelay: `${i * 20}ms` }} />
+          <span key={i} className={`h-full min-w-0 flex-1 rounded-full transition-colors duration-300 ${i < lit ? on : "bg-inset shadow-hairline"}`} style={{ transitionDelay: `${i * 20}ms` }} />
         ))}
       </div>
     );
@@ -715,7 +730,7 @@ export function Progress({
       className={`h-1.5 w-full overflow-hidden rounded-full bg-inset shadow-hairline ${className}`}
     >
       <div
-        className={`h-full rounded-full ${tone === "green" ? "bg-green" : "bg-accent"} ${
+        className={`h-full rounded-full ${tone === "green" ? "bg-green" : tone === "ink" ? "bg-ink" : "bg-accent"} ${
           indeterminate ? "progress-indeterminate-bar" : ""
         }`}
         style={
@@ -728,6 +743,43 @@ export function Progress({
         }
       />
     </div>
+  );
+}
+
+/* ── Rating ────────────────────────────────────────────── */
+/* Stars for a score out of five (or `max`). Full, half and empty
+ * stars are the same Tabler glyph: filled via CSS, the half one a
+ * filled star clipped to its left half over an empty one. Orange is
+ * the one place the semantic warm colour reads as "stars", not a
+ * warning. The number, if you want it, sits beside as text: the
+ * stars are aria-hidden and the score is on the wrapper's label. */
+export function Rating({
+  value = 4.5,
+  max = 5,
+  size = 16,
+  className = "",
+}: {
+  value?: number;
+  max?: number;
+  /** star size in px */
+  size?: number;
+  className?: string;
+}) {
+  const v = Math.max(0, Math.min(max, value));
+  return (
+    <span role="img" aria-label={`${v} out of ${max} stars`} className={`inline-flex items-center gap-0.5 ${className}`}>
+      {Array.from({ length: max }, (_, i) => {
+        const fill = Math.max(0, Math.min(1, v - i));
+        return (
+          <span key={i} aria-hidden className="relative inline-flex text-orange">
+            <Icon name="star" size={size} strokeWidth={1.8} className={fill >= 1 ? "fill-current" : "text-chart-track"} />
+            {fill > 0 && fill < 1 && (
+              <Icon name="star" size={size} strokeWidth={1.8} className="absolute inset-0 fill-current" style={{ clipPath: `inset(0 ${Math.round((1 - fill) * 100)}% 0 0)` }} />
+            )}
+          </span>
+        );
+      })}
+    </span>
   );
 }
 
