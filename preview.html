@@ -16015,13 +16015,25 @@ function App() {
   }, [before]);
   useEffect(() => {
     let raf = 0;
+    /* the page above appears only on a deliberate move up (wheel, keys,
+       a drag past the top), never on landing: a click on the rail must
+       show the page that was clicked, at its top */
+    const prepend = () => {
+      if (window.scrollY < 400 && start - before > 0 && keep.current === null) {
+        keep.current = document.documentElement.scrollHeight;
+        setBefore((n) => n + 1);
+      }
+    };
+    const onWheel = (e) => { if (e.deltaY < 0) prepend(); };
+    const onKey = (e) => { if (["ArrowUp", "PageUp", "Home"].includes(e.key) && !e.target.closest("input, textarea, [contenteditable], [role=dialog]")) prepend(); };
+    let lastY = window.scrollY;
     const onScroll = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
         const nearEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 900;
         if (nearEnd) setExtra((n) => (start + 1 + n < PAGES.length ? n + 1 : n));
-        const nearTop = window.scrollY < 400 && start - before > 0 && keep.current === null;
-        if (nearTop) { keep.current = document.documentElement.scrollHeight; setBefore((n) => n + 1); }
+        if (window.scrollY < lastY) prepend();   // scrolling up by any means (scrollbar drag, touch)
+        lastY = window.scrollY;
         const tops = [...document.querySelectorAll("[data-page]")].map((el) => [el.dataset.page, el.getBoundingClientRect().top]);
         /* the page under the reader's eye: the last one whose top has passed the upper third */
         const under = tops.filter(([, t]) => t <= window.innerHeight * 0.35).pop() || tops[0];
@@ -16034,8 +16046,10 @@ function App() {
       });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("wheel", onWheel, { passive: true });
+    window.addEventListener("keydown", onKey);
     onScroll();
-    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("wheel", onWheel); window.removeEventListener("keydown", onKey); cancelAnimationFrame(raf); };
   }, [start, current, before]);
   /* a search hit on a variant lands on its card once the page has rendered */
   useEffect(() => {
