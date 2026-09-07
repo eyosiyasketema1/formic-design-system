@@ -1613,7 +1613,7 @@ function Shortcut({ keys, quiet = false, className = "" }) {
   return (
     <span
       aria-label={`Shortcut ${keys.join(" ")}`}
-      className={`inline-flex shrink-0 items-center gap-0.5 ${quiet ? "pointer-events-none opacity-0 transition-opacity duration-150 group-hover/row:opacity-100 group-focus-within/row:opacity-100 [@media(hover:none)]:opacity-100" : ""} ${className}`}
+      className={`inline-flex shrink-0 items-center gap-1 ${quiet ? "pointer-events-none opacity-0 transition-opacity duration-150 group-hover/row:opacity-100 group-focus-within/row:opacity-100 [@media(hover:none)]:opacity-100" : ""} ${className}`}
     >
       {keys.map((k, i) => (
         <kbd key={i} className="flex h-4.5 min-w-4.5 items-center justify-center rounded-[4px] bg-inset px-1 font-sans text-micro font-medium text-ink-3 shadow-hairline">{k}</kbd>
@@ -6118,7 +6118,8 @@ function Select({
 const MO_MODAL_WIDTHS = {
   sm: "max-w-80",
   md: "max-w-105",
-  lg: "max-w-130"
+  lg: "max-w-130",
+  xl: "max-w-170"
 };
 function Modal({
   open,
@@ -13881,7 +13882,6 @@ function GalleryCard({ label, wide, full, children }) {
 }
 
 function DocsPage({ page, index, pg, state: givenState, set: givenSet, first = true }) {
-  const prev = PAGES[index - 1], next = PAGES[index + 1];
   /* the current page's playground is driven from the rail; a page that was
      scrolled into below it keeps its own knobs until it becomes current */
   const [ownState, ownSet] = usePlayground(pg ? pg.schema : [], page.id);
@@ -13899,14 +13899,6 @@ function DocsPage({ page, index, pg, state: givenState, set: givenSet, first = t
           <div className="min-w-0">
             <h1 id={first ? "page-title" : undefined} tabIndex={-1} className="text-display font-semibold tracking-tight text-ink outline-none">{page.title}</h1>
             {page.note && <p className="mt-1.5 max-w-2xl text-body text-ink-2">{page.note}</p>}
-          </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <IconButton label={prev ? `Previous: ${prev.title}` : "Previous"} onClick={() => prev && (location.hash = `#/${prev.id}`)} disabled={!prev} className="text-ink-3 hover:bg-hover hover:text-ink disabled:opacity-35">
-              <Icon name="chevron-left" size={16} strokeWidth={2} />
-            </IconButton>
-            <IconButton label={next ? `Next: ${next.title}` : "Next"} onClick={() => next && (location.hash = `#/${next.id}`)} disabled={!next} className="text-ink-3 hover:bg-hover hover:text-ink disabled:opacity-35">
-              <Icon name="chevron-right" size={16} strokeWidth={2} />
-            </IconButton>
           </div>
         </header>
 
@@ -15965,7 +15957,7 @@ function SearchModal({ open, onClose }) {
   };
   const listId = "gallery-search-results";
   return (
-    <Modal open={open} onClose={onClose} title="Search the gallery" size="md">
+    <Modal open={open} onClose={onClose} title="Search the gallery" size="xl">
       <div className="-mx-4 -my-3.5">
         <div ref={inputRef} className="border-b border-line px-4 py-3">
           <Input leadingIcon="search" placeholder="Component, variant or page…" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKey} role="combobox" aria-expanded aria-controls={listId} aria-activedescendant={results[cursor] ? `${listId}-${cursor}` : undefined} aria-autocomplete="list" />
@@ -15985,10 +15977,10 @@ function SearchModal({ open, onClose }) {
             </li>
           ))}
         </ul>
-        <div className="flex items-center gap-3 border-t border-line px-4 py-2 text-small text-ink-3">
-          <span className="flex items-center gap-1.5"><Shortcut keys={["↑", "↓"]} /> move</span>
-          <span className="flex items-center gap-1.5"><Shortcut keys={["↵"]} /> open</span>
-          <span className="flex items-center gap-1.5"><Shortcut keys={["Esc"]} /> close</span>
+        <div className="flex items-center gap-5 border-t border-line px-4 py-2.5 text-small text-ink-3">
+          <span className="flex items-center gap-2"><Shortcut keys={["↑", "↓"]} /> move</span>
+          <span className="flex items-center gap-2"><Shortcut keys={["↵"]} /> open</span>
+          <span className="flex items-center gap-2"><Shortcut keys={["Esc"]} /> close</span>
         </div>
       </div>
     </Modal>
@@ -16008,9 +16000,19 @@ function App() {
      follow whichever page is under the top of the window. A click on the
      rail starts a fresh run from that page. */
   const [extra, setExtra] = useState(0);
+  const [before, setBefore] = useState(0);
   const [current, setCurrent] = useState(route);
-  useEffect(() => { setExtra(0); setCurrent(route); }, [route]);
-  const shown = PAGES.slice(start, Math.min(PAGES.length, start + 1 + extra));
+  useEffect(() => { setExtra(0); setBefore(0); setCurrent(route); }, [route]);
+  const shown = PAGES.slice(start - before, Math.min(PAGES.length, start + 1 + extra));
+  /* a page added above would shove the reader down the screen: remember
+     the height before it mounts and give the difference back after */
+  const keep = useRef(null);
+  useLayoutEffect(() => {
+    if (keep.current === null) return;
+    const delta = document.documentElement.scrollHeight - keep.current;
+    keep.current = null;
+    if (delta > 0) window.scrollTo({ top: window.scrollY + delta });
+  }, [before]);
   useEffect(() => {
     let raf = 0;
     const onScroll = () => {
@@ -16018,8 +16020,11 @@ function App() {
       raf = requestAnimationFrame(() => {
         const nearEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 900;
         if (nearEnd) setExtra((n) => (start + 1 + n < PAGES.length ? n + 1 : n));
+        const nearTop = window.scrollY < 400 && start - before > 0 && keep.current === null;
+        if (nearTop) { keep.current = document.documentElement.scrollHeight; setBefore((n) => n + 1); }
         const tops = [...document.querySelectorAll("[data-page]")].map((el) => [el.dataset.page, el.getBoundingClientRect().top]);
-        const under = tops.filter(([, t]) => t <= 120).pop() || tops[0];
+        /* the page under the reader's eye: the last one whose top has passed the upper third */
+        const under = tops.filter(([, t]) => t <= window.innerHeight * 0.35).pop() || tops[0];
         if (under && under[0] !== current) {
           setCurrent(under[0]);
           history.replaceState(null, "", `#/${under[0]}`);
@@ -16031,7 +16036,7 @@ function App() {
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
-  }, [start, current]);
+  }, [start, current, before]);
   /* a search hit on a variant lands on its card once the page has rendered */
   useEffect(() => {
     if (!PENDING_CARD) return;
@@ -16072,7 +16077,7 @@ function App() {
           <p className="mt-0.5 font-mono text-micro text-ink-3 tabular-nums">v0.1 · {componentCount} components</p>
           <p className="font-mono text-micro text-ink-3 tabular-nums">{variantCount} variants across {PAGES.length} pages</p>
           <div className="mt-2 flex items-center gap-1.5">
-            <a href="./customize" className="corner-smooth inline-flex h-7 items-center gap-1.5 rounded-control bg-surface px-2 text-caption font-medium text-ink shadow-btn transition-colors duration-150 hover:bg-hover">
+            <a href="./customize" className="corner-smooth inline-flex h-7 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-control bg-surface px-2 text-caption font-medium text-ink shadow-btn transition-colors duration-150 hover:bg-hover">
               <Icon name="sparkles" size={13} strokeWidth={2} />
               Customize
             </a>
@@ -16086,9 +16091,9 @@ function App() {
         <nav className="flex flex-col" aria-label="Components">
           {groups.map((g) => (
             <div key={g.label} className="mb-4">
-              <p className="mb-1 flex items-center justify-between gap-2 px-2 font-mono text-micro tracking-wide text-ink-3 uppercase">
+              <p className="mb-1.5 flex items-center justify-between gap-2 px-2 text-small font-semibold tracking-wide text-ink uppercase">
                 <span>{g.label}</span>
-                <span aria-label={`${g.items.length} pages`} className="rounded-[4px] bg-inset px-1 text-micro leading-4 tabular-nums normal-case">{g.items.length}</span>
+                <span aria-label={`${g.items.length} pages`} className="rounded-[4px] bg-inset px-1.5 font-mono text-micro leading-4 font-medium text-ink-2 tabular-nums normal-case">{g.items.length}</span>
               </p>
               <div className="flex flex-col gap-px">
                 {g.items.map((p) => (
@@ -16124,7 +16129,7 @@ function App() {
             const ppg = PLAYGROUNDS[p.id];
             return (
               <div key={p.id} className={i > 0 ? "mt-16 border-t border-line pt-12" : ""}>
-                <DocsPage page={p} index={start + i} pg={p.id === page.id ? pg : ppg} state={p.id === page.id ? pgState : undefined} set={p.id === page.id ? pgSet : undefined} first={i === 0} />
+                <DocsPage page={p} index={start - before + i} pg={p.id === page.id ? pg : ppg} state={p.id === page.id ? pgState : undefined} set={p.id === page.id ? pgSet : undefined} first={p.id === route} />
               </div>
             );
           })}
