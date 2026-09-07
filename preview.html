@@ -1343,7 +1343,7 @@ function IconTile({ icon, tone = "neutral", className = "" }) {
     </span>
   );
 }
-const BADGE_TONES = { green: "bg-green-tint text-green", red: "bg-red-tint text-red", neutral: "bg-inset text-ink-2" };
+const BADGE_TONES = { green: "bg-green-tint text-green", red: "bg-red-tint text-red", orange: "bg-orange-tint text-orange", neutral: "bg-inset text-ink-2" };
 function Badge({ tone = "neutral", free = false, className = "", style, children }) {
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full font-medium ${free ? "" : "h-5.5 px-2 text-tiny"} ${BADGE_TONES[tone]} ${className}`} style={style}>
@@ -8582,6 +8582,16 @@ function niceMax(v) {
   const mag = Math.pow(10, Math.floor(Math.log10(v)));
   return Math.ceil(v / (mag / 2)) * (mag / 2);
 }
+function niceTicks(min, max, target = 4) {
+  const span = max - min || 1;
+  const raw = span / target;
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((v) => v >= raw) ?? mag * 10;
+  const out = [];
+  for (let v = Math.ceil(min / step) * step; v <= max + step / 1000; v += step) out.push(Math.round(v * 1000) / 1000);
+  return out;
+}
+
 function useTip() {
   const [tip, setTip] = useState(null);
   return {
@@ -8655,6 +8665,7 @@ function BarChart({
   valuePosition = "top",
   axis = false,
   thin = false,
+  horizontal = false,
   format = compact,
   animate = FORMIC_CONFIG.motion,
   className = "",
@@ -8671,21 +8682,74 @@ function BarChart({
       : Math.max(0, ...series.map((s) => s.values[i] ?? 0)),
   );
   const max = niceMax(Math.max(0, ...columnPeak));
+  /* grouped bars may go below zero (a month's net): the baseline then
+     sits inside the plot and bars hang from it */
+  const minV = stacked ? 0 : Math.min(0, ...series.flatMap((s) => s.values));
+  const span = max - minV || 1;
+  const zeroPct = (max / span) * 100;
 
   /* A headline number over the column only means something when it
    * represents the whole column. Grouped multi-series has no such
    * number — printing the tallest series would read as the total. An
    * axis already says how tall a column is, so it switches them off. */
   const labelValues = showValues && !axis && (stacked || series.length === 1);
-  /* as many gridlines as divide the ceiling into round numbers: 350 → 5 steps of 70, not 4 of 87.5 */
-  const divisions = [4, 5, 2, 3].find((d) => Number.isInteger(max / d)) ?? 4;
-  const grid = Array.from({ length: divisions + 1 }, (_, i) => i / divisions);
+  /* gridlines at round values between the floor and the ceiling, zero among them */
+  const tickValues = niceTicks(minV, max);
+  const grid = tickValues.map((v) => (max - v) / span);
   const columnMin = stacked ? HIT : series.length * HIT;
 
   const onEnter = (event, node) => {
     const [x, y] = anchorOf(event);
     show(x, y, node);
   };
+
+  if (horizontal) {
+    return (
+      <div className={`flex w-full flex-col ${fill ? "h-full min-h-0 justify-between" : ""} ${className}`} onMouseLeave={hide}>
+        <div className={`flex flex-col gap-2.5 ${fill ? "flex-1 justify-around" : ""}`}>
+          {labels.map((label, i) => (
+            <div key={`${label}-${i}`} className="flex items-center gap-3">
+              <span className="w-20 shrink-0 truncate text-right text-caption text-ink-2 sm:w-24" title={label}>{label}</span>
+              <div className={`relative min-w-0 flex-1 ${stacked ? "flex h-6 overflow-hidden rounded-sm" : "flex flex-col gap-0.5"}`}>
+                {axis && tickValues.map((v) => (
+                  <span key={v} aria-hidden className="pointer-events-none absolute inset-y-0 border-l border-dashed border-chart-track" style={{ left: `${(v / max) * 100}%` }} />
+                ))}
+                {series.map((s, si) => {
+                  const value = s.values[i] ?? 0;
+                  const tone = toneOf(s.color, si);
+                  const text = `${s.name} · ${format(value)}`;
+                  return (
+                    <button
+                      key={`${s.name}-${si}`}
+                      type="button"
+                      aria-label={`${s.name}, ${label}: ${value.toLocaleString()}`}
+                      onMouseEnter={(e) => onEnter(e, text)}
+                      onFocus={(e) => onEnter(e, text)}
+                      onBlur={hide}
+                      className={`origin-left transition-opacity duration-150 hover:opacity-80 ${SERIES_BG[tone]} ${stacked ? "h-full" : "h-4 rounded-sm"}`}
+                      style={{ width: `${(value / max) * 100}%`, transform: settled ? "scaleX(1)" : "scaleX(0)", transition: drawing ? `transform 900ms var(--ease-out-quint) ${i * 60}ms` : undefined }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+        {axis && (
+          <div aria-hidden className="mt-2 flex items-center gap-3">
+            <span className="w-20 shrink-0 sm:w-24" />
+            <div className="relative h-4 min-w-0 flex-1">
+              {tickValues.map((v) => (
+                <span key={v} className={`absolute top-0 text-tiny text-ink-3 tabular-nums ${v === 0 ? "" : v === max ? "-translate-x-full" : "-translate-x-1/2"}`} style={{ left: `${(v / max) * 100}%` }}>{format(v)}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        {series.length > 1 && <div className="mt-3 flex justify-center"><ChartLegend series={series} /></div>}
+        <ChartTip tip={tip} />
+      </div>
+    );
+  }
 
   return (
     <div className={`flex w-full flex-col ${fill ? "h-full min-h-0" : ""} ${className}`}>
@@ -8706,13 +8770,15 @@ function BarChart({
             spans only the bars row, so its top and bottom meet the gridlines */}
         <div className={`grid grid-cols-[auto_1fr] grid-rows-[minmax(0,1fr)_auto] ${fill ? "absolute inset-0" : ""}`} style={fill ? undefined : { height: height + 20 }}>
           {axis ? (
-            <div aria-hidden className="flex flex-col justify-between pr-2 text-right text-tiny text-ink-3 tabular-nums">
-              {grid.map((t) => <span key={t} className="leading-none">{format(max - t * max)}</span>)}
+            <div aria-hidden className="relative w-10 pr-2 text-right text-tiny text-ink-3 tabular-nums">
+              {/* labels slide from their top edge at the ceiling to their bottom edge at the floor, so none is cut off */}
+              {tickValues.map((v, i) => <span key={v} className="absolute right-2 leading-none" style={{ top: `${grid[i] * 100}%`, transform: `translateY(-${grid[i] * 100}%)` }}>{format(v)}</span>)}
             </div>
           ) : <span />}
           <div className="relative flex min-h-0 items-end gap-1.5">
-            {axis && grid.map((t) => (
-              <span key={t} aria-hidden className="pointer-events-none absolute inset-x-0 border-t border-dashed border-chart-track" style={{ top: `${t * 100}%` }} />
+            {minV < 0 && <span aria-hidden className="pointer-events-none absolute inset-x-0 border-t border-line-strong" style={{ top: `${zeroPct}%` }} />}
+            {axis && grid.map((t, i) => (
+              <span key={tickValues[i]} aria-hidden className="pointer-events-none absolute inset-x-0 border-t border-dashed border-chart-track" style={{ top: `${t * 100}%` }} />
             ))}
             {labels.map((label, i) => (
               <div
@@ -8753,9 +8819,12 @@ function BarChart({
                         onMouseEnter={(e) => onEnter(e, text)}
                         onFocus={(e) => onEnter(e, text)}
                         onBlur={hide}
-                        className={`w-full origin-bottom transition-opacity duration-150 hover:opacity-80 ${thin ? "max-w-3 rounded-[2px]" : "rounded-sm"} ${SERIES_BG[tone]} ${dimmed ? "opacity-25" : ""}`}
+                        className={`w-full transition-opacity duration-150 hover:opacity-80 ${value < 0 ? "origin-top" : "origin-bottom"} ${thin ? "max-w-3 rounded-[2px]" : "rounded-sm"} ${value < 0 ? "bg-ink-3" : SERIES_BG[tone]} ${dimmed ? "opacity-25" : ""}`}
                         style={{
-                          height: `${(value / max) * 100}%`,
+                          height: `${(Math.abs(value) / span) * 100}%`,
+                          /* below zero the bar hangs from the baseline: pushed down by the
+                             positive room above it, in muted ink so the sign reads at a glance */
+                          marginBottom: minV < 0 ? `${((Math.min(value, 0) - minV) / span) * 100}%` : undefined,
                           /* scaleY composites on the GPU; animating height relays out every frame */
                           transform: settled ? "scaleY(1)" : "scaleY(0)",
                           transition: drawing ? `transform 900ms var(--ease-out-quint) ${i * 60}ms` : undefined,
@@ -8797,9 +8866,12 @@ function LineChart({
   floor = true,
   format = compact,
   endMarker = false,
+  tooltip = "point",
   className = "",
 }) {
   const gradientId = useId();
+  const [cross, setCross] = useState(null);
+  const shared = tooltip === "shared";
   const { tip, show, hide } = useTip();
   const { settled, drawing } = useEntrance(animate);
   const W = 100, H = 40;                      // viewBox units; CSS does the sizing
@@ -8842,7 +8914,7 @@ function LineChart({
       <div
         className={`relative ${fill ? "min-h-0" : ""}`}
         style={fill ? { minHeight: height } : undefined}
-        onMouseLeave={hide}
+        onMouseLeave={() => { hide(); setCross(null); }}
       >
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -8861,6 +8933,9 @@ function LineChart({
           {guides && labels.map((l, i) => (
             <line key={`g-${l}-${i}`} x1={i * step} x2={i * step} y1="0" y2={H} className="stroke-chart-track" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
           ))}
+          {shared && cross !== null && (
+            <line x1={cross * step} x2={cross * step} y1="0" y2={H} className="stroke-ink-3" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+          )}
           {backdrop && series[0] && series[0].values.map((v, i) => (
             <rect key={`b-${i}`} x={i * step - step * 0.28} width={step * 0.56} y={yOf(v)} height={Math.max(0, zeroY - yOf(v))} className="fill-chart-track" opacity="0.6" />
           ))}
@@ -8922,9 +8997,45 @@ function LineChart({
             points="hover" keeps the targets but shows the dot only while it
             is hovered or focused — for a long series where 50 dots would
             bead the line. */}
+        {shared && Array.from({ length: slots }, (_, i) => {
+          const node = (
+            <span className="flex flex-col gap-1">
+              <span className="font-medium text-ink">{labels[i] ?? i + 1}</span>
+              {series.map((s, si) => (
+                <span key={`${s.name}-${si}`} className="flex items-center gap-1.5">
+                  {s.style === "dashed" ? <span className="w-2.5 border-t border-dashed border-ink-3" /> : <span className={`size-2 rounded-full ${SERIES_BG[toneOf(s.color, si)]}`} />}
+                  <span className="text-ink-2">{s.name}</span>
+                  <span className="ml-auto pl-3 font-medium tabular-nums">{format(s.values[i] ?? 0)}</span>
+                </span>
+              ))}
+            </span>
+          );
+          const enter = (e) => { setCross(i); const r = e.currentTarget.getBoundingClientRect(); show(r.left + r.width / 2, r.top, node); };
+          const leave = () => { setCross(null); hide(); };
+          return (
+            <button
+              key={`slot-${i}`}
+              type="button"
+              aria-label={`${labels[i] ?? i + 1}: ${series.map((s) => `${s.name} ${format(s.values[i] ?? 0)}`).join(", ")}`}
+              onMouseEnter={enter}
+              onFocus={enter}
+              onMouseLeave={leave}
+              onBlur={leave}
+              className="absolute inset-y-0 -translate-x-1/2 rounded-sm"
+              style={{ left: `${(i / Math.max(slots - 1, 1)) * 100}%`, width: `max(${HIT}px, ${100 / Math.max(slots, 1)}%)` }}
+            />
+          );
+        })}
         {points && series.map((s, si) => {
           const tone = toneOf(s.color, si);
-          return s.values.map((v, i) => (
+          if (s.style === "dashed") return null;
+          return s.values.map((v, i) => shared ? (
+            <span
+              key={`${s.name}-${si}-${i}`} aria-hidden
+              className={`pointer-events-none absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface transition-transform duration-150 ${SERIES_BG[tone]} ${points === "hover" && cross !== i ? "scale-0" : ""}`}
+              style={{ left: `${(i / Math.max(slots - 1, 1)) * 100}%`, top: `${(yOf(v) / H) * 100}%`, opacity: settled ? 1 : 0, transition: drawing ? `opacity 400ms var(--ease-out-quint) ${900 + i * 40}ms` : undefined }}
+            />
+          ) : (
             <button
               key={`${s.name}-${si}-${i}`}
               type="button"
@@ -8978,6 +9089,7 @@ function DonutChart({
   size = 116,
   segments,
   legend = true,
+  center,
   format = compact,
   animate = FORMIC_CONFIG.motion,
   className = "",
@@ -8997,8 +9109,27 @@ function DonutChart({
     });
     const lead = arcs[active ?? 0];
     const sweep = settled ? 1 : 0;
+    const list = legend === "list";
+    const rowFor = ({ seg, i, tone }) => (
+      <li key={`${seg.name}-${i}`} className={list ? "w-full" : undefined}>
+        {/* a row is a button so the keyboard can bring each part to the centre */}
+        <button
+          type="button"
+          aria-label={`${seg.name}: ${format(seg.value)}, ${Math.round((seg.value / total) * 100)}%`}
+          onMouseEnter={() => setActive(i)}
+          onFocus={() => setActive(i)}
+          onBlur={() => setActive(null)}
+          className={`flex items-center gap-1.5 rounded-sm px-1 transition-colors duration-150 ${list ? "h-7 w-full gap-2.5 text-caption" : "h-6 text-tiny"} ${active === i ? "text-ink" : "text-ink-2"}`}
+        >
+          <span className={`size-2 shrink-0 rounded-full ${SERIES_BG[tone]}`} />
+          <span className={list ? "min-w-0 flex-1 truncate text-left" : undefined}>{seg.name}</span>
+          {list && <span className="w-10 shrink-0 text-right font-medium text-ink tabular-nums">{format(seg.value)}</span>}
+          <span className={`text-ink-3 tabular-nums ${list ? "w-10 shrink-0 text-right text-small" : ""}`}>{Math.round((seg.value / total) * 100)}%</span>
+        </button>
+      </li>
+    );
     return (
-      <div className={`flex w-full flex-col items-center gap-4 ${className}`}>
+      <div className={`flex w-full ${list ? "flex-wrap items-center justify-center gap-6" : "flex-col items-center gap-4"} ${className}`}>
         <div
           className="relative shrink-0"
           style={{ width: size, height: size, maxWidth: "100%" }}
@@ -9019,31 +9150,19 @@ function DonutChart({
               />
             ))}
           </svg>
-          <span className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-4 text-center">
-            <span className="text-title font-semibold text-ink tabular-nums">{format(lead.seg.value)}</span>
-            <span className="max-w-full truncate text-tiny text-ink-2">{lead.seg.name}</span>
-            {lead.seg.detail && <span className="max-w-full truncate text-tiny text-ink-3">{lead.seg.detail}</span>}
-          </span>
+          {center !== undefined && active === null ? (
+            <span className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center">{center}</span>
+          ) : (
+            <span className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-4 text-center">
+              <span className="text-title font-semibold text-ink tabular-nums">{format(lead.seg.value)}</span>
+              <span className="max-w-full truncate text-tiny text-ink-2">{lead.seg.name}</span>
+              {lead.seg.detail && <span className="max-w-full truncate text-tiny text-ink-3">{lead.seg.detail}</span>}
+            </span>
+          )}
         </div>
         {legend && (
-          <ul className="flex w-full flex-wrap justify-center gap-x-3.5 gap-y-1.5">
-            {arcs.map(({ seg, i, tone }) => (
-              <li key={`${seg.name}-${i}`}>
-                {/* a row is a button so the keyboard can bring each part to the centre */}
-                <button
-                  type="button"
-                  aria-label={`${seg.name}: ${format(seg.value)}, ${Math.round((seg.value / total) * 100)}%`}
-                  onMouseEnter={() => setActive(i)}
-                  onFocus={() => setActive(i)}
-                  onBlur={() => setActive(null)}
-                  className={`flex h-6 items-center gap-1.5 rounded-sm px-1 text-tiny transition-colors duration-150 ${active === i ? "text-ink" : "text-ink-2"}`}
-                >
-                  <span className={`size-2 shrink-0 rounded-full ${SERIES_BG[tone]}`} />
-                  {seg.name}
-                  <span className="text-ink-3 tabular-nums">{Math.round((seg.value / total) * 100)}%</span>
-                </button>
-              </li>
-            ))}
+          <ul className={list ? "flex min-w-44 flex-1 flex-col gap-0.5" : "flex w-full flex-wrap justify-center gap-x-3.5 gap-y-1.5"}>
+            {arcs.map(rowFor)}
           </ul>
         )}
       </div>
@@ -9179,6 +9298,98 @@ function RadarChart({
         <ChartTip tip={tip} />
       </div>
       {legend && series.length > 1 && <ChartLegend series={series} />}
+    </div>
+  );
+}
+
+/* ═══════════ ScatterChart ═══════════ */
+/* Two quantities per thing, a third as the mark's size — deal size
+ * against days to close, bubble for how many. SVG axes and guides, the
+ * marks as HTML buttons (real targets, real tooltips with every field
+ * as text), a dashed crosshair to the hovered mark. One colour per
+ * point in the ramp with a legend, because the points are categories. */
+const DEFAULT_POINTS = [
+  { name: "Referrals", x: 184_000, y: 31, size: 22 }, { name: "Website", x: 96_000, y: 48, size: 34 },
+  { name: "Repeat clients", x: 212_000, y: 19, size: 15 }, { name: "Events", x: 58_000, y: 62, size: 9 }, { name: "Directories", x: 41_000, y: 74, size: 6 },
+];
+function ScatterChart({
+  points = DEFAULT_POINTS,
+  xLabel = "Average project value",
+  yLabel = "Days to sign",
+  sizeLabel = "Projects",
+  formatX = (n) => `ETB ${compact(n)}`,
+  formatY = (n) => `${n}d`,
+  height = 220,
+  legend = true,
+  animate = FORMIC_CONFIG.motion,
+  className = "",
+}) {
+  const { tip, show, hide } = useTip();
+  const { settled, drawing } = useEntrance(animate);
+  const [cross, setCross] = useState(null);
+  const maxX = niceMax(Math.max(0, ...points.map((p) => p.x)));
+  const maxY = niceMax(Math.max(0, ...points.map((p) => p.y)));
+  const maxS = Math.max(1, ...points.map((p) => p.size ?? 1));
+  const xTicks = niceTicks(0, maxX), yTicks = niceTicks(0, maxY);
+  const px = (p) => (p.x / maxX) * 100;
+  const py = (p) => 100 - (p.y / maxY) * 100;
+  const r = (p) => 6 + Math.sqrt((p.size ?? 1) / maxS) * 10;
+  return (
+    <div className={`flex w-full flex-col gap-3 ${className}`}>
+      <div className="grid grid-cols-[auto_1fr] grid-rows-[auto_auto]">
+        <div aria-hidden className="relative w-12 pr-2 text-right text-tiny text-ink-3 tabular-nums">
+          {yTicks.map((v) => <span key={v} className="absolute right-2 leading-none" style={{ top: `${100 - (v / maxY) * 100}%`, transform: `translateY(-${100 - (v / maxY) * 100}%)` }}>{formatY(v)}</span>)}
+        </div>
+        <div className="relative" style={{ height }} onMouseLeave={() => { hide(); setCross(null); }}>
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full overflow-visible" role="img" aria-label={`${yLabel} against ${xLabel}. ${points.map((p) => `${p.name}: ${formatX(p.x)}, ${formatY(p.y)}${p.size !== undefined ? `, ${sizeLabel} ${p.size}` : ""}`).join(". ")}`}>
+            {yTicks.map((v) => <line key={`h${v}`} x1="0" x2="100" y1={100 - (v / maxY) * 100} y2={100 - (v / maxY) * 100} className="stroke-chart-track" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />)}
+            {xTicks.map((v) => <line key={`v${v}`} x1={(v / maxX) * 100} x2={(v / maxX) * 100} y1="0" y2="100" className="stroke-chart-track" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />)}
+            {cross !== null && points[cross] && (
+              <>
+                <line x1={px(points[cross])} x2={px(points[cross])} y1="0" y2="100" className="stroke-ink-3" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+                <line x1="0" x2="100" y1={py(points[cross])} y2={py(points[cross])} className="stroke-ink-3" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+              </>
+            )}
+          </svg>
+          {points.map((p, i) => {
+            const tone = toneOf(p.color, i);
+            const node = (
+              <span className="flex flex-col gap-0.5">
+                <span className="font-medium text-ink">{p.name}</span>
+                <span className="text-ink-2">{xLabel}: <span className="text-ink tabular-nums">{formatX(p.x)}</span></span>
+                <span className="text-ink-2">{yLabel}: <span className="text-ink tabular-nums">{formatY(p.y)}</span></span>
+                {p.size !== undefined && <span className="text-ink-2">{sizeLabel}: <span className="text-ink tabular-nums">{p.size}</span></span>}
+              </span>
+            );
+            const enter = (e) => { setCross(i); const [x, y] = anchorOf(e); show(x, y, node); };
+            return (
+              <button
+                key={`${p.name}-${i}`}
+                type="button"
+                aria-label={`${p.name}: ${xLabel} ${formatX(p.x)}, ${yLabel} ${formatY(p.y)}${p.size !== undefined ? `, ${sizeLabel} ${p.size}` : ""}`}
+                onMouseEnter={enter}
+                onFocus={enter}
+                onBlur={() => { setCross(null); hide(); }}
+                className="group absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full"
+                style={{ left: `${px(p)}%`, top: `${py(p)}%`, width: Math.max(HIT, r(p) * 2), height: Math.max(HIT, r(p) * 2) }}
+              >
+                <span
+                  className={`rounded-full transition-transform duration-150 group-hover:scale-110 ${SERIES_BG[tone]} ${cross !== null && cross !== i ? "opacity-50" : ""}`}
+                  style={{ width: r(p) * 2, height: r(p) * 2, transform: settled ? "scale(1)" : "scale(0)", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 80}ms` : undefined }}
+                />
+              </button>
+            );
+          })}
+          <ChartTip tip={tip} />
+        </div>
+        <span />
+        <div aria-hidden className="relative mt-2 h-4">
+          {xTicks.map((v) => (
+            <span key={v} className={`absolute top-0 text-tiny text-ink-3 tabular-nums ${v === 0 ? "" : v === maxX ? "-translate-x-full" : "-translate-x-1/2"}`} style={{ left: `${(v / maxX) * 100}%` }}>{formatX(v)}</span>
+          ))}
+        </div>
+      </div>
+      {legend && <ChartLegend series={points.map((p, i) => ({ name: p.name, color: toneOf(p.color, i), values: [] }))} />}
     </div>
   );
 }
@@ -9510,6 +9721,7 @@ function Delta({ tone = "up", children }) {
     </span>
   );
 }
+const KEY_TONES = { 1: "bg-chart-1", 2: "bg-chart-2", 3: "bg-chart-3", 4: "bg-chart-4", 5: "bg-chart-5" };
 function StatCard({
   label = "Invoiced",
   value = 1_437_500,
@@ -9532,6 +9744,7 @@ function StatCard({
   ring,
   chart: chartProp,
   period,
+  keyTone = 1,
   size = "md",
   className = "",
 }) {
@@ -9564,6 +9777,17 @@ function StatCard({
           <span className="block truncate text-lead font-semibold text-ink tabular-nums">{display ?? compact(value)}</span>
         </span>
         {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+      </div>
+    );
+  }
+  if (layout === "key") {
+    return (
+      <div className={`flex min-w-0 items-stretch gap-2.5 ${className}`}>
+        <span aria-hidden className={`w-0.75 shrink-0 rounded-full ${KEY_TONES[keyTone]}`} />
+        <span className="min-w-0">
+          <span className="flex items-center gap-2"><span className="text-title font-semibold text-ink tabular-nums">{display ?? compact(value)}</span>{delta && <Delta tone={deltaTone}>{delta}</Delta>}</span>
+          <span className="block truncate text-caption text-ink-3">{label}</span>
+        </span>
       </div>
     );
   }
@@ -11187,6 +11411,174 @@ function StatStrip({ items = DEFAULT_STRIP, className = "" }) {
     </Card>
   );
 }
+/* ── DataTable (mirror components/DataTable.tsx) ── */
+const ALIGN = { start: "text-left", center: "text-center", end: "text-right" };
+
+function DataTable({
+  columns,
+  rows,
+  selectable = false,
+  selected,
+  defaultSelected = [],
+  onSelectedChange,
+  actions,
+  toolbar,
+  pageSize,
+  total,
+  page,
+  defaultPage = 1,
+  onPageChange,
+  empty = "Nothing here yet",
+  label = "Records",
+  onRowClick,
+  className = "",
+}) {
+  const [internalSel, setInternalSel] = useState(defaultSelected);
+  const [internalPage, setInternalPage] = useState(defaultPage);
+  const picked = selected ?? internalSel;
+  const setPicked = (ids) => { if (selected === undefined) setInternalSel(ids); onSelectedChange?.(ids); };
+  const current = page ?? internalPage;
+  const setPage = (p) => { if (page === undefined) setInternalPage(p); onPageChange?.(p); };
+
+  const allOn = rows.length > 0 && rows.every((r) => picked.includes(r.id));
+  const someOn = !allOn && rows.some((r) => picked.includes(r.id));
+  const toggleAll = () => setPicked(allOn ? picked.filter((id) => !rows.some((r) => r.id === id)) : Array.from(new Set([...picked, ...rows.map((r) => r.id)])));
+  const toggle = (id) => setPicked(picked.includes(id) ? picked.filter((x) => x !== id) : [...picked, id]);
+
+  const count = total ?? rows.length;
+  const size = pageSize ?? Math.max(rows.length, 1);
+  const pageCount = Math.max(1, Math.ceil(count / size));
+  const from = count === 0 ? 0 : (current - 1) * size + 1;
+  const to = Math.min(count, from + rows.length - 1);
+
+  const box = (on, mixed, onClick, name) => (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={mixed ? "mixed" : on}
+      aria-label={name}
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      className="flex size-6 items-center justify-center rounded-sm"
+    >
+      <RadioCheck type="check" on={on} mixed={mixed} />
+    </button>
+  );
+
+  return (
+    <div className={`flex w-full flex-col rounded-card bg-surface shadow-card ${className}`}>
+      {toolbar && <div className="flex flex-wrap items-center gap-2 border-b border-line p-4">{toolbar}</div>}
+      <div role="region" aria-label={`${label}, scrollable`} tabIndex={0} className="overflow-x-auto rounded-b-card">
+        <table className="w-full border-collapse text-caption">
+          <thead>
+            <tr className="border-b border-line">
+              {selectable && <th scope="col" className="w-10 px-4 py-3">{box(allOn, someOn, toggleAll, allOn ? "Deselect all rows" : "Select all rows")}</th>}
+              {columns.map((c) => (
+                <th key={c.key} scope="col" style={{ width: c.width }} className={`px-4 py-3 text-small font-medium whitespace-nowrap text-ink-3 ${ALIGN[c.align ?? "start"]}`}>{c.header}</th>
+              ))}
+              {actions && <th scope="col" className="px-4 py-3 text-right text-small font-medium text-ink-3">Actions</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && (
+              <tr><td colSpan={columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)} className="px-4 py-10 text-center text-caption text-ink-3">{empty}</td></tr>
+            )}
+            {rows.map((row) => {
+              const on = picked.includes(row.id);
+              return (
+                <tr
+                  key={row.id}
+                  aria-selected={selectable ? on : undefined}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={`border-b border-line last:border-b-0 transition-colors duration-150 ${on ? "bg-hover" : "hover:bg-hover"} ${onRowClick ? "cursor-pointer" : ""}`}
+                >
+                  {selectable && <td className="px-4 py-3">{box(on, false, () => toggle(row.id), on ? "Deselect row" : "Select row")}</td>}
+                  {columns.map((c) => (
+                    <td key={c.key} className={`px-4 py-3 align-middle whitespace-nowrap ${c.muted ? "text-ink-3" : "text-ink"} ${ALIGN[c.align ?? "start"]}`}>
+                      {c.render ? c.render(row) : row[c.key]}
+                    </td>
+                  ))}
+                  {actions && <td className="px-4 py-3 text-right"><span className="inline-flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>{actions(row)}</span></td>}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {pageSize && (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
+          <span className="text-caption text-ink-3 tabular-nums">Showing {from} to {to} of {count} entries</span>
+          {pageCount > 1 && <div className="ml-auto flex"><Pagination pageCount={pageCount} page={current} onChange={setPage} /></div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── cells ─────────────────────────────────────────────── */
+/* A who: avatar, name, a detail under it. */
+function PersonCell({ name, detail, src, kind }) {
+  return (
+    <span className="flex min-w-0 items-center gap-3">
+      <Avatar name={name} src={src} kind={kind} size="lg" />
+      <span className="min-w-0">
+        <span className="block truncate text-caption font-medium text-ink">{name}</span>
+        {detail && <span className="block truncate text-small text-ink-3">{detail}</span>}
+      </span>
+    </span>
+  );
+}
+
+/* An icon (or any tile — a BrandLogo in a span) with a name and a detail. */
+function IconCell({ icon, tile, name, detail }) {
+  return (
+    <span className="flex min-w-0 items-center gap-3">
+      {tile ?? (icon && <IconTile icon={icon} />)}
+      <span className="min-w-0">
+        <span className="block truncate text-caption font-medium text-ink">{name}</span>
+        {detail && <span className="block truncate text-small text-ink-3">{detail}</span>}
+      </span>
+    </span>
+  );
+}
+
+/* A bar with its percent before and its fraction after. */
+function ProgressCell({ value, max = 100, label }) {
+  const pct = max === 0 ? 0 : Math.round((value / max) * 100);
+  return (
+    <span className="flex items-center gap-2.5">
+      <span className="w-9 shrink-0 text-right text-small text-ink-3 tabular-nums">{pct}%</span>
+      <Progress value={value} max={max} label={label} tone="ink" className="min-w-16 flex-1" />
+      <span className="shrink-0 text-caption text-ink tabular-nums">{value}/{max}</span>
+    </span>
+  );
+}
+
+/* A number with the icon that says what it counts: 14 people, 23 lessons. */
+function CountCell({ icon, value, label }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-caption text-ink tabular-nums" aria-label={`${value} ${label}`}>
+      <Icon name={icon} size={15} strokeWidth={2} className="text-ink-3" />
+      {value}
+    </span>
+  );
+}
+
+/* A state as a pill. */
+function StatusCell({ tone = "neutral", children }) {
+  return <Badge tone={tone}>{children}</Badge>;
+}
+
+/* The standard trailing trio: view, delete, more. Pass your own handlers. */
+function RowActions({ onView, onDelete, onMore }) {
+  const cls = "size-7 rounded-sm text-ink-3 transition-colors duration-150 hover:bg-hover hover:text-ink";
+  return (
+    <>
+      {onView && <Tooltip label="View"><IconButton label="View" onClick={onView} className={cls}><Icon name="eye" size={15} /></IconButton></Tooltip>}
+      {onDelete && <Tooltip label="Delete"><IconButton label="Delete" onClick={onDelete} className={`${cls} hover:text-red`}><Icon name="trash" size={15} /></IconButton></Tooltip>}
+      {onMore && <Tooltip label="More"><IconButton label="More" onClick={onMore} className={cls}><Icon name="dots-vertical" size={15} /></IconButton></Tooltip>}
+    </>
+  );
+}
 function Page_statcard() {
   return (
     <>
@@ -11308,6 +11700,21 @@ function Page_statcard() {
           { icon: "arrow-up", label: "Change vs last month", display: "-6%", tone: "down" },
         ]} />
       </GalleryCard>
+      <GalleryCard label="Key · no card, a coloured rule on the left: the headline figures above a chart that double as its legend" full>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap gap-6">
+              <StatCard layout="key" keyTone={1} label="Invoiced" display="ETB 2.4M" />
+              <StatCard layout="key" keyTone={2} label="Collected" display="ETB 1.9M" />
+            </div>
+            <Tabs variant="segmented" tabs={[{ key: "1m", label: "1M" }, { key: "6m", label: "6M" }, { key: "1y", label: "1Y" }, { key: "all", label: "All" }]} defaultValue="1y" />
+          </div>
+          <LineChart curve="smooth" points="hover" axis area={false} legend={false} height={180} format={(n) => `ETB ${compact(n)}`} labels={["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"]} series={[
+            { name: "Invoiced", values: [120000, 140000, 135000, 180000, 210000, 190000, 205000, 240000, 230000, 250000, 245000, 260000] },
+            { name: "Collected", color: 2, values: [90000, 110000, 120000, 150000, 160000, 175000, 180000, 200000, 210000, 215000, 230000, 235000] },
+          ]} />
+        </div>
+      </GalleryCard>
     </>
   );
 }
@@ -11409,6 +11816,30 @@ function Page_charts() {
           { name: "Retainers", color: 5, values: [30, 30, 30, 36, 36, 36, 42, 42, 42, 42, 48, 48] },
         ]} />
       </GalleryCard>
+      <GalleryCard label="ScatterChart · two quantities per source, the third as the mark's size; crosshair and a tooltip with every field" full>
+        <ScatterChart />
+      </GalleryCard>
+      <GalleryCard label="BarChart · horizontal and stacked: won and lost per source on one row each, a value axis along the bottom" full>
+        <BarChart horizontal variant="stacked" axis labels={["Referrals", "Website", "Repeat clients", "Events", "Directories"]} series={[
+          { name: "Won", values: [9, 6, 8, 7, 10] },
+          { name: "Lost", color: 5, values: [4, 7, 3, 5, 1] },
+        ]} format={(n) => String(n)} />
+      </GalleryCard>
+      <GalleryCard label="BarChart · below zero: a month's net hangs from the baseline in muted ink" full>
+        <BarChart axis labels={["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"]} series={[{ name: "Net cash", values: [20, -12, 13, -9, 19, -14, 15] }]} format={(n) => `${n}k`} height={200} />
+      </GalleryCard>
+      <GalleryCard label="DonutChart · a list legend beside the ring with each count and share, a total in the middle" full>
+        <DonutChart size={160} label="Clients by stage" center={<><span className="text-display font-semibold text-ink tabular-nums">60</span><span className="text-small text-ink-3">clients</span></>} legend="list" format={(n) => String(n)} segments={[
+          { name: "Prospect", value: 15 }, { name: "In talks", value: 14 }, { name: "Active", value: 20 }, { name: "At risk", value: 7 }, { name: "Past", value: 4 },
+        ]} />
+      </GalleryCard>
+      <GalleryCard label="LineChart · three smooth series with a shared tooltip: one target per month lists every series under a crosshair" full>
+        <LineChart curve="smooth" tooltip="shared" points="hover" axis area={false} height={200} labels={["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"]} series={[
+          { name: "Clients", values: [5, 3, 4, 6, 3, 6, 5, 4, 5, 5, 4, 1] },
+          { name: "Proposals", color: 4, values: [8, 8, 8, 8, 9, 9, 9, 9, 8, 9, 14, 9] },
+          { name: "Contacts", color: 2, values: [10, 6, 7, 11, 6, 10, 10, 9, 11, 10, 10, 8] },
+        ]} format={(n) => String(n)} />
+      </GalleryCard>
     </>
   );
 }
@@ -11421,6 +11852,101 @@ function Page_recordstable() {
   );
 }
 
+function Page_datatable() {
+  const [sel, setSel] = useState([]);
+  const [show, setShow] = useState("5");
+  const [status, setStatus] = useState("");
+  const invoices = [
+    { id: "INV-2041", client: "Northwind Bank", contact: "Meron Tadesse", total: "ETB 312,000", issued: "03 Apr 2026", state: "paid" },
+    { id: "INV-2038", client: "Creamery", contact: "Yonas Alemu", total: "ETB 145,000", issued: "12 May 2026", state: "paid" },
+    { id: "INV-2036", client: "Selam Coffee", contact: "Hana Bekele", total: "ETB 120,000", issued: "26 Jun 2026", state: "pending" },
+    { id: "INV-2031", client: "Addis Motors", contact: "Dawit Haile", total: "ETB 268,000", issued: "05 Jul 2026", state: "overdue" },
+    { id: "INV-2029", client: "Blue Nile Tours", contact: "Sara Girma", total: "ETB 312,000", issued: "07 Aug 2026", state: "paid" },
+  ];
+  const tone = { paid: "green", pending: "orange", overdue: "red" };
+  const courses = [
+    { id: "c1", name: "Brand identity", tile: "figma", lead: "Meron Tadesse", hours: "19h 17m", done: 50, of: 100, people: 14, lessons: 23, clips: 26 },
+    { id: "c2", name: "Web build", tile: "react", lead: "Yonas Alemu", hours: "20h 05m", done: 11, of: 50, people: 15, lessons: 24, clips: 27 },
+    { id: "c3", name: "Product thinking", tile: "notion", lead: "Hana Bekele", hours: "21h 38m", done: 1, of: 10, people: 16, lessons: 25, clips: 28 },
+    { id: "c4", name: "Motion", tile: "framer", lead: "Dawit Haile", hours: "22h 12m", done: 26, of: 50, people: 17, lessons: 26, clips: 29 },
+    { id: "c5", name: "Research", tile: "github", lead: "Sara Girma", hours: "23h 45m", done: 76, of: 100, people: 18, lessons: 27, clips: 30 },
+  ];
+  const people = [
+    { id: "p1", name: "Meron Tadesse", email: "meron@formic.studio", role: "Owner", roleIcon: "shield", plan: "Studio", billing: "Auto debit", state: "Active", tone: "green" },
+    { id: "p2", name: "Yonas Alemu", email: "yonas@formic.studio", role: "Admin", roleIcon: "user", plan: "Studio", billing: "Auto debit", state: "Active", tone: "green" },
+    { id: "p3", name: "Hana Bekele", email: "hana@selamcoffee.et", role: "Editor", roleIcon: "edit", plan: "Team", billing: "Manual · transfer", state: "Pending", tone: "orange" },
+    { id: "p4", name: "Dawit Haile", email: "dawit@addismotors.et", role: "Author", roleIcon: "edit", plan: "Basic", billing: "Manual · cash", state: "Inactive", tone: "red" },
+    { id: "p5", name: "Sara Girma", email: "sara@bluenile.et", role: "Viewer", roleIcon: "eye", plan: "Company", billing: "Auto debit", state: "Active", tone: "green" },
+  ];
+  const acts = (row) => <RowActions onView={() => {}} onDelete={() => {}} onMore={() => {}} />;
+  return (
+    <>
+      <GalleryCard label="Invoices · toolbar with a page-size select, the accent action, search and a status filter; select boxes, a status badge, a who, the standard actions and a paged footer" full>
+        <DataTable
+          label="Invoices"
+          selectable selected={sel} onSelectedChange={setSel}
+          pageSize={5} total={25}
+          toolbar={<>
+            <span className="flex items-center gap-2 text-caption text-ink-2">Show <Select size="sm" value={show} onChange={setShow} options={[{ value: "5", label: "5" }, { value: "10", label: "10" }, { value: "25", label: "25" }]} width="w-18" /></span>
+            <Button variant="accent" size="sm" icon={<Icon name="plus" size={14} />}>New invoice</Button>
+            <span className="ml-auto flex flex-wrap items-center gap-2">
+              <Input size="sm" leadingIcon="search" placeholder="Search client…" width="w-56" />
+              <Select size="sm" placeholder="All statuses" value={status} onChange={setStatus} options={[{ value: "paid", label: "Paid" }, { value: "pending", label: "Pending" }, { value: "overdue", label: "Overdue" }]} width="w-40" />
+            </span>
+          </>}
+          columns={[
+            { key: "id", header: "ID", muted: true, width: "120px" },
+            { key: "state", header: "Status", width: "110px", render: (r) => <StatusCell tone={tone[r.state]}>{r.state[0].toUpperCase() + r.state.slice(1)}</StatusCell> },
+            { key: "client", header: "Client", render: (r) => <PersonCell name={r.contact} detail={r.client} /> },
+            { key: "total", header: "Total", align: "end", render: (r) => <span className="tabular-nums">{r.total}</span> },
+            { key: "issued", header: "Issued", muted: true },
+          ]}
+          rows={invoices}
+          actions={acts}
+        />
+      </GalleryCard>
+      <GalleryCard label="Courses · an icon cell with a logo tile and a lead under it, a progress cell with its percent and fraction, count cells" full>
+        <DataTable
+          label="Courses"
+          selectable
+          pageSize={5} total={25}
+          toolbar={<><span className="text-lead font-semibold text-ink">Courses you are taking</span><span className="ml-auto"><Input size="sm" placeholder="Search course" width="w-48" /></span></>}
+          columns={[
+            { key: "name", header: "Course", width: "32%", render: (r) => <IconCell tile={<span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-inset shadow-hairline"><BrandLogo name={r.tile} size={18} /></span>} name={r.name} detail={r.lead} /> },
+            { key: "hours", header: "Time", muted: true },
+            { key: "done", header: "Progress", width: "30%", render: (r) => <ProgressCell value={r.done} max={r.of} label={`${r.name} progress`} /> },
+            { key: "stats", header: "Statistics", align: "end", render: (r) => <span className="inline-flex items-center gap-5"><CountCell icon="user" value={r.people} label="people" /><CountCell icon="file" value={r.lessons} label="lessons" /><CountCell icon="video" value={r.clips} label="videos" /></span> },
+          ]}
+          rows={courses}
+        />
+      </GalleryCard>
+      <GalleryCard label="People · three filters above, a role with its icon, a state badge in three tones" full>
+        <DataTable
+          label="People"
+          selectable
+          pageSize={5} total={25}
+          toolbar={<div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
+            {[["Role", ["Owner", "Admin", "Editor"]], ["Plan", ["Studio", "Team", "Basic"]], ["Status", ["Active", "Pending", "Inactive"]]].map(([l, opts]) => (
+              <label key={l} className="flex flex-col gap-1.5 text-caption font-medium text-ink">{l}<Select size="sm" placeholder="All" options={opts.map((o) => ({ value: o.toLowerCase(), label: o }))} /></label>
+            ))}
+          </div>}
+          columns={[
+            { key: "name", header: "User", width: "34%", render: (r) => <PersonCell name={r.name} detail={r.email} /> },
+            { key: "role", header: "Role", render: (r) => <span className="inline-flex items-center gap-1.5"><Icon name={r.roleIcon} size={14} strokeWidth={2} className="text-ink-3" />{r.role}</span> },
+            { key: "plan", header: "Plan", muted: true },
+            { key: "billing", header: "Billing", muted: true },
+            { key: "state", header: "Status", render: (r) => <StatusCell tone={r.tone}>{r.state}</StatusCell> },
+          ]}
+          rows={people}
+          actions={acts}
+        />
+      </GalleryCard>
+      <GalleryCard label="Empty" wide>
+        <DataTable label="Payouts" columns={[{ key: "a", header: "Payout" }, { key: "b", header: "Date" }]} rows={[]} empty="No payouts yet — the first one lands after the first paid invoice." />
+      </GalleryCard>
+    </>
+  );
+}
 function Page_filtertable() {
   return (
     <>
@@ -12540,6 +13066,7 @@ const PAGES = [
   { id: "dashboard", group: "Dashboard", title: "Dashboard widgets", note: "The moving parts of a dashboard, composed into one screen: CountUp settles the headline once, a smooth Sparkline draws itself in, the Gauge lights its ticks in sequence, BarList ranks in a single hue because the ranking is the message, MetricRow carries a funnel with a detail line, and PrivacyScope hides the money until the eye opens. Every animation collapses to its final frame under reduced motion.", file: "components/charts.tsx components/StatCard.tsx components/Privacy.tsx", Component: Page_dashboard },
   { id: "privacy", group: "Dashboard", title: "Privacy", note: "A dashboard is often open on a screen someone else can see. Wrap a card in PrivacyScope, put PrivacyToggle where the header wants the eye, and wrap each figure in Masked. Hidden is the default on every visit and deliberately never remembered.", file: "components/Privacy.tsx", Component: Page_privacy },
   { id: "recordstable", group: "Data", title: "RecordsTable", note: "AI spreadsheet grid \u2014 click headers for property config, + to add an AI column, then Go calculate. Drag column edges to resize.", file: "components/RecordsTable.tsx", Component: Page_recordstable },
+  { id: "datatable", group: "Data", title: "DataTable", note: "The records list every admin screen has: a toolbar, declared columns, select boxes with a mixed header, cell helpers for a who, a progress bar, an icon with a name and a count, the standard view / delete / more actions, and a footer that says where you are. Wide tables scroll in their own region.", file: "components/DataTable.tsx", Component: Page_datatable },
   { id: "filtertable", group: "Data", title: "FilterTable", note: "Status chips directly filter the table \u2014 rows collapse and expand as you switch.", file: "components/FilterTable.tsx", Component: Page_filtertable },
   { id: "difftable", group: "Data", title: "DiffTable", note: "Proposed edit as a diff \u2014 click changed rows to include/exclude each edit, then apply.", file: "components/DiffTable.tsx", Component: Page_difftable },
   { id: "contextcards", group: "Data", title: "ContextCards", note: "Retrieved chunks with source chips \u2014 file-type badges link back to the original document.", file: "components/ContextCards.tsx", Component: Page_contextcards },

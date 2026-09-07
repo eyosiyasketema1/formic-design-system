@@ -21,6 +21,9 @@ import { FORMIC_CONFIG } from "./config";
  *   layout="tile"          icon tile and the delta on the top row, the
  *                          number and label under, a `period` chip at
  *                          the foot ("Last 4 months")
+ *   layout="key"           no card: a coloured rule on the left, the
+ *                          number and label beside it — the headline
+ *                          figures above a chart that are also its legend
  *   StatStrip              one bar of headline figures divided by
  *                          hairlines, an icon tile per figure, for the
  *                          top of a finance screen
@@ -57,6 +60,7 @@ export function Delta({ tone = "up", children }: { tone?: DeltaTone; children: R
 }
 
 export type StatIconTone = IconTileTone;
+const KEY_TONES: Record<ChartColor, string> = { 1: "bg-chart-1", 2: "bg-chart-2", 3: "bg-chart-3", 4: "bg-chart-4", 5: "bg-chart-5" };
 
 export function StatCard({
   label = "Invoiced",
@@ -80,6 +84,7 @@ export function StatCard({
   ring,
   chart: chartProp,
   period,
+  keyTone = 1,
   size = "md",
   className = "",
 }: {
@@ -106,7 +111,7 @@ export function StatCard({
   trendNames?: [string, string];
   /** label-first (default), value-first (the number leads, the label under it), chart-middle (label, chart, then the number)
    *  or inline (the icon tile and the number on one row, the label under, the delta as text before the caption) */
-  layout?: "label-first" | "value-first" | "chart-middle" | "inline" | "tile";
+  layout?: "label-first" | "value-first" | "chart-middle" | "inline" | "tile" | "key";
   /** sm: a compact tile on inset, icon tile left, label and value right; for a grid of four inside a panel */
   size?: "md" | "sm";
   /** centre everything: the hero halves of a report panel */
@@ -117,6 +122,8 @@ export function StatCard({
   chart?: ReactNode;
   /** the window the figure covers, as a chip at the foot of the tile: "Last 4 months" */
   period?: string;
+  /** with layout="key": the series colour of the rule on the left, so the figure doubles as the chart's legend */
+  keyTone?: ChartColor;
   className?: string;
 }) {
   const centred = align === "center";
@@ -148,6 +155,17 @@ export function StatCard({
           <span className="block truncate text-lead font-semibold text-ink tabular-nums">{display ?? compact(value)}</span>
         </span>
         {delta && <Delta tone={deltaTone}>{delta}</Delta>}
+      </div>
+    );
+  }
+  if (layout === "key") {
+    return (
+      <div className={`flex min-w-0 items-stretch gap-2.5 ${className}`}>
+        <span aria-hidden className={`w-0.75 shrink-0 rounded-full ${KEY_TONES[keyTone]}`} />
+        <span className="min-w-0">
+          <span className="flex items-center gap-2"><span className="text-title font-semibold text-ink tabular-nums">{display ?? compact(value)}</span>{delta && <Delta tone={deltaTone}>{delta}</Delta>}</span>
+          <span className="block truncate text-caption text-ink-3">{label}</span>
+        </span>
       </div>
     );
   }

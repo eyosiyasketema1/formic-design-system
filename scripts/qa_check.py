@@ -88,6 +88,8 @@ PAIRS = [  # (fg var | literal, bg var, minimum, label)
     ("--ink-3", "--surface", 4.5, "muted text on cards"),
     ("--ink-2", "--canvas", 4.5, "secondary text on canvas"),
     ("--green", "--green-tint", 4.5, "badge text"),
+    ("--red", "--red-tint", 4.5, "badge text (danger)"),
+    ("--orange", "--orange-tint", 4.5, "badge text (pending)"),
     ("--green", "--canvas", 4.5, "diff counts"),
     ("--canvas", "--green", 4.5, "button text on green (success)"),
     ("--canvas", "--orange", 4.5, "badge letters on orange"),
@@ -225,6 +227,10 @@ if m0:
     for mm in re.finditer(r"^(export|import)\b", m0.group(1), re.M):
         line = m0.group(1)[: mm.start()].count("\n") + 1
         fails.append(f"preview.html: script line {line}: '{mm.group(1)}' in the inline Babel script white-screens the gallery (a mirror kept its module syntax)")
+    # a TypeScript `as` cast in the mirror stops Babel the same way
+    for mm in re.finditer(r"\b(\w+\)?) as (Element|HTMLElement|ChartColor|const|unknown|Record<)", m0.group(1)):
+        line = m0.group(1)[: mm.start()].count("\n") + 1
+        fails.append(f"preview.html: script line {line}: '{mm.group(0)}' is a TypeScript cast; the inline Babel script is plain JSX")
     # TypeScript generics on hooks survive a careless mirror regen and stop Babel cold
     for mm in re.finditer(r"\b(use[A-Z]\w*|createContext)<(?=[A-Za-z\[{(])", m0.group(1)):
         line = m0.group(1)[: mm.start()].count("\n") + 1
