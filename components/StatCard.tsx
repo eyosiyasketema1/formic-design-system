@@ -68,6 +68,7 @@ export function StatCard({
   trendAnimate = FORMIC_CONFIG.motion,
   trendKind = "line",
   trendSplit,
+  trendNames,
   layout = "label-first",
   align = "start",
   ring,
@@ -94,6 +95,8 @@ export function StatCard({
   /** line (sparkline), bars (capsule columns on tracks) or stacked (two series, `trendSplit` on top) */
   trendKind?: "line" | "bars" | "stacked";
   trendSplit?: number[];
+  /** names for the stacked pair, e.g. ["Revenue", "Cost"]: the tooltip and the legend under the bars say which colour is which */
+  trendNames?: [string, string];
   /** label-first (default), value-first (the number leads, the label under it), chart-middle (label, chart, then the number)
    *  or inline (the icon tile and the number on one row, the label under, the delta as text before the caption) */
   layout?: "label-first" | "value-first" | "chart-middle" | "inline";
@@ -124,7 +127,7 @@ export function StatCard({
     (trend && trend.length > 1
       ? trendKind === "line"
         ? <Sparkline values={trend} color={trendTone} smooth={trendSmooth} animate={trendAnimate} />
-        : <MiniBars values={trend} split={trendKind === "stacked" ? trendSplit : undefined} track={trendKind === "bars"} color={trendTone} animate={trendAnimate} />
+        : <MiniBars values={trend} split={trendKind === "stacked" ? trendSplit : undefined} names={trendNames} legend={trendKind === "stacked"} track={trendKind === "bars"} color={trendTone} animate={trendAnimate} />
       : null);
   const body = layout === "value-first" ? <>{number}{copy}</> : layout === "chart-middle" ? <>{copy}{chart}{number}</> : <>{copy}{number}</>;
   if (size === "sm") {

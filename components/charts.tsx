@@ -561,42 +561,84 @@ export function Sparkline({
 export function MiniBars({
   values = [12, 18, 9, 22, 16, 25, 14],
   split,
+  names = ["Value", "Second"],
+  labels,
   track = true,
   color = 1,
   height = 64,
+  legend = false,
+  format = (v) => v.toLocaleString(),
   animate = FORMIC_CONFIG.motion,
   className = "",
 }: {
   values?: number[];
   /** a second series stacked on top of `values`, one entry per column */
   split?: number[];
+  /** what the two series are called: the tooltip and legend say it, so two colours never need guessing */
+  names?: [string, string] | string[];
+  /** one per column, for the tooltip ("Mar · Revenue 120") */
+  labels?: string[];
   /** draw the column's full height in the track colour behind the value */
   track?: boolean;
   color?: ChartColor;
   height?: number;
+  /** a two-dot legend under a stacked chart */
+  legend?: boolean;
+  format?: (v: number) => string;
   animate?: boolean;
   className?: string;
 }) {
   const { settled, drawing } = useEntrance(animate);
+  const { tip, show, hide } = useTip();
   const max = niceMax(Math.max(1, ...values.map((v, i) => v + (split?.[i] ?? 0))));
   const second: ChartColor = (color % 5 + 1) as ChartColor;
+  const bar = (i: number, v: number, top: number) => {
+    const at = labels?.[i] ? `${labels[i]} · ` : "";
+    return split ? `${at}${names[0]} ${format(v)}, ${names[1]} ${format(top)}` : `${at}${format(v)}`;
+  };
+  const tipNode = (i: number, v: number, top: number) =>
+    split ? (
+      <span className="flex flex-col gap-0.5">
+        {labels?.[i] && <span className="opacity-70">{labels[i]}</span>}
+        <span className="flex items-center gap-1.5"><span className={`size-1.5 rounded-full ${SERIES_BG[second]}`} />{names[1]} · {format(top)}</span>
+        <span className="flex items-center gap-1.5"><span className={`size-1.5 rounded-full ${SERIES_BG[color]}`} />{names[0]} · {format(v)}</span>
+      </span>
+    ) : bar(i, v, top);
   return (
-    <div role="img" aria-label={values.map((v, i) => split ? `${v} and ${split[i] ?? 0}` : String(v)).join(", ")} className={`flex w-full items-end justify-between gap-1.5 ${className}`} style={{ height }}>
-      {values.map((v, i) => {
-        const top = split?.[i] ?? 0;
-        return (
-          <span key={i} className={`relative flex h-full w-full max-w-4 min-w-1.5 flex-col justify-end overflow-hidden rounded-full ${track ? "bg-chart-track" : ""}`}>
-            {split ? (
-              <>
-                <span className={`w-full rounded-t-full ${SERIES_BG[second]}`} style={{ height: `${(top / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
-                <span className={`w-full rounded-b-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
-              </>
-            ) : (
-              <span className={`w-full rounded-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
-            )}
-          </span>
-        );
-      })}
+    <div className={`flex w-full flex-col gap-2 ${className}`}>
+      <div role="img" aria-label={values.map((v, i) => bar(i, v, split?.[i] ?? 0)).join("; ")} className="relative flex w-full items-end justify-between gap-1.5" style={{ height }} onMouseLeave={hide}>
+        {values.map((v, i) => {
+          const top = split?.[i] ?? 0;
+          return (
+            /* each column is a focus target: hover or Tab to read it as text (rule 16) */
+            <button
+              key={i}
+              type="button"
+              aria-label={bar(i, v, top)}
+              onMouseEnter={(e) => show(...anchorOf(e), tipNode(i, v, top))}
+              onFocus={(e) => show(...anchorOf(e), tipNode(i, v, top))}
+              onBlur={hide}
+              className={`relative flex h-full w-full max-w-4 min-w-1.5 flex-col justify-end overflow-hidden rounded-full transition-opacity duration-150 hover:opacity-80 ${track ? "bg-chart-track" : ""}`}
+            >
+              {split ? (
+                <>
+                  <span className={`w-full rounded-t-full ${SERIES_BG[second]}`} style={{ height: `${(top / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+                  <span className={`w-full rounded-b-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+                </>
+              ) : (
+                <span className={`w-full rounded-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+              )}
+            </button>
+          );
+        })}
+        <ChartTip tip={tip} />
+      </div>
+      {legend && split && (
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
+          <span className="flex items-center gap-1.5 text-tiny text-ink-3"><span className={`size-1.5 rounded-full ${SERIES_BG[color]}`} />{names[0]}</span>
+          <span className="flex items-center gap-1.5 text-tiny text-ink-3"><span className={`size-1.5 rounded-full ${SERIES_BG[second]}`} />{names[1]}</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -8917,32 +8917,67 @@ function Sparkline({
 function MiniBars({
   values = [12, 18, 9, 22, 16, 25, 14],
   split,
+  names = ["Value", "Second"],
+  labels,
   track = true,
   color = 1,
   height = 64,
+  legend = false,
+  format = (v) => v.toLocaleString(),
   animate = FORMIC_CONFIG.motion,
   className = "",
 }) {
   const { settled, drawing } = useEntrance(animate);
+  const { tip, show, hide } = useTip();
   const max = niceMax(Math.max(1, ...values.map((v, i) => v + (split?.[i] ?? 0))));
   const second = (color % 5 + 1);
+  const bar = (i, v, top) => {
+    const at = labels?.[i] ? `${labels[i]} · ` : "";
+    return split ? `${at}${names[0]} ${format(v)}, ${names[1]} ${format(top)}` : `${at}${format(v)}`;
+  };
+  const tipNode = (i, v, top) =>
+    split ? (
+      <span className="flex flex-col gap-0.5">
+        {labels?.[i] && <span className="opacity-70">{labels[i]}</span>}
+        <span className="flex items-center gap-1.5"><span className={`size-1.5 rounded-full ${SERIES_BG[second]}`} />{names[1]} · {format(top)}</span>
+        <span className="flex items-center gap-1.5"><span className={`size-1.5 rounded-full ${SERIES_BG[color]}`} />{names[0]} · {format(v)}</span>
+      </span>
+    ) : bar(i, v, top);
   return (
-    <div role="img" aria-label={values.map((v, i) => split ? `${v} and ${split[i] ?? 0}` : String(v)).join(", ")} className={`flex w-full items-end justify-between gap-1.5 ${className}`} style={{ height }}>
-      {values.map((v, i) => {
-        const top = split?.[i] ?? 0;
-        return (
-          <span key={i} className={`relative flex h-full w-full max-w-4 min-w-1.5 flex-col justify-end overflow-hidden rounded-full ${track ? "bg-chart-track" : ""}`}>
-            {split ? (
-              <>
-                <span className={`w-full rounded-t-full ${SERIES_BG[second]}`} style={{ height: `${(top / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
-                <span className={`w-full rounded-b-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
-              </>
-            ) : (
-              <span className={`w-full rounded-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
-            )}
-          </span>
-        );
-      })}
+    <div className={`flex w-full flex-col gap-2 ${className}`}>
+      <div role="img" aria-label={values.map((v, i) => bar(i, v, split?.[i] ?? 0)).join("; ")} className="relative flex w-full items-end justify-between gap-1.5" style={{ height }} onMouseLeave={hide}>
+        {values.map((v, i) => {
+          const top = split?.[i] ?? 0;
+          return (
+            /* each column is a focus target: hover or Tab to read it as text (rule 16) */
+            <button
+              key={i}
+              type="button"
+              aria-label={bar(i, v, top)}
+              onMouseEnter={(e) => show(...anchorOf(e), tipNode(i, v, top))}
+              onFocus={(e) => show(...anchorOf(e), tipNode(i, v, top))}
+              onBlur={hide}
+              className={`relative flex h-full w-full max-w-4 min-w-1.5 flex-col justify-end overflow-hidden rounded-full transition-opacity duration-150 hover:opacity-80 ${track ? "bg-chart-track" : ""}`}
+            >
+              {split ? (
+                <>
+                  <span className={`w-full rounded-t-full ${SERIES_BG[second]}`} style={{ height: `${(top / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+                  <span className={`w-full rounded-b-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+                </>
+              ) : (
+                <span className={`w-full rounded-full ${SERIES_BG[color]}`} style={{ height: `${(v / max) * 100}%`, transform: settled ? "scaleY(1)" : "scaleY(0)", transformOrigin: "bottom", transition: drawing ? `transform 700ms var(--ease-out-quint) ${i * 40}ms` : undefined }} />
+              )}
+            </button>
+          );
+        })}
+        <ChartTip tip={tip} />
+      </div>
+      {legend && split && (
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
+          <span className="flex items-center gap-1.5 text-tiny text-ink-3"><span className={`size-1.5 rounded-full ${SERIES_BG[color]}`} />{names[0]}</span>
+          <span className="flex items-center gap-1.5 text-tiny text-ink-3"><span className={`size-1.5 rounded-full ${SERIES_BG[second]}`} />{names[1]}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -9082,6 +9117,7 @@ function StatCard({
   trendAnimate = FORMIC_CONFIG.motion,
   trendKind = "line",
   trendSplit,
+  trendNames,
   layout = "label-first",
   align = "start",
   ring,
@@ -9106,7 +9142,7 @@ function StatCard({
     (trend && trend.length > 1
       ? trendKind === "line"
         ? <Sparkline values={trend} color={trendTone} smooth={trendSmooth} animate={trendAnimate} />
-        : <MiniBars values={trend} split={trendKind === "stacked" ? trendSplit : undefined} track={trendKind === "bars"} color={trendTone} animate={trendAnimate} />
+        : <MiniBars values={trend} split={trendKind === "stacked" ? trendSplit : undefined} names={trendNames} legend={trendKind === "stacked"} track={trendKind === "bars"} color={trendTone} animate={trendAnimate} />
       : null);
   const body = layout === "value-first" ? <>{number}{copy}</> : layout === "chart-middle" ? <>{copy}{chart}{number}</> : <>{copy}{number}</>;
   if (size === "sm") {
@@ -10677,7 +10713,7 @@ function Page_statcard() {
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard layout="value-first" label="Margin" display="42%" delta="+3.1%" />
           <StatCard layout="value-first" label="Billable hours" caption="This week" display="146" delta="-9%" deltaTone="down" trend={[38, 41, 35, 32]} trendKind="bars" />
-          <StatCard layout="value-first" label="Revenue vs cost" caption="Per project, last five" display="ETB 812k" delta="+14%" trend={[120, 140, 95, 160, 130]} trendSplit={[80, 90, 70, 100, 85]} trendKind="stacked" />
+          <StatCard layout="value-first" label="Revenue vs cost" caption="Per project, last five" display="ETB 812k" delta="+14%" trend={[120, 140, 95, 160, 130]} trendSplit={[80, 90, 70, 100, 85]} trendNames={["Revenue", "Cost"]} trendKind="stacked" />
           <StatCard layout="value-first" label="Net promoter" display="61" delta="+4" />
         </div>
       </GalleryCard>
@@ -10773,7 +10809,7 @@ function Page_charts() {
       <GalleryCard label="MiniBars · capsule columns on tracks, and a two-series stack" wide>
         <div className="flex w-full max-w-80 flex-col gap-4">
           <MiniBars values={[8, 22, 14, 17, 26, 15, 18]} />
-          <MiniBars values={[120, 140, 95, 160, 130]} split={[80, 90, 70, 100, 85]} track={false} />
+          <MiniBars values={[120, 140, 95, 160, 130]} split={[80, 90, 70, 100, 85]} names={["Revenue", "Cost"]} labels={["Bank", "Creamery", "Ministry", "Sunrise", "Air"]} legend track={false} format={(v) => `ETB ${v}k`} />
         </div>
       </GalleryCard>
       <GalleryCard label="DonutChart">
@@ -11494,7 +11530,7 @@ function Page_dashboard() {
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard label="Invoiced" caption="This month" display="ETB 1.44M" delta="+31%" icon="receipt" iconTone="accent" trend={[6, 9, 8, 12, 11, 15, 14, 19]} trendSmooth className="max-w-none" />
             <StatCard layout="chart-middle" label="Billable hours" caption="This week" display="146" delta="-9%" deltaTone="down" trend={[38, 41, 35, 32, 44, 39, 36]} trendKind="bars" className="max-w-none" />
-            <StatCard layout="value-first" label="Margin" caption="Revenue over cost, last five projects" display="42%" delta="+3.1%" trend={[120, 140, 95, 160, 130]} trendSplit={[80, 90, 70, 100, 85]} trendKind="stacked" className="max-w-none" />
+            <StatCard layout="value-first" label="Margin" caption="Revenue over cost, last five projects" display="42%" delta="+3.1%" trend={[120, 140, 95, 160, 130]} trendSplit={[80, 90, 70, 100, 85]} trendNames={["Revenue", "Cost"]} trendKind="stacked" className="max-w-none" />
             <StatCard label="Delivery" caption="This quarter" display="18 of 24" delta="+3" ring={{ value: 18, max: 24, label: "done", color: 2 }} className="max-w-none" />
           </div>
           <div className="grid grid-cols-1 gap-3.5 xl:grid-cols-3">
@@ -12125,7 +12161,7 @@ const PLAYGROUNDS = {
     ],
     render: (p) => (
       <StatCard label={p.label} display={p.display} caption={p.caption} delta={p.delta} deltaTone={p.deltaTone} layout={p.layout}
-        icon={p.icon ? "receipt" : undefined} iconTone={p.iconTone} trend={p.trendKind === "none" ? undefined : [3, 6, 4, 9, 7, 11, 10, 14]} trendKind={p.trendKind === "none" ? "line" : p.trendKind} trendSplit={[2, 3, 2, 5, 4, 6, 5, 7]} trendSmooth={p.trendSmooth} />
+        icon={p.icon ? "receipt" : undefined} iconTone={p.iconTone} trend={p.trendKind === "none" ? undefined : [3, 6, 4, 9, 7, 11, 10, 14]} trendKind={p.trendKind === "none" ? "line" : p.trendKind} trendSplit={[2, 3, 2, 5, 4, 6, 5, 7]} trendNames={["Revenue", "Cost"]} trendSmooth={p.trendSmooth} />
     ),
   },
   charts: {
