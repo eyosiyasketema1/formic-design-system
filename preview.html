@@ -9589,7 +9589,9 @@ function ActivityCalendar({
           /* fluid columns: the squares shrink to the panel, down to a floor
              where the box scrolls instead */
           className="grid w-full rounded-sm"
-          style={{ gridTemplateColumns: `auto repeat(${weeks}, minmax(0, 1fr))`, gap: GAP, minWidth: weeks * (CELL - 2) }}
+          /* fluid down to a floor where the box scrolls, and up to a ceiling
+             (14px cells) so a short span does not turn into tiles */
+          style={{ gridTemplateColumns: `auto repeat(${weeks}, minmax(0, 1fr))`, gap: GAP, minWidth: weeks * (CELL - 2), maxWidth: weeks * (CELL + 3 + GAP) + 44 }}
         >
           <span />
           {/* month names sit on the first column of the month they start in */}
@@ -11230,9 +11232,11 @@ function Page_composition() {
           <CardGroup columns={3}>
             {[["Northwind Bank", "Brand and site", "figma"], ["Creamery", "Menu board app", "react"], ["Selam Coffee", "Packaging", "notion"]].map(([name, kind, logo]) => (
               <Card key={name}>
-                <CardMedia icon="folder" />
-                <CardTitle>{name}</CardTitle>
-                <CardDescription>{kind}</CardDescription>
+                <CardHeader>
+                  <CardMedia icon="folder" />
+                  <CardTitle>{name}</CardTitle>
+                  <CardDescription>{kind}</CardDescription>
+                </CardHeader>
                 <CardFooter><CardButton>Open</CardButton></CardFooter>
               </Card>
             ))}
@@ -13446,7 +13450,6 @@ function Page_colorpicker() {
 }
 
 const PAGES = [
-  { id: "composition", group: "Foundations", title: "Composition", note: "Nothing on a screen without a reason. A brief (reader, question, action, register) comes before markup; the register decides how much a screen reads and how much it shows; every element passes an admission test; scripts/compose_check.py flags the mechanical tells. Formic's value is in what it leaves out.", file: "AGENTS.md scripts/compose_check.py", Component: Page_composition },
   { id: "colors", group: "Foundations", title: "Colors", note: "The token palette. Every value lives in styles/tokens.css and re-resolves live \u2014 switch theme or palette to watch the whole page follow.", file: "styles/tokens.css", Component: Page_colors },
   { id: "typography", group: "Foundations", title: "Typography", note: "Urbanist (variable, 300\u2013800). One standard ramp \u2014 14px base, integer steps, 10 to 48 \u2014 plus the true weight ramp. text-nano (8px) stays reserved for mini-badge letters.", file: "styles/tokens.css", Component: Page_typography },
   { id: "shape-motion", group: "Foundations", title: "Shape & motion", note: "Six radii; one easing \u2014 var(--ease-out-quint) \u2014 drives every entrance and transition. Replay to see the house motion.", file: "styles/tokens.css", Component: Page_shape_motion },
@@ -13501,6 +13504,7 @@ const PAGES = [
   { id: "statcard", group: "Dashboard", title: "StatCard & MetricRow", note: "The tiles a dashboard is mostly made of. Delta direction is an explicit prop, never inferred from the sign \u2014 down is good for churn and cost, and only the caller knows which.", file: "components/StatCard.tsx", Component: Page_statcard },
   { id: "charts", group: "Dashboard", title: "Charts", note: "No chart library \u2014 bars are HTML (a scaled SVG scales its text and breaks the type ramp), lines are SVG with non-scaling strokes. Series use the categorical chart ramp, never the semantic green/red, and anything multi-series gets a legend because hue alone fails for colour-blind readers. Hover or tab to a bar or point for its value.", file: "components/charts.tsx", Component: Page_charts },
   { id: "dashboard", group: "Dashboard", title: "Dashboard widgets", note: "The moving parts of a dashboard, composed into one screen: CountUp settles the headline once, a smooth Sparkline draws itself in, the Gauge lights its ticks in sequence, BarList ranks in a single hue because the ranking is the message, MetricRow carries a funnel with a detail line, and PrivacyScope hides the money until the eye opens. Every animation collapses to its final frame under reduced motion.", file: "components/charts.tsx components/StatCard.tsx components/Privacy.tsx", Component: Page_dashboard },
+  { id: "composition", group: "Dashboard", title: "Composition", note: "Nothing on a screen without a reason. A brief (reader, question, action, register) comes before markup; the register decides how much a screen reads and how much it shows; every element passes an admission test; scripts/compose_check.py flags the mechanical tells. Formic's value is in what it leaves out.", file: "AGENTS.md scripts/compose_check.py", Component: Page_composition },
   { id: "privacy", group: "Dashboard", title: "Privacy", note: "A dashboard is often open on a screen someone else can see. Wrap a card in PrivacyScope, put PrivacyToggle where the header wants the eye, and wrap each figure in Masked. Hidden is the default on every visit and deliberately never remembered.", file: "components/Privacy.tsx", Component: Page_privacy },
   { id: "recordstable", group: "Data", title: "RecordsTable", note: "AI spreadsheet grid \u2014 click headers for property config, + to add an AI column, then Go calculate. Drag column edges to resize.", file: "components/RecordsTable.tsx", Component: Page_recordstable },
   { id: "datatable", group: "Data", title: "DataTable", note: "The records list every admin screen has: a toolbar, declared columns, select boxes with a mixed header, cell helpers for a who, a progress bar, an icon with a name and a count, the standard view / delete / more actions, and a footer that says where you are. Wide tables scroll in their own region.", file: "components/DataTable.tsx", Component: Page_datatable },

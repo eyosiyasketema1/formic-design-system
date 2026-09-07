@@ -1108,7 +1108,9 @@ export function ActivityCalendar({
           /* fluid columns: the squares shrink to the panel, down to a floor
              where the box scrolls instead */
           className="grid w-full rounded-sm"
-          style={{ gridTemplateColumns: `auto repeat(${weeks}, minmax(0, 1fr))`, gap: GAP, minWidth: weeks * (CELL - 2) }}
+          /* fluid down to a floor where the box scrolls, and up to a ceiling
+             (14px cells) so a short span does not turn into tiles */
+          style={{ gridTemplateColumns: `auto repeat(${weeks}, minmax(0, 1fr))`, gap: GAP, minWidth: weeks * (CELL - 2), maxWidth: weeks * (CELL + 3 + GAP) + 44 }}
         >
           <span />
           {/* month names sit on the first column of the month they start in */}
