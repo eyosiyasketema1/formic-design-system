@@ -12010,6 +12010,75 @@ function RowActions({ onView, onDelete, onMore }) {
     </>
   );
 }
+/* ═══════════ TopBar (mirror components/TopBar.tsx) ═══════════ */
+const TB_USER_MENU = [
+  { key: "profile", label: "Profile", icon: "user" },
+  { key: "settings", label: "Settings", icon: "gear" },
+  { type: "divider" },
+  { key: "signout", label: "Sign out", icon: "sign-out" },
+];
+
+function TopBar({
+  title = "Overview",
+  leading,
+  search = true,
+  searchPlaceholder = "Search…",
+  onSearch,
+  theme,
+  onTheme,
+  notifications = 0,
+  onNotifications,
+  user = { name: "Eyosiyas Ketema" },
+  userMenu = TB_USER_MENU,
+  onUserAction,
+  actions,
+  className = "",
+}) {
+  const ctl = "size-9 rounded-control bg-surface text-ink-2 shadow-btn transition-colors duration-150 hover:bg-hover hover:text-ink";
+  return (
+    <header className={`flex h-14 w-full shrink-0 items-center gap-3 border-b border-line bg-canvas px-4 sm:px-6 ${className}`}>
+      {leading}
+      <h1 className="min-w-0 flex-1 truncate text-heading font-semibold tracking-tight text-ink">{title}</h1>
+      <div className="flex shrink-0 items-center gap-2">
+        {search && (
+          <Input
+            size="sm"
+            leadingIcon="search"
+            placeholder={searchPlaceholder}
+            aria-label="Search"
+            onChange={(event) => onSearch?.(event.target.value)}
+            width="hidden w-56 md:flex lg:w-72"
+          />
+        )}
+        {actions}
+        {onTheme && (
+          <Tooltip label={theme === "dark" ? "Light mode" : "Dark mode"}>
+            <IconButton label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={onTheme} className={ctl}>
+              <Icon name={theme === "dark" ? "sun" : "moon"} size={16} strokeWidth={1.8} />
+            </IconButton>
+          </Tooltip>
+        )}
+        {notifications !== null && (
+          <Tooltip label={notifications ? `${notifications} unread` : "Notifications"}>
+            <span className="relative inline-flex">
+              <IconButton label={notifications ? `Notifications, ${notifications} unread` : "Notifications"} onClick={onNotifications} className={ctl}>
+                <Icon name="bell" size={16} strokeWidth={1.8} />
+              </IconButton>
+              {notifications > 0 && <span aria-hidden className="pointer-events-none absolute top-2 right-2 size-2 rounded-full bg-accent ring-2 ring-canvas" />}
+            </span>
+          </Tooltip>
+        )}
+        {user && (
+          <DropdownMenu align="end" menuWidth={220} items={userMenu} onSelect={(key) => onUserAction?.(key)}>
+            <button type="button" aria-label="Open account menu" className="corner-smooth flex size-9 items-center justify-center rounded-control bg-surface shadow-btn transition-colors duration-150 hover:bg-hover">
+              <Avatar name={user.name} src={user.src} kind={user.kind ?? FORMIC_CONFIG.avatar} size="md" />
+            </button>
+          </DropdownMenu>
+        )}
+      </div>
+    </header>
+  );
+}
 function Page_statcard() {
   return (
     <>
@@ -12615,6 +12684,25 @@ function Page_panel() {
   );
 }
 
+function TopBarDemo() {
+  const [theme, setTheme] = useTheme();
+  const toast = useToast();
+  return (
+    <div className="flex h-[560px] overflow-hidden rounded-card border border-line">
+      <AppSidebar active="overview" user={null} submenus="none" />
+      <div className="flex min-w-0 flex-1 flex-col bg-canvas">
+        <TopBar title="Overview" theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")} notifications={3} onNotifications={() => toast({ title: "3 unread" })} onUserAction={(k) => toast({ title: `Account: ${k}` })} />
+        <div className="page-content flex flex-col gap-3 p-5">
+          <p className="text-caption text-ink-3">The page starts here, on the same canvas as the bar.</p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <StatCard label="Invoiced" display="ETB 2.4M" delta="+12%" caption="vs August" className="max-w-none" />
+            <StatCard label="Active clients" display="24" caption="This month" className="max-w-none" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 function Page_appsidebar() {
   const [active, setActive] = useState("reports-sales");
   const [variant, setVariant] = useState("expanded");
@@ -12628,6 +12716,9 @@ function Page_appsidebar() {
             <p className="text-caption text-ink-3">Reports is a group: in the expanded rail its pages open in place; in the collapsed rail they open as a flyout beside the icon. The collapse and expand control is in the header in both.</p>
           </div>
         </div>
+      </GalleryCard>
+      <GalleryCard label="Top bar · the rail keeps its user row off; search, theme, notifications and the account move to a strip above the page" full>
+        <TopBarDemo />
       </GalleryCard>
       <GalleryCard label="Rail · click Reports for the flyout" wide>
         <div className="flex h-[600px] overflow-hidden rounded-card border border-line">
@@ -13513,7 +13604,7 @@ const PAGES = [
   { id: "pagination", group: "Navigation", title: "Pagination", note: "Numbered pages with sibling windows and gap ellipses \u2014 first and last stay reachable, active page carries aria-current, edges disable prev / next.", file: "components/Pagination.tsx", Component: Page_pagination },
   { id: "breadcrumbs", group: "Navigation", title: "Breadcrumbs", note: "Path trail \u2014 long trails collapse their middle into a DropdownMenu, the current page carries aria-current, labels truncate instead of breaking the row. Navigating fires a toast here.", file: "components/Breadcrumbs.tsx", Component: Page_breadcrumbs },
   { id: "menubar", group: "Navigation", title: "Menubar", note: "A bar of action menus, each a DropdownMenu \u2014 dividers, disabled and destructive items included. Selections fire toasts here.", file: "components/Menubar.tsx", Component: Page_menubar },
-  { id: "sidebar", group: "Navigation", title: "Sidebar", note: "Three rails, one surface (--sidebar, hairline edge, flat bg-hover-2 selection). ProjectSidebar for tools that hold things (projects, documents, sites): workspace switcher, \u2318K search, groups, status dots, row menus, inset or edge layout. AppSidebar for dashboards and admin apps: grouped menu with counts and sub-menus, expanded or rail. SidebarNav for chat: the same switcher, Projects and Agents, a searchable chat history and the account row. All three fill the shell\u2019s height and follow formic.config.json for the account avatar.", file: "components/ProjectSidebar.tsx components/AppSidebar.tsx components/SidebarNav.tsx", Component: Page_sidebar },
+  { id: "sidebar", group: "Navigation", title: "Sidebar", note: "Three rails, one surface (--sidebar, hairline edge, flat bg-hover-2 selection). ProjectSidebar for tools that hold things (projects, documents, sites): workspace switcher, \u2318K search, groups, status dots, row menus, inset or edge layout. AppSidebar for dashboards and admin apps: grouped menu with counts and sub-menus, expanded or rail. TopBar above the page when the rail keeps its user row off: title, search, theme, notifications, account. SidebarNav for chat: the same switcher, Projects and Agents, a searchable chat history and the account row. All of them fill the shell\u2019s height and follow formic.config.json for the account avatar.", file: "components/ProjectSidebar.tsx components/AppSidebar.tsx components/TopBar.tsx components/SidebarNav.tsx", Component: Page_sidebar },
   { id: "searchlist", group: "Navigation", title: "SearchList", note: "Command search with live filtering \u2014 type to filter, gibberish for the empty state.", file: "components/SearchList.tsx", Component: Page_searchlist }
 ];
 const PAGE_INDEX = Object.fromEntries(PAGES.map((p, i) => [p.id, i]));
@@ -15609,7 +15700,7 @@ const CZ_CHOICES = {
   type: ["base", "lg", "xl"],
   theme: ["light", "dark"],
   avatar: ["initials", "doodle", "photo"],
-  sidebar: ["full", "inset", "edge"],
+  sidebar: ["full", "inset", "edge", "topbar"],
   sidebarState: ["expanded", "rail"],
   font: CZ_FONTS.map((f) => f.id),
   layout: ["compact", "medium", "full"],
@@ -15622,7 +15713,7 @@ const CZ_HELP = {
   type: "The whole type ramp one or two steps up, still integer pixels: base reads at 14, lg at 15, xl at 16. Controls keep their heights.",
   theme: "Where the app starts. Users can still switch.",
   avatar: "People without a photo of their own: initials, a drawn face derived from the name, or a placeholder photo until real ones exist.",
-  sidebar: "The three rails on the Sidebar page. Full view: expanded with a sub-menu open, collapse in the header. Inset: the page is a surface card beside the rail; the trigger hides and shows it. Edge: hairline on the right, same page.",
+  sidebar: "The rails on the Sidebar page. Full view: expanded with a sub-menu open, collapse in the header. Inset: the page is a surface card beside the rail; the trigger hides and shows it. Edge: hairline on the right, same page. Top bar: the full rail without its user row, and a strip above the page with search, theme, notifications and the account.",
   sidebarState: "How the rail first opens. Full view collapses to an icon rail; Inset and Edge hide behind their trigger.",
   font: "Every face on the list is variable through 300 to 800 on Google Fonts, so the weight ramp stays real. The type scale never changes.",
   layout: "Compact keeps page content to a column of 64rem, Medium 80rem, both centred. Full lets it run edge to edge. Rails and headers are outside all three.",
@@ -15777,17 +15868,18 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
      entrance rather than waiting for the next data change */
   const k = `${cfg.motion}-${cfg.sidebar}-${state}`;
   const me = { name: "Eyosiyas Ketema", detail: "Admin", kind: cfg.avatar };
-  const project = cfg.sidebar !== "full";
+  const project = cfg.sidebar === "inset" || cfg.sidebar === "edge";
+  const topbar = cfg.sidebar === "topbar";
   const rail = project
     ? <ProjectSidebar key={k} open={projectOpen} user={me} layout={cfg.sidebar} active="northwind" onSelect={() => {}} />
-    : <AppSidebar key={k} variant={variant} onVariantChange={setVariant} active="reports-sales" onSelect={() => {}} user={me} />;
+    : <AppSidebar key={k} variant={variant} onVariantChange={setVariant} active="reports-sales" onSelect={() => {}} user={topbar ? null : me} />;
   const content = (
     <div className="page-content flex min-w-0 flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           {project && <ProjectSidebarTrigger open={projectOpen} toggle={() => setProjectOpen((o) => !o)} />}
           <div className="min-w-0">
-            <h2 className="text-title font-semibold tracking-tight text-ink">Overview</h2>
+            {!topbar && <h2 className="text-title font-semibold tracking-tight text-ink">Overview</h2>}
             <p className="text-small text-ink-3">Last 30 days</p>
           </div>
         </div>
@@ -15860,7 +15952,12 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
         {rail}
         {cfg.sidebar === "inset"
           ? <ProjectInset className="@container min-w-0 flex-1 overflow-hidden p-4">{content}</ProjectInset>
-          : <div className="@container flex min-w-0 flex-1 flex-col overflow-hidden p-4">{content}</div>}
+          : topbar
+            ? <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                <TopBar title="Overview" theme={mode} onTheme={() => onMode(mode === "dark" ? "light" : "dark")} notifications={3} user={me} />
+                <div className="@container flex min-w-0 flex-1 flex-col overflow-hidden p-4">{content}</div>
+              </div>
+            : <div className="@container flex min-w-0 flex-1 flex-col overflow-hidden p-4">{content}</div>}
       </div>
     </section>
   );
@@ -15988,8 +16085,8 @@ function CustomizeApp() {
           <CzChoice label="Type size" help={CZ_HELP.type} value={cfg.type} options={[{ id: "base", label: "Base" }, { id: "lg", label: "LG" }, { id: "xl", label: "XL" }]} onChange={(v) => set("type", v)} />
           <CzChoice label="Content layout" help={CZ_HELP.layout} value={cfg.layout} options={CZ_CHOICES.layout} onChange={(v) => set("layout", v)} />
           <CzChoice label="Starting theme" help={CZ_HELP.theme} value={cfg.theme} options={CZ_CHOICES.theme} onChange={(v) => set("theme", v)} />
-          <CzChoice label="Sidebar" help={CZ_HELP.sidebar} value={cfg.sidebar} options={[{ id: "full", label: "Full view" }, { id: "inset", label: "Inset" }, { id: "edge", label: "Edge" }]} onChange={(v) => set("sidebar", v)} />
-          <CzChoice label="Sidebar opens" help={CZ_HELP.sidebarState} value={cfg.sidebarState} options={[{ id: "expanded", label: "Expanded" }, { id: "rail", label: cfg.sidebar === "full" ? "Rail" : "Hidden" }]} onChange={(v) => set("sidebarState", v)} />
+          <CzChoice label="Sidebar" help={CZ_HELP.sidebar} value={cfg.sidebar} options={[{ id: "full", label: "Full view" }, { id: "inset", label: "Inset" }, { id: "edge", label: "Edge" }, { id: "topbar", label: "Top bar" }]} onChange={(v) => set("sidebar", v)} />
+          <CzChoice label="Sidebar opens" help={CZ_HELP.sidebarState} value={cfg.sidebarState} options={[{ id: "expanded", label: "Expanded" }, { id: "rail", label: cfg.sidebar === "inset" || cfg.sidebar === "edge" ? "Hidden" : "Rail" }]} onChange={(v) => set("sidebarState", v)} />
           <CzChoice label="Avatar" help={CZ_HELP.avatar} value={cfg.avatar} options={CZ_CHOICES.avatar} onChange={(v) => set("avatar", v)} />
           <div className="flex items-start justify-between gap-3">
             <div>
