@@ -17,8 +17,10 @@ export type FormicConfig = {
   /** which of the three rails on the Sidebar page the app is built on:
    *  full (AppSidebar, sections with sub-menus, collapse in the header),
    *  inset (ProjectSidebar, the page a surface card beside it) or
-   *  edge (ProjectSidebar with a hairline edge, the page flat beside it) */
-  sidebar: "full" | "inset" | "edge";
+   *  edge (ProjectSidebar with a hairline edge, the page flat beside it) or
+   *  topbar (the full rail without its user row, plus a TopBar above the page
+   *  with search, theme, notifications and the account) */
+  sidebar: "full" | "inset" | "edge" | "topbar";
   /** how that rail first opens: full collapses to an icon rail, inset and edge hide behind their trigger */
   sidebarState: "expanded" | "rail";
   /** charts and sparklines animate in (reduced-motion still wins) */

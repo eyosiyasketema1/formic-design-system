@@ -18,7 +18,7 @@ edited by hand. Every key is optional; a missing key keeps the system default.
       "type":    "base",           base | lg | xl   (the type ramp: 14, 15 or 16px base)
       "theme":   "light",          light | dark   (the app's starting theme)
       "avatar":  "initials",       initials | doodle | photo   (people without a src)
-      "sidebar": "full",           full | inset | edge   (the three rails on the Sidebar page)
+      "sidebar": "full",           full | inset | edge | topbar   (the rails on the Sidebar page; topbar = the full rail plus a TopBar)
       "sidebarState": "expanded",  expanded | rail       (full: expanded or icon rail; inset / edge: shown or hidden)
       "font":    "Urbanist",       a face from the approved Google list (below)
       "layout":  "compact",        compact | medium | full   (64rem, 80rem, or edge to edge)
@@ -108,7 +108,7 @@ CHOICES = {
     "type": ("base", "lg", "xl"),
     "theme": ("light", "dark"),
     "avatar": ("initials", "doodle", "photo"),
-    "sidebar": ("full", "inset", "edge"),
+    "sidebar": ("full", "inset", "edge", "topbar"),
     "sidebarState": ("expanded", "rail"),
     "font": tuple(FONTS),
     "layout": ("compact", "medium", "full"),
