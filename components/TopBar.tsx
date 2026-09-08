@@ -69,7 +69,7 @@ export default function TopBar({
       <div className="flex shrink-0 items-center gap-2">
         {search && (
           <Input
-            size="sm"
+            size="md"
             leadingIcon="search"
             placeholder={searchPlaceholder}
             aria-label="Search"
