@@ -77,6 +77,7 @@ export default function AppSidebar({
   onVariantChange,
   collapsible = true,
   submenus = "nested",
+  header = "plain",
   user = DEFAULT_USER,
   footer,
   className = "",
@@ -96,6 +97,8 @@ export default function AppSidebar({
   submenus?: "nested" | "none";
   /** account row at the bottom; pass `null` to omit */
   user?: AppSidebarUser | null;
+  /** bar: the header is the same 56px as a TopBar with a hairline under it, and the collapse is a raised chevron; for the rail-plus-bar shell */
+  header?: "plain" | "bar";
   /** replaces the account row entirely */
   footer?: ReactNode;
   className?: string;
@@ -227,31 +230,32 @@ export default function AppSidebar({
     >
       {/* Header: workspace mark, and the collapse / expand control in the
           same place in both variants, so the eye knows where to go back. */}
-      <div className={`flex shrink-0 ${rail ? "flex-col items-center gap-1 py-2.5" : "h-14 items-center gap-2 px-3"}`}>
-        {workspace.logo ? (
+      <div className={`flex shrink-0 ${rail ? (header === "bar" ? "h-14 items-center justify-center" : "flex-col items-center gap-1 py-2.5") : "h-14 items-center gap-2 px-3"} ${header === "bar" ? "border-b border-line" : ""}`}>
+        {/* with a bar header the collapsed rail shows only the way back; the mark returns with the name */}
+        {!(rail && header === "bar") && (workspace.logo ? (
           <span className="flex size-7 shrink-0 items-center justify-center">{workspace.logo}</span>
         ) : (
           <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-ink text-small font-semibold text-canvas">
             {workspace.monogram ?? workspace.name.slice(0, 1)}
           </span>
-        )}
+        ))}
         {!rail && <span className="min-w-0 flex-1 truncate text-body font-semibold text-ink">{workspace.name}</span>}
         {canFlip && (
           rail ? (
             <Tooltip label="Expand sidebar">
-              <IconButton label="Expand sidebar" onClick={flip} className="size-9 text-ink-3 hover:bg-hover-2 hover:text-ink">
-                <Icon name="sidebar" size={15} strokeWidth={2} className="rotate-180" />
+              <IconButton label="Expand sidebar" onClick={flip} className={header === "bar" ? "size-8 rounded-control bg-surface text-ink-2 shadow-btn hover:bg-hover hover:text-ink" : "size-9 text-ink-3 hover:bg-hover-2 hover:text-ink"}>
+                <Icon name={header === "bar" ? "chevron-right" : "sidebar"} size={15} strokeWidth={2} className={header === "bar" ? "" : "rotate-180"} />
               </IconButton>
             </Tooltip>
           ) : (
-            <IconButton label="Collapse sidebar" onClick={flip} className="text-ink-3 hover:bg-hover-2 hover:text-ink">
-              <Icon name="sidebar" size={15} strokeWidth={2} />
+            <IconButton label="Collapse sidebar" onClick={flip} className={header === "bar" ? "size-8 rounded-control bg-surface text-ink-2 shadow-btn hover:bg-hover hover:text-ink" : "text-ink-3 hover:bg-hover-2 hover:text-ink"}>
+              <Icon name={header === "bar" ? "chevron-left" : "sidebar"} size={15} strokeWidth={2} />
             </IconButton>
           )
         )}
       </div>
 
-      <nav className={`min-h-0 flex-1 overflow-y-auto ${rail ? "px-2" : "px-2.5"}`}>
+      <nav className={`min-h-0 flex-1 overflow-y-auto ${rail ? "px-2" : "px-2.5"} ${header === "bar" ? "pt-3" : ""}`}>
         {sections.map((section, si) => (
           <div key={section.title ?? si} className={si ? "mt-4" : ""}>
             {section.title && !rail && (

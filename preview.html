@@ -10251,6 +10251,7 @@ function AppSidebar({
   onVariantChange,
   collapsible = true,
   submenus = "nested",
+  header = "plain",
   user = APPSB_USER,
   footer,
   className = "",
@@ -10382,31 +10383,32 @@ function AppSidebar({
     >
       {/* Header: workspace mark, and the collapse / expand control in the
           same place in both variants, so the eye knows where to go back. */}
-      <div className={`flex shrink-0 ${rail ? "flex-col items-center gap-1 py-2.5" : "h-14 items-center gap-2 px-3"}`}>
-        {workspace.logo ? (
+      <div className={`flex shrink-0 ${rail ? (header === "bar" ? "h-14 items-center justify-center" : "flex-col items-center gap-1 py-2.5") : "h-14 items-center gap-2 px-3"} ${header === "bar" ? "border-b border-line" : ""}`}>
+        {/* with a bar header the collapsed rail shows only the way back; the mark returns with the name */}
+        {!(rail && header === "bar") && (workspace.logo ? (
           <span className="flex size-7 shrink-0 items-center justify-center">{workspace.logo}</span>
         ) : (
           <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-ink text-small font-semibold text-canvas">
             {workspace.monogram ?? workspace.name.slice(0, 1)}
           </span>
-        )}
+        ))}
         {!rail && <span className="min-w-0 flex-1 truncate text-body font-semibold text-ink">{workspace.name}</span>}
         {canFlip && (
           rail ? (
             <Tooltip label="Expand sidebar">
-              <IconButton label="Expand sidebar" onClick={flip} className="size-9 text-ink-3 hover:bg-hover-2 hover:text-ink">
-                <Icon name="sidebar" size={15} strokeWidth={2} className="rotate-180" />
+              <IconButton label="Expand sidebar" onClick={flip} className={header === "bar" ? "size-8 rounded-control bg-surface text-ink-2 shadow-btn hover:bg-hover hover:text-ink" : "size-9 text-ink-3 hover:bg-hover-2 hover:text-ink"}>
+                <Icon name={header === "bar" ? "chevron-right" : "sidebar"} size={15} strokeWidth={2} className={header === "bar" ? "" : "rotate-180"} />
               </IconButton>
             </Tooltip>
           ) : (
-            <IconButton label="Collapse sidebar" onClick={flip} className="text-ink-3 hover:bg-hover-2 hover:text-ink">
-              <Icon name="sidebar" size={15} strokeWidth={2} />
+            <IconButton label="Collapse sidebar" onClick={flip} className={header === "bar" ? "size-8 rounded-control bg-surface text-ink-2 shadow-btn hover:bg-hover hover:text-ink" : "text-ink-3 hover:bg-hover-2 hover:text-ink"}>
+              <Icon name={header === "bar" ? "chevron-left" : "sidebar"} size={15} strokeWidth={2} />
             </IconButton>
           )
         )}
       </div>
 
-      <nav className={`min-h-0 flex-1 overflow-y-auto ${rail ? "px-2" : "px-2.5"}`}>
+      <nav className={`min-h-0 flex-1 overflow-y-auto ${rail ? "px-2" : "px-2.5"} ${header === "bar" ? "pt-3" : ""}`}>
         {sections.map((section, si) => (
           <div key={section.title ?? si} className={si ? "mt-4" : ""}>
             {section.title && !rail && (
@@ -12042,7 +12044,7 @@ function TopBar({
       <div className="flex shrink-0 items-center gap-2">
         {search && (
           <Input
-            size="sm"
+            size="md"
             leadingIcon="search"
             placeholder={searchPlaceholder}
             aria-label="Search"
@@ -12689,7 +12691,7 @@ function TopBarDemo() {
   const toast = useToast();
   return (
     <div className="flex h-[560px] overflow-hidden rounded-card border border-line">
-      <AppSidebar active="overview" user={null} submenus="none" />
+      <AppSidebar active="overview" user={null} submenus="none" header="bar" />
       <div className="flex min-w-0 flex-1 flex-col bg-canvas">
         <TopBar title="Overview" theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")} notifications={3} onNotifications={() => toast({ title: "3 unread" })} onUserAction={(k) => toast({ title: `Account: ${k}` })} />
         <div className="page-content flex flex-col gap-3 p-5">
@@ -15872,7 +15874,7 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
   const topbar = cfg.sidebar === "topbar";
   const rail = project
     ? <ProjectSidebar key={k} open={projectOpen} user={me} layout={cfg.sidebar} active="northwind" onSelect={() => {}} />
-    : <AppSidebar key={k} variant={variant} onVariantChange={setVariant} active="reports-sales" onSelect={() => {}} user={topbar ? null : me} />;
+    : <AppSidebar key={k} variant={variant} onVariantChange={setVariant} active="reports-sales" onSelect={() => {}} user={topbar ? null : me} header={topbar ? "bar" : "plain"} />;
   const content = (
     <div className="page-content flex min-w-0 flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
