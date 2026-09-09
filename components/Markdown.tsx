@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, type ReactNode } from "react";
 import CodeBlock, { type CodeLanguage } from "./CodeBlock";
+import { InlineCitation, DEFAULT_SOURCES, type Source } from "./Sources";
 /* ─────────────────────────────────────────────────────────
  * MARKDOWN
  * Dependency-free renderer for AI output — the practical
@@ -21,8 +22,8 @@ const safeHref = (href: string) => {
 };
 /* ── inline ────────────────────────────────────────────── */
 const INLINE =
-  /(`[^`\n]+`)|(\*\*\*[^*\n]+\*\*\*)|(\*\*(?:[^*\n]|\*(?!\*))+\*\*)|(\*[^*\n]+\*)|(~~[^~\n]+~~)|(\[[^\]\n]+\]\([^()\s]+\))/g;
-function renderInline(text: string, keyBase: string): ReactNode[] {
+  /(`[^`\n]+`)|(\[\^?\d+(?:\s*,\s*\d+)*\])|(\*\*\*[^*\n]+\*\*\*)|(\*\*(?:[^*\n]|\*(?!\*))+\*\*)|(\*[^*\n]+\*)|(~~[^~\n]+~~)|(\[[^\]\n]+\]\([^()\s]+\))/g;
+function renderInline(text: string, keyBase: string, sourcesMap?: Map<string, Source>): ReactNode[] {
   const nodes: ReactNode[] = [];
   const re = new RegExp(INLINE.source, "g");
   let cursor = 0;
@@ -31,31 +32,44 @@ function renderInline(text: string, keyBase: string): ReactNode[] {
   const key = () => `${keyBase}-${(sequence += 1)}`;
   while ((match = re.exec(text))) {
     if (match.index > cursor) nodes.push(text.slice(cursor, match.index));
-    const [full, code, boldItalic, bold, italic, strike, link] = match;
-    if (boldItalic) {
-      nodes.push(
-        <strong key={key()} className="font-semibold text-ink">
-          <em>{renderInline(full.slice(3, -3), key())}</em>
-        </strong>,
-      );
-    } else if (code) {
+    const [full, code, citation, boldItalic, bold, italic, strike, link] = match;
+    if (code) {
       nodes.push(
         <code key={key()} className="rounded-[4px] bg-inset px-1 font-mono text-caption text-ink shadow-hairline">
           {full.slice(1, -1)}
         </code>,
       );
+    } else if (citation) {
+      const ids = citation.slice(1, -1).replace(/^\^/, "").split(",").map((s) => s.trim());
+      const matchedSources = ids.map((id) => sourcesMap?.get(id)).filter(Boolean) as Source[];
+      const effectiveSources = matchedSources.length > 0 ? matchedSources : DEFAULT_SOURCES.filter((s) => ids.includes(String(s.id)));
+      if (effectiveSources.length > 0) {
+        nodes.push(<InlineCitation key={key()} source={effectiveSources} label={citation.replace(/^\[\^?/, "[")} />);
+      } else {
+        nodes.push(
+          <span key={key()} className="inline-flex items-center align-baseline px-1.5 py-0.5 mx-0.5 rounded-sm font-mono text-micro font-semibold text-accent bg-accent-tint">
+            {citation}
+          </span>
+        );
+      }
+    } else if (boldItalic) {
+      nodes.push(
+        <strong key={key()} className="font-semibold text-ink">
+          <em>{renderInline(full.slice(3, -3), key(), sourcesMap)}</em>
+        </strong>,
+      );
     } else if (bold) {
       nodes.push(
         <strong key={key()} className="font-semibold text-ink">
-          {renderInline(full.slice(2, -2), key())}
+          {renderInline(full.slice(2, -2), key(), sourcesMap)}
         </strong>,
       );
     } else if (italic) {
-      nodes.push(<em key={key()}>{renderInline(full.slice(1, -1), key())}</em>);
+      nodes.push(<em key={key()}>{renderInline(full.slice(1, -1), key(), sourcesMap)}</em>);
     } else if (strike) {
       nodes.push(
         <s key={key()} className="text-ink-3">
-          {renderInline(full.slice(2, -2), key())}
+          {renderInline(full.slice(2, -2), key(), sourcesMap)}
         </s>,
       );
     } else if (link) {
@@ -70,7 +84,7 @@ function renderInline(text: string, keyBase: string): ReactNode[] {
             rel="noreferrer"
             className="animated-underline font-medium text-accent"
           >
-            {renderInline(inner![1], key())}
+            {renderInline(inner![1], key(), sourcesMap)}
           </a>
         ) : (
           inner?.[1] ?? full
@@ -217,13 +231,23 @@ const plan = schedule("pistachio", { batches: 2 });
 \`\`\``;
 export default function Markdown({
   content = DEFAULT_CONTENT,
+  sources,
   className = "",
 }: {
   /** markdown source; defaults to demo content */
   content?: string;
+  /** optional sources list to resolve inline citations like [1] or [1, 2] */
+  sources?: Source[];
   className?: string;
 } = {}) {
   const blocks = useMemo(() => parseBlocks(content), [content]);
+  const sourcesMap = useMemo(() => {
+    if (!sources) return undefined;
+    const map = new Map<string, Source>();
+    sources.forEach((s) => map.set(String(s.id), s));
+    return map;
+  }, [sources]);
+
   return (
     <div className={`flex w-full flex-col gap-3 ${className}`}>
       {blocks.map((block, index) => {
@@ -233,14 +257,14 @@ export default function Markdown({
             const Tag = (`h${Math.min(block.level + 2, 6)}`) as "h3" | "h4" | "h5" | "h6";
             return (
               <Tag key={key} className={HEADING_CLASSES[Math.min(block.level, 3)]}>
-                {renderInline(block.text, key)}
+                {renderInline(block.text, key, sourcesMap)}
               </Tag>
             );
           }
           case "paragraph":
             return (
               <p key={key} className="text-body leading-relaxed text-ink">
-                {renderInline(block.text, key)}
+                {renderInline(block.text, key, sourcesMap)}
               </p>
             );
           case "code":
@@ -249,7 +273,7 @@ export default function Markdown({
             return (
               <blockquote key={key} className="border-l-2 border-line-strong pl-3 text-body leading-relaxed text-ink-2">
                 {block.lines.map((quoteLine, quoteIndex) => (
-                  <p key={quoteIndex}>{renderInline(quoteLine, `${key}-${quoteIndex}`)}</p>
+                  <p key={quoteIndex}>{renderInline(quoteLine, `${key}-${quoteIndex}`, sourcesMap)}</p>
                 ))}
               </blockquote>
             );
@@ -264,12 +288,12 @@ export default function Markdown({
               >
                 {block.items.map((item, itemIndex) => (
                   <li key={itemIndex}>
-                    {renderInline(item.text, `${key}-${itemIndex}`)}
+                    {renderInline(item.text, `${key}-${itemIndex}`, sourcesMap)}
                     {item.sub.length > 0 && (
                       <ul className="mt-1 flex list-[circle] flex-col gap-1 pl-5 marker:text-ink-3">
                         {item.sub.map((subItem, subIndex) => (
                           <li key={subIndex}>
-                            {renderInline(subItem, `${key}-${itemIndex}-${subIndex}`)}
+                            {renderInline(subItem, `${key}-${itemIndex}-${subIndex}`, sourcesMap)}
                           </li>
                         ))}
                       </ul>
@@ -287,7 +311,7 @@ export default function Markdown({
                     <tr className="border-b border-line">
                       {block.header.map((cell, cellIndex) => (
                         <th key={cellIndex} className="primitive-table-cell text-small font-medium whitespace-nowrap text-ink-3">
-                          {renderInline(cell, `${key}-h${cellIndex}`)}
+                          {renderInline(cell, `${key}-h${cellIndex}`, sourcesMap)}
                         </th>
                       ))}
                     </tr>
@@ -297,7 +321,7 @@ export default function Markdown({
                       <tr key={rowIndex} className="border-b border-line last:border-0">
                         {row.map((cell, cellIndex) => (
                           <td key={cellIndex} className="primitive-table-cell text-body text-ink">
-                            {renderInline(cell, `${key}-${rowIndex}-${cellIndex}`)}
+                            {renderInline(cell, `${key}-${rowIndex}-${cellIndex}`, sourcesMap)}
                           </td>
                         ))}
                       </tr>

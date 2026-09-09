@@ -2,6 +2,7 @@
 import { useState, type ReactNode } from "react";
 import { Avatar, Badge, Icon, IconButton, IconTile, Progress, RadioCheck, Tooltip, type AvatarKind, type BadgeTone, type IconName } from "./primitives";
 import Pagination from "./Pagination";
+import EmptyState from "./EmptyState";
 /* ─────────────────────────────────────────────────────────
  * DATA TABLE — the records list every admin screen has
  * A toolbar above (search, filters, the one accent action),
@@ -47,7 +48,7 @@ export type DataTableProps<T extends { id: string }> = {
   page?: number;
   defaultPage?: number;
   onPageChange?: (page: number) => void;
-  /** what an empty page says */
+  /** what an empty page shows; an EmptyState by default, pass one with the right kind and action */
   empty?: ReactNode;
   /** accessible name of the table */
   label?: string;
@@ -71,7 +72,7 @@ export function DataTable<T extends { id: string }>({
   page,
   defaultPage = 1,
   onPageChange,
-  empty = "Nothing here yet",
+  empty = <EmptyState size="sm" />,
   label = "Records",
   onRowClick,
   className = "",
@@ -123,7 +124,7 @@ export function DataTable<T extends { id: string }>({
           </thead>
           <tbody>
             {rows.length === 0 && (
-              <tr><td colSpan={columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)} className="px-4 py-10 text-center text-caption text-ink-3">{empty}</td></tr>
+              <tr><td colSpan={columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)} className="p-0">{typeof empty === "string" ? <p className="px-4 py-10 text-center text-caption text-ink-2">{empty}</p> : empty}</td></tr>
             )}
             {rows.map((row) => {
               const on = picked.includes(row.id);
