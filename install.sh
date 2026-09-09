@@ -125,117 +125,67 @@ EOF
 @import "./formic/styles/formic.css";   /* tokens, palettes, Tailwind bridge, component sheets */
 EOF
   cat > "$APP/src/App.tsx" <<'EOF'
-import Dashboard from "./pages/Dashboard";
+import Welcome from "./pages/Welcome";
 
 export default function App() {
-  return <Dashboard />;
+  return <Welcome />;
 }
 EOF
-  cat > "$APP/src/pages/Dashboard.tsx" <<'EOF'
+  cat > "$APP/src/pages/Welcome.tsx" <<'EOF'
 /* Brief
-   Reader:   the studio owner, first thing in the morning, on a laptop
-   Question: is new business coming in, and where is it coming from?
-   Action:   open a lead or a region that needs attention
-   Register: analytical
+   Reader:   the person who just ran the installer, in the browser it opened
+   Question: did it work, and what do I do next?
+   Action:   open their AI tool in this folder and paste the test prompt
+   Register: text
 */
-/* Demo page — the reference layout. Every piece is a Formic component from
-   src/formic: an AppSidebar shell, StatCards, and Panels whose bodies fill.
-   Replace the numbers with real data through props, then ask your agent for
-   the next page: "Use Formic (src/formic). Read AGENTS.md first, then build ..."
-   Every screen starts with a Brief like the one above; scripts/compose_check.py
-   insists on it. */
-import { useState } from "react";
-import AppSidebar from "../formic/components/AppSidebar";
-import Button from "../formic/components/Button";
+/* The first page. Your AI tool replaces it with the dashboard when you paste
+   the prompt below; nothing here is meant to stay. */
+import InputCopy from "../formic/components/InputCopy";
 import Panel from "../formic/components/Panel";
-import { StatCard, MetricRow } from "../formic/components/StatCard";
-import { BarChart, BarList, LineChart } from "../formic/components/charts";
+import { FormicMark } from "../formic/components/brand";
 import { Icon } from "../formic/components/primitives";
 
-const NAV = [
-  { items: [
-    { key: "overview", label: "Overview", icon: "home" as const },
-    { key: "reports", label: "Reports", icon: "chart" as const, count: "12", children: [
-      { key: "reports-sales", label: "Sales", count: "5" }, { key: "reports-customers", label: "Customers", count: "4" },
-    ] },
-    { key: "records", label: "Records", icon: "file" as const },
-  ] },
-  { title: "Workspace", items: [
-    { key: "people", label: "People", icon: "user-add" as const, count: "8" },
-    { key: "settings", label: "Settings", icon: "gear" as const },
-  ] },
+const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page with a dashboard: the full rail, a page header, four figures, a revenue chart and a recent invoices table.";
+const READY = [
+  "Components and tokens in src/formic",
+  "Tailwind wired: fonts, tokens, palettes",
+  "Rules for Claude Code, Cursor, Copilot and Codex",
+  "Two checks that run before every commit",
 ];
-const WEEKS = ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8"];
 
-export default function Dashboard() {
-  const [page, setPage] = useState("overview");
-  const [dark, setDark] = useState(() => document.documentElement.getAttribute("data-theme") === "dark");
-  const toggleTheme = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
-  };
+export default function Welcome() {
   return (
-    <div className="flex h-dvh">
-      <AppSidebar sections={NAV} active={page} onSelect={setPage} />
-      <main className="min-w-0 flex-1 overflow-y-auto">
-        <div className="page-content flex flex-col gap-6 p-6 sm:p-8">
-          <header className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <h1 className="text-display font-semibold text-ink">Overview</h1>
-              <p className="mt-0.5 text-caption text-ink-3">Built with Formic. Everything on this page is a component from src/formic.</p>
+    <main className="min-h-dvh bg-canvas">
+      <div className="page-content flex flex-col gap-6 p-6 sm:p-8">
+        <header className="flex items-center gap-3">
+          <span className="flex size-10 items-center justify-center rounded-md bg-accent-tint text-accent"><FormicMark size={22} /></span>
+          <div className="min-w-0">
+            <h1 className="text-display font-semibold text-ink">Formic is working</h1>
+            <p className="mt-0.5 text-caption text-ink-2">Everything is set up. Your AI tool builds the rest.</p>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
+          <Panel title="What the installer set up">
+            <ul className="flex flex-col gap-2">
+              {READY.map((item) => (
+                <li key={item} className="flex items-center gap-2 text-body text-ink">
+                  <Icon name="circle-check" size={16} className="shrink-0 text-green" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </Panel>
+          <Panel title="Next: build the dashboard" caption="Open your AI tool in this folder, then paste">
+            <div className="flex flex-col gap-3">
+              <InputCopy label="Claude Code, in the same terminal" value="claude" />
+              <InputCopy label="The test prompt" value={PROMPT} mono={false} variant="button" />
+              <p className="text-caption text-ink-2">Cursor or Copilot: open this folder, then paste the prompt. The result looks like the gallery; if it looks generic, say "That is not Formic, read AGENTS.md and redo it".</p>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <Button variant="ghost" size="sm" icon={<Icon name={dark ? "sun" : "moon"} />} onClick={toggleTheme}>
-                {dark ? "Light" : "Dark"}
-              </Button>
-              <Button variant="outline" size="sm" icon={<Icon name="download" />}>Export CSV</Button>
-              <Button variant="accent" size="sm" icon={<Icon name="sparkles" />}>Generate report</Button>
-            </div>
-          </header>
-
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="New leads" caption="This month" display="128" delta="+24%" icon="user-add" iconTone="accent" trend={[6, 9, 7, 12, 10, 15, 13, 19]} trendSmooth trendAnimate />
-            <StatCard label="Orders" caption="Won this month" display="34" delta="+8%" icon="circle-check" trend={[2, 3, 3, 5, 4, 6, 5, 7]} trendTone={2} />
-            <StatCard label="Conversion" caption="Lead to client" display="18%" delta="-2%" deltaTone="down" icon="chart" />
-            <StatCard label="People reached" caption="Returning: 9" display="43" delta="0.0%" deltaTone="flat" icon="globe" />
-          </div>
-
-          {/* Two panels, one row: the grid stretches them to the same height
-              and `fill` makes each body reach the bottom edge. */}
-          <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-5">
-            <Panel title="Revenue & sales" caption="Weekly, current vs previous period" className="lg:col-span-3" actions={<Button variant="ghost" size="xs">ETB</Button>}>
-              <LineChart fill labels={WEEKS} series={[
-                { name: "Current", values: [38, 52, 44, 61, 55, 72, 66, 84] },
-                { name: "Previous", color: 3, values: [30, 41, 36, 47, 43, 58, 52, 66] },
-              ]} />
-            </Panel>
-            <Panel title="Revenue by location" caption="Top purchasing regions" className="lg:col-span-2">
-              <BarList fill format={(n) => `ETB ${n.toLocaleString()}`} items={[
-                { label: "Addis Ababa", value: 72400 }, { label: "Nairobi", value: 28900 },
-                { label: "Dubai", value: 19400 }, { label: "London", value: 15600 }, { label: "Berlin", value: 11950 },
-              ]} />
-            </Panel>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
-            <Panel title="Revenue by service" caption="Stacked by month">
-              <BarChart fill variant="stacked" labels={["Jan", "Feb", "Mar", "Apr", "May", "Jun"]} series={[
-                { name: "Design", values: [38, 52, 32, 41, 35, 48] },
-                { name: "Build", color: 3, values: [11, 9, 15, 12, 18, 14] },
-                { name: "Retainers", color: 5, values: [7, 13, 9, 16, 11, 19] },
-              ]} />
-            </Panel>
-            <Panel title="Funnel" caption="From first visit to signed" bodyClassName="justify-between">
-              <MetricRow icon="globe" label="Visited" detail="128 opened the site" value="128" delta="+24%" />
-              <MetricRow icon="message-question" label="Enquired" detail="96 opened their private link" value="96" delta="+12%" />
-              <MetricRow icon="file" label="Quoted" detail="51 received a proposal" value="51" />
-              <MetricRow icon="circle-check" label="Won" detail="34 signed" value="34" delta="+8%" />
-            </Panel>
-          </div>
+          </Panel>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
 EOF
@@ -427,9 +377,9 @@ if [ "$NEW" = 1 ]; then
   [ -d .git ] || { git init -q && git add -A && git -c user.name=formic -c user.email=formic@formicai.dev commit -qm "Formic starter" >/dev/null 2>&1 && say "git repository initialised"; } || true
   write_hook
   printf '\nDone. Run it:\n'
-  printf '  cd %s && npm run dev\n\n' "$APP"
-  printf 'Then open your AI tool in that folder and paste:\n'
-  printf '  Use Formic (src/formic), read AGENTS.md, then build <the screen you want>.\n\n'
+  printf '  cd %s && npm run dev        # the browser opens a page that says Formic is working\n\n' "$APP"
+  printf 'Then, in that folder, open your AI tool (claude, or Cursor) and paste the test prompt:\n'
+  printf '  Use Formic (src/formic), read AGENTS.md, then replace the welcome page with a dashboard: the full rail, a page header, four figures, a revenue chart and a recent invoices table.\n\n'
   printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
   printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
   exit 0
@@ -443,6 +393,6 @@ else
   [ "$CSS_WIRED" = 1 ] || { printf '  • In your global CSS (Tailwind v4), in this order:\n'; printf '       @import "<path to>/%s/styles/fonts.css";\n       @import "tailwindcss";\n       @import "<path to>/%s/styles/formic.css";\n' "$DEST" "$DEST"; }
   printf 'Then open your AI tool in this folder and paste:\n'
 fi
-printf '  Use Formic (%s), read AGENTS.md, then build <the screen you want>.\n\n' "$DEST"
+printf '  Use Formic (%s), read AGENTS.md, then build a dashboard page: the full rail, a page header, four figures, a revenue chart and a recent invoices table.\n\n' "$DEST"
 printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
 printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
