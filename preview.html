@@ -4400,6 +4400,223 @@ function ContextMeter({
   );
 }
 
+/* ═══════════ Terminal (mirrors components/Terminal.tsx) ═══════════ */
+const DEFAULT_TERMINAL_LINES= [
+  { text: "npm run build", kind: "cmd" },
+  { text: "vite v6.0.3 building for production..." },
+  { text: "transforming (412) src/formic/components/charts.tsx" },
+  { text: "✓ 418 modules transformed." },
+  { text: "dist/index.html                  0.40 kB" },
+  { text: "dist/assets/index-Bx2k.css      78.02 kB │ gzip: 15.87 kB" },
+  { text: "dist/assets/index-CoNi.js      260.01 kB │ gzip: 74.28 kB" },
+  { text: "✓ built in 1.63s" },
+];
+
+
+const LINE_CLASS= {
+  cmd: "text-ink",
+  out: "text-ink-2",
+  err: "text-red",
+  info: "text-ink-3 italic",
+};
+
+function Terminal({
+  lines = DEFAULT_TERMINAL_LINES,
+  title = "Terminal",
+  status = "done",
+  exitCode = status === "error" ? 1 : status === "done" ? 0 : undefined,
+  duration,
+  stream = false,
+  maxHeight = "max-h-72",
+  onStop,
+  onCopy,
+  className = "",
+}) {
+  const { count } = useStream(stream ? lines.length : 0, { intervalMs: 140 });
+  const shown = stream ? lines.slice(0, count) : lines;
+  const running = status === "running" || (stream && count < lines.length);
+  const bodyRef = useRef(null);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => { bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight }); }, [shown.length]);
+  const copy = async () => {
+    const text = lines.map((l) => (l.kind === "cmd" ? `$ ${l.text}` : l.text)).join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      onCopy?.(text);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch { /* clipboard unavailable: stay quiet */ }
+  };
+  return (
+    <div className={`w-full min-w-0 overflow-hidden rounded-card bg-surface shadow-card ${className}`}>
+      <div className="primitive-card-bar flex items-center justify-between gap-3 border-b border-line">
+        <span className="flex min-w-0 items-center gap-2">
+          <Icon name="terminal" size={13} strokeWidth={2} className="shrink-0 text-ink-3" />
+          <span className="min-w-0 truncate font-mono text-micro tracking-wide text-ink-3 uppercase">{title}</span>
+        </span>
+        <span className="flex shrink-0 items-center gap-1.5">
+          {running ? (
+            <>
+              <span className="flex items-center gap-1.5 text-micro text-ink-3"><Spinner size={11} /> running</span>
+              {onStop && (
+                <IconButton label="Stop" onClick={onStop} className="text-ink-3 hover:bg-hover hover:text-ink">
+                  <Icon name="close" size={13} strokeWidth={2.2} />
+                </IconButton>
+              )}
+            </>
+          ) : exitCode !== undefined ? (
+            <>
+              {duration !== undefined && <span className="text-micro tabular-nums text-ink-3">{tcFormatDuration(duration)}</span>}
+              <Badge tone={exitCode === 0 ? "green" : "red"}>exit {exitCode}</Badge>
+            </>
+          ) : null}
+          <span aria-live="polite" className="text-micro text-ink-3">{copied ? "Copied" : ""}</span>
+          <IconButton label="Copy output" onClick={copy} className={copied ? "text-green" : "text-ink-3 hover:bg-hover hover:text-ink"}>
+            <Icon name={copied ? "check" : "copy"} size={13} strokeWidth={2} />
+          </IconButton>
+        </span>
+      </div>
+      <div ref={bodyRef} role="log" aria-live={running ? "polite" : "off"} aria-label={title} tabIndex={0} className={`overflow-auto ${maxHeight}`}>
+        <pre className="w-fit min-w-full px-3.5 py-3 font-mono text-caption leading-relaxed">
+          {shown.map((line, i) => {
+            const kind = line.kind ?? "out";
+            const last = i === shown.length - 1;
+            return (
+              <div key={i} className={`flex min-h-[1lh] whitespace-pre ${LINE_CLASS[kind]}`}>
+                {kind === "cmd" && <span aria-hidden className="mr-2 select-none text-ink-3">$</span>}
+                <span>{line.text}</span>
+                {last && running && <StreamCaret className="self-center" />}
+              </div>
+            );
+          })}
+          {shown.length === 0 && running && <div className="flex min-h-[1lh] items-center"><StreamCaret /></div>}
+        </pre>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════ FileTree (mirrors components/FileTree.tsx) ═══════════ */
+const DEFAULT_FILE_TREE= [
+  {
+    name: "src", open: true, children: [
+      {
+        name: "formic", children: [
+          { name: "components", children: [{ name: "Panel.tsx" }, { name: "StatCard.tsx" }, { name: "charts.tsx" }] },
+          { name: "styles", children: [{ name: "tokens.css" }, { name: "themes.css" }] },
+        ],
+      },
+      {
+        name: "pages", open: true, children: [
+          { name: "Dashboard.tsx", status: "modified", meta: "+74 −41" },
+          { name: "Invoices.tsx", status: "added", meta: "+118" },
+          { name: "Welcome.tsx", status: "deleted", meta: "−56" },
+        ],
+      },
+      { name: "App.tsx", status: "modified", meta: "+3 −1" },
+      { name: "index.css" },
+    ],
+  },
+  { name: "formic.config.json", status: "modified", meta: "+1 −1" },
+  { name: "package.json" },
+  { name: "README.md" },
+];
+
+const STATUS_DOT= { added: "bg-green", modified: "bg-orange", deleted: "bg-red" };
+const STATUS_TEXT= { added: "added", modified: "modified", deleted: "deleted" };
+
+const fileIcon = (name) => {
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  if (["png", "jpg", "jpeg", "gif", "svg", "webp"].includes(ext)) return "image";
+  if (["mp4", "mov", "webm"].includes(ext)) return "video";
+  if (["ts", "tsx", "js", "jsx", "py", "css", "html", "json", "sh"].includes(ext)) return "code";
+  return "file";
+};
+
+
+function FileTree({
+  nodes = DEFAULT_FILE_TREE,
+  selected,
+  defaultSelected,
+  onSelect,
+  label = "Files",
+  className = "",
+}) {
+  const [ownSelected, setOwnSelected] = useState(defaultSelected ?? null);
+  const current = selected !== undefined ? selected : ownSelected;
+  /* folders open on mount: their own `open`, plus the path down to the selection */
+  const [openPaths, setOpenPaths] = useState(() => {
+    const set = new Set();
+    const walk = (list, base) => list.forEach((n) => {
+      const path = base ? `${base}/${n.name}` : n.name;
+      if (n.children && (n.open || (current && current.startsWith(path + "/")))) set.add(path);
+      if (n.children) walk(n.children, path);
+    });
+    walk(nodes, "");
+    return set;
+  });
+  const [focused, setFocused] = useState(null);
+  const rows = useMemo(() => {
+    const out = [];
+    const walk = (list, base, depth) => list.forEach((n) => {
+      const path = base ? `${base}/${n.name}` : n.name;
+      const folder = Array.isArray(n.children);
+      out.push({ node: n, path, depth, folder });
+      if (folder && openPaths.has(path)) walk(n.children, path, depth + 1);
+    });
+    walk(nodes, "", 0);
+    return out;
+  }, [nodes, openPaths]);
+  const toggle = (path) => setOpenPaths((s) => { const next = new Set(s); if (next.has(path)) next.delete(path); else next.add(path); return next; });
+  const choose = (row) => {
+    if (row.folder) { toggle(row.path); return; }
+    if (selected === undefined) setOwnSelected(row.path);
+    onSelect?.(row.path, row.node);
+  };
+  const focusRow = (path) => { setFocused(path); document.getElementById(`tree-${path}`)?.focus(); };
+  const onKey = (event, row, index) => {
+    const { key } = event;
+    if (key === "ArrowDown" && rows[index + 1]) { event.preventDefault(); focusRow(rows[index + 1].path); }
+    else if (key === "ArrowUp" && rows[index - 1]) { event.preventDefault(); focusRow(rows[index - 1].path); }
+    else if (key === "ArrowRight" && row.folder) { event.preventDefault(); if (!openPaths.has(row.path)) toggle(row.path); else if (rows[index + 1]) focusRow(rows[index + 1].path); }
+    else if (key === "ArrowLeft") { event.preventDefault(); if (row.folder && openPaths.has(row.path)) toggle(row.path); else { const parent = rows.slice(0, index).reverse().find((r) => r.folder && row.path.startsWith(r.path + "/")); if (parent) focusRow(parent.path); } }
+    else if (key === "Enter" || key === " ") { event.preventDefault(); choose(row); }
+    else if (key === "Home" && rows[0]) { event.preventDefault(); focusRow(rows[0].path); }
+    else if (key === "End") { event.preventDefault(); focusRow(rows[rows.length - 1].path); }
+  };
+  const tabStop = focused ?? current ?? rows[0]?.path;
+  return (
+    <ul role="tree" aria-label={label} className={`flex w-full min-w-0 flex-col ${className}`}>
+      {rows.map((row, i) => {
+        const open = row.folder && openPaths.has(row.path);
+        const isSelected = row.path === current;
+        return (
+          <li key={row.path} role="treeitem" aria-expanded={row.folder ? open : undefined} aria-selected={row.folder ? undefined : isSelected} aria-level={row.depth + 1} className="list-none">
+            <button
+              id={`tree-${row.path}`}
+              type="button"
+              tabIndex={row.path === tabStop ? 0 : -1}
+              onClick={() => choose(row)}
+              onFocus={() => setFocused(row.path)}
+              onKeyDown={(event) => onKey(event, row, i)}
+              className={`corner-smooth flex h-7 w-full items-center gap-1.5 rounded-sm pr-2 text-left text-caption transition-colors duration-150 ${isSelected ? "bg-hover-2 font-medium text-ink" : "text-ink hover:bg-hover"} ${row.node.status === "deleted" ? "line-through decoration-ink-3" : ""}`}
+              style={{ paddingLeft: `${8 + row.depth * 16}px` }}
+            >
+              <span className="flex size-4 shrink-0 items-center justify-center text-ink-3">
+                {row.folder && <Icon name="chevron-right" size={12} strokeWidth={2} className={`transition-transform duration-150 ${open ? "rotate-90" : ""}`} />}
+              </span>
+              <Icon name={row.node.icon ?? (row.folder ? "folder" : fileIcon(row.node.name))} size={14} strokeWidth={1.8} className={`shrink-0 ${isSelected ? "text-ink" : "text-ink-2"}`} />
+              <span className="min-w-0 flex-1 truncate">{row.node.name}</span>
+              {row.node.meta && <span className="shrink-0 font-mono text-tiny tabular-nums text-ink-3">{row.node.meta}</span>}
+              {row.node.status && <span className={`size-1.5 shrink-0 rounded-full ${STATUS_DOT[row.node.status]}`} role="img" aria-label={STATUS_TEXT[row.node.status]} />}
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 /* ═══════════ ContextCards ═══════════ */
 const CTX_TONES = {
   red: "bg-red",
@@ -12537,6 +12754,56 @@ function Page_streamingtext() {
   );
 }
 
+function Page_terminal() {
+  const toast = useToast();
+  return (
+    <>
+      <GalleryCard label="Done · the command, its output, exit 0 and the time" wide>
+        <Terminal title="npm run build" duration={1630} />
+      </GalleryCard>
+      <GalleryCard label="Streaming · lines print one by one, the caret on the last, Stop in the bar" wide>
+        <Terminal title="npm run formic" stream status="running" onStop={() => toast({ title: "Stopped" })} lines={[
+          { text: "npm run formic", kind: "cmd" },
+          { text: "> python3 src/formic/scripts/formic_check.py src", kind: "info" },
+          { text: "formic: 6 file(s) built on the system — tokens, ramp, radii, Formic components, no second kit" },
+          { text: "> python3 src/formic/scripts/compose_check.py src", kind: "info" },
+          { text: "src/pages/Dashboard.tsx" },
+          { text: "  ✗ figures   a StatCard delta with no period in reach", kind: "err" },
+          { text: "1 composition issue(s). The brief is the rubric.", kind: "err" },
+        ]} />
+      </GalleryCard>
+      <GalleryCard label="Failed · stderr in red, exit 1" wide>
+        <Terminal title="npx tsc -b" status="error" duration={4200} lines={[
+          { text: "npx tsc -b", kind: "cmd" },
+          { text: "src/pages/Invoices.tsx(42,18): error TS2322: Type 'string' is not assignable to type 'number'.", kind: "err" },
+          { text: "src/pages/Invoices.tsx(58,7): error TS2741: Property 'rows' is missing in type '{}'.", kind: "err" },
+          { text: "Found 2 errors in 1 file." },
+        ]} />
+      </GalleryCard>
+    </>
+  );
+}
+
+function Page_filetree() {
+  const toast = useToast();
+  const [path, setPath] = useState("src/pages/Dashboard.tsx");
+  return (
+    <>
+      <GalleryCard label="Default · folders, files, status dots and the change counts" wide>
+        <div className="rounded-md bg-surface p-1 shadow-hairline">
+          <FileTree selected={path} onSelect={(p) => { setPath(p); toast({ title: p }); }} />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Beside a Terminal · the run and the files it touched" full>
+        <div className="grid grid-cols-1 gap-3.5 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+          <div className="rounded-md bg-surface p-1 shadow-hairline"><FileTree defaultSelected="src/pages/Invoices.tsx" /></div>
+          <Terminal title="npm run build" duration={1630} />
+        </div>
+      </GalleryCard>
+    </>
+  );
+}
+
 function Page_codeblock() {
   return (
     <>
@@ -14529,6 +14796,8 @@ const PAGES = [
   { id: "chatapp", group: "Conversation", title: "ChatApp", note: "The whole system composed into one surface \u2014 SidebarNav rail, a thread of MessageBubbles embedding Markdown and CodeBlock, PromptBar below. Send a message: it thinks, then streams the reply. Built by the formic-design-system skill following its own recipe.", file: "components/ChatApp.tsx", Component: Page_chatapp },
   { id: "chatthread", group: "Conversation", title: "ChatThread", note: "A conversation column \u2014 user bubbles right, assistant replies flat. The final reply streams in once; embed StreamingText, ToolChips, or ApprovalCard as message children in a real thread.", file: "components/ChatThread.tsx", Component: Page_chatthread },
   { id: "streamingtext", group: "Conversation", title: "StreamingText", note: "Words resolve out of blur; citations, sources, and follow-ups appear when done. Loops.", file: "components/StreamingText.tsx", Component: Page_streamingtext },
+  { id: "terminal", group: "Conversation", title: "Terminal", note: "What a command printed, as it printed it: the command on a prompt line, its output beneath, and at the end the exit code and the time. The same shell as CodeBlock (surface card, mono, a bar with the title and a copy). Lines are cmd, out, err (red) or info; stream= prints them one by one with the caret on the last and a Stop in the bar; a non-zero exit is the only other colour.", file: "components/Terminal.tsx", Component: Page_terminal },
+  { id: "filetree", group: "Structure", title: "FileTree", note: "The files an agent touched, where they live. Folders open and close, files select, a dot says added, modified or deleted and a mono count says how much. The rails\u2019 28px rows and flat selection, 16px per level; arrows move and open, Enter selects; controlled or not.", file: "components/FileTree.tsx", Component: Page_filetree },
   { id: "codeblock", group: "Conversation", title: "CodeBlock", note: "AI code output \u2014 dependency-free syntax highlighting on theme tokens, copy action, optional line numbers. Block comments spanning lines stay plain (accepted).", file: "components/CodeBlock.tsx", Component: Page_codeblock },
   { id: "markdown", group: "Conversation", title: "Markdown", note: "Dependency-free renderer for AI output \u2014 headings, emphasis, safe links, nested lists, quotes, tables that scroll in place, and fenced code through CodeBlock. javascript: URLs are dropped.", file: "components/Markdown.tsx", Component: Page_markdown },
   { id: "sources", group: "Conversation", title: "Sources & InlineCitation", note: "Where an answer came from. InlineCitation is a small number in the running text, superscript height so the line does not move; hover or focus opens a card with the source\u2019s mark and domain, its title, the quoted passage and one link out. Sources is one quiet row under the reply (marks, 3 sources, a chevron) that opens into rows, not cards. Marks are favicons, a brand mark from brand.tsx, or initials. ", file: "components/Sources.tsx", Component: Page_sources },

@@ -101,7 +101,7 @@ All of these choices, plus the avatar fallback, the sidebar's first variant and 
 
 ## Components
 
-**Conversation:** ChatThread, MessageBubble, StreamingText, PromptBar, ChatComposer, Markdown, CodeBlock, SelectionActions, ApprovalCard, ApprovalFlow, AskUserQuestions, InsightCards, RecommendationCard, ContextCards, ModelSelector, ContextMeter, Sources + InlineCitation, InlineCitation, ChatApp
+**Conversation:** ChatThread, MessageBubble, StreamingText, PromptBar, ChatComposer, Markdown, CodeBlock, SelectionActions, ApprovalCard, ApprovalFlow, AskUserQuestions, InsightCards, RecommendationCard, ContextCards, ModelSelector, ContextMeter, Terminal, Sources + InlineCitation, InlineCitation, ChatApp
 
 **Feedback and agents:** EmptyState, ThinkingIndicator, ThinkingState, TaskRows, ToolChips, ToolCall, LoadingState, Progress, Skeleton, Alert, Toast
 
@@ -111,7 +111,7 @@ All of these choices, plus the avatar fallback, the sidebar's first variant and 
 
 **Dashboard:** Panel, StatCard, MetricRow, Delta, BarChart, LineChart, DonutChart, Sparkline, ChartLegend, CountUp, Gauge, BarList, PrivacyScope, PrivacyToggle, Masked
 
-**Data and structure:** RecordsTable, FilterTable, DiffTable, Accordion, Steps, Timeline, CardGroup + Card parts (cards.tsx)
+**Data and structure:** FileTree, RecordsTable, FilterTable, DiffTable, Accordion, Steps, Timeline, CardGroup + Card parts (cards.tsx)
 
 **Navigation:** CommandPalette, Tabs, Pagination, Breadcrumbs, Menubar, AppSidebar, ProjectSidebar, SidebarNav, SearchList
 
