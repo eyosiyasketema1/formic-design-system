@@ -1,17 +1,21 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Formic AI Design System</title>
 <script>
-  /* Apply the stored theme before first paint. The toggle's own sync runs at
-     the bottom of the page, which is far too late — a light-mode visitor
-     would get a full dark render first. Same ds-theme key as the gallery. */
-  try {
-    var _t = localStorage.getItem("ds-theme");
-    if (_t === "light" || _t === "dark") document.documentElement.setAttribute("data-theme", _t);
-  } catch (e) {}
+  /* Theme before first paint: the visitor's own choice if they made one
+     (ds-theme, shared with the gallery), otherwise the system setting,
+     followed live until they choose. */
+  (function () {
+    var root = document.documentElement, stored = null;
+    try { stored = localStorage.getItem("ds-theme"); } catch (e) {}
+    var mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+    var apply = function () { root.setAttribute("data-theme", stored === "light" || stored === "dark" ? stored : (mq && mq.matches ? "dark" : "light")); };
+    apply();
+    if (mq && mq.addEventListener) mq.addEventListener("change", function () { try { stored = localStorage.getItem("ds-theme"); } catch (e) {} if (stored !== "light" && stored !== "dark") apply(); });
+  })();
 </script>
 <meta name="description" content="A token-driven React + Tailwind v4 design system for AI product interfaces. 50+ components, WCAG AA in every mode, and a live hero you can play with." />
 <meta property="og:title" content="Formic AI Design System" />
@@ -22,6 +26,7 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="canonical" href="https://formicai.dev/" />
 <link rel="icon" type="image/png" href="./assets/favicon.png" />
+<link rel="apple-touch-icon" href="./assets/formic-logomark-512.png" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" integrity="sha512-QVs8Lo43F9lSuBykadDb0oSXDL/BbZ588urWVCRwSIoewQv/Ewg1f84mK3U790bZ0FfhFa1YSQUmIhG+pIRKeg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" integrity="sha512-6a1107rTlA4gYpgHAqbwLAtxmWipBdJFcq8y5S/aTge3Bp+VAklABm2LO+Kg51vOWR9JMZq1Ovjl5tpluNpTeQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.4/babel.min.js" integrity="sha512-hX7KzoYtNHhNJsz8TAHyddcegokOwhmYiFWCDHqFkcoNVsYwCziO+NISSRlNKpfOYaqyQxm2+MTCJqSaHssJTA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -1113,7 +1118,7 @@ footer.site a:hover { color: var(--ink); }
       <h2>Built for AI products, not adapted to them</h2>
       <p class="section-sub">The AI-specific surface is first-class, highlighted below, and the everyday controls around it match to the pixel.</p>
       <div class="inventory">
-        <a class="inv-chip ai" href="./preview.html">ChatThread</a><a class="inv-chip ai" href="./preview.html">PromptBar</a><a class="inv-chip ai" href="./preview.html">StreamingText</a><a class="inv-chip ai" href="./preview.html">ThinkingState</a><a class="inv-chip ai" href="./preview.html">ToolChips</a><a class="inv-chip ai" href="./preview.html">ApprovalCard</a><a class="inv-chip ai" href="./preview.html">TaskRows</a><a class="inv-chip ai" href="./preview.html">Markdown</a><a class="inv-chip ai" href="./preview.html">CodeBlock</a><a class="inv-chip ai" href="./preview.html">SelectionActions</a><a class="inv-chip" href="./preview.html">Button</a><a class="inv-chip" href="./preview.html">Input</a><a class="inv-chip" href="./preview.html">Select</a><a class="inv-chip" href="./preview.html">Calendar</a><a class="inv-chip" href="./preview.html">DateRangePicker</a><a class="inv-chip" href="./preview.html">Modal</a><a class="inv-chip" href="./preview.html">Drawer</a><a class="inv-chip" href="./preview.html">Toast</a><a class="inv-chip" href="./preview.html">DropdownMenu</a><a class="inv-chip" href="./preview.html">Tabs</a><a class="inv-chip" href="./preview.html">Steps</a><a class="inv-chip" href="./preview.html">Breadcrumbs</a><a class="inv-chip" href="./preview.html">SidebarNav</a><a class="inv-chip" href="./preview.html">RecordsTable</a><a class="inv-chip" href="./preview.html">FilterTable</a><a class="inv-chip" href="./preview.html">Timeline</a><a class="inv-chip" href="./preview.html">Accordion</a><a class="inv-chip" href="./preview.html">Skeleton</a><a class="inv-chip" href="./preview.html">Avatar</a><a class="inv-chip" href="./preview.html">FileDropzone</a><a class="inv-chip ai" href="./preview.html#/askuserquestions">AskUserQuestions</a><a class="inv-chip ai" href="./preview.html#/insightcards">InsightCards</a><a class="inv-chip ai" href="./preview.html#/thinkingindicator">ThinkingIndicator</a><a class="inv-chip ai" href="./preview.html#/flowchart">Flowchart</a><a class="inv-chip" href="./preview.html#/sidebar">AppSidebar</a><a class="inv-chip" href="./preview.html#/sidebar">ProjectSidebar</a><a class="inv-chip" href="./preview.html#/datatable">DataTable</a><a class="inv-chip" href="./preview.html#/panel">Panel</a><a class="inv-chip" href="./preview.html#/statcard">StatCard</a><a class="inv-chip" href="./preview.html#/statcard">StatStrip</a><a class="inv-chip" href="./preview.html#/charts">LineChart</a><a class="inv-chip" href="./preview.html#/charts">BarChart</a><a class="inv-chip" href="./preview.html#/charts">DonutChart</a><a class="inv-chip" href="./preview.html#/charts">RadarChart</a><a class="inv-chip" href="./preview.html#/charts">ScatterChart</a><a class="inv-chip" href="./preview.html#/charts">ShareBar</a><a class="inv-chip" href="./preview.html#/charts">ActivityCalendar</a><a class="inv-chip" href="./preview.html#/charts">BarList</a><a class="inv-chip" href="./preview.html#/card">CardGroup</a><a class="inv-chip" href="./preview.html#/slider-otp">Slider</a><a class="inv-chip" href="./preview.html#/inputgroup">InputGroup</a><a class="inv-chip" href="./preview.html#/inputcopy">InputCopy</a><a class="inv-chip" href="./preview.html#/primitives">Rating</a><a class="inv-chip" href="./preview.html#/primitives">Shortcut</a><a class="inv-chip" href="./preview.html">+ 10 more in the gallery</a>
+        <a class="inv-chip ai" href="./preview.html">ChatThread</a><a class="inv-chip ai" href="./preview.html">PromptBar</a><a class="inv-chip ai" href="./preview.html">StreamingText</a><a class="inv-chip ai" href="./preview.html">ThinkingState</a><a class="inv-chip ai" href="./preview.html">ToolChips</a><a class="inv-chip ai" href="./preview.html">ApprovalCard</a><a class="inv-chip ai" href="./preview.html">TaskRows</a><a class="inv-chip ai" href="./preview.html">Markdown</a><a class="inv-chip ai" href="./preview.html">CodeBlock</a><a class="inv-chip ai" href="./preview.html">SelectionActions</a><a class="inv-chip" href="./preview.html">Button</a><a class="inv-chip" href="./preview.html">Input</a><a class="inv-chip" href="./preview.html">Select</a><a class="inv-chip" href="./preview.html">Calendar</a><a class="inv-chip" href="./preview.html">DateRangePicker</a><a class="inv-chip" href="./preview.html">Modal</a><a class="inv-chip" href="./preview.html">Drawer</a><a class="inv-chip" href="./preview.html">Toast</a><a class="inv-chip" href="./preview.html">DropdownMenu</a><a class="inv-chip" href="./preview.html">Tabs</a><a class="inv-chip" href="./preview.html">Steps</a><a class="inv-chip" href="./preview.html">Breadcrumbs</a><a class="inv-chip" href="./preview.html">SidebarNav</a><a class="inv-chip" href="./preview.html">RecordsTable</a><a class="inv-chip" href="./preview.html">FilterTable</a><a class="inv-chip" href="./preview.html">Timeline</a><a class="inv-chip" href="./preview.html">Accordion</a><a class="inv-chip" href="./preview.html">Skeleton</a><a class="inv-chip" href="./preview.html">Avatar</a><a class="inv-chip" href="./preview.html">FileDropzone</a><a class="inv-chip ai" href="./preview.html#/askuserquestions">AskUserQuestions</a><a class="inv-chip ai" href="./preview.html#/insightcards">InsightCards</a><a class="inv-chip ai" href="./preview.html#/thinkingindicator">ThinkingIndicator</a><a class="inv-chip" href="./preview.html#/sidebar">AppSidebar</a><a class="inv-chip" href="./preview.html#/sidebar">ProjectSidebar</a><a class="inv-chip" href="./preview.html#/datatable">DataTable</a><a class="inv-chip" href="./preview.html#/panel">Panel</a><a class="inv-chip" href="./preview.html#/statcard">StatCard</a><a class="inv-chip" href="./preview.html#/statcard">StatStrip</a><a class="inv-chip" href="./preview.html#/charts">LineChart</a><a class="inv-chip" href="./preview.html#/charts">BarChart</a><a class="inv-chip" href="./preview.html#/charts">DonutChart</a><a class="inv-chip" href="./preview.html#/charts">RadarChart</a><a class="inv-chip" href="./preview.html#/charts">ScatterChart</a><a class="inv-chip" href="./preview.html#/charts">ShareBar</a><a class="inv-chip" href="./preview.html#/charts">ActivityCalendar</a><a class="inv-chip" href="./preview.html#/charts">BarList</a><a class="inv-chip" href="./preview.html#/card">CardGroup</a><a class="inv-chip" href="./preview.html#/slider-otp">Slider</a><a class="inv-chip" href="./preview.html#/inputgroup">InputGroup</a><a class="inv-chip" href="./preview.html#/inputcopy">InputCopy</a><a class="inv-chip" href="./preview.html#/primitives">Rating</a><a class="inv-chip" href="./preview.html#/primitives">Shortcut</a><a class="inv-chip" href="./preview.html">+ 10 more in the gallery</a>
       </div>
     </div>
   </section>
@@ -1271,10 +1276,7 @@ footer.site a:hover { color: var(--ink); }
   var moon = document.getElementById("icon-moon");
   var sun = document.getElementById("icon-sun");
 
-  /* the gallery reads the same key, so the two pages stay in sync */
-  var stored;
-  try { stored = localStorage.getItem("ds-theme"); } catch (e) { stored = null; }
-  if (stored === "light" || stored === "dark") root.setAttribute("data-theme", stored);
+  /* the head script already applied the choice (or the system setting) */
 
   function paint() {
     var dark = root.getAttribute("data-theme") === "dark";

@@ -111,7 +111,7 @@ All of these choices, plus the avatar fallback, the sidebar's first variant and 
 
 **Dashboard:** Panel, StatCard, MetricRow, Delta, BarChart, LineChart, DonutChart, Sparkline, ChartLegend, CountUp, Gauge, BarList, PrivacyScope, PrivacyToggle, Masked
 
-**Data and structure:** RecordsTable, FilterTable, DiffTable, Accordion, Steps, Timeline, Flowchart, CardGroup + Card parts (cards.tsx)
+**Data and structure:** RecordsTable, FilterTable, DiffTable, Accordion, Steps, Timeline, CardGroup + Card parts (cards.tsx)
 
 **Navigation:** Tabs, Pagination, Breadcrumbs, Menubar, AppSidebar, ProjectSidebar, SidebarNav, SearchList
 
