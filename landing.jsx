@@ -2390,8 +2390,23 @@ const ACCENT_PRESETS = [
   { hex: "#ffffff", swatch: "#ffffff", label: "Mono" },
 ];
 
+/* the swatches show each accent as it will actually render in the current
+   theme (fitted for AA on that surface), so light mode shows the deeper
+   light-mode value, not the raw dark-mode brights */
+function useDocumentTheme() {
+  const read = () => (document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
+  const [theme, setTheme] = useState(read);
+  useEffect(() => {
+    const observer = new MutationObserver(() => setTheme(read()));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+  return theme;
+}
 function AccentPicker() {
   const [accent, setAccentHex] = useAccent();
+  const theme = useDocumentTheme();
+  const shown = (hex) => deriveAccentVariants(hex)?.[theme] ?? hex;
   const layerId = useId();
   const { open, position, anchorRef, openAt, close } = useAnchoredLayer(layerId);
   return (
@@ -2407,7 +2422,7 @@ function AccentPicker() {
           className={`h-6 w-11 rounded-capsule transition-transform duration-150 hover:scale-105 ${
             accent === preset.hex ? "outline-2 outline-offset-2 outline-line-strong outline" : "shadow-hairline"
           }`}
-          style={{ background: preset.swatch }}
+          style={{ background: shown(preset.swatch) }}
         />
       ))}
       <button
@@ -2464,6 +2479,13 @@ const PRINCIPLES = [
     tone: "bg-accent-tint text-accent",
     title: "A QA gate, not a wiki",
     description: "One script checks forbidden patterns, contrast, token drift, and compilation. Work is not done while it fails.",
+  },
+  {
+    id: "composition",
+    icon: "sparkles",
+    tone: "bg-green-tint text-green",
+    title: "Nothing on a screen without a reason",
+    description: "Every screen starts with a four-line brief and keeps one register: text, balanced, analytical or visual. A check refuses the tells: a chart for one number, a delta with no period, a donut for two, an icon per card.",
   },
 ];
 
