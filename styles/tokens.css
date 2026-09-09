@@ -206,12 +206,14 @@
 body { font-family: var(--font-sans); background: var(--canvas); color: var(--ink); }
 
 /* Keyboard focus — visible on every interactive element,
-   invisible for mouse/touch (:focus-visible only) */
+   invisible for mouse/touch (:focus-visible only). The outline follows
+   the element's own corners; the rule sets no radius of its own, so a
+   focused control keeps the radius the scale gave it. */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
 }
+a:focus-visible { border-radius: var(--radius-sm); } /* text links have no corners of their own */
 
 /* Elements focused by script for screen-reader position (page headings,
    the active step) carry tabindex="-1", so Tab can never reach them — a
