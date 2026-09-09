@@ -1,10 +1,11 @@
 # Formic AI Design System
 
-A token-driven React + Tailwind v4 design system for AI product interfaces: chat threads, prompt bars, streaming text, agent traces, approval cards, and the whole app shell around them.
+A token-driven React + Tailwind v4 design system for AI product interfaces: chat threads, prompt bars, streaming text, tool calls, terminals, file trees, sources and citations, approval cards, and the whole app shell around them.
 
 **[Live site](https://formicai.dev/)** · **[Component gallery](https://formicai.dev/preview.html)**
 
-- 50+ components, 10 palettes x light/dark, plus a custom palette from any colour
+- 70+ components, 10 palettes x light/dark, plus a custom palette from any colour
+- The agent surface is first-class: ToolCall, Terminal, FileTree, SplitPane (chat and canvas), Sources + InlineCitation, ImageResult, ContextMeter, ModelSelector, CommandPalette, NotificationList, all on the same tokens as the buttons and tables around them
 - `AppShell`: one component that mounts whichever rail `formic.config.json` names (full, inset, edge, topbar) with the page header and `.page-content`, so a config change moves the whole app
 - Two gates for apps built on it: `scripts/formic_check.py` refuses generic UI (off-token colours, off-ramp type, drop shadows, raw buttons and tables, a second kit, a page importing nothing from the system) and `scripts/compose_check.py` judges what is on the screen
 - Composition intelligence: a brief before every screen, four registers (text, balanced, analytical, visual), an admission test for every element, and `scripts/compose_check.py` to catch the tells (AGENTS.md → Composition intelligence)
@@ -28,10 +29,6 @@ curl -fsSL https://formicai.dev/install.sh | bash && npm run dev
 ```
 
 Then open your AI tool in that folder and paste the test prompt the installer prints. (`--new my-app` still works when you want the installer to create the folder.)
-
-```bash
-curl -fsSL https://formicai.dev/install.sh | bash
-```
 
 ### 2. By hand
 
@@ -101,7 +98,7 @@ All of these choices, plus the avatar fallback, the sidebar's first variant and 
 
 ## Components
 
-**Conversation:** ChatThread, MessageBubble, StreamingText, PromptBar, ChatComposer, Markdown, CodeBlock, SelectionActions, ApprovalCard, ApprovalFlow, AskUserQuestions, InsightCards, RecommendationCard, ContextCards, ModelSelector, ContextMeter, Terminal, ImageResult, Sources + InlineCitation, InlineCitation, ChatApp
+**Conversation:** ChatThread, MessageBubble, StreamingText, PromptBar, ChatComposer, Markdown, CodeBlock, SelectionActions, ApprovalCard, ApprovalFlow, AskUserQuestions, InsightCards, RecommendationCard, ContextCards, ModelSelector, ContextMeter, Terminal, ImageResult + ImageResults, Sources + InlineCitation, ChatApp
 
 **Feedback and agents:** NotificationList, EmptyState, ThinkingIndicator, ThinkingState, TaskRows, ToolChips, ToolCall, LoadingState, Progress, Skeleton, Alert, Toast
 
@@ -111,13 +108,13 @@ All of these choices, plus the avatar fallback, the sidebar's first variant and 
 
 **Dashboard:** Panel, StatCard, MetricRow, Delta, BarChart, LineChart, DonutChart, Sparkline, ChartLegend, CountUp, Gauge, BarList, PrivacyScope, PrivacyToggle, Masked
 
-**Data and structure:** SplitPane, FileTree, RecordsTable, FilterTable, DiffTable, Accordion, Steps, Timeline, CardGroup + Card parts (cards.tsx)
+**Data and structure:** SplitPane, FileTree, DataTable, RecordsTable, FilterTable, DiffTable, Accordion, Steps, Timeline, CardGroup + Card parts (cards.tsx)
 
-**Navigation:** CommandPalette, Tabs, Pagination, Breadcrumbs, Menubar, AppSidebar, ProjectSidebar, SidebarNav, SearchList
+**Navigation and shell:** AppShell, AppSidebar, ProjectSidebar, TopBar, SidebarNav, CommandPalette, Tabs, Pagination, Breadcrumbs, Menubar, SearchList
 
 **Brand** (`components/brand.tsx`, `components/brand-logos.tsx`): FormicMark, BrandIcon (81 monochrome marks), BrandLogo (101 real full-colour logos)
 
-**Primitives** (`components/primitives.tsx`): Icon, Spinner, StreamText, Skeleton, Avatar (photo, doodle, initials), AvatarGroup, Tooltip, Progress, Separator, Chip, Badge, IconButton, SendButton, Switch, Checkbox, Disclosure, GlideMenu, Card, Popover, AvatarStack
+**Primitives** (`components/primitives.tsx`): Icon, Spinner, StreamText, Skeleton, Avatar (photo, doodle, initials), AvatarGroup, Tooltip, Progress, Separator, Chip, Badge, IconTile, IconButton, SendButton, Switch, Checkbox, Disclosure, OptionRow, GlideMenu, Card, Popover, AvatarStack
 
 Open the [gallery](https://formicai.dev/preview.html): one page per component with a live playground, and global controls for theme, palette, accent, radius and size. Deep-link any component as `preview.html#/button`.
 
