@@ -44,10 +44,10 @@ function renderInline(text: string, keyBase: string, sourcesMap?: Map<string, So
       const matchedSources = ids.map((id) => sourcesMap?.get(id)).filter(Boolean) as Source[];
       const effectiveSources = matchedSources.length > 0 ? matchedSources : DEFAULT_SOURCES.filter((s) => ids.includes(String(s.id)));
       if (effectiveSources.length > 0) {
-        nodes.push(<InlineCitation key={key()} source={effectiveSources} label={citation.replace(/^\[\^?/, "[")} />);
+        nodes.push(<InlineCitation key={key()} source={effectiveSources} />);
       } else {
         nodes.push(
-          <span key={key()} className="inline-flex items-center align-baseline px-1.5 py-0.5 mx-0.5 rounded-sm font-mono text-micro font-semibold text-accent bg-accent-tint">
+          <span key={key()} className="align-super text-micro font-medium text-ink-3 leading-none px-0.5">
             {citation}
           </span>
         );
