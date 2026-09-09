@@ -47,7 +47,7 @@ if [ "$NEW" = 1 ]; then
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": { "dev": "vite --open", "build": "tsc -b && vite build", "preview": "vite preview" },
+  "scripts": { "dev": "vite --open", "build": "tsc -b && vite build", "preview": "vite preview", "formic": "python3 src/formic/scripts/formic_check.py src && python3 src/formic/scripts/compose_check.py src" },
   "dependencies": {
     "@dicebear/core": "^9.2.2",
     "@dicebear/notionists": "^9.2.2",
@@ -169,7 +169,7 @@ const WEEKS = ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8"];
 
 export default function Dashboard() {
   const [page, setPage] = useState("overview");
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(() => document.documentElement.getAttribute("data-theme") === "dark");
   const toggleTheme = () => {
     const next = !dark;
     setDark(next);
@@ -179,7 +179,7 @@ export default function Dashboard() {
     <div className="flex h-dvh">
       <AppSidebar sections={NAV} active={page} onSelect={setPage} />
       <main className="min-w-0 flex-1 overflow-y-auto">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6 sm:p-8">
+        <div className="page-content flex flex-col gap-6 p-6 sm:p-8">
           <header className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <h1 className="text-display font-semibold text-ink">Overview</h1>
@@ -204,14 +204,14 @@ export default function Dashboard() {
           {/* Two panels, one row: the grid stretches them to the same height
               and `fill` makes each body reach the bottom edge. */}
           <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-5">
-            <Panel title="Revenue & sales" caption="Weekly, current vs previous period" className="lg:col-span-3" actions={<Button variant="ghost" size="xs">USD</Button>}>
+            <Panel title="Revenue & sales" caption="Weekly, current vs previous period" className="lg:col-span-3" actions={<Button variant="ghost" size="xs">ETB</Button>}>
               <LineChart fill labels={WEEKS} series={[
                 { name: "Current", values: [38, 52, 44, 61, 55, 72, 66, 84] },
                 { name: "Previous", color: 3, values: [30, 41, 36, 47, 43, 58, 52, 66] },
               ]} />
             </Panel>
             <Panel title="Revenue by location" caption="Top purchasing regions" className="lg:col-span-2">
-              <BarList fill format={(n) => `$${n.toLocaleString()}`} items={[
+              <BarList fill format={(n) => `ETB ${n.toLocaleString()}`} items={[
                 { label: "Addis Ababa", value: 72400 }, { label: "Nairobi", value: 28900 },
                 { label: "Dubai", value: 19400 }, { label: "London", value: 15600 }, { label: "Berlin", value: 11950 },
               ]} />
@@ -269,6 +269,7 @@ cp "$TMP/formic/scripts/set_accent.py" "$DEST/scripts/set_accent.py"
 cp "$TMP/formic/scripts/apply_config.py" "$DEST/scripts/apply_config.py"
 cp "$TMP/formic/scripts/palette.py" "$DEST/scripts/palette.py"
 cp "$TMP/formic/scripts/compose_check.py" "$DEST/scripts/compose_check.py"
+cp "$TMP/formic/scripts/formic_check.py" "$DEST/scripts/formic_check.py"
 printf 'formic-design-system %s\nhttps://github.com/eyosiyasketema1/formic-design-system\nre-run install.sh to update\n' "$SHA" > "$DEST/VERSION"
 say "$DEST/styles, $DEST/components and $DEST/scripts (commit $SHA)"
 
@@ -340,7 +341,7 @@ if [ ! -f CLAUDE.md ] || ! grep -q "Formic" CLAUDE.md; then
 
 ## UI: Formic AI Design System
 
-All UI in this project is built with Formic, vendored at \`$DEST/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`$DEST/components\`, use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings.
+All UI in this project is built with Formic, vendored at \`$DEST/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`$DEST/components\` (never a raw <button>, <input>, <table> or <svg>; when no component fits, build one in \`$DEST/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running \`python3 $DEST/scripts/formic_check.py src\` and \`python3 $DEST/scripts/compose_check.py src\` until both pass.
 EOF
   say "CLAUDE.md (Formic section)"
 else
@@ -357,7 +358,7 @@ alwaysApply: true
 
 All UI in this project is built with the Formic AI Design System, vendored at \`$DEST/\`.
 
-Before writing or changing any UI, read @AGENTS.md and follow its procedure in order: confirm \`$DEST/styles/tokens.css\` exists, read it, list \`$DEST/components/\`, import existing components instead of re-creating them, compose new patterns from \`$DEST/components/primitives.tsx\`, and run the self-check (no hex colours, no \`text-[Npx]\`, no \`font-bold\`, no drop shadows, no \`cubic-bezier()\`, tokens only).
+Before writing or changing any UI, read @AGENTS.md and follow its procedure in order: confirm \`$DEST/styles/tokens.css\` exists, read it, list \`$DEST/components/\`, import existing components instead of re-creating them, compose new patterns from \`$DEST/components/primitives.tsx\`, build only from its components (a raw <button>, <input>, <table> or <svg> in a page is a defect; when no component fits, build one in \`$DEST/components\` from primitives and say so), and finish by running \`python3 $DEST/scripts/formic_check.py src\` and \`python3 $DEST/scripts/compose_check.py src\` until both pass.
 EOF
 say ".cursor/rules/formic-design-system.mdc"
 
@@ -368,7 +369,7 @@ if [ ! -f .github/copilot-instructions.md ] || ! grep -q "Formic" .github/copilo
 
 ## UI: Formic AI Design System
 
-All UI in this project is built with the Formic AI Design System, vendored at \`$DEST/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`$DEST/components\`, use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings.
+All UI in this project is built with the Formic AI Design System, vendored at \`$DEST/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`$DEST/components\` (never a raw <button>, <input>, <table> or <svg>; when no component fits, build one in \`$DEST/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running \`python3 $DEST/scripts/formic_check.py src\` and \`python3 $DEST/scripts/compose_check.py src\` until both pass.
 EOF
   say ".github/copilot-instructions.md (Formic section)"
 else

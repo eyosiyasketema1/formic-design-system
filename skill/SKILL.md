@@ -18,7 +18,7 @@ A token-driven React + Tailwind v4 design system for AI product interfaces, by E
 
 ## Procedure (consuming) — follow in order, every time
 
-Generic Tailwind is the failure mode: it happens when the agent invents styles instead of importing the system.
+Generic Tailwind is the failure mode: it happens when the agent invents styles instead of importing the system, or hand-rolls a piece because no component fit. Both are caught by `formic_check.py`; neither is acceptable.
 
 1. **Find Formic.** `ls src/formic/styles/tokens.css src/formic/components/primitives.tsx`. If missing, install before writing any UI. In an existing project (from its root):
    ```bash
@@ -37,10 +37,12 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
    ```
    Peer deps: `react >=18`, `react-dom >=18`, `@tabler/icons-react >=3`; `@dicebear/core` + `@dicebear/notionists` ^9 only if doodle avatars are used (loaded on demand). `formic.css` already includes the `sidebar.css` / `records.css` component sheets. Wrap the app in `<ToastProvider>` if toasts are used.
 3. **Read before writing.** Open `src/formic/styles/tokens.css` and list `src/formic/components/`. Never write a component that already exists. Then write the screen's brief (next section) before any markup.
-4. **Import, don't re-create.** Buttons, inputs, cards, chips, tables, charts, modals, chat surfaces, dashboard tiles all come from `src/formic/components/`. Pass props; never copy markup into a page or edit a component's internals for a one-off.
-5. **New patterns compose primitives** from `src/formic/components/primitives.tsx` plus token utilities. No raw `<svg>` icons, no second icon package, no chart libraries, no UI kits.
-6. **Self-check before finishing.** Any hit in your output is a bug: hex colours, `text-[Npx]` or Tailwind's `text-sm/lg` family, `font-bold`, `shadow-sm/md/lg`, `cubic-bezier(`, `rounded-lg/xl`, raw palette classes like `bg-gray-100` / `text-blue-600`. Every new UI file imports at least one thing from `src/formic/components`, or it is not Formic.
-7. **Composition check.** `python3 src/formic/scripts/compose_check.py src/` must pass, then reread the screen against its brief and remove what does not serve it.
+4. **Map the screen to the inventory.** Name the Formic component for every piece the screen needs (rail, header, figures, chart, table, form, dialog) from the inventory below. A piece that resolves to "a div with classes" is where generic UI starts; a raw `<button>`, `<input>`, `<table>` or `<svg>` in a page is a defect.
+5. **When nothing fits, build the component; never fake it inline.** Say so ("Formic has no X; building `src/formic/components/X.tsx`"), then build it the way the system builds its own: composed from `primitives.tsx` and token utilities, control metrics (24/32/36/40, `.corner-smooth`, `.optical-text`), the ramp, typed variant union, `DEFAULT_*` demo props, fluid root, ARIA, the shared focus rule, `useReducedMotion()`, tokens only so both themes come free. Take the time it needs and tell the user what you built.
+6. **Readability is not optional.** Body copy `text-body text-ink`; secondary `text-caption`/`text-small` in `text-ink-2`; `text-ink-3` never under 12px; no `opacity-*` on text; `text-canvas` (never `text-white`) on fills; numbers `tabular-nums`, right-aligned. Hard to read on the screenshot means defective.
+7. **Run both gates, fix every line, report.** `python3 src/formic/scripts/formic_check.py src` (how it was built: tokens, ramp, radii, no raw elements, no second kit, `.page-content` under a rail) and `python3 src/formic/scripts/compose_check.py src` (what is on it). Both print clean before the work is done; a true exception carries a `formic-ok` comment with its reason. End with a short report: components used, components built, the gates' output.
+
+**Prompt length.** The user's request can be one line; this skill is the specification. Do not ask about spacing, radius, weights, colours, rail or chart type, the system decides those. Ask only about the brief: who reads it, what question it answers, what they do next.
 
 ## Composition intelligence (before any markup)
 

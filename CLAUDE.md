@@ -67,6 +67,7 @@ After every piece of work, look for extractable pieces and extract them:
 - `preview.html` — standalone browser gallery (CDN React + Tailwind; duplicates styles inline)
 - `AUDIT.md`, `QA-REPORT.md` — audit history; update when resolving findings
 - `scripts/qa_check.py` — the QA gate
+- `scripts/formic_check.py`, `scripts/compose_check.py` — the two gates apps run on their own `src/` (the installer copies them with `apply_config.py` and `palette.py`); AGENTS.md → Build protocol tells agents to run both and to build a missing component rather than fake it inline
 
 ## Git
 
