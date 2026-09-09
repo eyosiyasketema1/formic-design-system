@@ -4284,6 +4284,122 @@ function ModelSelector({
   );
 }
 
+/* ═══════════ ContextMeter (mirrors components/ContextMeter.tsx) ═══════════ */
+const formatTokens = (n) => (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(n % 1_000_000 ? 1 : 0)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n));
+
+const cmTone = (share) => (share >= 0.95 ? "red" : share >= 0.8 ? "orange" : "ink");
+const CM_TONE_TEXT = { ink: "text-ink", orange: "text-orange", red: "text-red" };
+const CM_TONE_STROKE = { ink: "var(--ink)", orange: "var(--orange)", red: "var(--red)" };
+
+const DEFAULT_CONTEXT_PARTS = [
+  { label: "System prompt", tokens: 2_400 },
+  { label: "Messages", tokens: 31_800 },
+  { label: "Tool results", tokens: 9_600 },
+  { label: "Files", tokens: 4_200 },
+];
+
+function CmRing({ share, size = 16 }) {
+  const r = (size - 3) / 2, c = 2 * Math.PI * r;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden className="shrink-0 -rotate-90">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--chart-track)" strokeWidth={3} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={CM_TONE_STROKE[cmTone(share)]} strokeWidth={3} strokeLinecap="butt" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(1, share))} style={{ transition: "stroke-dashoffset 400ms var(--ease-out-quint)" }} />
+    </svg>
+  );
+}
+
+function CmBreakdown({ used, max, parts, cost, model, headline = true }) {
+  const share = used / max;
+  return (
+    <div className="flex flex-col gap-2.5">
+      {headline && <div className="flex items-baseline justify-between gap-3">
+        <span className="text-caption font-semibold text-ink">{formatTokens(used)} of {formatTokens(max)}</span>
+        <span className={`text-small tabular-nums ${CM_TONE_TEXT[cmTone(share)]}`}>{Math.round(share * 100)}%</span>
+      </div>}
+      {parts && parts.length > 0 && (
+        <>
+          <div className="flex h-1.5 w-full gap-px overflow-hidden rounded-full bg-chart-track">
+            {parts.map((p, i) => <span key={p.label} className="h-full" style={{ width: `${(p.tokens / max) * 100}%`, background: `var(--chart-${(i % 5) + 1})` }} />)}
+          </div>
+          <ul className="flex flex-col gap-1">
+            {parts.map((p, i) => (
+              <li key={p.label} className="flex items-center gap-2 text-small">
+                <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ background: `var(--chart-${(i % 5) + 1})` }} />
+                <span className="min-w-0 flex-1 truncate text-ink-2">{p.label}</span>
+                <span className="tabular-nums text-ink">{formatTokens(p.tokens)}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {(cost || model) && (
+        <div className="flex items-center justify-between gap-3 border-t border-line pt-2 text-small text-ink-3">
+          <span className="min-w-0 truncate">{model}</span>
+          {cost && <span className="tabular-nums">{cost}</span>}
+        </div>
+      )}
+      {share >= 0.8 && <p className={`text-small ${CM_TONE_TEXT[cmTone(share)]}`}>{share >= 0.95 ? "Nearly full: older messages will be trimmed." : "Filling up: start a new thread for a new topic."}</p>}
+    </div>
+  );
+}
+
+function ContextMeter({
+  used = 48_000,
+  max = 200_000,
+  parts = DEFAULT_CONTEXT_PARTS,
+  cost = "$0.42 so far",
+  model,
+  variant = "ring",
+  label = "Context",
+  className = "",
+}) {
+  const share = Math.max(0, Math.min(1, max ? used / max : 0));
+  const text = `${formatTokens(used)} / ${formatTokens(max)}`;
+  const layerId = useId();
+  const { open, position, anchorRef, openAt, close } = useAnchoredLayer(layerId);
+  const leave = useRef(null);
+  const show = () => { if (leave.current) window.clearTimeout(leave.current); if (!open) openAt({ estimatedHeight: 220, width: 264, align: "end" }); };
+  const hide = () => { if (leave.current) window.clearTimeout(leave.current); leave.current = window.setTimeout(close, 160); };
+  useEffect(() => () => { if (leave.current) window.clearTimeout(leave.current); }, []);
+
+  if (variant === "bar") {
+    return (
+      <div className={`flex w-full min-w-0 flex-col gap-2 ${className}`} role="group" aria-label={`${label}: ${text}`}>
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-caption font-medium text-ink">{label}</span>
+          <span className="text-small tabular-nums text-ink-2">{text} · <span className={CM_TONE_TEXT[cmTone(share)]}>{Math.round(share * 100)}%</span></span>
+        </div>
+        <CmBreakdown used={used} max={max} parts={parts} cost={cost} model={model} headline={false} />
+      </div>
+    );
+  }
+  return (
+    <>
+      <button
+        ref={anchorRef}
+        type="button"
+        aria-label={`${label}: ${text}, ${Math.round(share * 100)}% used`}
+        aria-expanded={open}
+        aria-controls={open ? layerId : undefined}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+        onClick={() => (open ? close() : show())}
+        className={`corner-smooth inline-flex h-8 items-center gap-2 rounded-control px-2 text-small tabular-nums text-ink-2 transition-colors duration-150 hover:bg-hover hover:text-ink ${className}`}
+      >
+        <CmRing share={share} />
+        <span>{text}</span>
+      </button>
+      {open && position && (
+        <Popover id={layerId} role="dialog" x={position.x} top={position.top} bottom={position.bottom} width={264} onClose={close} onMouseEnter={show} onMouseLeave={hide} className="p-3">
+          <CmBreakdown used={used} max={max} parts={parts} cost={cost} model={model} />
+        </Popover>
+      )}
+    </>
+  );
+}
+
 /* ═══════════ ContextCards ═══════════ */
 const CTX_TONES = {
   red: "bg-red",
@@ -12495,6 +12611,31 @@ function Page_approvalflow() {
   );
 }
 
+function Page_contextmeter() {
+  return (
+    <>
+      <GalleryCard label="Ring · in a toolbar; hover or focus for the breakdown" wide>
+        <div className="flex flex-wrap items-center gap-3">
+          <ContextMeter model="Claude Sonnet" />
+          <ContextMeter used={168000} max={200000} cost="$1.90 so far" model="Claude Sonnet" parts={[{ label: "System prompt", tokens: 2400 }, { label: "Messages", tokens: 121000 }, { label: "Tool results", tokens: 38600 }, { label: "Files", tokens: 6000 }]} />
+          <ContextMeter used={194000} max={200000} cost="$2.30 so far" model="Claude Sonnet" parts={[{ label: "System prompt", tokens: 2400 }, { label: "Messages", tokens: 140000 }, { label: "Tool results", tokens: 45600 }, { label: "Files", tokens: 6000 }]} />
+          <ContextMeter used={12000} max={1000000} parts={undefined} cost={undefined} />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Bar · a usage panel: the parts, the legend, the cost" wide>
+        <Panel title="This thread" caption="Claude Sonnet · 200k window">
+          <ContextMeter variant="bar" model="Claude Sonnet" />
+        </Panel>
+      </GalleryCard>
+      <GalleryCard label="Bar · past 80%, the meter says what to do" wide>
+        <Panel title="This thread" caption="GPT-5 · 400k window">
+          <ContextMeter variant="bar" used={352000} max={400000} cost="$0.88 so far" model="GPT-5" parts={[{ label: "System prompt", tokens: 3100 }, { label: "Messages", tokens: 260000 }, { label: "Tool results", tokens: 74900 }, { label: "Files", tokens: 14000 }]} />
+        </Panel>
+      </GalleryCard>
+    </>
+  );
+}
+
 function Page_modelselector() {
   const toast = useToast();
   const [model, setModel] = useState("claude-sonnet");
@@ -14396,6 +14537,7 @@ const PAGES = [
   { id: "askuserquestions", group: "Conversation", title: "AskUserQuestions", note: "An agent asks, the person answers: a stepped flow of questions with numbered options. 1 to 9 picks, Enter confirms, Backspace goes back. Single-select advances on its own, multi-select waits for Next, an Other row opens an inline field, a free-text question is a textarea (\u2318 Enter submits), and a question can be skippable. onComplete returns every answer. For a decision the agent needs before it continues; ApprovalCard is for a yes or no with consequences. Ported from Micka Touillaud\u2019s Ask User Questions (MIT), rebuilt on Formic primitives.", file: "components/AskUserQuestions.tsx", Component: Page_askuserquestions },
   { id: "approvalcard", group: "Conversation", title: "ApprovalCard", note: "Human-in-the-loop questions \u2014 fully interactive, try answering.", file: "components/ApprovalCard.tsx", Component: Page_approvalcard },
   { id: "approvalflow", group: "Conversation", title: "ApprovalFlow", note: "The stepper sibling of ApprovalCard, for a run that needs several questions in sequence. The stack slides vertically and the card's height animates to fit, so it never jumps; the counter rolls like an odometer. Single-choice answers auto-advance, multi-select waits for Continue, and every question takes a free-text answer.", file: "components/ApprovalFlow.tsx", Component: Page_approvalflow },
+  { id: "contextmeter", group: "Conversation", title: "ContextMeter", note: "How much of the model\u2019s window a thread has used. Ring: 16px beside 48k / 200k for a toolbar or thread header, hover or focus for the breakdown (what filled it, the cost, the model). Bar: a full row for a usage panel with the parts on the chart ramp, a legend with each count and the cost. Ink until 80%, orange from 80% with a line on what to do, red from 95% when older messages are about to be trimmed.", file: "components/ContextMeter.tsx", Component: Page_contextmeter },
   { id: "modelselector", group: "Conversation", title: "ModelSelector", note: "Which model answers, chosen in one control. Closed: the provider\u2019s mark, the name, a chevron, at the height of the row it sits in (sm 32px for a composer toolbar, md 36px for a settings row). Open: a listbox grouped by provider, each row the name, quiet tags (Fast, Reasoning, Vision), one line on what it is for, and the two numbers people decide by, context window and price; the chosen one carries a check, a disabled one stays grey. Marks from brand.tsx, initials when the provider has none. PromptBar keeps its own two-line picker inside the composer; this is the control for toolbars, settings and headers.", file: "components/ModelSelector.tsx", Component: Page_modelselector },
   { id: "promptbar", group: "Conversation", title: "PromptBar", note: "Full composer: @ sources, / commands, model picker (pick Sprinkles 5 for the rainbow), dictation. Self-running demo hands over on interaction. While an answer streams (status=\"streaming\") the send button is Stop, a draft sent meanwhile waits in a queue above the field and goes out when the answer ends; ArrowUp recalls history, Tab takes the placeholder suggestion, and a suggestion list sits under an empty field.", file: "components/PromptBar.tsx", Component: Page_promptbar },
   { id: "chatcomposer", group: "Conversation", title: "ChatComposer", note: "Interactive chat panel \u2014 type a prompt and send to trigger the reply sequence.", file: "components/ChatComposer.tsx", Component: Page_chatcomposer },

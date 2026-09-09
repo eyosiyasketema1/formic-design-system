@@ -101,7 +101,7 @@ All of these choices, plus the avatar fallback, the sidebar's first variant and 
 
 ## Components
 
-**Conversation:** ChatThread, MessageBubble, StreamingText, PromptBar, ChatComposer, Markdown, CodeBlock, SelectionActions, ApprovalCard, ApprovalFlow, AskUserQuestions, InsightCards, RecommendationCard, ContextCards, ModelSelector, Sources + InlineCitation, InlineCitation, ChatApp
+**Conversation:** ChatThread, MessageBubble, StreamingText, PromptBar, ChatComposer, Markdown, CodeBlock, SelectionActions, ApprovalCard, ApprovalFlow, AskUserQuestions, InsightCards, RecommendationCard, ContextCards, ModelSelector, ContextMeter, Sources + InlineCitation, InlineCitation, ChatApp
 
 **Feedback and agents:** EmptyState, ThinkingIndicator, ThinkingState, TaskRows, ToolChips, ToolCall, LoadingState, Progress, Skeleton, Alert, Toast
 
