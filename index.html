@@ -1140,22 +1140,22 @@ footer.site a:hover { color: var(--ink); }
     <div class="wrap">
       <div class="kicker">Quick start</div>
       <h2>One command, no files to edit</h2>
-      <p class="section-sub">Formic is vendored, not installed: the code lands in <code>src/formic/</code> where you and your AI tool can read it. Pick your situation.</p>
+      <p class="section-sub">The code lands in <code>src/formic/</code>, where you and your AI tool can read it.</p>
       <div class="qs-tabs" role="tablist" aria-label="Quick start">
         <button type="button" class="qs-tab is-active" role="tab" aria-selected="true" aria-controls="qs-new" id="qs-tab-new">New project</button>
         <button type="button" class="qs-tab" role="tab" aria-selected="false" aria-controls="qs-existing" id="qs-tab-existing">Existing project</button>
       </div>
       <div id="qs-new" role="tabpanel" aria-labelledby="qs-tab-new">
-        <p class="qs-lead">For designers and developers starting from nothing. Creates a Vite + React + Tailwind app, wires the Formic CSS, drops in a demo dashboard, installs dependencies, and writes the files your AI tool reads. Needs git and Node.</p>
+        <p class="qs-lead">A Vite + React + Tailwind app with a demo dashboard and the AI rule files, ready to run (needs git and Node).</p>
         <div class="lcode">
           <div class="lcode-head">Terminal · anywhere</div>
           <pre>curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app
 cd my-app && npm run dev</pre>
         </div>
-        <p class="qs-lead">That is the whole setup. The demo dashboard opens in your browser; from here you talk to your AI tool, see <a href="#ai-tools">Build with your AI tool</a> below.</p>
+        <p class="qs-lead">Then <a href="#ai-tools">build with your AI tool</a>.</p>
       </div>
       <div id="qs-existing" role="tabpanel" aria-labelledby="qs-tab-existing" hidden>
-        <p class="qs-lead">For an app you already have (Tailwind v4). Run from the project root: it copies <code>styles/</code> and <code>components/</code> into <code>src/formic/</code> and writes <code>AGENTS.md</code> plus the per-tool rule files. Re-run any time to update.</p>
+        <p class="qs-lead">For an app you already have on Tailwind v4; re-run any time to update.</p>
         <div class="lcode">
           <div class="lcode-head">Terminal · from your project root</div>
           <pre>curl -fsSL https://formicai.dev/install.sh | bash
@@ -1188,69 +1188,65 @@ npm install @tabler/icons-react</pre>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/></svg>
           Build with your AI tool
         </div>
-        <p>A rules file alone is not enough. If the components are not in your project, every agent falls back to generic Tailwind, however good the prompt. These four steps give Claude Code, Cursor, Copilot and Codex the code and the rules together, and none of them asks you to edit a file.</p>
+        <p>Four steps, each one thing to run or paste; nothing to edit by hand.</p>
         <ol class="ai-steps">
           <li>
-            <div class="ai-step-title">Get a project with Formic inside</div>
-            <p>New project: the one command in Quick start. Existing project: run the installer from its root. Either way you end up with <code>src/formic/</code> plus <code>AGENTS.md</code>, a Cursor rule, Copilot instructions and a Claude Code skill, all written for you.</p>
-          </li>
-          <li>
-            <div class="ai-step-title">Open your AI tool in that folder and name the system</div>
-            <p>Start (or restart) Claude Code, Cursor or Copilot inside the project so it picks up the rule files, then begin with this. Naming the folder is what makes the agent read the code instead of guessing.</p>
+            <div class="ai-step-title">Install</div>
+            <p>Puts the components and the rules for every AI tool into your project.</p>
             <div class="lcode">
-              <div class="lcode-head">First prompt</div>
-              <pre>Use Formic (src/formic). Read AGENTS.md first and follow its procedure.
-Then build a settings page with a SidebarNav, a form of Field + Input + Switch, and one accent Save button.</pre>
+              <div class="lcode-head">Terminal · new project (anywhere)</div>
+              <pre>curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app &amp;&amp; cd my-app</pre>
+            </div>
+            <div class="lcode">
+              <div class="lcode-head">Terminal · existing project (from its root)</div>
+              <pre>curl -fsSL https://formicai.dev/install.sh | bash</pre>
             </div>
           </li>
           <li>
-            <div class="ai-step-title">Look at the result</div>
-            <p>Formic looks like the gallery: Urbanist type, hairline borders instead of shadows, one lime call to action, the same tiles and controls. Generic looks like every other Tailwind page: grey boxes, blue buttons, drop shadows, bold headings. If you get the second kind, say <em>"That is not Formic. Read AGENTS.md and redo it with the components in src/formic"</em>.</p>
-            <details class="ai-dev">
-              <summary>For developers: the mechanical check</summary>
-              <div class="lcode">
-                <div class="lcode-head">Terminal · two gates, both must print clean</div>
-                <pre>python3 src/formic/scripts/formic_check.py src
-python3 src/formic/scripts/compose_check.py src</pre>
-              </div>
-            </details>
-            <p>The first gate judges how it was built: it refuses hex colours and Tailwind's grey and blue, off-ramp type sizes, bold, drop shadows, off-scale radii, a raw button, input, table or svg where a component exists, a second icon or chart library, a page that imports nothing from the system, text faded with opacity. The second is the composition check. Looking right is half of it; the other half is that nothing is on the screen by habit. Every screen the agent builds starts with a four-line brief (who reads it, what question it answers, what they do next, whether it reads or shows), and the check refuses the usual tells: KPI cards with invented deltas, a chart for one number, a donut for two, an icon per card, placeholder copy. The system knows when a page should be prose, when it should be one panel, and when it earns a chart.</p>
-          </li>
-          <li>
-            <div class="ai-step-title">Make it yours, once</div>
-            <p>Open <a href="./customize">Customize</a>: accent, a palette from ten or one derived from your own colour, a font from twenty-five approved faces, radius, size, type size, content layout, starting theme, which of the three rails and how it opens, avatars, motion, in a live preview you can flip between light and dark. The accent you bring is fitted for both modes there, so what you see is what ships. Press <strong>Copy for your AI tool</strong>, paste into the same chat, and the agent saves <code>formic.config.json</code> and runs the script that applies it. Every later prompt inherits those choices; re-running the installer keeps them.</p>
+            <div class="ai-step-title">Choose your look</div>
+            <p>Open <a href="./customize">Customize</a>, press <strong>Copy for your AI tool</strong>, and paste it as the first message in Claude Code, Cursor or Copilot opened in that folder.</p>
             <div class="lcode">
-              <div class="lcode-head">What the copy button gives you</div>
+              <div class="lcode-head">Your AI tool · first message (what the copy button gives you)</div>
               <pre>Apply this Formic configuration and keep it as the source of truth:
 save it as src/formic/formic.config.json, then run
   python3 src/formic/scripts/apply_config.py
-{ "accent": "#29E0C2", "palette": "paper", "radius": "rounded", ... }</pre>
+{ "accent": "#29E0C2", "palette": "paper", "radius": 10, ... }</pre>
+            </div>
+          </li>
+          <li>
+            <div class="ai-step-title">Ask for a screen</div>
+            <p>One line is enough; the rules the installer wrote decide the rest.</p>
+            <div class="lcode">
+              <div class="lcode-head">Your AI tool · second message</div>
+              <pre>Use Formic (src/formic), read AGENTS.md, then build a settings page with the rail, a form and one Save button.</pre>
+            </div>
+          </li>
+          <li>
+            <div class="ai-step-title">Check it</div>
+            <p>Both lines must print clean; if not, paste the output back and say "fix every line".</p>
+            <div class="lcode">
+              <div class="lcode-head">Terminal · in the project</div>
+              <pre>npm run formic</pre>
             </div>
           </li>
         </ol>
         <div class="ai-ways">
           <div class="ai-way">
             <div class="ai-way-title">Claude Code</div>
-            <p>Reads <code>CLAUDE.md</code> and the project skill in <code>.claude/skills/</code>. Both are written by the installer. To use Formic in every project, also install the skill globally:</p>
-            <div class="lcode">
-              <div class="lcode-head">Terminal</div>
-              <pre>mkdir -p ~/.claude/skills/formic-design-system
-curl -o ~/.claude/skills/formic-design-system/SKILL.md \
-  https://raw.githubusercontent.com/eyosiyasketema1/formic-design-system/main/skill/SKILL.md</pre>
-            </div>
+            <p>Reads <code>CLAUDE.md</code> and <code>.claude/skills/</code>, both written by the installer.</p>
           </div>
           <div class="ai-way">
             <div class="ai-way-title">Cursor</div>
-            <p>Reads <code>.cursor/rules/formic-design-system.mdc</code> (always on) and <code>AGENTS.md</code>. Both are written by the installer. Check Settings → Rules shows the rule as applied, and use Agent mode so it can open the component files.</p>
+            <p>Reads <code>.cursor/rules/formic-design-system.mdc</code>, written by the installer; use Agent mode.</p>
           </div>
           <div class="ai-way">
             <div class="ai-way-title">Copilot, Codex, other agents</div>
-            <p>Copilot reads <code>.github/copilot-instructions.md</code> and <code>AGENTS.md</code>; Codex and most CLI agents read <code>AGENTS.md</code> natively. All written by the installer. For a tool that reads none of these, paste <code>AGENTS.md</code> into its rules or system-prompt setting.</p>
+            <p>Read <code>.github/copilot-instructions.md</code> or <code>AGENTS.md</code>, written by the installer; any other tool gets <code>AGENTS.md</code> pasted into its rules.</p>
           </div>
         </div>
         <div class="ai-way ai-way-wide">
           <div class="ai-way-title">Claude desktop or claude.ai (no code editor)</div>
-          <p>Download the skill file, drop it into a chat, and click Save skill. It teaches Claude the rules and the component API; give it a folder with <code>src/formic</code> in it for real code.</p>
+          <p>Drop the skill file into a chat and click Save skill.</p>
           <a class="lbtn lbtn-md lbtn-accent" href="./skill/formic-design-system.skill" download>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 11l5 5l5 -5"/><path d="M12 4l0 12"/></svg>
             Download the skill

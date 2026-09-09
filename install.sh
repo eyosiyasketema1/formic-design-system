@@ -319,6 +319,16 @@ localise() { # file
   fi
 }
 
+# ── 1b. `npm run formic` — the two gates, one command ──────
+if [ -f package.json ] && ! grep -q '"formic"' package.json && command -v node >/dev/null 2>&1; then
+  node -e '
+    const fs = require("fs"); const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
+    p.scripts = p.scripts || {};
+    p.scripts.formic = "python3 '"$DEST"'/scripts/formic_check.py src && python3 '"$DEST"'/scripts/compose_check.py src";
+    fs.writeFileSync("package.json", JSON.stringify(p, null, 2) + "\n");
+  ' && say "package.json: npm run formic (formic_check + compose_check)" || warn "could not add the formic script to package.json; run the two scripts in $DEST/scripts directly"
+fi
+
 # ── 2. AGENTS.md — read natively by Cursor, Copilot, Codex, and most agents ──
 if [ ! -f AGENTS.md ]; then
   cp "$TMP/formic/AGENTS.md" AGENTS.md; localise AGENTS.md

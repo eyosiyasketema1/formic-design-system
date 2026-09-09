@@ -56,7 +56,7 @@ python3 src/formic/scripts/formic_check.py src     # how it was built: tokens, r
 python3 src/formic/scripts/compose_check.py src    # what is on it: brief, register, budgets, real periods
 ```
 
-Both must print clean. A line that is a real exception carries a `formic-ok` comment with the reason. Finish the task with a short report: the components used, any component built, and the two gates' output. Work is not done while either fails.
+`npm run formic` runs both (the installer adds the script). Both must print clean. A line that is a real exception carries a `formic-ok` comment with the reason. Finish the task with a short report: the components used, any component built, and the two gates' output. Work is not done while either fails.
 
 **On prompt length.** The user's request can be one line. This file is the specification; do not ask for design detail the system already decides (spacing, radius, weights, colours, which rail, which chart). Ask only about the brief: who reads the screen, what question it answers, what they do next.
 
