@@ -71,6 +71,7 @@ export default function CodeBlock({
   filename,
   lineNumbers = false,
   onCopy,
+  className = "",
 }: {
   /** the source to render; defaults to demo content */
   code?: string;
@@ -80,6 +81,7 @@ export default function CodeBlock({
   lineNumbers?: boolean;
   /** called with the code after a successful copy */
   onCopy?: (code: string) => void;
+  className?: string;
 } = {}) {
   const [copied, setCopied] = useState(false);
   const lines = useMemo(
@@ -97,7 +99,7 @@ export default function CodeBlock({
     }
   };
   return (
-    <div className="w-full max-w-105">
+    <div className={`w-full min-w-0 ${className}`}>
       <div className="overflow-hidden rounded-card bg-surface shadow-card">
         <div className="primitive-card-bar flex items-center justify-between border-b border-line">
           <span className="min-w-0 truncate font-mono text-micro tracking-wide text-ink-3 uppercase">

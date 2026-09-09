@@ -6895,7 +6895,8 @@ function CodeBlock({
   language = "ts",
   filename,
   lineNumbers = false,
-  onCopy
+  onCopy,
+  className = ""
 } = {}) {
   const [copied, setCopied] = useState(false);
   const lines = useMemo(
@@ -6911,7 +6912,7 @@ function CodeBlock({
     } catch {
     }
   };
-  return <div className="w-full max-w-105">
+  return <div className={`w-full min-w-0 ${className}`}>
       <div className="overflow-hidden rounded-card bg-surface shadow-card">
         <div className="primitive-card-bar flex items-center justify-between border-b border-line">
           <span className="min-w-0 truncate font-mono text-micro tracking-wide text-ink-3 uppercase">
@@ -12953,8 +12954,8 @@ function Page_filetree() {
 function Page_codeblock() {
   return (
     <>
-      <GalleryCard label="TypeScript" wide><CodeBlock /></GalleryCard>
-      <GalleryCard label="Python · line numbers" wide><CodeBlock language="py" lineNumbers filename="restock.py" code={'def restock(flavor, batches=2):\n    # churn overnight so it sets by open\n    job = schedule(flavor, batches, at="05:30")\n    log(f"queued {flavor} x{batches}", job.id)\n    return job'} /></GalleryCard>
+      <GalleryCard label="TypeScript" full><CodeBlock /></GalleryCard>
+      <GalleryCard label="Python · line numbers" full><CodeBlock language="py" lineNumbers filename="restock.py" code={'def restock(flavor, batches=2):\n    # churn overnight so it sets by open\n    job = schedule(flavor, batches, at="05:30")\n    log(f"queued {flavor} x{batches}", job.id)\n    return job'} /></GalleryCard>
     </>
   );
 }
@@ -12962,7 +12963,7 @@ function Page_codeblock() {
 function Page_markdown() {
   return (
     <>
-      <GalleryCard label="Kitchen sink" wide><Markdown /></GalleryCard>
+      <GalleryCard label="Kitchen sink" full><Markdown /></GalleryCard>
     </>
   );
 }
@@ -15495,7 +15496,7 @@ function GalleryCard({ label, wide, full, children }) {
         </Tooltip>
       )}
       {/* a one-column grid, not display: contents: a demo with h-full (Panel, a shell) sizes to its content in an auto row instead of to the card */}
-      <div ref={bodyRef} key={take} className="grid min-w-0">{children}</div>
+      <div ref={bodyRef} key={take} className="grid min-w-0 [&>*]:min-w-0">{children}</div>
     </div>
   );
 }
