@@ -37,6 +37,7 @@ import { FORMIC_CONFIG } from "./config";
  *   Switch        toggle: role=switch, sizes sm/md — settings only
  *   Checkbox      labelled check: completion / selection
  *   Disclosure    expand/collapse (grid-rows 0fr→1fr)
+ *   OptionRow     one listbox row (Select, Combobox, TagInput)
  *   GlideMenu     one highlight glides across menu rows
  *   Card          surface container (rounded-card + shadow)
  *   Badge         status pill: green/red/neutral tints
@@ -400,6 +401,58 @@ export function Chip({
     >
       {children}
     </As>
+  );
+}
+
+/* ── OptionRow ─────────────────────────────────────────── */
+/* one row of a listbox (Select, Combobox, TagInput's suggestions):
+   32px, flat bg-hover when the keyboard is on it, a check when it is
+   the chosen one; the mousedown is swallowed so focus stays on the
+   trigger and aria-activedescendant keeps working */
+export function OptionRow({
+  id,
+  active = false,
+  selected = false,
+  disabled = false,
+  swatch,
+  icon,
+  hint,
+  onHover,
+  onPick,
+  className = "",
+  children,
+}: {
+  id: string;
+  active?: boolean;
+  selected?: boolean;
+  disabled?: boolean;
+  /** a colour dot before the label */
+  swatch?: string;
+  icon?: IconName;
+  /** a quiet note after the label */
+  hint?: ReactNode;
+  onHover?: () => void;
+  onPick?: () => void;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      id={id}
+      role="option"
+      aria-selected={selected}
+      aria-disabled={disabled || undefined}
+      onMouseEnter={disabled ? undefined : onHover}
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={disabled ? undefined : onPick}
+      className={`flex h-8 items-center gap-2 rounded-sm px-2 text-body text-ink transition-colors duration-150 ${disabled ? "cursor-default opacity-50" : "cursor-pointer"} ${active ? "bg-hover" : ""} ${className}`}
+    >
+      {swatch && <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ background: swatch }} />}
+      {icon && <Icon name={icon} size={14} strokeWidth={1.8} className="shrink-0 text-ink-2" />}
+      <span className="min-w-0 flex-1 truncate">{children}</span>
+      {hint && <span className="shrink-0 text-small text-ink-3">{hint}</span>}
+      {selected && <Icon name="check" size={14} strokeWidth={2.2} className="shrink-0 text-ink" />}
+    </div>
   );
 }
 

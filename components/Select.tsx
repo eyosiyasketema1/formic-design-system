@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useId, useState } from "react";
 import { useAnchoredLayer } from "./hooks";
-import { Icon, Popover } from "./primitives";
+import { Icon, OptionRow, Popover } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * SELECT
  * A combobox on the quiet field style. The listbox portals
@@ -152,25 +152,17 @@ export default function Select({
           onClose={() => setOpen(false)}
         >
           {options.map((option, index) => (
-            <div
+            <OptionRow
               key={option.value}
               id={`${listboxId}-${index}`}
-              role="option"
-              aria-selected={option.value === selectedValue}
-              onMouseEnter={() => setActive(index)}
-              /* prevent the mousedown from stealing focus off the trigger */
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => choose(option)}
-              className={`flex h-8 cursor-pointer items-center gap-2 rounded-sm px-2 text-body text-ink transition-colors duration-150 ${
-                index === active ? "bg-hover" : ""
-              }`}
+              active={index === active}
+              selected={option.value === selectedValue}
+              swatch={option.swatch}
+              onHover={() => setActive(index)}
+              onPick={() => choose(option)}
             >
-              {option.swatch && <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ background: option.swatch }} />}
-              <span className="min-w-0 flex-1 truncate">{option.label}</span>
-              {option.value === selectedValue && (
-                <Icon name="check" size={14} strokeWidth={2.2} className="shrink-0 text-ink" />
-              )}
-            </div>
+              {option.label}
+            </OptionRow>
           ))}
         </Popover>
       )}
