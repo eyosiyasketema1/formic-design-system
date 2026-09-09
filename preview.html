@@ -994,6 +994,7 @@ const ICON_PATHS = {  /* authentic Tabler outline path data (@tabler/icons, MIT)
   "help": (<><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 16v.01" /><path d="M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483" /></>),
   "warning": (<><path d="M12 9v4" /><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" /><path d="M12 16h.01" /></>),
   "dots-vertical": (<><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></>),
+  "grip-vertical": (<><path d="M9 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M9 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M9 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M15 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M15 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M15 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></>),
   "archive": (<><path d="M3 4m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" /><path d="M10 12l4 0" /></>),
   "tag": (<><path d="M7.5 7.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M3 6v5.172a2 2 0 0 0 .586 1.414l7.71 7.71a2.41 2.41 0 0 0 3.408 0l5.592 -5.592a2.41 2.41 0 0 0 0 -3.408l-7.71 -7.71a2 2 0 0 0 -1.414 -.586h-5.172a3 3 0 0 0 -3 3z" /></>),
   "user": (<><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></>),
@@ -4727,6 +4728,139 @@ function ImageResults({
           {onUse && current && <Button variant="accent" size="sm" icon={<Icon name="check" />} onClick={() => onUse(current)}>Use this one</Button>}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ═══════════ SplitPane ═══════════ */
+const SP_STEP = 16;
+const SP_BIG_STEP = 64;
+function SplitPane({
+  children,
+  direction = "horizontal",
+  defaultSize = 0.5,
+  size,
+  onResize,
+  min = 160,
+  max,
+  minSecond = 160,
+  collapsible = false,
+  stackBelow = 640,
+  storageKey,
+  label = "Resize panes",
+  className = "",
+  paneClassName = "",
+}) {
+  const horizontal = direction === "horizontal";
+  const ref = useRef(null);
+  const [box, setBox] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([entry]) => setBox({ width: entry.contentRect.width, height: entry.contentRect.height }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const { width } = box;
+  /* the axis the divider moves on: width side by side, height stacked */
+  const extent = horizontal ? box.width : box.height;
+
+  const resolveDefault = useCallback((total) => (defaultSize >= 1 ? defaultSize : Math.round(total * defaultSize)), [defaultSize]);
+  const [own, setOwn] = useState(() => {
+    if (!storageKey || typeof window === "undefined") return null;
+    try { const raw = window.localStorage.getItem(storageKey); const n = raw ? Number(raw) : NaN; return Number.isFinite(n) ? n : null; } catch { return null; }
+  });
+  const [collapsed, setCollapsed] = useState(false);
+  const clamp = useCallback((px) => {
+    const upper = Math.min(max ?? Infinity, Math.max(min, extent - minSecond));
+    return Math.max(min, Math.min(upper, px));
+  }, [min, max, minSecond, extent]);
+  const current = collapsed ? 0 : clamp(size ?? own ?? resolveDefault(extent));
+
+  const commit = (px, fold) => {
+    const next = fold ? 0 : clamp(px);
+    setCollapsed(!!fold);
+    if (size === undefined && !fold) setOwn(next);
+    if (storageKey && !fold) { try { window.localStorage.setItem(storageKey, String(next)); } catch { /* storage unavailable */ } }
+    onResize?.(next);
+  };
+  const reset = () => { setCollapsed(false); const px = clamp(resolveDefault(extent)); if (size === undefined) setOwn(null); if (storageKey) { try { window.localStorage.removeItem(storageKey); } catch { /* storage unavailable */ } } onResize?.(px); };
+
+  /* drag */
+  const [dragging, setDragging] = useState(false);
+  const start = useRef(null);
+  const onPointerDown = (event) => {
+    if (event.button !== 0) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    start.current = { at: horizontal ? event.clientX : event.clientY, from: current };
+    setDragging(true);
+  };
+  const onPointerMove = (event) => {
+    if (!start.current) return;
+    const delta = (horizontal ? event.clientX : event.clientY) - start.current.at;
+    const px = start.current.from + delta;
+    if (collapsible && px < min / 2) { if (!collapsed) commit(0, true); return; }
+    commit(px);
+  };
+  const onPointerUp = (event) => {
+    if (!start.current) return;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+    start.current = null;
+    setDragging(false);
+  };
+  const onKeyDown = (event) => {
+    const step = event.shiftKey ? SP_BIG_STEP : SP_STEP;
+    const less = horizontal ? "ArrowLeft" : "ArrowUp", more = horizontal ? "ArrowRight" : "ArrowDown";
+    if (event.key === less) { event.preventDefault(); if (collapsible && !collapsed && current <= min) commit(0, true); else if (!collapsed) commit(current - step); }
+    else if (event.key === more) { event.preventDefault(); commit((collapsed ? min - step : current) + step); }
+    else if (event.key === "Home") { event.preventDefault(); commit(collapsible ? 0 : min, collapsible); }
+    else if (event.key === "End") { event.preventDefault(); commit(Infinity); }
+    else if (event.key === "Enter") { event.preventDefault(); reset(); }
+  };
+
+  const stacked = stackBelow > 0 && width > 0 && width < stackBelow;
+  const upper = Math.min(max ?? Infinity, Math.max(min, extent - minSecond));
+  const percent = extent ? Math.round((current / extent) * 100) : 0;
+  const pane = `min-h-0 min-w-0 overflow-auto ${paneClassName}`;
+
+  if (stacked) {
+    return (
+      <div ref={ref} className={`flex w-full min-w-0 flex-col ${className}`}>
+        <div className={pane}>{children[0]}</div>
+        <div className="h-px shrink-0 bg-line" aria-hidden />
+        <div className={pane}>{children[1]}</div>
+      </div>
+    );
+  }
+  return (
+    <div ref={ref} className={`flex w-full min-w-0 ${horizontal ? "flex-row" : "flex-col"} ${dragging ? "select-none" : ""} ${className}`}>
+      <div className={`shrink-0 ${pane} ${collapsed ? "overflow-hidden" : ""}`} style={{ ...(horizontal ? { width: current } : { height: current }), ...(collapsed ? { padding: 0 } : {}) }} aria-hidden={collapsed || undefined}>
+        {children[0]}
+      </div>
+      <div
+        role="separator"
+        tabIndex={0}
+        aria-label={label}
+        aria-orientation={horizontal ? "vertical" : "horizontal"}
+        aria-valuenow={percent}
+        aria-valuemin={Math.round((collapsible ? 0 : min) / (extent || 1) * 100)}
+        aria-valuemax={Math.round((upper / (extent || 1)) * 100)}
+        aria-valuetext={collapsed ? "Collapsed" : `${percent}%`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onDoubleClick={reset}
+        onKeyDown={onKeyDown}
+        className={`group/split relative z-10 flex shrink-0 touch-none items-center justify-center rounded-sm ${horizontal ? "-mx-1 w-2.5 cursor-col-resize" : "-my-1 h-2.5 cursor-row-resize"}`}
+      >
+        {/* the line itself, one hairline in a 10px hit area; the grip shows on hover or focus */}
+        <span aria-hidden className={`absolute ${horizontal ? "inset-y-0 left-1 w-px" : "inset-x-0 top-1 h-px"} ${dragging ? "bg-line-strong" : "bg-line"}`} />
+        <span aria-hidden className={`pointer-events-none relative flex items-center justify-center rounded-sm bg-surface text-ink-3 shadow-hairline transition-opacity duration-150 group-hover/split:opacity-100 group-focus-visible/split:opacity-100 ${dragging ? "opacity-100" : "opacity-0"} ${horizontal ? "h-6 w-3" : "h-3 w-6"}`}>
+          <Icon name="grip-vertical" size={12} strokeWidth={2} className={horizontal ? "" : "rotate-90"} />
+        </span>
+      </div>
+      <div className={`flex-1 ${pane}`}>{children[1]}</div>
     </div>
   );
 }
@@ -12878,6 +13012,33 @@ function ImageResultLive() {
   const state = stage < 3 ? "generating" : "done";
   return <ImageResult state={state} progress={stage < 3 ? [0.15, 0.5, 0.85][stage] : undefined} onDownload={() => {}} onRegenerate={() => {}} />;
 }
+function Page_splitpane() {
+  const [size, setSize] = useState(null);
+  return (
+    <>
+      <GalleryCard label="Chat and canvas · the reply on the left, the file it made on the right; drag the line, or focus it and use the arrows" full>
+        <SplitPane className="h-96 overflow-hidden rounded-md shadow-hairline" defaultSize={0.42} paneClassName="p-4" onResize={setSize} label="Resize chat and canvas">
+          <Markdown content={"**Restock is wired.** The job runs at 05:30 so the pistachio base sets before open, and it logs the batch id.\n\nNext I can add the Friday double batch, or leave it for now."} />
+          <CodeBlock filename="restock.ts" />
+        </SplitPane>
+        <p className="mt-2 text-small tabular-nums text-ink-3" aria-live="polite">{size === null ? "Chat pane at its default" : `Chat pane ${Math.round(size)}px`}</p>
+      </GalleryCard>
+      <GalleryCard label="Vertical · the editor above, its run below" full>
+        <SplitPane direction="vertical" className="h-120 overflow-hidden rounded-md shadow-hairline" defaultSize={0.55} min={120} minSecond={120} paneClassName="p-4" label="Resize editor and terminal">
+          <CodeBlock language="py" lineNumbers filename="restock.py" code={'def restock(flavor, batches=2):\n    # churn overnight so it sets by open\n    job = schedule(flavor, batches, at="05:30")\n    log(f"queued {flavor} x{batches}", job.id)\n    return job'} />
+          <Terminal title="python restock.py" lines={[{ text: "python restock.py", kind: "cmd" }, { text: "queued pistachio x2 job_8f21" }, { text: "done in 0.4s" }]} duration={412} />
+        </SplitPane>
+      </GalleryCard>
+      <GalleryCard label="Collapsible · the file tree folds away when dragged past its minimum; Home folds it, End opens it wide" full>
+        <SplitPane className="h-96 overflow-hidden rounded-md shadow-hairline" defaultSize={240} min={180} minSecond={240} collapsible paneClassName="p-3" label="Resize files and editor">
+          <FileTree defaultSelected="src/pages/Dashboard.tsx" />
+          <CodeBlock filename="Dashboard.tsx" code={'export default function Dashboard() {\n  return (\n    <AppShell title="Dashboard">\n      <StatCards />\n    </AppShell>\n  );\n}'} language="ts" />
+        </SplitPane>
+      </GalleryCard>
+    </>
+  );
+}
+
 function Page_imageresult() {
   const toast = useToast();
   return (
@@ -14945,6 +15106,7 @@ const PAGES = [
   { id: "streamingtext", group: "Conversation", title: "StreamingText", note: "Words resolve out of blur; citations, sources, and follow-ups appear when done. Loops.", file: "components/StreamingText.tsx", Component: Page_streamingtext },
   { id: "imageresult", group: "Conversation", title: "ImageResult", note: "A picture the model made, from ask to keep, in a frame that never changes size. Generating: the frame shimmers with a line and a progress bar when the API gives one. Done: the image, a quiet toolbar on hover (download, regenerate, open), the prompt as caption with the meta, and one accent, Use image. Error: the frame holds the empty state with Try again. ImageResults lays several candidates in a grid to pick from.", file: "components/ImageResult.tsx", Component: Page_imageresult },
   { id: "terminal", group: "Conversation", title: "Terminal", note: "What a command printed, as it printed it: the command on a prompt line, its output beneath, and at the end the exit code and the time. The same shell as CodeBlock (surface card, mono, a bar with the title and a copy). Lines are cmd, out, err (red) or info; stream= prints them one by one with the caret on the last and a Stop in the bar; a non-zero exit is the only other colour.", file: "components/Terminal.tsx", Component: Page_terminal },
+  { id: "splitpane", group: "Structure", title: "SplitPane", note: "Two things side by side, the line between them movable: the chat and the canvas, the editor and its run. The divider is a hairline whose grip shows on hover or focus; drag it, or arrow it 16px at a time (Shift for 64, Home and End for the limits, Enter for the default). collapsible folds the first pane away past its minimum; storageKey remembers the position; below stackBelow the panes stack and the line goes away.", file: "components/SplitPane.tsx", Component: Page_splitpane },
   { id: "filetree", group: "Structure", title: "FileTree", note: "The files an agent touched, where they live. Folders open and close, files select, a dot says added, modified or deleted and a mono count says how much. The rails\u2019 28px rows and flat selection, 16px per level; arrows move and open, Enter selects; controlled or not.", file: "components/FileTree.tsx", Component: Page_filetree },
   { id: "codeblock", group: "Conversation", title: "CodeBlock", note: "AI code output \u2014 dependency-free syntax highlighting on theme tokens, copy action, optional line numbers. Block comments spanning lines stay plain (accepted).", file: "components/CodeBlock.tsx", Component: Page_codeblock },
   { id: "markdown", group: "Conversation", title: "Markdown", note: "Dependency-free renderer for AI output \u2014 headings, emphasis, safe links, nested lists, quotes, tables that scroll in place, and fenced code through CodeBlock. javascript: URLs are dropped.", file: "components/Markdown.tsx", Component: Page_markdown },
