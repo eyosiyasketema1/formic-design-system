@@ -2008,6 +2008,36 @@ function useElapsed() {
   return `${Math.floor(total / 60)}m ${(total % 60).toFixed(1)}s`;
 }
 
+/* ═══════════ EmptyState (mirrors components/EmptyState.tsx) ═══════════ */
+const EMPTY_KINDS = {
+  first: { icon: "sparkles", title: "Nothing here yet", description: "When you add the first one it shows up here." },
+  search: { icon: "search", title: "No matches", description: "Nothing matches that search. Try another word or clear it." },
+  filter: { icon: "filter-off", title: "Nothing matches these filters", description: "Every item is hidden by the current filters. Clear them to see the list again." },
+  error: { icon: "refresh-alert", title: "Could not load", description: "Something went wrong on the way here. Try again in a moment." },
+};
+function EmptyState({ kind = "first", icon, title, description, query, action, secondary, size = "md", className = "" }) {
+  const spec = EMPTY_KINDS[kind];
+  const heading = title ?? (kind === "search" && query ? <>No matches for &ldquo;{query}&rdquo;</> : spec.title);
+  const sm = size === "sm";
+  return (
+    <div role="status" className={`flex w-full flex-col items-center justify-center text-center ${sm ? "gap-2 px-4 py-6" : "gap-3 px-6 py-12"} ${className}`}>
+      <span aria-hidden className={`corner-smooth flex shrink-0 items-center justify-center rounded-md bg-inset text-ink-2 ${sm ? "size-9" : "size-12"}`}>
+        <Icon name={icon ?? spec.icon} size={sm ? 17 : 22} strokeWidth={1.8} />
+      </span>
+      <div className="flex max-w-sm flex-col gap-1">
+        <p className={`font-semibold text-ink ${sm ? "text-body" : "text-title"}`}>{heading}</p>
+        <p className={`text-ink-2 ${sm ? "text-caption" : "text-body"}`}>{description ?? spec.description}</p>
+      </div>
+      {(action || secondary) && (
+        <div className={`flex flex-wrap items-center justify-center gap-2 ${sm ? "" : "mt-1"}`}>
+          {action}
+          {secondary}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ═══════════ LoadingState ═══════════ */
 const chevron = Array.from({ length: 9 }, (_, i) => {
   const r = Math.floor(i / 3), c = i % 3;
@@ -11668,6 +11698,48 @@ function Page_skeleton() {
   );
 }
 
+function Page_emptystate() {
+  const toast = useToast();
+  const [query, setQuery] = useState("northwind bank q3");
+  return (
+    <>
+      <GalleryCard label="First run · the page's purpose is to make the first one, so the action is the accent" wide>
+        <div className="rounded-card bg-surface shadow-card">
+          <EmptyState kind="first" icon="file" title="No proposals yet" description="Write the first one and it lands here with its status, client and value."
+            action={<Button variant="accent" size="sm" icon={<Icon name="plus" />} onClick={() => toast({ title: "New proposal" })}>New proposal</Button>}
+            secondary={<Button variant="ghost" size="sm" onClick={() => toast({ title: "Import" })}>Import from a file</Button>} />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Search · quotes the words that matched nothing; the action clears them" wide>
+        <div className="flex flex-col gap-3">
+          <Input size="sm" leadingIcon="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search clients" aria-label="Search clients" />
+          <div className="rounded-card bg-surface shadow-card">
+            {query ? <EmptyState kind="search" query={query} size="sm" action={<Button variant="secondary" size="sm" onClick={() => setQuery("")}>Clear search</Button>} /> : <p className="px-4 py-6 text-center text-caption text-ink-2">Type to search the 24 clients.</p>}
+          </div>
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Filters · nothing survives the current filters, one action removes them" wide>
+        <div className="rounded-card bg-surface shadow-card">
+          <EmptyState kind="filter" size="sm" action={<Button variant="secondary" size="sm" icon={<Icon name="filter-off" />} onClick={() => toast({ title: "Filters cleared" })}>Clear filters</Button>} />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Error · could not load, retry is the action" wide>
+        <div className="rounded-card bg-surface shadow-card">
+          <EmptyState kind="error" size="sm" description="The invoices service did not answer. Your data is safe; try again." action={<Button variant="secondary" size="sm" icon={<Icon name="retry" />} onClick={() => toast({ title: "Retrying" })}>Try again</Button>} />
+        </div>
+      </GalleryCard>
+      <GalleryCard label="Inside a Panel · sm, the panel keeps its title and caption" wide>
+        <Panel title="Recent invoices" caption="This quarter">
+          <EmptyState kind="first" icon="receipt" size="sm" title="No invoices this quarter" description="Invoices you send from a proposal appear here." action={<Button variant="secondary" size="sm">Send an invoice</Button>} />
+        </Panel>
+      </GalleryCard>
+      <GalleryCard label="Inside a DataTable · the default empty body, no props" full>
+        <DataTable label="Clients" rows={[]} columns={[{ key: "name", header: "Client" }, { key: "plan", header: "Plan" }, { key: "state", header: "Status" }]} />
+      </GalleryCard>
+    </>
+  );
+}
+
 function Page_loadingstate() {
   return (
     <>
@@ -11882,7 +11954,7 @@ function DataTable({
   page,
   defaultPage = 1,
   onPageChange,
-  empty = "Nothing here yet",
+  empty = <EmptyState size="sm" />,
   label = "Records",
   onRowClick,
   className = "",
@@ -11934,7 +12006,7 @@ function DataTable({
           </thead>
           <tbody>
             {rows.length === 0 && (
-              <tr><td colSpan={columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)} className="px-4 py-10 text-center text-caption text-ink-3">{empty}</td></tr>
+              <tr><td colSpan={columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)} className="p-0">{typeof empty === "string" ? <p className="px-4 py-10 text-center text-caption text-ink-2">{empty}</p> : empty}</td></tr>
             )}
             {rows.map((row) => {
               const on = picked.includes(row.id);
@@ -13576,6 +13648,7 @@ const PAGES = [
   { id: "toast", group: "Overlays", title: "Toast", note: "App notifications from anywhere via useToast() \u2014 bottom-right stack, auto-dismiss (hover pauses), success / error tones, optional action. Errors announce assertively.", file: "components/Toast.tsx", Component: Page_toast },
   { id: "dropdownmenu", group: "Overlays", title: "DropdownMenu", note: "The standard action menu \u2014 wrap any trigger; keyboard-driven via aria-activedescendant, dividers, disabled and destructive items. Selecting fires a toast here.", file: "components/DropdownMenu.tsx", Component: Page_dropdownmenu },
   { id: "drawer", group: "Overlays", title: "Drawer", note: "Side panel on the same machinery as Modal (shared useModalLayer: trap, restore, layered Escape, scroll lock) \u2014 slides from either edge, full height, footer actions.", file: "components/Drawer.tsx", Component: Page_drawer },
+  { id: "emptystate", group: "Feedback", title: "EmptyState", note: "What a surface says when there is nothing to show, the doctrine's real empty state. Four kinds with their own icon and words: first (nothing made yet, the lead action creates it), search (quotes the query, clears it), filter (clear the filters), error (retry). One title, one line, one action, a quiet second at most; sm inside a panel, list or table, md for a page. DataTable uses it by default.", file: "components/EmptyState.tsx", Component: Page_emptystate },
   { id: "alert", group: "Feedback", title: "Alert", note: "Inline callouts on the system tints \u2014 five tones, optional dismiss. Copy stays ink so every palette keeps AA contrast.", file: "components/Alert.tsx", Component: Page_alert },
   { id: "skeleton", group: "Feedback", title: "Skeleton", note: "Loading placeholders \u2014 one primitive, shaped entirely by className. Compose avatars, lines, and cards from it.", file: "components/primitives.tsx", Component: Page_skeleton },
   { id: "loadingstate", group: "Feedback", title: "LoadingState", note: "Pixel-grid loader with shimmer label and elapsed timer.", file: "components/LoadingState.tsx", Component: Page_loadingstate },
