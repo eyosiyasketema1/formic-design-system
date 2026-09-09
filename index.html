@@ -886,6 +886,9 @@ main, footer.site { position: relative; z-index: 1; }
 .ai-step-title { font-size: var(--text-body); font-weight: 600; color: var(--ink); }
 .ai-steps p { margin: 4px 0 0; max-width: 70ch; font-size: var(--text-caption); color: var(--ink-2); }
 .ai-steps .lcode { margin-top: 10px; background: var(--surface); }
+.ai-info { margin-top: 14px; display: grid; gap: 6px; }
+.ai-info p { margin: 0; max-width: 80ch; font-size: var(--text-caption); color: var(--ink-2); }
+.ai-info strong { color: var(--ink); font-weight: 600; }
 .ai-steps .lcode pre { font-size: var(--text-small); }
 .ai-note code, .ai-steps code { font-family: var(--font-mono); font-size: var(--text-small); color: var(--ink); background: var(--inset); padding: 1px 5px; border-radius: var(--radius-sm); }
 .ai-way-wide { margin-top: 14px; }
@@ -1149,38 +1152,17 @@ footer.site a:hover { color: var(--ink); }
         <p class="qs-lead">A Vite + React + Tailwind app with a demo dashboard and the AI rule files, ready to run (needs git and Node).</p>
         <div class="lcode">
           <div class="lcode-head">Terminal · anywhere</div>
-          <pre>curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app
-cd my-app && npm run dev</pre>
+          <pre>curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app &amp;&amp; cd my-app &amp;&amp; npm run dev</pre>
         </div>
         <p class="qs-lead">Then <a href="#ai-tools">build with your AI tool</a>.</p>
       </div>
       <div id="qs-existing" role="tabpanel" aria-labelledby="qs-tab-existing" hidden>
-        <p class="qs-lead">For an app you already have on Tailwind v4; re-run any time to update.</p>
+        <p class="qs-lead">For an app you already have on Tailwind v4: it adds <code>src/formic/</code>, the CSS imports, the icon package, the rule files and the commit check; re-run any time to update.</p>
         <div class="lcode">
           <div class="lcode-head">Terminal · from your project root</div>
-          <pre>curl -fsSL https://formicai.dev/install.sh | bash
-npm install @tabler/icons-react</pre>
+          <pre>curl -fsSL https://formicai.dev/install.sh | bash</pre>
         </div>
-        <div class="lcode">
-          <div class="lcode-head">globals.css · three lines, in this order</div>
-          <pre><span class="k">@import</span> "./formic/styles/fonts.css";    <span class="c">/* first: Urbanist */</span>
-<span class="k">@import</span> "tailwindcss";
-<span class="k">@import</span> "./formic/styles/formic.css";   <span class="c">/* tokens, palettes, bridge, component sheets */</span></pre>
-        </div>
-        <div class="lcode">
-          <div class="lcode-head">Then compose</div>
-          <pre><span class="k">import</span> ChatThread <span class="k">from</span> "./formic/components/ChatThread";
-<span class="k">import</span> PromptBar <span class="k">from</span> "./formic/components/PromptBar";
-
-<span class="k">export default function</span> Chat() {
-  <span class="k">return</span> (
-    &lt;&gt;
-      &lt;ChatThread messages={messages} /&gt;
-      &lt;PromptBar onSend={send} /&gt;
-    &lt;/&gt;
-  );
-}</pre>
-        </div>
+        <p class="qs-lead">Then <a href="#ai-tools">build with your AI tool</a>.</p>
       </div>
 
       <div class="ai-note" id="ai-tools">
@@ -1188,48 +1170,15 @@ npm install @tabler/icons-react</pre>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/></svg>
           Build with your AI tool
         </div>
-        <p>Four steps, each one thing to run or paste; nothing to edit by hand.</p>
-        <ol class="ai-steps">
-          <li>
-            <div class="ai-step-title">Install</div>
-            <p>Puts the components and the rules for every AI tool into your project.</p>
-            <div class="lcode">
-              <div class="lcode-head">Terminal · new project (anywhere)</div>
-              <pre>curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app &amp;&amp; cd my-app</pre>
-            </div>
-            <div class="lcode">
-              <div class="lcode-head">Terminal · existing project (from its root)</div>
-              <pre>curl -fsSL https://formicai.dev/install.sh | bash</pre>
-            </div>
-          </li>
-          <li>
-            <div class="ai-step-title">Choose your look</div>
-            <p>Open <a href="./customize">Customize</a>, press <strong>Copy for your AI tool</strong>, and paste it as the first message in Claude Code, Cursor or Copilot opened in that folder.</p>
-            <div class="lcode">
-              <div class="lcode-head">Your AI tool · first message (what the copy button gives you)</div>
-              <pre>Apply this Formic configuration and keep it as the source of truth:
-save it as src/formic/formic.config.json, then run
-  python3 src/formic/scripts/apply_config.py
-{ "accent": "#29E0C2", "palette": "paper", "radius": 10, ... }</pre>
-            </div>
-          </li>
-          <li>
-            <div class="ai-step-title">Ask for a screen</div>
-            <p>One line is enough; the rules the installer wrote decide the rest.</p>
-            <div class="lcode">
-              <div class="lcode-head">Your AI tool · second message</div>
-              <pre>Use Formic (src/formic), read AGENTS.md, then build a settings page with the rail, a form and one Save button.</pre>
-            </div>
-          </li>
-          <li>
-            <div class="ai-step-title">Check it</div>
-            <p>Both lines must print clean; if not, paste the output back and say "fix every line".</p>
-            <div class="lcode">
-              <div class="lcode-head">Terminal · in the project</div>
-              <pre>npm run formic</pre>
-            </div>
-          </li>
-        </ol>
+        <p>After the command above, open Claude Code, Cursor or Copilot in that folder and paste one line; the rules the installer wrote decide the rest.</p>
+        <div class="lcode">
+          <div class="lcode-head">Your AI tool</div>
+          <pre>Use Formic (src/formic), read AGENTS.md, then build a settings page with the rail, a form and one Save button.</pre>
+        </div>
+        <div class="ai-info">
+          <p><strong>Your own look.</strong> <a href="./customize">Customize</a> accent, palette, font, radius and rail, press <strong>Copy for your AI tool</strong>, paste it into the same chat; the stock look ships without this.</p>
+          <p><strong>The check.</strong> Two gates refuse generic UI and screens without a reason; they run before every commit, and <code>npm run formic</code> runs them any time. If they fail, paste the output to your AI tool and say "fix every line".</p>
+        </div>
         <div class="ai-ways">
           <div class="ai-way">
             <div class="ai-way-title">Claude Code</div>

@@ -386,29 +386,63 @@ else
   skip ".github/copilot-instructions.md already mentions Formic"
 fi
 
+# ── 5b. Existing project: wire the CSS and the icon package when it is unambiguous ──
+CSS_WIRED=0; DEPS_WIRED=0
+if [ "$NEW" != 1 ]; then
+  CSS_FILES="$(grep -rl --include=*.css '@import "tailwindcss"' src app styles 2>/dev/null | grep -v "/$DEST/" | head -5)"
+  if [ "$(printf '%s\n' "$CSS_FILES" | grep -c .)" = 1 ] && ! grep -q "formic.css" "$CSS_FILES"; then
+    REL="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], os.path.dirname(sys.argv[2])))" "$DEST" "$CSS_FILES" 2>/dev/null || echo "$DEST")"
+    case "$REL" in .*|/*) ;; *) REL="./$REL" ;; esac
+    awk -v rel="$REL" '
+      /@import "tailwindcss"/ && !done { print "@import \"" rel "/styles/fonts.css\";    /* first: the Urbanist font */"; print; print "@import \"" rel "/styles/formic.css\";   /* tokens, palettes, Tailwind bridge, component sheets */"; done=1; next }
+      { print }' "$CSS_FILES" > "$CSS_FILES.tmp" && mv "$CSS_FILES.tmp" "$CSS_FILES" && CSS_WIRED=1 && say "$CSS_FILES: Formic imports added around @import \"tailwindcss\""
+  elif [ -n "$CSS_FILES" ] && grep -q "formic.css" $CSS_FILES 2>/dev/null; then
+    CSS_WIRED=1
+  fi
+  if [ -f package.json ] && command -v npm >/dev/null 2>&1; then
+    if grep -q '"@tabler/icons-react"' package.json; then DEPS_WIRED=1
+    else npm install --silent --no-fund --no-audit @tabler/icons-react && DEPS_WIRED=1 && say "@tabler/icons-react installed"; fi
+  fi
+fi
+
+# ── 5c. Git hook: the two gates run on every commit ─────────
+write_hook() {
+  [ -d .git ] || return 0
+  mkdir -p .git/hooks
+  if [ ! -f .git/hooks/pre-commit ]; then
+    printf '#!/bin/sh\n# Formic gates: how it was built, and what is on the screen\npython3 %s/scripts/formic_check.py src && python3 %s/scripts/compose_check.py src\n' "$DEST" "$DEST" > .git/hooks/pre-commit
+    chmod +x .git/hooks/pre-commit && say ".git/hooks/pre-commit (formic_check + compose_check run before every commit)"
+  elif ! grep -q "formic_check" .git/hooks/pre-commit; then
+    printf '\n# Formic gates\npython3 %s/scripts/formic_check.py src && python3 %s/scripts/compose_check.py src || exit 1\n' "$DEST" "$DEST" >> .git/hooks/pre-commit
+    say ".git/hooks/pre-commit (Formic gates appended)"
+  fi
+}
+[ "$NEW" = 1 ] || write_hook
+
 # ── 6. Finish ──────────────────────────────────────────────
 if [ "$NEW" = 1 ]; then
   printf '\nInstalling dependencies (npm install)…\n'
   npm install --silent --no-fund --no-audit || die "npm install failed — run it again inside $APP"
   say "dependencies installed"
   [ -d .git ] || { git init -q && git add -A && git -c user.name=formic -c user.email=formic@formicai.dev commit -qm "Formic starter" >/dev/null 2>&1 && say "git repository initialised"; } || true
-  printf '\nDone. Next:\n'
-  printf '  cd %s && npm run dev        # opens the demo dashboard in your browser\n\n' "$APP"
-  printf 'Then open your AI tool in this folder (claude, or Cursor) and start with:\n'
-  printf '  "Use Formic (src/formic). Read AGENTS.md first and follow its procedure. Then build ..."\n\n'
-  printf 'Make it yours: pick accent, palette, radius, size, avatars and sidebar at\n'
-  printf '  https://formicai.dev/customize   then paste the block it copies into your AI tool.\n\n'
+  write_hook
+  printf '\nDone. Run it:\n'
+  printf '  cd %s && npm run dev\n\n' "$APP"
+  printf 'Then open your AI tool in that folder and paste:\n'
+  printf '  Use Formic (src/formic), read AGENTS.md, then build <the screen you want>.\n\n'
+  printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
+  printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
   exit 0
 fi
 
-NEED_TABLER=1
-if [ -f package.json ] && grep -q '"@tabler/icons-react"' package.json; then NEED_TABLER=0; fi
-printf '\nNext, by hand:\n'
-[ "$NEED_TABLER" = 1 ] && printf '  • npm install @tabler/icons-react @dicebear/core @dicebear/notionists   # icons, and doodle avatars\n'
-printf '  • In your global CSS (Tailwind v4), in this order (fonts.css must be first):\n'
-printf '       @import "<relative path to>/%s/styles/fonts.css";\n' "$DEST"
-printf '       @import "tailwindcss";\n'
-printf '       @import "<relative path to>/%s/styles/formic.css";\n' "$DEST"
-printf '  • Open your agent and start with:\n'
-printf '       "Use Formic (%s). Read AGENTS.md first, then build ..."\n' "$DEST"
-printf '  • Make it yours at https://formicai.dev/customize and paste the block it copies into your agent.\n\n'
+if [ "$CSS_WIRED" = 1 ] && [ "$DEPS_WIRED" = 1 ]; then
+  printf '\nDone. Open your AI tool in this folder and paste:\n'
+else
+  printf '\nDone, with one thing left by hand:\n'
+  [ "$DEPS_WIRED" = 1 ] || printf '  • npm install @tabler/icons-react\n'
+  [ "$CSS_WIRED" = 1 ] || { printf '  • In your global CSS (Tailwind v4), in this order:\n'; printf '       @import "<path to>/%s/styles/fonts.css";\n       @import "tailwindcss";\n       @import "<path to>/%s/styles/formic.css";\n' "$DEST" "$DEST"; }
+  printf 'Then open your AI tool in this folder and paste:\n'
+fi
+printf '  Use Formic (%s), read AGENTS.md, then build <the screen you want>.\n\n' "$DEST"
+printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
+printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
