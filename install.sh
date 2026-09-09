@@ -27,11 +27,6 @@ while [ $# -gt 0 ]; do
 done
 DEST="${DEST%/}"
 
-# No package.json here and nothing but dotfiles: an empty folder, so scaffold in place.
-# (The folder you cd into is the app; no --new needed.)
-if [ "$NEW" = 0 ] && [ ! -f package.json ] && [ -z "$(ls -A 2>/dev/null | grep -v '^\.' | head -1)" ]; then
-  NEW=1; APP="."
-fi
 
 say()  { printf '  \033[32m✓\033[0m %s\n' "$1"; }
 skip() { printf '  \033[90m–\033[0m %s\n' "$1"; }
@@ -39,6 +34,16 @@ die()  { printf '  \033[31m✗\033[0m %s\n' "$1" >&2; exit 1; }
 warn() { printf '  \033[33m!\033[0m %s\n' "$1"; }
 
 command -v git >/dev/null 2>&1 || die "git is required (https://git-scm.com)"
+
+# No package.json here: this is not a project yet, so scaffold one in place.
+# The folder you cd into is the app; no --new needed. Anything already in the
+# folder is left alone, unless it is one of the files the scaffold writes.
+if [ "$NEW" = 0 ] && [ ! -f package.json ]; then
+  NEW=1; APP="."
+  for f in vite.config.ts tsconfig.json index.html src/main.tsx src/index.css src/App.tsx src/pages/Welcome.tsx; do
+    [ -e "$f" ] && die "$f already exists but there is no package.json; run the installer in an empty folder, or in the root of your app"
+  done
+fi
 
 # ── 0. --new: scaffold a Vite + React + Tailwind v4 app first ────
 if [ "$NEW" = 1 ]; then
@@ -200,7 +205,7 @@ EOF
   DEST="src/formic"
 fi
 
-[ -d .git ] || [ -f package.json ] || die "run this from your project root (no .git or package.json here)"
+[ -f package.json ] || die "no package.json here; run the installer in the root of your app, or in an empty folder to start one"
 
 case "$DEST" in
   ""|.|..|/*|*..*) die "install folder must be a relative path inside the project, e.g. src/formic (got '$DEST')" ;;
