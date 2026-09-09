@@ -66,7 +66,7 @@ LINE_RULES = [
     ("readable", re.compile(r"(?<![:\w-])text-ink-3\b[^\"'`]*(?<![:\w-])(?:text-body|text-lead)\b|(?<![:\w-])(?:text-body|text-lead)\b[^\"'`]*(?<![:\w-])text-ink-3\b"), "body copy in the mutest ink; text-ink-3 is for eyebrows, captions and hints, running text is text-ink or text-ink-2"),
 ]
 SHELLS = ("<AppSidebar", "<ProjectSidebar", "<TopBar", "<SidebarNav")
-JSX = re.compile(r"<[A-Za-z][\w.]*[\s/>]")
+JSX = re.compile(r"<[a-z][\w-]*[\s/>]")  # a lowercase tag: markup of its own. A file that only composes components (App.tsx) is fine
 FORMIC_IMPORT = re.compile(r"from\s+[\"'][^\"']*formic/(?:components|styles)")
 FORMIC_IMPORT_ALT = re.compile(r"from\s+[\"'](?:@/formic|@formic|~/formic)")
 SKIP_DIRS = ("/formic/", "node_modules", "/dist/", "/build/", "/.next/")
