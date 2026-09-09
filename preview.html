@@ -1389,6 +1389,44 @@ function Chip({ as: As = "span", tone = "field", size = "sm", mono = false, clas
     </As>
   );
 }
+/* ── OptionRow ─────────────────────────────────────────── */
+/* one row of a listbox (Select, Combobox, TagInput's suggestions):
+   32px, flat bg-hover when the keyboard is on it, a check when it is
+   the chosen one; the mousedown is swallowed so focus stays on the
+   trigger and aria-activedescendant keeps working */
+function OptionRow({
+  id,
+  active = false,
+  selected = false,
+  disabled = false,
+  swatch,
+  icon,
+  hint,
+  onHover,
+  onPick,
+  className = "",
+  children,
+}) {
+  return (
+    <div
+      id={id}
+      role="option"
+      aria-selected={selected}
+      aria-disabled={disabled || undefined}
+      onMouseEnter={disabled ? undefined : onHover}
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={disabled ? undefined : onPick}
+      className={`flex h-8 items-center gap-2 rounded-sm px-2 text-body text-ink transition-colors duration-150 ${disabled ? "cursor-default opacity-50" : "cursor-pointer"} ${active ? "bg-hover" : ""} ${className}`}
+    >
+      {swatch && <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ background: swatch }} />}
+      {icon && <Icon name={icon} size={14} strokeWidth={1.8} className="shrink-0 text-ink-2" />}
+      <span className="min-w-0 flex-1 truncate">{children}</span>
+      {hint && <span className="shrink-0 text-small text-ink-3">{hint}</span>}
+      {selected && <Icon name="check" size={14} strokeWidth={2.2} className="shrink-0 text-ink" />}
+    </div>
+  );
+}
+
 function DiffStat({ add, del = 0, className = "" }) {
   return (
     <span className={`shrink-0 font-mono text-tiny tabular-nums ${className}`}>
@@ -4863,6 +4901,368 @@ function SplitPane({
   );
 }
 
+/* ═══════════ Combobox ═══════════ */
+/* ─────────────────────────────────────────────────────────
+ * COMBOBOX — a field that types to find
+ * Select is for a handful of choices the reader can see at once;
+ * this is for a list too long to scan: clients, people, cities,
+ * models. The reader types, the list narrows, an arrow and Enter
+ * pick. It is Input's field with Select's listbox, so it lines up
+ * with both in a form.
+ *
+ * Typing narrows to options whose label (or hint) contains the
+ * query; `filter` replaces that. Enter on a match picks it; with
+ * `allowCustom` Enter on no match keeps what was typed as a value
+ * of its own (a new tag, an email not in the book). Escape closes
+ * and puts the chosen label back; blur does the same, so the field
+ * never shows a query that is not a value. The x clears.
+ * Works inside Field, which injects id / aria-describedby / invalid.
+ * ───────────────────────────────────────────────────────── */
+const CBX_HEIGHTS = { sm: "h-8", md: "h-9" };
+
+const DEFAULT_COMBOBOX_OPTIONS = [
+  { value: "northwind", label: "Northwind Bank", hint: "Addis Ababa" },
+  { value: "creamery", label: "Creamery", hint: "Addis Ababa" },
+  { value: "selam", label: "Selam Coffee", hint: "Hawassa" },
+  { value: "addis-yoga", label: "Addis Yoga", hint: "Addis Ababa" },
+  { value: "habesha", label: "Habesha Textiles", hint: "Bahir Dar" },
+  { value: "lucy", label: "Lucy Tours", hint: "Lalibela" },
+  { value: "blue-nile", label: "Blue Nile Press", hint: "Bahir Dar" },
+  { value: "entoto", label: "Entoto Trail Runs", hint: "Addis Ababa" },
+];
+
+const cbxContains = (text, q) => !!text && text.toLowerCase().includes(q);
+
+function Combobox({
+  options = DEFAULT_COMBOBOX_OPTIONS,
+  value,
+  defaultValue,
+  onChange,
+  onQueryChange,
+  filter,
+  allowCustom = false,
+  placeholder = "Type to find…",
+  emptyMessage = "Nothing matches",
+  leadingIcon,
+  loading = false,
+  size = "md",
+  width = "w-full",
+  invalid = false,
+  disabled = false,
+  className = "",
+  id,
+  "aria-labelledby": labelledBy,
+  "aria-describedby": describedBy,
+} = {}) {
+  const autoId = useId();
+  const inputId = id ?? `${autoId}-input`;
+  const listboxId = `${autoId}-listbox`;
+  const [own, setOwn] = useState(defaultValue ?? null);
+  const current = value !== undefined ? value : own;
+  const selected = options.find((o) => o.value === current);
+  const labelOf = (v) => options.find((o) => o.value === v)?.label ?? v ?? "";
+  const [query, setQuery] = useState(() => labelOf(current));
+  const [typed, setTyped] = useState(false);
+  const inputRef = useRef(null);
+  const [active, setActive] = useState(0);
+  const { open, setOpen, position, anchorRef, openAt } = useAnchoredLayer(listboxId);
+
+  /* a controlled value changing from outside updates the text */
+  useEffect(() => { if (!typed) setQuery(labelOf(current)); }, [current]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const q = query.trim().toLowerCase();
+  const shown = useMemo(() => {
+    if (!typed || !q) return options;
+    if (filter) return filter(query, options);
+    return options.filter((o) => cbxContains(o.label, q) || cbxContains(o.hint, q));
+  }, [typed, q, query, options, filter]);
+  const exact = shown.find((o) => o.label.toLowerCase() === q);
+  const customRow = allowCustom && typed && q.length > 0 && !exact;
+  const rows = customRow ? shown.length + 1 : shown.length;
+
+  const show = () => {
+    if (disabled) return;
+    openAt({ estimatedHeight: Math.min(Math.max(rows, 1), 7) * 32 + 8, matchWidth: true });
+    setActive(Math.max(0, shown.findIndex((o) => o.value === current)));
+  };
+  const settle = (next, option) => {
+    if (value === undefined) setOwn(next);
+    onChange?.(next, option);
+    setQuery(option?.label ?? next ?? "");
+    setTyped(false);
+    setOpen(false);
+  };
+  const pick = (index) => {
+    if (customRow && index === shown.length) { settle(query.trim()); return; }
+    const option = shown[index];
+    if (!option || option.disabled) return;
+    settle(option.value, option);
+  };
+  const revert = () => { setQuery(labelOf(current)); setTyped(false); setOpen(false); };
+  const clear = () => { settle(null); inputRef.current?.focus(); };
+
+  useEffect(() => {
+    if (!open) return;
+    document.getElementById(`${listboxId}-${active}`)?.scrollIntoView({ block: "nearest" });
+  }, [open, active, listboxId]);
+  /* keep the active row inside the list as it narrows */
+  useEffect(() => { setActive((i) => Math.min(i, Math.max(0, rows - 1))); }, [rows]);
+
+  const onKeyDown = (event) => {
+    if (event.key === "ArrowDown") { event.preventDefault(); if (!open) show(); else setActive((i) => Math.min(i + 1, rows - 1)); }
+    else if (event.key === "ArrowUp") { event.preventDefault(); if (!open) show(); else setActive((i) => Math.max(i - 1, 0)); }
+    else if (event.key === "Home" && open) { event.preventDefault(); setActive(0); }
+    else if (event.key === "End" && open) { event.preventDefault(); setActive(rows - 1); }
+    else if (event.key === "Enter") { if (open && rows > 0) { event.preventDefault(); pick(active); } else if (allowCustom && typed && q) { event.preventDefault(); settle(query.trim()); } }
+    else if (event.key === "Escape") { if (open || typed) { event.preventDefault(); revert(); } }
+    else if (event.key === "Tab") { if (open) setOpen(false); if (typed) revert(); }
+  };
+
+  return (
+    <>
+      <span
+        ref={anchorRef}
+        data-invalid={invalid || undefined}
+        onClick={() => { inputRef.current?.focus(); if (!open) show(); }}
+        className={`primitive-field flex ${width} cursor-text items-center gap-2 rounded-control border border-line bg-field px-3 transition-opacity duration-150 ${disabled ? "opacity-60" : ""} ${CBX_HEIGHTS[size]} ${className}`}
+      >
+        {selected?.swatch ? <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ background: selected.swatch }} />
+          : (selected?.icon ?? leadingIcon) && <Icon name={selected?.icon ?? leadingIcon} size={14} strokeWidth={2} className="shrink-0 text-ink-3" />}
+        <input
+          ref={inputRef}
+          id={inputId}
+          type="text"
+          role="combobox"
+          autoComplete="off"
+          spellCheck={false}
+          disabled={disabled}
+          value={query}
+          placeholder={placeholder}
+          aria-autocomplete="list"
+          aria-expanded={open}
+          aria-controls={open ? listboxId : undefined}
+          aria-activedescendant={open && rows > 0 ? `${listboxId}-${active}` : undefined}
+          aria-labelledby={labelledBy}
+          aria-describedby={describedBy}
+          aria-invalid={invalid || undefined}
+          onChange={(event) => { setQuery(event.target.value); setTyped(true); setActive(0); onQueryChange?.(event.target.value); if (!open) show(); }}
+          onBlur={() => { if (typed) { if (allowCustom && q) settle(query.trim()); else revert(); } }}
+          onKeyDown={onKeyDown}
+          className="min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-3"
+        />
+        {loading ? <Spinner size={12} className="shrink-0 text-ink-3" />
+          : current ? (
+            <IconButton label="Clear" onClick={clear} onMouseDown={(event) => event.preventDefault()} className="-mr-1.5 size-6 shrink-0 text-ink-3 hover:bg-hover hover:text-ink" tabIndex={-1}>
+              <Icon name="close" size={12} strokeWidth={2.2} />
+            </IconButton>
+          ) : <Icon name="chevron" size={14} strokeWidth={2} className={`shrink-0 text-ink-3 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />}
+      </span>
+      {open && position && (
+        <Popover x={position.x} top={position.top} bottom={position.bottom} width={position.width} id={listboxId} role="listbox" className="max-h-60 overflow-y-auto p-1" onClose={() => setOpen(false)}>
+          {loading && shown.length === 0 ? (
+            <p className="flex h-8 items-center gap-2 px-2 text-caption text-ink-3"><Spinner size={12} /> Looking…</p>
+          ) : rows === 0 ? (
+            <p className="flex h-8 items-center px-2 text-caption text-ink-3">{emptyMessage}</p>
+          ) : (
+            <>
+              {shown.map((option, index) => (
+                <OptionRow key={option.value} id={`${listboxId}-${index}`} active={index === active} selected={option.value === current} disabled={option.disabled} swatch={option.swatch} icon={option.icon} hint={option.hint} onHover={() => setActive(index)} onPick={() => pick(index)}>
+                  {option.label}
+                </OptionRow>
+              ))}
+              {customRow && (
+                <OptionRow id={`${listboxId}-${shown.length}`} active={active === shown.length} icon="plus" onHover={() => setActive(shown.length)} onPick={() => pick(shown.length)}>
+                  Use “{query.trim()}”
+                </OptionRow>
+              )}
+            </>
+          )}
+        </Popover>
+      )}
+    </>
+  );
+}
+
+/* ═══════════ TagInput ═══════════ */
+/* ─────────────────────────────────────────────────────────
+ * TAG INPUT — several values in one field
+ * Labels on a project, skills on a person, recipients on an invoice:
+ * each one a chip inside the field, the caret after the last. Enter,
+ * comma or Tab keep what was typed; Backspace on an empty caret
+ * marks the last chip, a second Backspace removes it; each chip has
+ * its own x. Duplicates are ignored, case aside. With `suggestions`
+ * a listbox opens under the field as the reader types, showing the
+ * ones not yet chosen; arrows and Enter pick. `max` stops the field
+ * when it is full and says so.
+ *
+ * The field is Input's field grown to wrap (min-h, not h), the chips
+ * are the system's inset Chip, and the listbox is Select's, so it sits
+ * in a form beside the other three without a seam.
+ * Works inside Field, which injects id / aria-describedby / invalid.
+ * ───────────────────────────────────────────────────────── */
+const TAG_MIN_HEIGHTS = { sm: "min-h-8 py-1", md: "min-h-9 py-1" };
+
+const DEFAULT_TAGS = ["brand", "web", "retainer"];
+const DEFAULT_TAG_SUGGESTIONS = ["brand", "web", "print", "retainer", "motion", "packaging", "signage", "photography", "copy", "launch"];
+
+const tagSame = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+function TagInput({
+  value,
+  defaultValue = DEFAULT_TAGS,
+  onChange,
+  suggestions = DEFAULT_TAG_SUGGESTIONS,
+  allowCustom = true,
+  max,
+  validate,
+  placeholder = "Add a tag…",
+  size = "md",
+  width = "w-full",
+  invalid = false,
+  disabled = false,
+  className = "",
+  id,
+  "aria-labelledby": labelledBy,
+  "aria-describedby": describedBy,
+} = {}) {
+  const autoId = useId();
+  const inputId = id ?? `${autoId}-input`;
+  const listboxId = `${autoId}-listbox`;
+  const [own, setOwn] = useState(defaultValue);
+  const tags = value ?? own;
+  const [query, setQuery] = useState("");
+  const [marked, setMarked] = useState(false);
+  const [reason, setReason] = useState(null);
+  const [active, setActive] = useState(0);
+  const inputRef = useRef(null);
+  const { open, setOpen, position, anchorRef, openAt } = useAnchoredLayer(listboxId);
+  const full = max !== undefined && tags.length >= max;
+
+  const q = query.trim().toLowerCase();
+  const shown = useMemo(
+    () => suggestions.filter((s) => !tags.some((t) => tagSame(t, s)) && (!q || s.toLowerCase().includes(q))),
+    [suggestions, tags, q],
+  );
+  const exact = shown.find((s) => s.toLowerCase() === q);
+  const customRow = allowCustom && q.length > 0 && !exact && !tags.some((t) => tagSame(t, query));
+  const rows = customRow ? shown.length + 1 : shown.length;
+
+  const set = (next) => { if (value === undefined) setOwn(next); onChange?.(next); };
+  const add = (raw) => {
+    const tag = raw.trim();
+    if (!tag || full) return;
+    if (tags.some((t) => tagSame(t, tag))) { setQuery(""); return; }
+    const why = validate?.(tag);
+    if (why) { setReason(why); return; }
+    set([...tags, tag]);
+    setQuery("");
+    setReason(null);
+    setOpen(false);
+  };
+  const remove = (index) => { set(tags.filter((_, i) => i !== index)); setMarked(false); inputRef.current?.focus(); };
+  const show = () => {
+    if (disabled || full || rows === 0) { setOpen(false); return; }
+    openAt({ estimatedHeight: Math.min(rows, 7) * 32 + 8, matchWidth: true });
+    setActive(0);
+  };
+  const pick = (index) => {
+    if (customRow && index === shown.length) add(query);
+    else if (shown[index]) add(shown[index]);
+    inputRef.current?.focus();
+  };
+  useEffect(() => { if (open && rows === 0) setOpen(false); }, [open, rows, setOpen]);
+  useEffect(() => { setActive((i) => Math.min(i, Math.max(0, rows - 1))); }, [rows]);
+  useEffect(() => {
+    if (!open) return;
+    document.getElementById(`${listboxId}-${active}`)?.scrollIntoView({ block: "nearest" });
+  }, [open, active, listboxId]);
+
+  const onKeyDown = (event) => {
+    if (event.key === "Backspace" && query === "" && tags.length > 0) {
+      event.preventDefault();
+      if (marked) remove(tags.length - 1); else setMarked(true);
+      return;
+    }
+    if (marked) setMarked(false);
+    if (event.key === "ArrowDown") { event.preventDefault(); if (!open) show(); else setActive((i) => Math.min(i + 1, rows - 1)); }
+    else if (event.key === "ArrowUp") { event.preventDefault(); if (open) setActive((i) => Math.max(i - 1, 0)); }
+    else if (event.key === "Enter" || event.key === ",") {
+      if (open && rows > 0) { event.preventDefault(); pick(active); }
+      else if (query.trim()) { event.preventDefault(); if (allowCustom) add(query); }
+      else if (event.key === ",") event.preventDefault();
+    }
+    else if (event.key === "Tab") { if (query.trim() && allowCustom) { add(query); } if (open) setOpen(false); }
+    else if (event.key === "Escape") { if (open) { event.preventDefault(); setOpen(false); } else if (query) { event.preventDefault(); setQuery(""); } }
+  };
+
+  const chipSize = size === "sm" ? "sm" : "md";
+  return (
+    <>
+      <span
+        ref={anchorRef}
+        data-invalid={invalid || reason ? true : undefined}
+        onClick={() => inputRef.current?.focus()}
+        className={`primitive-field flex ${width} cursor-text flex-wrap items-center gap-1.5 rounded-control border border-line bg-field px-2 transition-opacity duration-150 ${disabled ? "opacity-60" : ""} ${TAG_MIN_HEIGHTS[size]} ${className}`}
+      >
+        {tags.map((tag, index) => (
+          <Chip key={tag} tone="inset" size={chipSize} className={`max-w-full ${marked && index === tags.length - 1 ? "bg-hover-2 text-ink" : ""}`}>
+            <span className="min-w-0 truncate">{tag}</span>
+            {!disabled && (
+              <button
+                type="button"
+                tabIndex={-1}
+                aria-label={`Remove ${tag}`}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={(event) => { event.stopPropagation(); remove(index); }}
+                className="-mr-0.5 flex size-4 shrink-0 items-center justify-center rounded-[3px] text-ink-3 transition-colors duration-150 hover:bg-hover-2 hover:text-ink"
+              >
+                <Icon name="close" size={10} strokeWidth={2.4} />
+              </button>
+            )}
+          </Chip>
+        ))}
+        <input
+          ref={inputRef}
+          id={inputId}
+          type="text"
+          role="combobox"
+          autoComplete="off"
+          spellCheck={false}
+          disabled={disabled || full}
+          value={query}
+          placeholder={full ? `Up to ${max}` : tags.length === 0 ? placeholder : ""}
+          size={Math.max(4, (full ? `Up to ${max}` : query || (tags.length === 0 ? placeholder : "")).length + 1)}
+          aria-autocomplete="list"
+          aria-expanded={open}
+          aria-controls={open ? listboxId : undefined}
+          aria-activedescendant={open && rows > 0 ? `${listboxId}-${active}` : undefined}
+          aria-labelledby={labelledBy}
+          aria-describedby={reason ? `${autoId}-reason` : describedBy}
+          aria-invalid={invalid || !!reason || undefined}
+          onChange={(event) => { setQuery(event.target.value); setReason(null); setMarked(false); if (!open) show(); }}
+          onBlur={() => { if (open) setOpen(false); if (marked) setMarked(false); }}
+          onKeyDown={onKeyDown}
+          className="h-6 min-w-0 flex-1 bg-transparent px-1 text-body text-ink outline-none placeholder:text-ink-3"
+        />
+        {max !== undefined && !full && tags.length > 0 && <span className="ml-auto shrink-0 pr-1 text-small tabular-nums text-ink-3">{tags.length}/{max}</span>}
+      </span>
+      {reason && <p id={`${autoId}-reason`} role="alert" className="mt-1.5 text-small text-red">{reason}</p>}
+      {open && position && rows > 0 && (
+        <Popover x={position.x} top={position.top} bottom={position.bottom} width={position.width} id={listboxId} role="listbox" className="max-h-60 overflow-y-auto p-1" onClose={() => setOpen(false)}>
+          {shown.map((s, index) => (
+            <OptionRow key={s} id={`${listboxId}-${index}`} active={index === active} onHover={() => setActive(index)} onPick={() => pick(index)}>{s}</OptionRow>
+          ))}
+          {customRow && (
+            <OptionRow id={`${listboxId}-${shown.length}`} active={active === shown.length} icon="plus" onHover={() => setActive(shown.length)} onPick={() => pick(shown.length)}>
+              Add “{query.trim()}”
+            </OptionRow>
+          )}
+        </Popover>
+      )}
+    </>
+  );
+}
+
 /* ═══════════ ContextCards ═══════════ */
 const CTX_TONES = {
   red: "bg-red",
@@ -7298,20 +7698,7 @@ function Select({
     className="max-h-60 overflow-y-auto p-1"
     onClose={() => setOpen(false)}
   >
-          {options.map((option, index) => <div
-    key={option.value}
-    id={`${listboxId}-${index}`}
-    role="option"
-    aria-selected={option.value === selectedValue}
-    onMouseEnter={() => setActive(index)}
-    onMouseDown={(event) => event.preventDefault()}
-    onClick={() => choose(option)}
-    className={`flex h-8 cursor-pointer items-center gap-2 rounded-sm px-2 text-body text-ink transition-colors duration-150 ${index === active ? "bg-hover" : ""}`}
-  >
-              {option.swatch && <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ background: option.swatch }} />}
-              <span className="min-w-0 flex-1 truncate">{option.label}</span>
-              {option.value === selectedValue && <Icon name="check" size={14} strokeWidth={2.2} className="shrink-0 text-ink" />}
-            </div>)}
+          {options.map((option, index) => <OptionRow key={option.value} id={`${listboxId}-${index}`} active={index === active} selected={option.value === selectedValue} swatch={option.swatch} onHover={() => setActive(index)} onPick={() => choose(option)}>{option.label}</OptionRow>)}
         </Popover>}
     </>;
 }
@@ -12667,6 +13054,107 @@ function Page_input() {
   );
 }
 
+function Page_combobox() {
+  const [client, setClient] = useState("selam");
+  const [loading, setLoading] = useState(false);
+  const [people, setPeople] = useState(null);
+  const PEOPLE = [
+    { value: "eyosiyas", label: "Eyosiyas Ketema", hint: "Studio lead", icon: "user" },
+    { value: "hanna", label: "Hanna Bekele", hint: "Design", icon: "user" },
+    { value: "dawit", label: "Dawit Alemu", hint: "Engineering", icon: "user" },
+    { value: "meron", label: "Meron Tadesse", hint: "Accounts", icon: "user" },
+    { value: "samuel", label: "Samuel Girma", hint: "On leave", icon: "user", disabled: true },
+  ];
+  return (
+    <>
+      <GalleryCard label="In a Field · type a client or a city; arrows and Enter pick, x clears" wide>
+        <Field label="Client" hint="The invoice goes out under this name.">
+          <Combobox value={client} onChange={setClient} />
+        </Field>
+        <p className="mt-3 text-small tabular-nums text-ink-3" aria-live="polite">{client ? `Chosen: ${client}` : "Nothing chosen"}</p>
+      </GalleryCard>
+      <GalleryCard label="Icons, a disabled row, a leading icon while empty · small" wide>
+        <Field label="Assign to">
+          <Combobox size="sm" options={PEOPLE} leadingIcon="user" placeholder="Find a person…" />
+        </Field>
+      </GalleryCard>
+      <GalleryCard label="allowCustom · Enter on no match keeps what was typed (a new tag, an address not in the book)" wide>
+        <Field label="Send to" hint="Anyone in the book, or an address you type.">
+          <Combobox allowCustom placeholder="Name or email…" options={[
+            { value: "abebe@northwindbank.et", label: "Abebe Worku", hint: "Northwind Bank" },
+            { value: "sara@creamery.et", label: "Sara Haile", hint: "Creamery" },
+            { value: "yonas@selamcoffee.com", label: "Yonas Tesfaye", hint: "Selam Coffee" },
+          ]} />
+        </Field>
+      </GalleryCard>
+      <GalleryCard label="Loading · options come from a server as the reader types" wide>
+        <Field label="Project">
+          <Combobox
+            options={people ?? []}
+            loading={loading}
+            placeholder="Type to search projects…"
+            emptyMessage="No project by that name"
+            onQueryChange={(q) => {
+              setLoading(true);
+              window.clearTimeout(window.__cbxTimer);
+              window.__cbxTimer = window.setTimeout(() => {
+                const all = [
+                  { value: "nw-brand", label: "Northwind brand refresh", hint: "ETB 724,000" },
+                  { value: "cr-site", label: "Creamery menu site", hint: "ETB 180,000" },
+                  { value: "sc-board", label: "Selam Coffee menu board", hint: "ETB 42,000" },
+                  { value: "ay-poster", label: "Addis Yoga autumn posters", hint: "ETB 28,000" },
+                ];
+                setPeople(all.filter((o) => o.label.toLowerCase().includes(q.toLowerCase())));
+                setLoading(false);
+              }, 600);
+            }}
+          />
+        </Field>
+      </GalleryCard>
+      <GalleryCard label="Error · invalid from Field" wide>
+        <Field label="Client" error="Pick a client before sending.">
+          <Combobox />
+        </Field>
+      </GalleryCard>
+    </>
+  );
+}
+
+function Page_taginput() {
+  const [tags, setTags] = useState(["brand", "web", "retainer"]);
+  return (
+    <>
+      <GalleryCard label="In a Field · Enter or comma keeps a tag, Backspace twice removes the last, suggestions under the caret" wide>
+        <Field label="Tags" hint="How the project is filed; type to see the studio's tags.">
+          <TagInput value={tags} onChange={setTags} />
+        </Field>
+        <p className="mt-3 text-small tabular-nums text-ink-3" aria-live="polite">{tags.length} tag{tags.length === 1 ? "" : "s"}</p>
+      </GalleryCard>
+      <GalleryCard label="max · the field says how many are left, then closes" wide>
+        <Field label="Skills" hint="Up to four.">
+          <TagInput max={4} defaultValue={["Figma", "Motion"]} suggestions={["Figma", "Motion", "Type", "Print", "Webflow", "After Effects", "Copy"]} placeholder="Add a skill…" />
+        </Field>
+      </GalleryCard>
+      <GalleryCard label="validate · a reason keeps a bad tag out (emails only)" wide>
+        <Field label="Recipients" hint="Press Enter after each address.">
+          <TagInput defaultValue={["abebe@northwindbank.et"]} suggestions={["sara@creamery.et", "yonas@selamcoffee.com", "meron@formic.studio"]} placeholder="Add an address…" validate={(t) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? undefined : `“${t}” is not an email address.`)} />
+        </Field>
+      </GalleryCard>
+      <GalleryCard label="Only the suggestions · allowCustom off · small" wide>
+        <Field label="Deliverables">
+          <TagInput size="sm" allowCustom={false} defaultValue={["Logo", "Site"]} suggestions={["Logo", "Site", "Deck", "Stationery", "Signage", "Social kit"]} placeholder="Choose…" />
+        </Field>
+      </GalleryCard>
+      <GalleryCard label="Empty and disabled" wide>
+        <div className="flex flex-col gap-4">
+          <TagInput defaultValue={[]} placeholder="No tags yet…" />
+          <TagInput disabled defaultValue={["brand", "web"]} />
+        </div>
+      </GalleryCard>
+    </>
+  );
+}
+
 function Page_select() {
   return (
     <>
@@ -15069,6 +15557,8 @@ const PAGES = [
   { id: "avatar", group: "Primitives", title: "Avatar", note: "Initials from the name, a photo through src, or a doodle derived from the name (DiceBear notionists, CC0, generated locally, initials until it loads). AvatarGroup overlaps people at avatar sizes with a +N tile; AvatarStack is the tiny favicon strip for sources.", file: "components/primitives.tsx", Component: Page_avatar },
   { id: "button", group: "Controls", title: "Button", note: "The complete matrix \u2014 every variant at every size, every state, both shapes, icons, width, links, and live loading. Rows generate from the component's own maps, so this page can never drift from the code.", file: "components/Button.tsx", Component: Page_button },
   { id: "input", group: "Forms", title: "Field & Input", note: "The form trio \u2014 Field owns label / hint / error and wires aria onto its control; Input and Textarea share the system's quiet field focus (border shift, no ring).", file: "components/Input.tsx", Component: Page_input },
+  { id: "combobox", group: "Forms", title: "Combobox", note: "A field that types to find. Select is for a handful of choices the reader can see at once; this is for a list too long to scan: clients, people, projects. Typing narrows to labels and hints, arrows and Enter pick, Escape and blur put the chosen label back so the field never shows a query that is not a value, the x clears. allowCustom keeps typed text as a value of its own; loading and onQueryChange fetch from a server; works inside Field.", file: "components/Combobox.tsx", Component: Page_combobox },
+  { id: "taginput", group: "Forms", title: "TagInput", note: "Several values in one field: each a chip, the caret after the last. Enter, comma or Tab keep what was typed; Backspace on an empty caret marks the last chip and a second removes it; every chip has its x. Duplicates are ignored. suggestions open under the caret as the reader types, showing the ones not chosen yet; max stops the field when full; validate keeps a bad tag out with a reason. Input's field grown to wrap, the system's inset chip, Select's listbox.", file: "components/TagInput.tsx", Component: Page_taginput },
   { id: "select", group: "Forms", title: "Select", note: "Combobox on the quiet field style \u2014 the listbox portals over the page, matches the trigger's width, and is fully keyboard-driven (arrows, Home/End, Enter, Escape).", file: "components/Select.tsx", Component: Page_select },
   { id: "switch", group: "Forms", title: "Switch", note: "The system toggle, promoted from RecordsTable's private switch \u2014 role=switch, two sizes, Field-compatible. RecordsTable now consumes the same primitive.", file: "components/primitives.tsx", Component: Page_switch },
   { id: "checkbox", group: "Forms", title: "Checkbox", note: "A labelled checkbox for completion and selection. The visual is the RadioCheck primitive; the semantics are a button with role=checkbox, so keyboard, focus ring and a 24px hit area come from the system. Switch is for settings that apply the moment they flip \u2014 a habit marked done, a row included in a selection, a task ticked off is a checkbox, never a switch.", file: "components/primitives.tsx", Component: Page_checkbox },

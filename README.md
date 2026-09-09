@@ -105,7 +105,7 @@ All of these choices, plus the avatar fallback, the sidebar's first variant and 
 
 **Feedback and agents:** EmptyState, ThinkingIndicator, ThinkingState, TaskRows, ToolChips, ToolCall, LoadingState, Progress, Skeleton, Alert, Toast
 
-**Forms:** Field, Input, Textarea, Select, Switch, Checkbox, FilterBar, Slider, RangeSlider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker, InputCopy, InputGroup
+**Forms:** Field, Input, Textarea, Select, Combobox, TagInput, Switch, Checkbox, FilterBar, Slider, RangeSlider, OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker, InputCopy, InputGroup
 
 **Overlays:** Modal, Drawer, DropdownMenu, Popover, Tooltip
 
