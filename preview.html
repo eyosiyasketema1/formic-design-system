@@ -4623,9 +4623,7 @@ const IMG_ASPECT = { square: "aspect-square", landscape: "aspect-video", portrai
 
 /* a studio poster drawn in SVG, so the demo ships without a binary:
    Selam Coffee's menu board hero, a cup on a warm field */
-const DEFAULT_IMAGE = "data:image/svg+xml," + encodeURIComponent(
-  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 400'><rect width='640' height='400' fill='#e8dccb'/><circle cx='470' cy='150' r='110' fill='#d9b382'/><rect x='80' y='230' width='300' height='24' rx='12' fill='#3d2b1f'/><rect x='80' y='270' width='220' height='14' rx='7' fill='#7a5c44'/><rect x='80' y='296' width='260' height='14' rx='7' fill='#7a5c44'/><path d='M420 250h120a40 40 0 0 1 0 80h-10v20a60 60 0 0 1-60 60h-10a60 60 0 0 1-60-60v-100z' fill='#3d2b1f'/><path d='M540 270a20 20 0 0 1 0 40' fill='none' stroke='#e8dccb' stroke-width='8'/></svg>`,
-);
+const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=1200&q=80";
 
 function ImageResult({
   src = DEFAULT_IMAGE,
@@ -13001,12 +12999,9 @@ function Page_streamingtext() {
   );
 }
 
-const IMG_POSTERS = [
-  DEFAULT_IMAGE,
-  "data:image/svg+xml," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><rect width='400' height='400' fill='#dfe7e2'/><circle cx='200' cy='170' r='96' fill='#2f6b4f'/><rect x='70' y='300' width='260' height='18' rx='9' fill='#1f3d2e'/></svg>"),
-  "data:image/svg+xml," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><rect width='400' height='400' fill='#f1e4d8'/><path d='M60 320 L200 90 L340 320 Z' fill='#c2703f'/><circle cx='300' cy='110' r='34' fill='#f5c98a'/></svg>"),
-  "data:image/svg+xml," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><rect width='400' height='400' fill='#e6e2ee'/><rect x='80' y='80' width='240' height='240' rx='40' fill='#5b4a8a'/><rect x='140' y='140' width='120' height='120' rx='20' fill='#e6e2ee'/></svg>"),
-];
+/* real photos for the studio's clients (Unsplash): Creamery's cones for the candidates, a sunrise for Addis Yoga */
+const IMG_CANDIDATES = ["https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&w=600&q=80", "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&w=600&q=80", "https://images.unsplash.com/photo-1488900128323-21503983a07e?auto=format&fit=crop&w=600&q=80"];
+const IMG_YOGA = "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=900&q=80";
 function ImageResultLive() {
   const stage = useSequence([1400, 1400, 1400, 4000]);
   const state = stage < 3 ? "generating" : "done";
@@ -13052,11 +13047,11 @@ function Page_imageresult() {
       <GalleryCard label="Error · the frame holds the empty state, the prompt is kept" wide>
         <ImageResult state="error" onRetry={() => toast({ title: "Trying again" })} />
       </GalleryCard>
-      <GalleryCard label="Portrait · a poster for the Creamery window" wide>
-        <ImageResult aspect="portrait" src={IMG_POSTERS[2]} prompt="A window poster for Creamery: pistachio season, one cone, warm afternoon light." meta="1024 × 1536 · 8.1s" onDownload={() => {}} onRegenerate={() => {}} className="max-w-72" />
+      <GalleryCard label="Portrait · a poster for Addis Yoga" wide>
+        <div className="max-w-72"><ImageResult aspect="portrait" src={IMG_YOGA} prompt="A poster for Addis Yoga's sunrise class: one figure, the light behind, room for the times below." meta="1024 × 1536 · 8.1s" onDownload={() => {}} onRegenerate={() => {}} /></div>
       </GalleryCard>
-      <GalleryCard label="ImageResults · four candidates, pick one, use it" wide>
-        <ImageResults prompt="A mark for Addis Yoga: a simple form, one colour, works at 16px." images={IMG_POSTERS.map((src, i) => ({ key: `c${i}`, src, meta: `candidate ${i + 1}` }))} onUse={(k) => toast({ title: `Using ${k}` })} />
+      <GalleryCard label="ImageResults · three candidates, pick one, use it" wide>
+        <ImageResults prompt="A window poster for Creamery: pistachio season, one cone, warm afternoon light." columns={3} images={IMG_CANDIDATES.map((src, i) => ({ key: `c${i}`, src, meta: `candidate ${i + 1}` }))} onUse={(k) => toast({ title: `Using ${k}` })} />
       </GalleryCard>
     </>
   );
