@@ -895,13 +895,6 @@ main, footer.site { position: relative; z-index: 1; }
 .ai-way-wide { margin-top: 14px; }
 .ai-way-wide .lbtn { margin-top: 4px; }
 @media (max-width: 640px) { .ai-steps li { padding-left: 40px; } .ai-steps li::before { left: 10px; } }
-.qs-tabs { display: inline-flex; gap: 4px; margin-top: 18px; padding: 3px; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface); corner-shape: squircle; }
-.qs-tab { height: 30px; padding: 0 14px; border: none; background: none; border-radius: var(--radius-sm); font: inherit; font-size: var(--text-caption); font-weight: 500; color: var(--ink-2); cursor: pointer; transition: background-color 150ms, color 150ms; }
-.qs-tab:hover { color: var(--ink); }
-.qs-tab.is-active { background: var(--hover-2); color: var(--ink); font-weight: 600; }
-.qs-lead { margin-top: 14px; max-width: 70ch; font-size: var(--text-caption); color: var(--ink-2); }
-.qs-lead code { font-family: var(--font-mono); font-size: var(--text-small); color: var(--ink); background: var(--inset); padding: 1px 5px; border-radius: var(--radius-sm); }
-.qs-lead a { color: var(--accent); text-decoration: none; } .qs-lead a:hover { text-decoration: underline; }
 .ai-dev { margin-top: 10px; }
 .ai-dev summary { cursor: pointer; font-size: var(--text-small); color: var(--ink-3); }
 .ai-dev summary:hover { color: var(--ink); }
@@ -1144,28 +1137,7 @@ footer.site a:hover { color: var(--ink); }
     <div class="wrap">
       <div class="kicker">Quick start</div>
       <h2>One command, no files to edit</h2>
-      <p class="section-sub">The code lands in <code>src/formic/</code>, where you and your AI tool can read it.</p>
-      <div class="qs-tabs" role="tablist" aria-label="Quick start">
-        <button type="button" class="qs-tab is-active" role="tab" aria-selected="true" aria-controls="qs-new" id="qs-tab-new">New project</button>
-        <button type="button" class="qs-tab" role="tab" aria-selected="false" aria-controls="qs-existing" id="qs-tab-existing">Existing project</button>
-      </div>
-      <div id="qs-new" role="tabpanel" aria-labelledby="qs-tab-new">
-        <p class="qs-lead">In an empty folder it scaffolds a Vite + React + Tailwind app with the AI rule files, ready to run (needs git and Node).</p>
-        <div class="lcode">
-          <div class="lcode-head">Terminal · inside your new, empty folder</div>
-          <pre>curl -fsSL https://formicai.dev/install.sh | bash &amp;&amp; npm run dev</pre>
-        </div>
-        <p class="qs-lead">Then <a href="#ai-tools">build with your AI tool</a>.</p>
-      </div>
-      <div id="qs-existing" role="tabpanel" aria-labelledby="qs-tab-existing" hidden>
-        <p class="qs-lead">For an app you already have on Tailwind v4: it adds <code>src/formic/</code>, the CSS imports, the icon package, the rule files and the commit check; re-run any time to update.</p>
-        <div class="lcode">
-          <div class="lcode-head">Terminal · from your project root</div>
-          <pre>curl -fsSL https://formicai.dev/install.sh | bash</pre>
-        </div>
-        <p class="qs-lead">Then <a href="#ai-tools">build with your AI tool</a>.</p>
-      </div>
-
+      <p class="section-sub">Works in an empty folder (scaffolds the app) and in an existing Tailwind v4 app (vendors Formic into <code>src/formic/</code>); needs git and Node.</p>
       <div class="ai-note" id="ai-tools">
         <div class="ai-note-head">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/></svg>
@@ -1176,7 +1148,7 @@ footer.site a:hover { color: var(--ink); }
             <div class="ai-step-title">Install and run</div>
             <p>Make a folder for the app, go into it in the terminal, run this; the browser opens a page that says Formic is working.</p>
             <div class="lcode">
-              <div class="lcode-head">Terminal · inside your project folder (empty, or an existing app)</div>
+              <div class="lcode-head">Terminal · inside your project folder</div>
               <pre>curl -fsSL https://formicai.dev/install.sh | bash &amp;&amp; npm run dev</pre>
             </div>
           </li>
@@ -1370,18 +1342,6 @@ footer.site a:hover { color: var(--ink); }
   var COPY = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></svg>';
   var DONE = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10" /></svg>';
 
-  /* Quick start tabs */
-  var qsTabs = document.querySelectorAll(".qs-tab");
-  qsTabs.forEach(function (tab) {
-    tab.addEventListener("click", function () {
-      qsTabs.forEach(function (t) {
-        var on = t === tab;
-        t.classList.toggle("is-active", on);
-        t.setAttribute("aria-selected", on ? "true" : "false");
-        document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
-      });
-    });
-  });
   document.querySelectorAll(".lcode").forEach(function (block) {
     var head = block.querySelector(".lcode-head");
     var pre = block.querySelector("pre");
