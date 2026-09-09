@@ -159,20 +159,33 @@ EOF
    Register: text
 */
 /* A dock in the corner, above whatever page is showing: a theme switch and a
-   "make it yours" card that folds to a pill, never disappears. Starts folded
-   on the welcome page, open once the AI tool has replaced it. Delete this file
-   and its line in App.tsx once the look is yours. */
+   "make it yours" card that folds to a pill. It remembers what you did:
+   folded stays folded across reloads, "Don't show again" keeps only the
+   theme switch. Starts folded on the welcome page, open once the AI tool has
+   replaced it. Delete this file and its line in App.tsx once the look is
+   yours. */
 import { useEffect, useState } from "react";
 import Button from "./formic/components/Button";
 import { Card, Icon, IconButton, Tooltip } from "./formic/components/primitives";
 
 const CUSTOMIZE_URL = "https://formicai.dev/customize";
+const STORAGE_KEY = "formic-dock";
+type DockState = "open" | "folded" | "off";
 const readTheme = () => (document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
+const readDock = (): DockState | null => {
+  try { const v = localStorage.getItem(STORAGE_KEY); return v === "open" || v === "folded" || v === "off" ? v : null; } catch { return null; }
+};
+const writeDock = (v: DockState) => { try { localStorage.setItem(STORAGE_KEY, v); } catch { /* private mode: the choice lasts the session */ } };
 
 export default function CustomizeNudge() {
-  const [open, setOpen] = useState(false);
+  const [dock, setDockState] = useState<DockState>("folded");
   const [theme, setTheme] = useState<"light" | "dark">(readTheme);
-  useEffect(() => { if (!document.querySelector("[data-formic-welcome]")) setOpen(true); }, []);
+  useEffect(() => {
+    const saved = readDock();
+    if (saved) { setDockState(saved); return; }
+    if (!document.querySelector("[data-formic-welcome]")) setDockState("open");
+  }, []);
+  const setDock = (v: DockState) => { setDockState(v); writeDock(v); };
   const flip = () => {
     const next = theme === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
@@ -185,11 +198,11 @@ export default function CustomizeNudge() {
       </IconButton>
     </Tooltip>
   );
-  if (!open) {
+  if (dock !== "open") {
     return (
       <div className="fixed right-4 bottom-4 z-40 flex items-center gap-2">
         {themeButton}
-        <Button variant="secondary" size="md" onClick={() => setOpen(true)} icon={<Icon name="sparkles" />}>Make it yours</Button>
+        {dock === "folded" && <Button variant="secondary" size="md" onClick={() => setDock("open")} icon={<Icon name="sparkles" />}>Make it yours</Button>}
       </div>
     );
   }
@@ -201,12 +214,15 @@ export default function CustomizeNudge() {
           <p className="text-body font-semibold text-ink">This is the stock look. Now make it yours.</p>
           <p className="mt-0.5 text-caption text-ink-2">Pick the accent, palette, font, radius and rail; press Copy for your AI tool and paste the block into the same chat. Every page after that inherits it.</p>
         </div>
-        <IconButton label="Fold away" onClick={() => setOpen(false)} className="-mt-1 -mr-1 shrink-0">
+        <IconButton label="Fold away" onClick={() => setDock("folded")} className="-mt-1 -mr-1 shrink-0">
           <Icon name="chevron" size={14} />
         </IconButton>
       </div>
       <div className="flex items-center justify-between gap-3">
-        {themeButton}
+        <div className="flex items-center gap-2">
+          {themeButton}
+          <Button variant="ghost" size="sm" onClick={() => setDock("off")}>Don't show again</Button>
+        </div>
         <Button variant="accent" size="sm" href={CUSTOMIZE_URL} target="_blank" icon={<Icon name="external" />}>Customize this page</Button>
       </div>
     </Card>

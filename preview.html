@@ -472,6 +472,9 @@ input:focus-visible, textarea:focus-visible { outline: none; }
   --radius-sm: 10px; --radius-chip: 999px; --radius-control: 999px;
   --radius-md: 14px; --radius-card: 20px; --radius-capsule: 999px;
 }
+/* Controls alone: buttons, inputs, chips become capsules while cards,
+   panels and menus keep the scale; formic.config.json's `controls`. */
+:root[data-controls="pill"] { --radius-control: 999px; --radius-chip: 999px; }
 
 /* ── Global size (density) scale ───────────────────────── */
 /* Tailwind v4 derives every spacing and sizing utility from --spacing
@@ -15760,8 +15763,8 @@ function AppShellDemo() {
    two panes are scoped copies of the real token blocks, built from
    the live stylesheet, so they cannot drift. State lives in the URL,
    so a designer can send the link to a developer. */
-const CZ_KEYS = ["accent", "palette", "paletteColor", "radius", "corners", "size", "type", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"];
-const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", paletteColor: "#a5e12a", radius: "default", corners: "smooth", size: "default", type: "base", theme: "light", avatar: "initials", sidebar: "full", sidebarState: "expanded", font: "Urbanist", layout: "compact", motion: true };
+const CZ_KEYS = ["accent", "palette", "paletteColor", "radius", "corners", "controls", "size", "type", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"];
+const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", paletteColor: "#a5e12a", radius: "default", corners: "smooth", controls: "scale", size: "default", type: "base", theme: "light", avatar: "initials", sidebar: "full", sidebarState: "expanded", font: "Urbanist", layout: "compact", motion: true };
 /* the approved faces (mirror of FONTS in scripts/apply_config.py): variable
    weight through 300–800 on Google Fonts, a full x-height range, tabular figures */
 const CZ_FONTS = [
@@ -15795,6 +15798,7 @@ const CZ_CHOICES = {
   palette: [...PALETTES.map((p) => p.id), "custom"],
   radius: RADII,
   corners: ["smooth", "round"],
+  controls: ["scale", "pill"],
   size: SIZES,
   type: ["base", "lg", "xl"],
   theme: ["light", "dark"],
@@ -15808,6 +15812,7 @@ const CZ_HELP = {
   accent: "Bring the brand colour. Light and dark each get their own value, fitted to AA on their surfaces.",
   palette: "The neutral family under everything: canvas, surfaces, lines, ink. Custom tints paper's neutrals toward a colour you bring, every pair still passing AA.",
   radius: "One scale for every corner. Pick a preset or a control radius in pixels; the rest of the scale follows (rows a little tighter, cards a little rounder) and every value is shown.",
+  controls: "Scale keeps buttons, inputs and chips on the radius scale. Pill makes them full capsules while cards, panels and menus keep the scale.",
   corners: "Smooth draws corners as squircles, the way Figma's corner smoothing does; Round is the plain arc. Browsers without corner-shape draw round either way.",
   size: "Control heights, padding and gaps move together. Type does not follow; that is the next choice.",
   type: "The whole type ramp one or two steps up, still integer pixels: base reads at 14, lg at 15, xl at 16. Controls keep their heights.",
@@ -16057,6 +16062,7 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
       data-palette={cfg.palette !== "paper" ? cfg.palette : undefined}
       data-radius={typeof cfg.radius === "number" ? "custom" : cfg.radius !== "default" ? cfg.radius : undefined}
       data-corners={cfg.corners !== "smooth" ? cfg.corners : undefined}
+      data-controls={cfg.controls !== "scale" ? cfg.controls : undefined}
       data-size={cfg.size !== "default" ? cfg.size : undefined}
       data-type={cfg.type !== "base" ? cfg.type : undefined}
       data-layout={cfg.layout !== "compact" ? cfg.layout : undefined}
@@ -16225,6 +16231,7 @@ function CustomizeApp() {
             })()}
             <p className="mt-1.5 text-small text-ink-3">{CZ_HELP.radius}</p>
           </div>
+          <CzChoice label="Controls" help={CZ_HELP.controls} value={cfg.controls} options={[{ id: "scale", label: "On the scale" }, { id: "pill", label: "Pill" }]} onChange={(v) => set("controls", v)} />
           <CzChoice label="Corners" help={CZ_HELP.corners} value={cfg.corners} options={[{ id: "smooth", label: "Smooth" }, { id: "round", label: "Round" }]} onChange={(v) => set("corners", v)} />
           <CzChoice label="Size" help={CZ_HELP.size} value={cfg.size} options={SIZES} onChange={(v) => set("size", v)} />
           <CzChoice label="Type size" help={CZ_HELP.type} value={cfg.type} options={[{ id: "base", label: "Base" }, { id: "lg", label: "LG" }, { id: "xl", label: "XL" }]} onChange={(v) => set("type", v)} />
