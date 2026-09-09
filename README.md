@@ -113,7 +113,7 @@ All of these choices, plus the avatar fallback, the sidebar's first variant and 
 
 **Data and structure:** RecordsTable, FilterTable, DiffTable, Accordion, Steps, Timeline, CardGroup + Card parts (cards.tsx)
 
-**Navigation:** Tabs, Pagination, Breadcrumbs, Menubar, AppSidebar, ProjectSidebar, SidebarNav, SearchList
+**Navigation:** CommandPalette, Tabs, Pagination, Breadcrumbs, Menubar, AppSidebar, ProjectSidebar, SidebarNav, SearchList
 
 **Brand** (`components/brand.tsx`, `components/brand-logos.tsx`): FormicMark, BrandIcon (81 monochrome marks), BrandLogo (101 real full-colour logos)
 
