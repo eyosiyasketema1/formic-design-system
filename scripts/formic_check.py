@@ -26,8 +26,8 @@ What it catches:
   import     lucide, heroicons, react-icons, recharts, chart.js, MUI, antd, Chakra,
              Radix, shadcn, framer-motion: a second kit or a chart library
   formic     a file that renders JSX and imports nothing from src/formic
-  shell      a page with a rail (AppSidebar / ProjectSidebar / TopBar) whose main
-             column carries no .page-content, so the layout choice is ignored
+  shell      a page that mounts AppSidebar / ProjectSidebar / TopBar itself instead
+             of AppShell, so the sidebar choice in the config cannot reach it
   readable   text-nano in a muted ink, body copy in text-ink-3, text faded with
              opacity: the three ways copy stops being readable
 
@@ -65,7 +65,7 @@ LINE_RULES = [
     ("readable", re.compile(r"\btext-nano\b[^\"'`]*\btext-ink-(?:2|3)\b|\btext-ink-(?:2|3)\b[^\"'`]*\btext-nano\b"), "8px letters in a muted ink; text-nano is for the letters inside a mini badge, in text-canvas on a fill, never running copy"),
     ("readable", re.compile(r"(?<![:\w-])text-ink-3\b[^\"'`]*(?<![:\w-])(?:text-body|text-lead)\b|(?<![:\w-])(?:text-body|text-lead)\b[^\"'`]*(?<![:\w-])text-ink-3\b"), "body copy in the mutest ink; text-ink-3 is for eyebrows, captions and hints, running text is text-ink or text-ink-2"),
 ]
-SHELLS = ("<AppSidebar", "<ProjectSidebar", "<TopBar", "<SidebarNav")
+SHELLS = ("<AppSidebar", "<ProjectSidebar", "<TopBar")
 JSX = re.compile(r"<[a-z][\w-]*[\s/>]")  # a lowercase tag: markup of its own. A file that only composes components (App.tsx) is fine
 FORMIC_IMPORT = re.compile(r"from\s+[\"'][^\"']*formic/(?:components|styles)")
 FORMIC_IMPORT_ALT = re.compile(r"from\s+[\"'](?:@/formic|@formic|~/formic)")
@@ -98,8 +98,10 @@ def check(path):
     imports_formic = bool(FORMIC_IMPORT.search(src) or FORMIC_IMPORT_ALT.search(src))
     if renders and not imports_formic and len(lines) > 12:
         out.append((1, "formic", path.name, "this file renders UI and imports nothing from src/formic; every screen is composed from the system's components, or it is not Formic"))
-    if any(s in src for s in SHELLS) and "<main" in src and "page-content" not in src:
-        out.append((1, "shell", "<main>", "a page with a rail but no .page-content wrapper inside <main>; the layout choice in formic.config.json (compact / medium / full) applies through that class"))
+    if any(s in src for s in SHELLS) and "<AppShell" not in src:
+        out.append((1, "shell", "rail", "a page mounts AppSidebar / ProjectSidebar / TopBar itself, so the sidebar choice in formic.config.json cannot reach it; wrap the page in <AppShell> (it mounts the rail the config names, the header and .page-content)"))
+    if "<SidebarNav" in src and "<main" in src and "page-content" not in src and "<AppShell" not in src:
+        out.append((1, "shell", "<main>", "a chat page with a rail but no .page-content wrapper inside <main>; the layout choice in formic.config.json (compact / medium / full) applies through that class"))
     return out
 
 

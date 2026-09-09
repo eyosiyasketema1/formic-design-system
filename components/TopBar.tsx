@@ -65,8 +65,8 @@ export default function TopBar({
   return (
     <header className={`flex h-14 w-full shrink-0 items-center gap-3 border-b border-line bg-canvas px-4 sm:px-6 ${className}`}>
       {leading}
-      <h1 className="min-w-0 flex-1 truncate text-heading font-semibold tracking-tight text-ink">{title}</h1>
-      <div className="flex shrink-0 items-center gap-2">
+      <h1 className="min-w-0 shrink-0 truncate text-heading font-semibold tracking-tight text-ink">{title}</h1>
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
         {search && (
           <Input
             size="md"
@@ -74,7 +74,7 @@ export default function TopBar({
             placeholder={searchPlaceholder}
             aria-label="Search"
             onChange={(event) => onSearch?.(event.target.value)}
-            width="hidden w-56 md:flex lg:w-72"
+            width="hidden min-w-24 max-w-72 flex-1 md:flex"
           />
         )}
         {actions}
