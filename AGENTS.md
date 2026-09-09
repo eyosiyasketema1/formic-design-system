@@ -56,7 +56,7 @@ python3 src/formic/scripts/formic_check.py src     # how it was built: tokens, r
 python3 src/formic/scripts/compose_check.py src    # what is on it: brief, register, budgets, real periods
 ```
 
-Both must print clean. A line that is a real exception carries a `formic-ok` comment with the reason. Finish the task with a short report: the components used, any component built, and the two gates' output. Work is not done while either fails.
+`npm run formic` runs both (the installer adds the script). Both must print clean. A line that is a real exception carries a `formic-ok` comment with the reason. Finish the task with a short report: the components used, any component built, and the two gates' output. Work is not done while either fails.
 
 **On prompt length.** The user's request can be one line. This file is the specification; do not ask for design detail the system already decides (spacing, radius, weights, colours, which rail, which chart). Ask only about the brief: who reads the screen, what question it answers, what they do next.
 
@@ -115,6 +115,8 @@ An element goes on the screen only if all four are true. Write the answer in a c
    - Prose: anything that needs a because. Numbers that need explaining get a sentence next to them, not another chart.
 3. **It is not already said.** A number in a StatCard and again as the chart's last point and again in a table row is said three times; keep the one that lets the reader act.
 4. **Removing it would cost the reader something.** If the answer is "it would look empty", the fix is a smaller page or a better hierarchy, never filler.
+
+**Demo data is not an empty state.** When the user asks for a demo, sample, starter or test screen, fill it with the content the components ship as `DEFAULT_*` (Formic Studio, its clients, invoices in ETB, agents); an empty state is for a real app that has no data yet. A test prompt that comes back as zeros and "No data" has misread the brief.
 
 ### 4. Budgets (per screen, at a normal laptop width)
 

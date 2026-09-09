@@ -24,11 +24,7 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
    ```bash
    curl -fsSL https://formicai.dev/install.sh | bash
    ```
-   In an empty folder, or when asked to "start a project", scaffold one instead (Vite + React + Tailwind v4 + demo dashboard, dependencies installed, nothing to edit):
-   ```bash
-   curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app
-   ```
-   Both copy `styles/` and `components/` into `src/formic/` and write `AGENTS.md`, a Cursor rule, Copilot instructions, and this skill into the project.
+   Run in an empty folder and the same command scaffolds a Vite + React + Tailwind v4 app (welcome page, dependencies installed, nothing to edit); `--new my-app` creates the folder for you. Both copy `styles/` and `components/` into `src/formic/` and write `AGENTS.md`, a Cursor rule, Copilot instructions, and this skill into the project.
 2. **Wire the CSS once** (Tailwind v4 global stylesheet, in this order; fix the relative path to `src/formic`):
    ```css
    @import "./formic/styles/fonts.css";    /* first: the Urbanist font */
@@ -40,7 +36,7 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
 4. **Map the screen to the inventory.** Name the Formic component for every piece the screen needs (rail, header, figures, chart, table, form, dialog) from the inventory below. A piece that resolves to "a div with classes" is where generic UI starts; a raw `<button>`, `<input>`, `<table>` or `<svg>` in a page is a defect.
 5. **When nothing fits, build the component; never fake it inline.** Say so ("Formic has no X; building `src/formic/components/X.tsx`"), then build it the way the system builds its own: composed from `primitives.tsx` and token utilities, control metrics (24/32/36/40, `.corner-smooth`, `.optical-text`), the ramp, typed variant union, `DEFAULT_*` demo props, fluid root, ARIA, the shared focus rule, `useReducedMotion()`, tokens only so both themes come free. Take the time it needs and tell the user what you built.
 6. **Readability is not optional.** Body copy `text-body text-ink`; secondary `text-caption`/`text-small` in `text-ink-2`; `text-ink-3` never under 12px; no `opacity-*` on text; `text-canvas` (never `text-white`) on fills; numbers `tabular-nums`, right-aligned. Hard to read on the screenshot means defective.
-7. **Run both gates, fix every line, report.** `python3 src/formic/scripts/formic_check.py src` (how it was built: tokens, ramp, radii, no raw elements, no second kit, `.page-content` under a rail) and `python3 src/formic/scripts/compose_check.py src` (what is on it). Both print clean before the work is done; a true exception carries a `formic-ok` comment with its reason. End with a short report: components used, components built, the gates' output.
+7. **Run both gates, fix every line, report.** `python3 src/formic/scripts/formic_check.py src` (how it was built: tokens, ramp, radii, no raw elements, no second kit, `.page-content` under a rail) and `python3 src/formic/scripts/compose_check.py src` (what is on it). `npm run formic` runs both. Both print clean before the work is done; a true exception carries a `formic-ok` comment with its reason. End with a short report: components used, components built, the gates' output.
 
 **Prompt length.** The user's request can be one line; this skill is the specification. Do not ask about spacing, radius, weights, colours, rail or chart type, the system decides those. Ask only about the brief: who reads it, what question it answers, what they do next.
 
