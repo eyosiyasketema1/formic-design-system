@@ -271,6 +271,9 @@
 .primitive-icon-button { display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; }
 .optical-text { text-box: trim-both cap alphabetic; }
 .corner-smooth { corner-shape: squircle; }
+/* Corner shape: smooth (squircle, the default) or round (a plain arc),
+ * chosen once for the whole app by formic.config.json's `corners`. */
+:root[data-corners="round"] .corner-smooth, :root[data-corners="round"] .primitive-field { corner-shape: round; }
 .primitive-field { box-shadow: var(--shadow-field); transition: border-color 150ms; corner-shape: squircle; }
 .primitive-field:focus-within { border-color: var(--line-strong); }
 .primitive-field[data-invalid="true"], .primitive-field[data-invalid="true"]:focus-within { border-color: var(--red); }
@@ -15664,8 +15667,8 @@ function useProjectSidebar(defaultOpen = true) {
    two panes are scoped copies of the real token blocks, built from
    the live stylesheet, so they cannot drift. State lives in the URL,
    so a designer can send the link to a developer. */
-const CZ_KEYS = ["accent", "palette", "paletteColor", "radius", "size", "type", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"];
-const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", paletteColor: "#a5e12a", radius: "default", size: "default", type: "base", theme: "light", avatar: "initials", sidebar: "full", sidebarState: "expanded", font: "Urbanist", layout: "compact", motion: true };
+const CZ_KEYS = ["accent", "palette", "paletteColor", "radius", "corners", "size", "type", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"];
+const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", paletteColor: "#a5e12a", radius: "default", corners: "smooth", size: "default", type: "base", theme: "light", avatar: "initials", sidebar: "full", sidebarState: "expanded", font: "Urbanist", layout: "compact", motion: true };
 /* the approved faces (mirror of FONTS in scripts/apply_config.py): variable
    weight through 300–800 on Google Fonts, a full x-height range, tabular figures */
 const CZ_FONTS = [
@@ -15698,6 +15701,7 @@ const CZ_FONTS = [
 const CZ_CHOICES = {
   palette: [...PALETTES.map((p) => p.id), "custom"],
   radius: RADII,
+  corners: ["smooth", "round"],
   size: SIZES,
   type: ["base", "lg", "xl"],
   theme: ["light", "dark"],
@@ -15710,7 +15714,8 @@ const CZ_CHOICES = {
 const CZ_HELP = {
   accent: "Bring the brand colour. Light and dark each get their own value, fitted to AA on their surfaces.",
   palette: "The neutral family under everything: canvas, surfaces, lines, ink. Custom tints paper's neutrals toward a colour you bring, every pair still passing AA.",
-  radius: "One scale for every corner, from controls to cards.",
+  radius: "One scale for every corner. Pick a preset or a control radius in pixels; the rest of the scale follows (rows a little tighter, cards a little rounder) and every value is shown.",
+  corners: "Smooth draws corners as squircles, the way Figma's corner smoothing does; Round is the plain arc. Browsers without corner-shape draw round either way.",
   size: "Control heights, padding and gaps move together. Type does not follow; that is the next choice.",
   type: "The whole type ramp one or two steps up, still integer pixels: base reads at 14, lg at 15, xl at 16. Controls keep their heights.",
   theme: "Where the app starts. Users can still switch.",
@@ -15734,6 +15739,17 @@ function czLoadFont(id) {
   document.head.appendChild(link);
 }
 const czStack = (font) => `"${font}", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+/* the pixel scale: a control radius in, the six tokens out (mirror of
+   radius_scale in scripts/apply_config.py and radiusScale in theme.ts) */
+function radiusScale(n) {
+  n = Math.max(0, Math.min(32, Math.round(n)));
+  return { sm: Math.round(n * 0.75), chip: Math.round(n * 0.9), control: n, md: n === 0 ? 0 : n + 2, card: n === 0 ? 0 : n + 6, capsule: n === 0 ? 0 : Math.round(n * 2.75) };
+}
+const RADIUS_PRESETS = { sharp: 0, default: 8, rounded: 12, full: 999 };
+function radiusCss(n, selector = ':root[data-radius="custom"]') {
+  const r = radiusScale(n);
+  return `${selector} { --radius-sm: ${r.sm}px; --radius-chip: ${r.chip}px; --radius-control: ${r.control}px; --radius-md: ${r.md}px; --radius-card: ${r.card}px; --radius-capsule: ${r.capsule}px; }\n`;
+}
 function czIsCustomize() {
   return /\/customize\/?$/.test(location.pathname) || /^#\/?customize$/.test(location.hash);
 }
@@ -15744,6 +15760,7 @@ function czRead() {
     const v = q.get(k);
     if (v === null) continue;
     if (k === "accent" || k === "paletteColor") { const h = "#" + v.replace("#", "").toLowerCase(); if (isHex(h)) cfg[k] = h; }
+    else if (k === "radius" && /^\d+$/.test(v)) cfg.radius = Math.max(0, Math.min(32, Number(v)));
     else if (k === "motion") cfg.motion = !["off", "false", "0"].includes(v);
     else if (CZ_CHOICES[k].includes(v)) cfg[k] = v;
   }
@@ -15754,6 +15771,7 @@ function czWrite(cfg) {
   for (const k of CZ_KEYS) {
     if (cfg[k] === CZ_DEFAULTS[k]) continue;
     if (k === "paletteColor" && cfg.palette !== "custom") continue;
+    if (k === "radius" && typeof cfg.radius === "number") { q.set(k, String(cfg.radius)); continue; }
     q.set(k, k === "accent" || k === "paletteColor" ? cfg[k].slice(1) : k === "motion" ? (cfg.motion ? "on" : "off") : cfg[k]);
   }
   const s = q.toString();
@@ -15857,6 +15875,14 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
   const [variant, setVariant] = useState(state);
   useEffect(() => { setVariant(state); }, [state, cfg.sidebar]);
   useEffect(() => { czLoadFont(cfg.font); }, [cfg.font]);
+  /* a pixel radius is written the way a preset is, scoped to the pane */
+  useEffect(() => {
+    const id = "cz-custom-radius";
+    let el = document.getElementById(id);
+    if (typeof cfg.radius !== "number") { el?.remove(); return; }
+    if (!el) { el = document.createElement("style"); el.id = id; document.head.appendChild(el); }
+    el.textContent = radiusCss(cfg.radius, '.cz-scope[data-radius="custom"]');
+  }, [cfg.radius]);
   /* a custom palette is written the way a built-in is, scoped to the pane */
   useEffect(() => {
     const id = "cz-custom-palette";
@@ -15933,7 +15959,8 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
       className={`cz-scope flex min-w-0 shrink-0 flex-col overflow-hidden rounded-card bg-canvas text-ink shadow-card transition-opacity duration-150 ${ready ? "" : "opacity-0"}`}
       data-theme={mode}
       data-palette={cfg.palette !== "paper" ? cfg.palette : undefined}
-      data-radius={cfg.radius !== "default" ? cfg.radius : undefined}
+      data-radius={typeof cfg.radius === "number" ? "custom" : cfg.radius !== "default" ? cfg.radius : undefined}
+      data-corners={cfg.corners !== "smooth" ? cfg.corners : undefined}
       data-size={cfg.size !== "default" ? cfg.size : undefined}
       data-type={cfg.type !== "base" ? cfg.type : undefined}
       data-layout={cfg.layout !== "compact" ? cfg.layout : undefined}
@@ -16082,7 +16109,27 @@ function CustomizeApp() {
             <p className="mt-1.5 text-small text-ink-3">{CZ_HELP.font}</p>
             <p className="mt-2 text-display-lg leading-none font-semibold text-ink" style={{ fontFamily: czStack(cfg.font) }} aria-hidden>Aa <span className="font-light">Bb</span> <span className="font-medium">Cc</span> <span className="text-title tabular-nums">0123</span></p>
           </div>
-          <CzChoice label="Radius" help={CZ_HELP.radius} value={cfg.radius} options={RADII} onChange={(v) => set("radius", v)} />
+          <div>
+            <CzChoice label="Radius" value={typeof cfg.radius === "number" ? "custom" : cfg.radius} options={[...RADII, { id: "custom", label: "Custom" }]} onChange={(v) => set("radius", v === "custom" ? (typeof cfg.radius === "number" ? cfg.radius : RADIUS_PRESETS[cfg.radius] === 999 ? 12 : RADIUS_PRESETS[cfg.radius] ?? 8) : v)} />
+            {typeof cfg.radius === "number" && (
+              <div className="mt-2">
+                <Slider min={0} max={24} step={1} value={cfg.radius} onChange={(v) => set("radius", v)} label="Control radius" showValue formatValue={(v) => `${v}px`} />
+              </div>
+            )}
+            {(() => {
+              const r = typeof cfg.radius === "number" ? radiusScale(cfg.radius) : cfg.radius === "full" ? { sm: 10, chip: "pill", control: "pill", md: 14, card: 20, capsule: "pill" } : cfg.radius === "rounded" ? { sm: 8, chip: 10, control: 12, md: 14, card: 18, capsule: 26 } : cfg.radius === "sharp" ? { sm: 0, chip: 0, control: 0, md: 0, card: 0, capsule: 0 } : { sm: 6, chip: 7, control: 8, md: 10, card: 14, capsule: 22 };
+              const px = (v) => (typeof v === "number" ? `${v}px` : v);
+              return (
+                <dl className="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 font-mono text-micro text-ink-3">
+                  {[["sm", r.sm], ["chip", r.chip], ["control", r.control], ["md", r.md], ["card", r.card], ["capsule", r.capsule]].map(([k, v]) => (
+                    <span key={k} className="flex items-center gap-1.5"><span aria-hidden className="size-3.5 shrink-0 border border-line-strong" style={{ borderRadius: typeof v === "number" ? Math.min(v, 7) : 7 }} /><dt>{k}</dt><dd className="text-ink-2">{px(v)}</dd></span>
+                  ))}
+                </dl>
+              );
+            })()}
+            <p className="mt-1.5 text-small text-ink-3">{CZ_HELP.radius}</p>
+          </div>
+          <CzChoice label="Corners" help={CZ_HELP.corners} value={cfg.corners} options={[{ id: "smooth", label: "Smooth" }, { id: "round", label: "Round" }]} onChange={(v) => set("corners", v)} />
           <CzChoice label="Size" help={CZ_HELP.size} value={cfg.size} options={SIZES} onChange={(v) => set("size", v)} />
           <CzChoice label="Type size" help={CZ_HELP.type} value={cfg.type} options={[{ id: "base", label: "Base" }, { id: "lg", label: "LG" }, { id: "xl", label: "XL" }]} onChange={(v) => set("type", v)} />
           <CzChoice label="Content layout" help={CZ_HELP.layout} value={cfg.layout} options={CZ_CHOICES.layout} onChange={(v) => set("layout", v)} />

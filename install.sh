@@ -298,8 +298,8 @@ cfg_path = Path(sys.argv[1]); cfg = json.loads(cfg_path.read_text())
 html = Path("index.html")
 if html.exists() and 'id="root"' in html.read_text():
     tag = re.search(r"<html\b([^>]*)>", html.read_text())
-    attrs = dict(re.findall(r'data-(theme|palette|radius|size|type|layout)="([^"]+)"', tag.group(1) if tag else ""))
-    for k in ("theme", "palette", "radius", "size", "type", "layout"):
+    attrs = dict(re.findall(r'data-(theme|palette|radius|corners|size|type|layout)="([^"]+)"', tag.group(1) if tag else ""))
+    for k in ("theme", "palette", "radius", "corners", "size", "type", "layout"):
         if k in attrs:
             cfg[k] = attrs[k]
 cfg_path.write_text(json.dumps(cfg, indent=2) + "\n")
