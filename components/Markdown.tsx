@@ -44,7 +44,7 @@ function renderInline(text: string, keyBase: string, sourcesMap?: Map<string, So
       const matchedSources = ids.map((id) => sourcesMap?.get(id)).filter(Boolean) as Source[];
       const effectiveSources = matchedSources.length > 0 ? matchedSources : DEFAULT_SOURCES.filter((s) => ids.includes(String(s.id)));
       if (effectiveSources.length > 0) {
-        nodes.push(<InlineCitation key={key()} source={effectiveSources} label={ids.join(", ")} />);
+        nodes.push(<InlineCitation key={key()} source={effectiveSources} />);
       } else {
         nodes.push(
           <span key={key()} className="align-super text-micro font-medium text-ink-3 leading-none px-0.5">
