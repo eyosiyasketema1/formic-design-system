@@ -154,36 +154,59 @@ EOF
   cat > "$APP/src/CustomizeNudge.tsx" <<'EOF'
 /* Brief
    Reader:   the person who just watched their AI tool build the first page
-   Question: this is the stock look; how do I make it mine?
-   Action:   open the customizer in a new tab, copy the block, paste it to the AI tool
+   Question: this is the stock look; how do I make it mine, and how does it read in dark?
+   Action:   flip the theme, open the customizer in a new tab, paste the block to the AI tool
    Register: text
 */
-/* A small card in the corner, above whatever page is showing. Delete this
-   file and its line in App.tsx once the look is yours. */
+/* A dock in the corner, above whatever page is showing: a theme switch and a
+   "make it yours" card that folds to a pill, never disappears. Starts folded
+   on the welcome page, open once the AI tool has replaced it. Delete this file
+   and its line in App.tsx once the look is yours. */
 import { useEffect, useState } from "react";
 import Button from "./formic/components/Button";
-import { Card, Icon, IconButton } from "./formic/components/primitives";
+import { Card, Icon, IconButton, Tooltip } from "./formic/components/primitives";
 
 const CUSTOMIZE_URL = "https://formicai.dev/customize";
+const readTheme = () => (document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
 
 export default function CustomizeNudge() {
-  /* hidden while the welcome page is on screen; it appears once the AI tool has replaced it */
   const [open, setOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">(readTheme);
   useEffect(() => { if (!document.querySelector("[data-formic-welcome]")) setOpen(true); }, []);
-  if (!open) return null;
+  const flip = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    setTheme(next);
+  };
+  const themeButton = (
+    <Tooltip label={theme === "dark" ? "Light mode" : "Dark mode"}>
+      <IconButton label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={flip} className="size-9 rounded-control bg-surface text-ink-2 shadow-btn hover:bg-hover hover:text-ink">
+        <Icon name={theme === "dark" ? "sun" : "moon"} size={16} />
+      </IconButton>
+    </Tooltip>
+  );
+  if (!open) {
+    return (
+      <div className="fixed right-4 bottom-4 z-40 flex items-center gap-2">
+        {themeButton}
+        <Button variant="secondary" size="md" onClick={() => setOpen(true)} icon={<Icon name="sparkles" />}>Make it yours</Button>
+      </div>
+    );
+  }
   return (
-    <Card role="status" aria-label="Next step" className="fixed right-4 bottom-4 z-40 flex w-full max-w-sm flex-col gap-3 p-4">
+    <Card role="region" aria-label="Make it yours" className="fixed right-4 bottom-4 z-40 flex w-full max-w-sm flex-col gap-3 p-4">
       <div className="flex items-start gap-3">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-accent-tint text-accent"><Icon name="sparkles" size={16} /></span>
         <div className="min-w-0 flex-1">
           <p className="text-body font-semibold text-ink">This is the stock look. Now make it yours.</p>
           <p className="mt-0.5 text-caption text-ink-2">Pick the accent, palette, font, radius and rail; press Copy for your AI tool and paste the block into the same chat. Every page after that inherits it.</p>
         </div>
-        <IconButton label="Dismiss" onClick={() => setOpen(false)} className="-mt-1 -mr-1 shrink-0">
-          <Icon name="close" size={14} />
+        <IconButton label="Fold away" onClick={() => setOpen(false)} className="-mt-1 -mr-1 shrink-0">
+          <Icon name="chevron" size={14} />
         </IconButton>
       </div>
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-3">
+        {themeButton}
         <Button variant="accent" size="sm" href={CUSTOMIZE_URL} target="_blank" icon={<Icon name="external" />}>Customize this page</Button>
       </div>
     </Card>
