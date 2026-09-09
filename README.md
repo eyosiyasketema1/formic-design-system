@@ -93,7 +93,7 @@ Light is the default everywhere. Dark is opt in:
 <html data-theme="dark">
 ```
 
-Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (default is paper). Two more global scales work the same way: `data-radius="sharp | rounded | full"` (or any pixel value through `formic.config.json`, see the customizer), `data-corners="round"` for circular instead of squircle corners, and `data-size="comfortable | spacious"`. For a runtime brand color, call `setAccent("#7c3aed")` from `components/theme.ts`, which derives AA-passing light and dark variants; `setAccent(null)` reverts.
+Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (default is paper). Two more global scales work the same way: `data-radius="sharp | rounded | full"` (or any pixel value through `formic.config.json`, see the customizer), `data-corners="round"` for circular instead of squircle corners, `data-controls="pill"` for capsule buttons and inputs with cards left alone, and `data-size="comfortable | spacious"`. For a runtime brand color, call `setAccent("#7c3aed")` from `components/theme.ts`, which derives AA-passing light and dark variants; `setAccent(null)` reverts.
 
 All of these choices, plus the avatar fallback, the sidebar's first variant and chart motion, live in one file: `formic.config.json`. Make them at [formicai.dev/customize](https://formicai.dev/customize) (light and dark side by side), copy the block it gives you into your AI tool, or edit the file and run `python3 src/formic/scripts/apply_config.py`. It fits the accent for both modes, writes the `data-*` attributes on `<html>` and the component defaults in `components/config.ts`. Re-running the installer keeps the file and re-applies it.
 

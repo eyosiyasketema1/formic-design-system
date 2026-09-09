@@ -3,6 +3,7 @@
   "palette": "paper",
   "radius": "default",
   "corners": "smooth",
+  "controls": "scale",
   "size": "default",
   "type": "base",
   "theme": "light",

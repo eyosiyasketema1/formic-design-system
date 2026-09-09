@@ -277,7 +277,7 @@ try:
             fails.append(f"config: components/config.ts {k} is {_ts_vals.get(k)} but formic.config.json says {want} (run scripts/apply_config.py)")
         if _pv_vals.get(k) != want:
             fails.append(f"config: preview.html FORMIC_CONFIG {k} is {_pv_vals.get(k)} but formic.config.json says {want} (rule 9)")
-    for k in ("accent", "palette", "radius", "corners", "size", "type", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"):
+    for k in ("accent", "palette", "radius", "corners", "controls", "size", "type", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"):
         want = str(_cfg[k]).lower()
         if _cz_vals.get(k, "").strip().lower() != want:
             fails.append(f"config: customizer CZ_DEFAULTS {k} is {_cz_vals.get(k)} but formic.config.json says {want}")

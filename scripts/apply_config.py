@@ -15,6 +15,7 @@ edited by hand. Every key is optional; a missing key keeps the system default.
       "paletteColor": "#7C3AED",   with palette "custom": the colour the neutrals are tinted toward (scripts/palette.py)
       "radius":  "default",        sharp | default | rounded | full, or a number: the control radius in px (0-32), the scale derives from it
       "corners": "smooth",         smooth (squircle) | round
+      "controls": "scale",         scale | pill   (pill: buttons, inputs and chips become capsules; cards keep the scale)
       "size":    "default",        default | comfortable | spacious   (control density)
       "type":    "base",           base | lg | xl   (the type ramp: 14, 15 or 16px base)
       "theme":   "light",          light | dark   (the app's starting theme)
@@ -64,6 +65,7 @@ DEFAULTS = {
     "paletteColor": None,
     "radius": "default",
     "corners": "smooth",
+    "controls": "scale",
     "size": "default",
     "type": "base",
     "theme": "light",
@@ -140,6 +142,7 @@ def write_custom_radius(cfg):
 CHOICES = {
     "palette": ("paper", "sage", "twilight", "clay", "ocean", "slate", "sand", "rose", "plum", "forest", "custom"),
     "corners": ("smooth", "round"),
+    "controls": ("scale", "pill"),
     "size": ("default", "comfortable", "spacious"),
     "type": ("base", "lg", "xl"),
     "theme": ("light", "dark"),
@@ -218,7 +221,7 @@ def write_preview_mirrors(cfg):
         return None
     src = path.read_text()
     fc = f'const FORMIC_CONFIG = {{ avatar: "{cfg["avatar"]}", sidebar: "{cfg["sidebar"]}", sidebarState: "{cfg["sidebarState"]}", motion: {"true" if cfg["motion"] else "false"} }};'
-    cz = (f'const CZ_DEFAULTS = {{ accent: "{(cfg["accent"] or DEFAULTS_ACCENT).lower()}", palette: "{cfg["palette"]}", paletteColor: "{(cfg["paletteColor"] or cfg["accent"] or DEFAULTS_ACCENT).lower()}", radius: {cfg["radius"] if isinstance(cfg["radius"], int) else json.dumps(cfg["radius"])}, corners: "{cfg["corners"]}", '
+    cz = (f'const CZ_DEFAULTS = {{ accent: "{(cfg["accent"] or DEFAULTS_ACCENT).lower()}", palette: "{cfg["palette"]}", paletteColor: "{(cfg["paletteColor"] or cfg["accent"] or DEFAULTS_ACCENT).lower()}", radius: {cfg["radius"] if isinstance(cfg["radius"], int) else json.dumps(cfg["radius"])}, corners: "{cfg["corners"]}", controls: "{cfg["controls"]}", '
           f'size: "{cfg["size"]}", type: "{cfg["type"]}", theme: "{cfg["theme"]}", avatar: "{cfg["avatar"]}", sidebar: "{cfg["sidebar"]}", sidebarState: "{cfg["sidebarState"]}", '
           f'font: "{cfg["font"]}", layout: "{cfg["layout"]}", motion: {"true" if cfg["motion"] else "false"} }};')
     new, n1 = re.subn(r"const FORMIC_CONFIG = \{[^}]*\};", fc, src, count=1)
@@ -250,7 +253,7 @@ def write_html_attrs(path, cfg):
     if not m:
         raise SystemExit(f"{path}: no <html> tag")
     attrs = m.group(1)
-    attrs = re.sub(r'\s+data-(theme|palette|radius|corners|size|type|layout)="[^"]*"', "", attrs)
+    attrs = re.sub(r'\s+data-(theme|palette|radius|corners|controls|size|type|layout)="[^"]*"', "", attrs)
     add = []
     if cfg["theme"] == "dark":
         add.append('data-theme="dark"')
@@ -262,6 +265,8 @@ def write_html_attrs(path, cfg):
         add.append(f'data-radius="{cfg["radius"]}"')
     if cfg["corners"] != "smooth":
         add.append(f'data-corners="{cfg["corners"]}"')
+    if cfg["controls"] != "scale":
+        add.append(f'data-controls="{cfg["controls"]}"')
     if cfg["size"] != "default":
         add.append(f'data-size="{cfg["size"]}"')
     if cfg["type"] != "base":
@@ -386,7 +391,7 @@ def main():
 
     # html attributes
     idx = app_index()
-    attrs = [f"{k}={cfg[k]}" for k in ("theme", "palette", "radius", "corners", "size", "type", "layout")]
+    attrs = [f"{k}={cfg[k]}" for k in ("theme", "palette", "radius", "corners", "controls", "size", "type", "layout")]
     if idx:
         added = write_html_attrs(idx, cfg)
         print(f"  html     {', '.join(attrs)} -> <html {' '.join(added) if added else '(defaults, no attributes)'}> in {idx.name}")

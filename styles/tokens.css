@@ -166,6 +166,10 @@
   --radius-md: 14px; --radius-card: 20px; --radius-capsule: 999px;
 }
 
+/* Controls alone: buttons, inputs, chips become capsules while cards,
+   panels and menus keep the scale; formic.config.json's `controls`. */
+:root[data-controls="pill"] { --radius-control: 999px; --radius-chip: 999px; }
+
 /* ── Global size (density) scale ───────────────────────── */
 /* Tailwind v4 derives every spacing and sizing utility from --spacing
    (0.25rem at root), so overriding that one value rescales all control
