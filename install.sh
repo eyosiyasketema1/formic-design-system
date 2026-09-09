@@ -106,7 +106,7 @@ EOF
 EOF
   cat > "$APP/index.html" <<EOF
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -137,64 +137,112 @@ EOF
 EOF
   cat > "$APP/src/App.tsx" <<'EOF'
 import Welcome from "./pages/Welcome";
+import CustomizeNudge from "./CustomizeNudge";
 
+/* App.tsx stays as the shell; pages come and go. The nudge is the one thing
+   that outlives the welcome page: it sends you to the customizer once the
+   dashboard is on screen, and is deleted when the look is yours. */
 export default function App() {
-  return <Welcome />;
+  return (
+    <>
+      <Welcome />
+      <CustomizeNudge />
+    </>
+  );
+}
+EOF
+  cat > "$APP/src/CustomizeNudge.tsx" <<'EOF'
+/* Brief
+   Reader:   the person who just watched their AI tool build the first page
+   Question: this is the stock look; how do I make it mine?
+   Action:   open the customizer in a new tab, copy the block, paste it to the AI tool
+   Register: text
+*/
+/* A small card in the corner, above whatever page is showing. Delete this
+   file and its line in App.tsx once the look is yours. */
+import { useEffect, useState } from "react";
+import Button from "./formic/components/Button";
+import { Card, Icon, IconButton } from "./formic/components/primitives";
+
+const CUSTOMIZE_URL = "https://formicai.dev/customize";
+
+export default function CustomizeNudge() {
+  /* hidden while the welcome page is on screen; it appears once the AI tool has replaced it */
+  const [open, setOpen] = useState(false);
+  useEffect(() => { if (!document.querySelector("[data-formic-welcome]")) setOpen(true); }, []);
+  if (!open) return null;
+  return (
+    <Card role="status" aria-label="Next step" className="fixed right-4 bottom-4 z-40 flex w-full max-w-sm flex-col gap-3 p-4">
+      <div className="flex items-start gap-3">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-accent-tint text-accent"><Icon name="sparkles" size={16} /></span>
+        <div className="min-w-0 flex-1">
+          <p className="text-body font-semibold text-ink">This is the stock look. Now make it yours.</p>
+          <p className="mt-0.5 text-caption text-ink-2">Pick the accent, palette, font, radius and rail; press Copy for your AI tool and paste the block into the same chat. Every page after that inherits it.</p>
+        </div>
+        <IconButton label="Dismiss" onClick={() => setOpen(false)} className="-mt-1 -mr-1 shrink-0">
+          <Icon name="close" size={14} />
+        </IconButton>
+      </div>
+      <div className="flex justify-end">
+        <Button variant="accent" size="sm" href={CUSTOMIZE_URL} target="_blank" icon={<Icon name="external" />}>Customize this page</Button>
+      </div>
+    </Card>
+  );
 }
 EOF
   cat > "$APP/src/pages/Welcome.tsx" <<'EOF'
 /* Brief
    Reader:   the person who just ran the installer, in the browser it opened
    Question: did it work, and what do I do next?
-   Action:   open their AI tool in this folder and paste the test prompt
+   Action:   copy the test prompt and paste it into their AI tool, opened in this folder
    Register: text
 */
 /* The first page. Your AI tool replaces it with the dashboard when you paste
    the prompt below; nothing here is meant to stay. */
-import InputCopy from "../formic/components/InputCopy";
+import { useEffect, useRef, useState } from "react";
+import Button from "../formic/components/Button";
 import Panel from "../formic/components/Panel";
 import { FormicMark } from "../formic/components/brand";
 import { Icon } from "../formic/components/primitives";
 
-const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page with the studio dashboard: AppSidebar rail, page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.";
-const READY = [
-  "Components and tokens in src/formic",
-  "Tailwind wired: fonts, tokens, palettes",
-  "Rules for Claude Code, Cursor, Copilot and Codex",
-  "Two checks that run before every commit",
-];
+const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with the studio dashboard: AppSidebar rail, page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.";
 
 export default function Welcome() {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<number | null>(null);
+  useEffect(() => () => { if (timer.current) window.clearTimeout(timer.current); }, []);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(PROMPT);
+      setCopied(true);
+      if (timer.current) window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  };
   return (
-    <main className="min-h-dvh bg-canvas">
-      <div className="page-content flex flex-col gap-6 p-6 sm:p-8">
-        <header className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-md bg-accent-tint text-accent"><FormicMark size={22} /></span>
-          <div className="min-w-0">
+    <main data-formic-welcome className="flex min-h-dvh items-center justify-center bg-canvas p-6 sm:p-8">
+      <div className="flex w-full max-w-2xl flex-col gap-6">
+        <header className="flex flex-col items-center gap-3 text-center">
+          <span className="flex size-12 items-center justify-center rounded-md bg-accent-tint text-accent"><FormicMark size={26} /></span>
+          <div>
             <h1 className="text-display font-semibold text-ink">Formic is working</h1>
-            <p className="mt-0.5 text-caption text-ink-2">Everything is set up. Your AI tool builds the rest.</p>
+            <p className="mt-1 text-body text-ink-2">Components, tokens, the rules for your AI tool and a check before every commit are in place.</p>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
-          <Panel title="What the installer set up">
-            <ul className="flex flex-col gap-2">
-              {READY.map((item) => (
-                <li key={item} className="flex items-center gap-2 text-body text-ink">
-                  <Icon name="circle-check" size={16} className="shrink-0 text-green" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </Panel>
-          <Panel title="Next: build the dashboard" caption="Open your AI tool in this folder, then paste">
-            <div className="flex flex-col gap-3">
-              <InputCopy label="Claude Code, in the same terminal" value="claude" />
-              <InputCopy label="The test prompt" value={PROMPT} mono={false} variant="button" />
-              <p className="text-caption text-ink-2">Cursor or Copilot: open this folder, then paste the prompt. The result looks like the gallery; if it looks generic, say "That is not Formic, read AGENTS.md and redo it".</p>
+        <Panel title="Next: let your AI tool build the first page" caption="Open your AI tool (Claude Code, Cursor, Antigravity, Copilot, Codex, any of them) in this folder and paste this">
+          <div className="flex flex-col gap-3">
+            <p className="rounded-md bg-inset p-4 text-body leading-relaxed text-ink">{PROMPT}</p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-caption text-ink-2">The dashboard it builds is what Formic looks like. If it looks generic, say "That is not Formic, read AGENTS.md and redo it".</p>
+              <Button variant="accent" size="md" onClick={copy} icon={<Icon name={copied ? "check" : "copy"} />} aria-live="polite">
+                {copied ? "Copied" : "Copy prompt"}
+              </Button>
             </div>
-          </Panel>
-        </div>
+          </div>
+        </Panel>
       </div>
     </main>
   );
@@ -389,8 +437,8 @@ if [ "$NEW" = 1 ]; then
   write_hook
   printf '\nDone. Run it:\n'
   if [ "$APP" = "." ]; then printf '  npm run dev        # the browser opens a page that says Formic is working\n\n'; else printf '  cd %s && npm run dev        # the browser opens a page that says Formic is working\n\n' "$APP"; fi
-  printf 'Then open your AI tool in this folder (type claude here, or open the folder in Cursor) and paste the test prompt:\n'
-  printf '  Use Formic (src/formic), read AGENTS.md, then replace the welcome page with the studio dashboard: AppSidebar rail, page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.\n\n'
+  printf 'Then open your AI tool (Claude Code, Cursor, Antigravity, Copilot, any of them) in this folder and paste the test prompt:\n'
+  printf '  Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with the studio dashboard: AppSidebar rail, page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.\n\n'
   printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
   printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
   exit 0
