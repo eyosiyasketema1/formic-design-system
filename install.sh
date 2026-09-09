@@ -228,7 +228,7 @@ import Panel from "../formic/components/Panel";
 import { FormicMark } from "../formic/components/brand";
 import { Icon } from "../formic/components/primitives";
 
-const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with the studio dashboard: AppSidebar rail, page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.";
+const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with the studio dashboard: an AppShell (it mounts the rail from the config) with the page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.";
 
 export default function Welcome() {
   const [copied, setCopied] = useState(false);
@@ -461,7 +461,7 @@ if [ "$NEW" = 1 ]; then
   printf '\nDone. Run it:\n'
   if [ "$APP" = "." ]; then printf '  npm run dev        # the browser opens a page that says Formic is working\n\n'; else printf '  cd %s && npm run dev        # the browser opens a page that says Formic is working\n\n' "$APP"; fi
   printf 'Then open your AI tool (Claude Code, Cursor, Antigravity, Copilot, any of them) in this folder and paste the test prompt:\n'
-  printf '  Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with the studio dashboard: AppSidebar rail, page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.\n\n'
+  printf '  Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with the studio dashboard: an AppShell (it mounts the rail from the config) with the page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.\n\n'
   printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
   printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
   exit 0
@@ -475,6 +475,6 @@ else
   [ "$CSS_WIRED" = 1 ] || { printf '  • In your global CSS (Tailwind v4), in this order:\n'; printf '       @import "<path to>/%s/styles/fonts.css";\n       @import "tailwindcss";\n       @import "<path to>/%s/styles/formic.css";\n' "$DEST" "$DEST"; }
   printf 'Then open your AI tool in this folder and paste:\n'
 fi
-printf '  Use Formic (%s), read AGENTS.md, then build the studio dashboard: AppSidebar rail, page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.\n\n' "$DEST"
+printf '  Use Formic (%s), read AGENTS.md, then build the studio dashboard: an AppShell (it mounts the rail from the config) with the page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.\n\n' "$DEST"
 printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
 printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'

@@ -12044,8 +12044,8 @@ function TopBar({
   return (
     <header className={`flex h-14 w-full shrink-0 items-center gap-3 border-b border-line bg-canvas px-4 sm:px-6 ${className}`}>
       {leading}
-      <h1 className="min-w-0 flex-1 truncate text-heading font-semibold tracking-tight text-ink">{title}</h1>
-      <div className="flex shrink-0 items-center gap-2">
+      <h1 className="min-w-0 shrink-0 truncate text-heading font-semibold tracking-tight text-ink">{title}</h1>
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
         {search && (
           <Input
             size="md"
@@ -12053,7 +12053,7 @@ function TopBar({
             placeholder={searchPlaceholder}
             aria-label="Search"
             onChange={(event) => onSearch?.(event.target.value)}
-            width="hidden w-56 md:flex lg:w-72"
+            width="hidden min-w-24 max-w-72 flex-1 md:flex"
           />
         )}
         {actions}
@@ -13019,6 +13019,9 @@ function Page_card() {
 function Page_sidebar() {
   return (
     <>
+      <Section title="App shell" note="AppShell: the rail formic.config.json chose (full, inset, edge or topbar), the page header where it belongs (in the TopBar when there is one), the content in .page-content. One component for every page; change the config and the whole app moves.">
+        <AppShellDemo />
+      </Section>
       <Section title="App sidebar" note="For dashboards and admin apps: grouped menu with counts and sub-menus, expanded (240px) or rail (56px), collapse control in the header. The playground above drives this one.">
         <Page_appsidebar />
       </Section>
@@ -13610,7 +13613,7 @@ const PAGES = [
   { id: "pagination", group: "Navigation", title: "Pagination", note: "Numbered pages with sibling windows and gap ellipses \u2014 first and last stay reachable, active page carries aria-current, edges disable prev / next.", file: "components/Pagination.tsx", Component: Page_pagination },
   { id: "breadcrumbs", group: "Navigation", title: "Breadcrumbs", note: "Path trail \u2014 long trails collapse their middle into a DropdownMenu, the current page carries aria-current, labels truncate instead of breaking the row. Navigating fires a toast here.", file: "components/Breadcrumbs.tsx", Component: Page_breadcrumbs },
   { id: "menubar", group: "Navigation", title: "Menubar", note: "A bar of action menus, each a DropdownMenu \u2014 dividers, disabled and destructive items included. Selections fire toasts here.", file: "components/Menubar.tsx", Component: Page_menubar },
-  { id: "sidebar", group: "Navigation", title: "Sidebar", note: "Three rails, one surface (--sidebar, hairline edge, flat bg-hover-2 selection). ProjectSidebar for tools that hold things (projects, documents, sites): workspace switcher, \u2318K search, groups, status dots, row menus, inset or edge layout. AppSidebar for dashboards and admin apps: grouped menu with counts and sub-menus, expanded or rail. TopBar above the page when the rail keeps its user row off: title, search, theme, notifications, account. SidebarNav for chat: the same switcher, Projects and Agents, a searchable chat history and the account row. All of them fill the shell\u2019s height and follow formic.config.json for the account avatar.", file: "components/ProjectSidebar.tsx components/AppSidebar.tsx components/TopBar.tsx components/SidebarNav.tsx", Component: Page_sidebar },
+  { id: "sidebar", group: "Navigation", title: "Sidebar", note: "AppShell mounts the rail the config chose; below it the three rails, one surface (--sidebar, hairline edge, flat bg-hover-2 selection). ProjectSidebar for tools that hold things (projects, documents, sites): workspace switcher, \u2318K search, groups, status dots, row menus, inset or edge layout. AppSidebar for dashboards and admin apps: grouped menu with counts and sub-menus, expanded or rail. TopBar above the page when the rail keeps its user row off: title, search, theme, notifications, account. SidebarNav for chat: the same switcher, Projects and Agents, a searchable chat history and the account row. All of them fill the shell\u2019s height and follow formic.config.json for the account avatar.", file: "components/AppShell.tsx components/ProjectSidebar.tsx components/AppSidebar.tsx components/TopBar.tsx components/SidebarNav.tsx", Component: Page_sidebar },
   { id: "searchlist", group: "Navigation", title: "SearchList", note: "Command search with live filtering \u2014 type to filter, gibberish for the empty state.", file: "components/SearchList.tsx", Component: Page_searchlist }
 ];
 const PAGE_INDEX = Object.fromEntries(PAGES.map((p, i) => [p.id, i]));
@@ -15658,6 +15661,95 @@ function useProjectSidebar(defaultOpen = true) {
   const [open, setOpen] = useState(defaultOpen);
   return { open, setOpen, toggle: () => setOpen((o) => !o) };
 }
+function AppShell({
+  rail = FORMIC_CONFIG.sidebar,
+  sections,
+  active,
+  onSelect,
+  workspace,
+  user,
+  title,
+  caption,
+  actions,
+  theme,
+  onTheme,
+  notifications,
+  onSearch,
+  padding = true,
+  fill = true,
+  className = "",
+  children,
+}) {
+  const project = useProjectSidebar(FORMIC_CONFIG.sidebarState === "expanded");
+  const isProject = rail === "inset" || rail === "edge";
+  const isTopBar = rail === "topbar";
+  const toGroups = (list) => list.map((section, index) => ({
+    key: section.title ? section.title.toLowerCase().replace(/\s+/g, "-") : `group-${index}`,
+    label: section.title ?? "Pages",
+    items: section.items.map((item) => ({ key: item.key, label: item.label, icon: item.icon, children: item.children?.map((child) => ({ key: child.key, label: child.label })) })),
+  }));
+  const header = (title || actions) && !isTopBar && (
+    <header className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        {isProject && <ProjectSidebarTrigger open={project.open} toggle={project.toggle} />}
+        <div className="min-w-0">
+          {title && <h1 className="truncate text-display font-semibold tracking-tight text-ink">{title}</h1>}
+          {caption && <p className="mt-0.5 text-caption text-ink-2">{caption}</p>}
+        </div>
+      </div>
+      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+    </header>
+  );
+  const content = (
+    <div className={`page-content flex min-w-0 flex-col gap-6 ${padding ? "p-6 sm:p-8" : ""}`}>
+      {header}
+      {isTopBar && caption && <p className="-mt-3 text-caption text-ink-2">{caption}</p>}
+      {children}
+    </div>
+  );
+  const height = fill ? "h-dvh" : "h-full";
+  if (isProject) {
+    return (
+      <div className={`flex ${height} min-w-0 ${rail === "inset" ? "bg-sidebar" : ""} ${className}`}>
+        <ProjectSidebar layout={rail} open={project.open} groups={sections ? toGroups(sections) : undefined} active={active} onSelect={onSelect} user={user} theme={theme} onTheme={onTheme} onSearch={onSearch} />
+        {rail === "inset"
+          ? <ProjectInset>{content}</ProjectInset>
+          : <main className="min-w-0 flex-1 overflow-y-auto">{content}</main>}
+      </div>
+    );
+  }
+  return (
+    <div className={`flex ${height} min-w-0 ${className}`}>
+      <AppSidebar sections={sections} active={active} onSelect={onSelect} workspace={workspace} user={isTopBar ? null : user} header={isTopBar ? "bar" : "plain"} />
+      <div className="flex min-w-0 flex-1 flex-col">
+        {isTopBar && <TopBar title={title} theme={theme} onTheme={onTheme} notifications={notifications} user={user === null ? null : user ? { name: user.name, src: user.src, kind: user.kind } : undefined} onSearch={onSearch} actions={actions} />}
+        <main className="min-w-0 flex-1 overflow-y-auto">{content}</main>
+      </div>
+    </div>
+  );
+}
+function AppShellDemo() {
+  const [rail, setRail] = useState(FORMIC_CONFIG.sidebar);
+  const [theme, setTheme] = useTheme();
+  const [page, setPage] = useState("overview");
+  return (
+    <div className="flex w-full min-w-0 flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <Tabs variant="segmented" value={rail} onChange={setRail} tabs={[{ key: "full", label: "Full view" }, { key: "inset", label: "Inset" }, { key: "edge", label: "Edge" }, { key: "topbar", label: "Top bar" }]} />
+        <span className="text-small text-ink-3">The app reads this from formic.config.json; the switch stands in for it here.</span>
+      </div>
+      <div className="h-[560px] overflow-hidden rounded-card border border-line">
+        <AppShell key={rail} rail={rail} fill={false} active={page} onSelect={setPage} title="Overview" caption="Last 30 days" theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")} notifications={3}
+          actions={<><Button variant="outline" size="sm" icon={<Icon name="download" />}>Export</Button><Button variant="accent" size="sm" icon={<Icon name="plus" />}>New report</Button></>}>
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+            <StatCard label="Invoiced" display="ETB 2.4M" delta="+12%" caption="vs August" className="max-w-none" />
+            <StatCard label="Active clients" display="24" caption="This month" className="max-w-none" />
+          </div>
+        </AppShell>
+      </div>
+    </div>
+  );
+}
 
 /* ═══════════ Customize — formicai.dev/customize ═══════════
    One page, every choice an app makes, light and dark side by side.
@@ -15791,6 +15883,9 @@ function czBlock(cfg) {
     "  python3 src/formic/scripts/apply_config.py",
     "and restart the dev server. Do not set --accent, the html data-*",
     "attributes or these prop defaults by hand; the script derives them.",
+    "Every page sits inside <AppShell> from src/formic/components, which",
+    "mounts the rail this config names (sidebar, sidebarState); a page that",
+    "mounts AppSidebar, ProjectSidebar or TopBar directly moves onto AppShell.",
     "",
     czJson(cfg),
     "",

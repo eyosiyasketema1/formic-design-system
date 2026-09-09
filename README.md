@@ -5,6 +5,7 @@ A token-driven React + Tailwind v4 design system for AI product interfaces: chat
 **[Live site](https://formicai.dev/)** · **[Component gallery](https://formicai.dev/preview.html)**
 
 - 50+ components, 10 palettes x light/dark, plus a custom palette from any colour
+- `AppShell`: one component that mounts whichever rail `formic.config.json` names (full, inset, edge, topbar) with the page header and `.page-content`, so a config change moves the whole app
 - Two gates for apps built on it: `scripts/formic_check.py` refuses generic UI (off-token colours, off-ramp type, drop shadows, raw buttons and tables, a second kit, a page importing nothing from the system) and `scripts/compose_check.py` judges what is on the screen
 - Composition intelligence: a brief before every screen, four registers (text, balanced, analytical, visual), an admission test for every element, and `scripts/compose_check.py` to catch the tells (AGENTS.md → Composition intelligence)
 - Tokens only: no hardcoded colors, sizes, radii, shadows, or easings
