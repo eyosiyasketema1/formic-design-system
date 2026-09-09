@@ -4617,6 +4617,120 @@ function FileTree({
   );
 }
 
+/* ═══════════ ImageResult (mirrors components/ImageResult.tsx) ═══════════ */
+const IMG_ASPECT = { square: "aspect-square", landscape: "aspect-video", portrait: "aspect-[3/4]" };
+
+/* a studio poster drawn in SVG, so the demo ships without a binary:
+   Selam Coffee's menu board hero, a cup on a warm field */
+const DEFAULT_IMAGE = "data:image/svg+xml," + encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 400'><rect width='640' height='400' fill='#e8dccb'/><circle cx='470' cy='150' r='110' fill='#d9b382'/><rect x='80' y='230' width='300' height='24' rx='12' fill='#3d2b1f'/><rect x='80' y='270' width='220' height='14' rx='7' fill='#7a5c44'/><rect x='80' y='296' width='260' height='14' rx='7' fill='#7a5c44'/><path d='M420 250h120a40 40 0 0 1 0 80h-10v20a60 60 0 0 1-60 60h-10a60 60 0 0 1-60-60v-100z' fill='#3d2b1f'/><path d='M540 270a20 20 0 0 1 0 40' fill='none' stroke='#e8dccb' stroke-width='8'/></svg>`,
+);
+
+function ImageResult({
+  src = DEFAULT_IMAGE,
+  alt = "",
+  prompt = "A warm hero for Selam Coffee's menu board: a cup, an early-morning field, room for the price list on the left.",
+  state = "done",
+  progress,
+  aspect = "landscape",
+  meta = "1536 × 1024 · 6.2s",
+  onDownload,
+  onRegenerate,
+  onOpen,
+  onUse,
+  onRetry,
+  actions,
+  className = "",
+}) {
+  const [loaded, setLoaded] = useState(false);
+  const generating = state === "generating";
+  return (
+    <figure className={`group/image w-full min-w-0 max-w-130 ${className}`}>
+      <div className={`relative w-full overflow-hidden rounded-card bg-inset shadow-hairline ${IMG_ASPECT[aspect]}`}>
+        {state === "done" && (
+          <>
+            <img src={src} alt={alt} onLoad={() => setLoaded(true)} className={`absolute inset-0 size-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`} />
+            {!loaded && <Skeleton className="absolute inset-0 h-full w-full rounded-none" />}
+            {(onDownload || onRegenerate || onOpen) && (
+              <div className="absolute top-2 right-2 flex items-center gap-1 rounded-control bg-surface p-1 opacity-0 shadow-overlay transition-opacity duration-150 group-focus-within/image:opacity-100 group-hover/image:opacity-100 [@media(hover:none)]:opacity-100">
+                {onDownload && <Tooltip label="Download"><IconButton label="Download" onClick={onDownload} className="text-ink-2 hover:bg-hover hover:text-ink"><Icon name="download" size={14} strokeWidth={2} /></IconButton></Tooltip>}
+                {onRegenerate && <Tooltip label="Regenerate"><IconButton label="Regenerate" onClick={onRegenerate} className="text-ink-2 hover:bg-hover hover:text-ink"><Icon name="retry" size={14} strokeWidth={2} /></IconButton></Tooltip>}
+                {onOpen && <Tooltip label="Open"><IconButton label="Open at full size" onClick={onOpen} className="text-ink-2 hover:bg-hover hover:text-ink"><Icon name="maximize" size={14} strokeWidth={2} /></IconButton></Tooltip>}
+              </div>
+            )}
+          </>
+        )}
+        {generating && (
+          <div role="status" aria-live="polite" className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6">
+            <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
+            <span className="relative flex size-10 items-center justify-center rounded-md bg-surface text-ink-2 shadow-hairline"><Icon name="image" size={18} strokeWidth={1.8} /></span>
+            <ShimmerLabel className="relative text-caption">Generating…</ShimmerLabel>
+            {progress !== undefined && <Progress value={Math.round(progress * 100)} tone="ink" className="relative w-40" />}
+          </div>
+        )}
+        {state === "error" && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <EmptyState kind="error" size="sm" title="Could not make it" description="The image service did not answer. Your prompt is kept; try again." action={onRetry && <Button variant="secondary" size="sm" icon={<Icon name="retry" />} onClick={onRetry}>Try again</Button>} />
+          </div>
+        )}
+      </div>
+      {(prompt || meta || onUse || actions) && (
+        <figcaption className="mt-2 flex items-start justify-between gap-3">
+          <span className="min-w-0 flex-1">
+            {prompt && <span className="line-clamp-2 text-caption text-ink-2">{prompt}</span>}
+            {meta && state === "done" && <span className="mt-0.5 block text-small tabular-nums text-ink-3">{meta}</span>}
+          </span>
+          {state === "done" && (actions ?? (onUse && <Button variant="accent" size="sm" icon={<Icon name="check" />} onClick={onUse}>Use image</Button>))}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
+/** several candidates from one prompt, in a grid; the picked one carries the accent ring and Use */
+function ImageResults({
+  images,
+  prompt,
+  picked,
+  onPick,
+  onUse,
+  columns = 2,
+  className = "",
+}) {
+  const [own, setOwn] = useState(images[0]?.key);
+  const current = picked ?? own;
+  const choose = (key) => { if (picked === undefined) setOwn(key); onPick?.(key); };
+  return (
+    <div className={`flex w-full min-w-0 max-w-130 flex-col gap-3 ${className}`}>
+      <div role="radiogroup" aria-label="Candidates" className={`grid gap-2 ${columns === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+        {images.map((img, i) => {
+          const on = img.key === current;
+          return (
+            <button
+              key={img.key}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              aria-label={`Candidate ${i + 1}${img.meta ? `, ${img.meta}` : ""}`}
+              onClick={() => choose(img.key)}
+              className={`relative aspect-square overflow-hidden rounded-md bg-inset transition-[box-shadow] duration-150 ${on ? "shadow-[0_0_0_2px_var(--accent)]" : "shadow-hairline hover:shadow-[0_0_0_1px_var(--line-strong)]"}`}
+            >
+              <img src={img.src} alt={img.alt ?? ""} className="absolute inset-0 size-full object-cover" />
+              {on && <span className="absolute top-2 left-2 flex size-5 items-center justify-center rounded-full bg-accent text-canvas"><Icon name="check" size={12} strokeWidth={2.5} /></span>}
+            </button>
+          );
+        })}
+      </div>
+      {(prompt || onUse) && (
+        <div className="flex items-start justify-between gap-3">
+          {prompt && <span className="line-clamp-2 min-w-0 flex-1 text-caption text-ink-2">{prompt}</span>}
+          {onUse && current && <Button variant="accent" size="sm" icon={<Icon name="check" />} onClick={() => onUse(current)}>Use this one</Button>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ═══════════ ContextCards ═══════════ */
 const CTX_TONES = {
   red: "bg-red",
@@ -12752,6 +12866,40 @@ function Page_streamingtext() {
   );
 }
 
+const IMG_POSTERS = [
+  DEFAULT_IMAGE,
+  "data:image/svg+xml," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><rect width='400' height='400' fill='#dfe7e2'/><circle cx='200' cy='170' r='96' fill='#2f6b4f'/><rect x='70' y='300' width='260' height='18' rx='9' fill='#1f3d2e'/></svg>"),
+  "data:image/svg+xml," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><rect width='400' height='400' fill='#f1e4d8'/><path d='M60 320 L200 90 L340 320 Z' fill='#c2703f'/><circle cx='300' cy='110' r='34' fill='#f5c98a'/></svg>"),
+  "data:image/svg+xml," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><rect width='400' height='400' fill='#e6e2ee'/><rect x='80' y='80' width='240' height='240' rx='40' fill='#5b4a8a'/><rect x='140' y='140' width='120' height='120' rx='20' fill='#e6e2ee'/></svg>"),
+];
+function ImageResultLive() {
+  const stage = useSequence([1400, 1400, 1400, 4000]);
+  const state = stage < 3 ? "generating" : "done";
+  return <ImageResult state={state} progress={stage < 3 ? [0.15, 0.5, 0.85][stage] : undefined} onDownload={() => {}} onRegenerate={() => {}} />;
+}
+function Page_imageresult() {
+  const toast = useToast();
+  return (
+    <>
+      <GalleryCard label="Done · hover for the toolbar; the prompt as caption, the meta, one accent to use it" wide>
+        <ImageResult onDownload={() => toast({ title: "Downloading" })} onRegenerate={() => toast({ title: "Regenerating" })} onOpen={() => toast({ title: "Opening" })} onUse={() => toast({ title: "Added to the menu board" })} />
+      </GalleryCard>
+      <GalleryCard label="Live · generating with progress, then the image lands in the same frame" wide>
+        <ImageResultLive />
+      </GalleryCard>
+      <GalleryCard label="Error · the frame holds the empty state, the prompt is kept" wide>
+        <ImageResult state="error" onRetry={() => toast({ title: "Trying again" })} />
+      </GalleryCard>
+      <GalleryCard label="Portrait · a poster for the Creamery window" wide>
+        <ImageResult aspect="portrait" src={IMG_POSTERS[2]} prompt="A window poster for Creamery: pistachio season, one cone, warm afternoon light." meta="1024 × 1536 · 8.1s" onDownload={() => {}} onRegenerate={() => {}} className="max-w-72" />
+      </GalleryCard>
+      <GalleryCard label="ImageResults · four candidates, pick one, use it" wide>
+        <ImageResults prompt="A mark for Addis Yoga: a simple form, one colour, works at 16px." images={IMG_POSTERS.map((src, i) => ({ key: `c${i}`, src, meta: `candidate ${i + 1}` }))} onUse={(k) => toast({ title: `Using ${k}` })} />
+      </GalleryCard>
+    </>
+  );
+}
+
 function Page_terminal() {
   const toast = useToast();
   return (
@@ -14794,6 +14942,7 @@ const PAGES = [
   { id: "chatapp", group: "Conversation", title: "ChatApp", note: "The whole system composed into one surface \u2014 SidebarNav rail, a thread of MessageBubbles embedding Markdown and CodeBlock, PromptBar below. Send a message: it thinks, then streams the reply. Built by the formic-design-system skill following its own recipe.", file: "components/ChatApp.tsx", Component: Page_chatapp },
   { id: "chatthread", group: "Conversation", title: "ChatThread", note: "A conversation column \u2014 user bubbles right, assistant replies flat. The final reply streams in once; embed StreamingText, ToolChips, or ApprovalCard as message children in a real thread.", file: "components/ChatThread.tsx", Component: Page_chatthread },
   { id: "streamingtext", group: "Conversation", title: "StreamingText", note: "Words resolve out of blur; citations, sources, and follow-ups appear when done. Loops.", file: "components/StreamingText.tsx", Component: Page_streamingtext },
+  { id: "imageresult", group: "Conversation", title: "ImageResult", note: "A picture the model made, from ask to keep, in a frame that never changes size. Generating: the frame shimmers with a line and a progress bar when the API gives one. Done: the image, a quiet toolbar on hover (download, regenerate, open), the prompt as caption with the meta, and one accent, Use image. Error: the frame holds the empty state with Try again. ImageResults lays several candidates in a grid to pick from.", file: "components/ImageResult.tsx", Component: Page_imageresult },
   { id: "terminal", group: "Conversation", title: "Terminal", note: "What a command printed, as it printed it: the command on a prompt line, its output beneath, and at the end the exit code and the time. The same shell as CodeBlock (surface card, mono, a bar with the title and a copy). Lines are cmd, out, err (red) or info; stream= prints them one by one with the caret on the last and a Stop in the bar; a non-zero exit is the only other colour.", file: "components/Terminal.tsx", Component: Page_terminal },
   { id: "filetree", group: "Structure", title: "FileTree", note: "The files an agent touched, where they live. Folders open and close, files select, a dot says added, modified or deleted and a mono count says how much. The rails\u2019 28px rows and flat selection, 16px per level; arrows move and open, Enter selects; controlled or not.", file: "components/FileTree.tsx", Component: Page_filetree },
   { id: "codeblock", group: "Conversation", title: "CodeBlock", note: "AI code output \u2014 dependency-free syntax highlighting on theme tokens, copy action, optional line numbers. Block comments spanning lines stay plain (accepted).", file: "components/CodeBlock.tsx", Component: Page_codeblock },
