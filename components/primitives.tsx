@@ -526,10 +526,11 @@ export const ICON_TILE_TONES: Record<IconTileTone, string> = {
   neutral: "bg-inset text-ink-2",
   accent: "bg-accent-tint text-accent",
 };
-export function IconTile({ icon, tone = "neutral", className = "" }: { icon: IconName; tone?: IconTileTone; className?: string }) {
+const ICON_TILE_SIZES = { md: "size-9", lg: "size-10" } as const;
+export function IconTile({ icon, tone = "neutral", size = "md", className = "" }: { icon: IconName; tone?: IconTileTone; /** md 36px beside a title, lg 40px beside an Avatar lg */ size?: keyof typeof ICON_TILE_SIZES; className?: string }) {
   return (
-    <span aria-hidden className={`corner-smooth flex size-9 shrink-0 items-center justify-center rounded-control ${ICON_TILE_TONES[tone]} ${className}`}>
-      <Icon name={icon} size={17} strokeWidth={2} />
+    <span aria-hidden className={`corner-smooth flex ${ICON_TILE_SIZES[size]} shrink-0 items-center justify-center rounded-control ${ICON_TILE_TONES[tone]} ${className}`}>
+      <Icon name={icon} size={size === "lg" ? 18 : 17} strokeWidth={2} />
     </span>
   );
 }
