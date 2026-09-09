@@ -158,18 +158,21 @@ export default function NotificationList({
                           </span>
                         )}
                       </span>
-                      <span className="shrink-0 pt-0.5 text-small tabular-nums text-ink-3 group-hover/row:opacity-0 group-focus-within/row:opacity-0">{n.time}</span>
+                      <span className="relative flex min-w-14 shrink-0 justify-end pt-0.5">
+                        {/* the time by default; on hover or focus the row's two controls take its place, in a slot the title never reaches */}
+                        <span className="text-small tabular-nums text-ink-3 transition-opacity duration-150 group-hover/row:opacity-0 group-focus-within/row:opacity-0">{n.time}</span>
+                        <span className="absolute -top-1 right-0 flex items-center gap-0.5 rounded-control bg-surface p-0.5 opacity-0 shadow-hairline transition-opacity duration-150 group-hover/row:opacity-100 group-focus-within/row:opacity-100" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
+                          {!n.read && (
+                            <Tooltip label="Mark read">
+                              <IconButton label="Mark read" onClick={() => markRead([n.id])} className="text-ink-3 hover:bg-hover-2 hover:text-ink"><Icon name="check" size={13} strokeWidth={2.2} /></IconButton>
+                            </Tooltip>
+                          )}
+                          <Tooltip label="Dismiss">
+                            <IconButton label="Dismiss" onClick={() => dismiss(n.id)} className="text-ink-3 hover:bg-hover-2 hover:text-ink"><Icon name="close" size={13} strokeWidth={2.2} /></IconButton>
+                          </Tooltip>
+                        </span>
+                      </span>
                     </div>
-                    <span className="absolute top-2.5 right-3 flex items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover/row:opacity-100 group-focus-within/row:opacity-100">
-                      {!n.read && (
-                        <Tooltip label="Mark read">
-                          <IconButton label="Mark read" onClick={() => markRead([n.id])} className="text-ink-3 hover:bg-hover-2 hover:text-ink"><Icon name="check" size={13} strokeWidth={2.2} /></IconButton>
-                        </Tooltip>
-                      )}
-                      <Tooltip label="Dismiss">
-                        <IconButton label="Dismiss" onClick={() => dismiss(n.id)} className="text-ink-3 hover:bg-hover-2 hover:text-ink"><Icon name="close" size={13} strokeWidth={2.2} /></IconButton>
-                      </Tooltip>
-                    </span>
                   </li>
                 ))}
               </ul>
