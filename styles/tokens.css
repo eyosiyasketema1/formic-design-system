@@ -253,6 +253,9 @@ textarea:focus-visible {
    500 below baseline) — box-centered text is already optically centered,
    so no fallback nudge is needed where text-box is unsupported. */
 .corner-smooth { corner-shape: squircle; }
+/* Corner shape: smooth (squircle, the default) or round (a plain arc),
+ * chosen once for the whole app by formic.config.json's `corners`. */
+:root[data-corners="round"] .corner-smooth, :root[data-corners="round"] .primitive-field { corner-shape: round; }
 /* Field wrapper focus: the wrapper (not the inner input) carries the
    ring. Plain CSS so no utility-ordering can swallow it. */
 .primitive-field {

@@ -227,3 +227,26 @@ export function setPalette(color: string | null): ReturnType<typeof derivePalett
   if (!existing) document.head.appendChild(el);
   return pal;
 }
+
+/* ─────────────────────────────────────────────────────────
+ * radiusScale — the six radius tokens from one control radius
+ * Twin of radius_scale in scripts/apply_config.py: rows a little
+ * tighter than controls, cards a little rounder, capsules rounder
+ * still; 8 gives the stock 6 / 7 / 8 / 10 / 14 / 22. setRadius()
+ * applies it at runtime as [data-radius="custom"], pair with
+ * <html data-radius="custom">.
+ * ───────────────────────────────────────────────────────── */
+export function radiusScale(n: number): { sm: number; chip: number; control: number; md: number; card: number; capsule: number } {
+  n = Math.max(0, Math.min(32, Math.round(n)));
+  return { sm: Math.round(n * 0.75), chip: Math.round(n * 0.9), control: n, md: n === 0 ? 0 : n + 2, card: n === 0 ? 0 : n + 6, capsule: n === 0 ? 0 : Math.round(n * 2.75) };
+}
+export function setRadius(px: number | null): void {
+  if (typeof document === "undefined") return;
+  const id = "ds-radius-custom";
+  const existing = document.getElementById(id);
+  if (px === null) { existing?.remove(); return; }
+  const r = radiusScale(px);
+  const el = existing ?? Object.assign(document.createElement("style"), { id });
+  el.textContent = `:root[data-radius="custom"] { --radius-sm: ${r.sm}px; --radius-chip: ${r.chip}px; --radius-control: ${r.control}px; --radius-md: ${r.md}px; --radius-card: ${r.card}px; --radius-capsule: ${r.capsule}px; }`;
+  if (!existing) document.head.appendChild(el);
+}

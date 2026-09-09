@@ -13,7 +13,8 @@ edited by hand. Every key is optional; a missing key keeps the system default.
       "accent":  "#29E0C2",        any colour — both modes are derived from it
       "palette": "paper",          paper | sage | twilight | clay | ocean | slate | sand | rose | plum | forest | custom
       "paletteColor": "#7C3AED",   with palette "custom": the colour the neutrals are tinted toward (scripts/palette.py)
-      "radius":  "default",        sharp | default | rounded | full
+      "radius":  "default",        sharp | default | rounded | full, or a number: the control radius in px (0-32), the scale derives from it
+      "corners": "smooth",         smooth (squircle) | round
       "size":    "default",        default | comfortable | spacious   (control density)
       "type":    "base",           base | lg | xl   (the type ramp: 14, 15 or 16px base)
       "theme":   "light",          light | dark   (the app's starting theme)
@@ -62,6 +63,7 @@ DEFAULTS = {
     "palette": "paper",
     "paletteColor": None,
     "radius": "default",
+    "corners": "smooth",
     "size": "default",
     "type": "base",
     "theme": "light",
@@ -101,9 +103,43 @@ FONTS = {
     "Bricolage Grotesque": "Bricolage+Grotesque:wght@300..800",
     "Host Grotesk": "Host+Grotesk:wght@300..800",
 }
+RADIUS_PRESETS = ("sharp", "default", "rounded", "full")
+
+
+def radius_scale(n):
+    """the six radius tokens from one control radius (twin of radiusScale in theme.ts)"""
+    n = max(0, min(32, int(round(n))))
+    return {"sm": round(n * 0.75), "chip": round(n * 0.9), "control": n, "md": 0 if n == 0 else n + 2, "card": 0 if n == 0 else n + 6, "capsule": 0 if n == 0 else round(n * 2.75)}
+
+
+RADIUS_BLOCK = re.compile(r'\n?/\* ═══ CUSTOM RADIUS[^\n]*\n:root\[data-radius="custom"\] \{[^}]*\}\n')
+
+
+def write_custom_radius(cfg):
+    """a numeric radius becomes a [data-radius="custom"] block after the presets
+    in styles/tokens.css (and the gallery's inline copy in the repo)"""
+    touched = []
+    for p in (ROOT / "styles" / "tokens.css", ROOT / "preview.html"):
+        if not p.exists():
+            continue
+        src = p.read_text()
+        new = RADIUS_BLOCK.sub("", src)
+        if isinstance(cfg["radius"], int):
+            r = radius_scale(cfg["radius"])
+            block = (f"\n/* ═══ CUSTOM RADIUS — control {cfg['radius']}px (apply_config) ═══ */\n:root[data-radius=\"custom\"] {{\n"
+                     f"  --radius-sm: {r['sm']}px; --radius-chip: {r['chip']}px; --radius-control: {r['control']}px;\n"
+                     f"  --radius-md: {r['md']}px; --radius-card: {r['card']}px; --radius-capsule: {r['capsule']}px;\n}}\n")
+            anchor = ':root[data-radius="full"] {'
+            i = new.index(anchor); j = new.index("}\n", i) + 2
+            new = new[:j] + block.lstrip("\n") + new[j:]
+        if new != src:
+            p.write_text(new); touched.append(p.name)
+    return touched
+
+
 CHOICES = {
     "palette": ("paper", "sage", "twilight", "clay", "ocean", "slate", "sand", "rose", "plum", "forest", "custom"),
-    "radius": ("sharp", "default", "rounded", "full"),
+    "corners": ("smooth", "round"),
     "size": ("default", "comfortable", "spacious"),
     "type": ("base", "lg", "xl"),
     "theme": ("light", "dark"),
@@ -138,6 +174,10 @@ def load(path):
     for k, opts in CHOICES.items():
         if cfg[k] not in opts:
             raise SystemExit(f"{path}: {k} must be one of {', '.join(opts)} (got {cfg[k]!r})")
+    if isinstance(cfg["radius"], bool) or not (cfg["radius"] in RADIUS_PRESETS or (isinstance(cfg["radius"], (int, float)) and 0 <= cfg["radius"] <= 32)):
+        raise SystemExit(f"{path}: radius must be sharp, default, rounded, full, or a number of pixels from 0 to 32 (got {cfg['radius']!r})")
+    if isinstance(cfg["radius"], float):
+        cfg["radius"] = int(round(cfg["radius"]))
     if not isinstance(cfg["motion"], bool):
         raise SystemExit(f"{path}: motion must be true or false")
     if cfg["accent"] is not None:
@@ -178,7 +218,7 @@ def write_preview_mirrors(cfg):
         return None
     src = path.read_text()
     fc = f'const FORMIC_CONFIG = {{ avatar: "{cfg["avatar"]}", sidebar: "{cfg["sidebar"]}", sidebarState: "{cfg["sidebarState"]}", motion: {"true" if cfg["motion"] else "false"} }};'
-    cz = (f'const CZ_DEFAULTS = {{ accent: "{(cfg["accent"] or DEFAULTS_ACCENT).lower()}", palette: "{cfg["palette"]}", paletteColor: "{(cfg["paletteColor"] or cfg["accent"] or DEFAULTS_ACCENT).lower()}", radius: "{cfg["radius"]}", '
+    cz = (f'const CZ_DEFAULTS = {{ accent: "{(cfg["accent"] or DEFAULTS_ACCENT).lower()}", palette: "{cfg["palette"]}", paletteColor: "{(cfg["paletteColor"] or cfg["accent"] or DEFAULTS_ACCENT).lower()}", radius: {cfg["radius"] if isinstance(cfg["radius"], int) else json.dumps(cfg["radius"])}, corners: "{cfg["corners"]}", '
           f'size: "{cfg["size"]}", type: "{cfg["type"]}", theme: "{cfg["theme"]}", avatar: "{cfg["avatar"]}", sidebar: "{cfg["sidebar"]}", sidebarState: "{cfg["sidebarState"]}", '
           f'font: "{cfg["font"]}", layout: "{cfg["layout"]}", motion: {"true" if cfg["motion"] else "false"} }};')
     new, n1 = re.subn(r"const FORMIC_CONFIG = \{[^}]*\};", fc, src, count=1)
@@ -210,14 +250,18 @@ def write_html_attrs(path, cfg):
     if not m:
         raise SystemExit(f"{path}: no <html> tag")
     attrs = m.group(1)
-    attrs = re.sub(r'\s+data-(theme|palette|radius|size|type|layout)="[^"]*"', "", attrs)
+    attrs = re.sub(r'\s+data-(theme|palette|radius|corners|size|type|layout)="[^"]*"', "", attrs)
     add = []
     if cfg["theme"] == "dark":
         add.append('data-theme="dark"')
     if cfg["palette"] != "paper":
         add.append(f'data-palette="{cfg["palette"]}"')
-    if cfg["radius"] != "default":
+    if isinstance(cfg["radius"], int):
+        add.append('data-radius="custom"')
+    elif cfg["radius"] != "default":
         add.append(f'data-radius="{cfg["radius"]}"')
+    if cfg["corners"] != "smooth":
+        add.append(f'data-corners="{cfg["corners"]}"')
     if cfg["size"] != "default":
         add.append(f'data-size="{cfg["size"]}"')
     if cfg["type"] != "base":
@@ -328,13 +372,21 @@ def main():
     elif t:
         print(f"  palette  {cfg['palette']} (custom blocks removed from {', '.join(t)})")
 
+    # radius (a number only writes)
+    t = write_custom_radius(cfg)
+    if isinstance(cfg["radius"], int):
+        r = radius_scale(cfg["radius"])
+        print(f"  radius   control {cfg['radius']}px -> sm {r['sm']} chip {r['chip']} md {r['md']} card {r['card']} capsule {r['capsule']} -> {', '.join(t) if t else 'unchanged'}")
+    elif t:
+        print(f"  radius   {cfg['radius']} (custom block removed from {', '.join(t)})")
+
     # font
     t = write_font(cfg)
     print(f"  font     {cfg['font']} -> {', '.join(t) if t else 'unchanged'}")
 
     # html attributes
     idx = app_index()
-    attrs = [f"{k}={cfg[k]}" for k in ("theme", "palette", "radius", "size", "type", "layout")]
+    attrs = [f"{k}={cfg[k]}" for k in ("theme", "palette", "radius", "corners", "size", "type", "layout")]
     if idx:
         added = write_html_attrs(idx, cfg)
         print(f"  html     {', '.join(attrs)} -> <html {' '.join(added) if added else '(defaults, no attributes)'}> in {idx.name}")
