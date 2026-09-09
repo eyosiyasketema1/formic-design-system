@@ -12634,11 +12634,9 @@ function Page_emptystate() {
         </div>
       </GalleryCard>
       <GalleryCard label="Inside a Panel · sm, the panel keeps its title and caption" wide>
-        <div className="grid">
-          <Panel title="Recent invoices" caption="This quarter">
-            <EmptyState kind="first" icon="receipt" size="sm" title="No invoices this quarter" description="Invoices you send from a proposal appear here." action={<Button variant="secondary" size="sm">Send an invoice</Button>} />
-          </Panel>
-        </div>
+        <Panel title="Recent invoices" caption="This quarter">
+          <EmptyState kind="first" icon="receipt" size="sm" title="No invoices this quarter" description="Invoices you send from a proposal appear here." action={<Button variant="secondary" size="sm">Send an invoice</Button>} />
+        </Panel>
       </GalleryCard>
       <GalleryCard label="Inside a DataTable · the default empty body, no props" full>
         <DataTable label="Clients" rows={[]} columns={[{ key: "name", header: "Client" }, { key: "plan", header: "Plan" }, { key: "state", header: "Status" }]} />
@@ -15347,7 +15345,8 @@ function GalleryCard({ label, wide, full, children }) {
           </IconButton>
         </Tooltip>
       )}
-      <div ref={bodyRef} key={take} className="contents">{children}</div>
+      {/* a one-column grid, not display: contents: a demo with h-full (Panel, a shell) sizes to its content in an auto row instead of to the card */}
+      <div ref={bodyRef} key={take} className="grid min-w-0">{children}</div>
     </div>
   );
 }
