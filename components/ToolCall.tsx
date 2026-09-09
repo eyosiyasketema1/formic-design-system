@@ -1,7 +1,7 @@
 "use client";
 import { isValidElement, useId, useState, type ReactNode } from "react";
 import Button from "./Button";
-import { Chip, Disclosure, Icon, Spinner, type IconName } from "./primitives";
+import { Chip, Disclosure, Icon, Spinner, formatDuration, type IconName } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * TOOL CALL — one thing an agent did, and what came back
  * ToolChips summarises a run; this is one call in full. A row the
@@ -61,13 +61,6 @@ export const DEFAULT_TOOL_CALLS: ToolCallData[] = [
   { name: "send_summary", label: "Sending the weekly summary", state: "pending", icon: "send" },
 ];
 
-export const formatDuration = (ms?: number) => {
-  if (ms === undefined) return "";
-  if (ms < 1000) return `${(ms / 1000).toFixed(1)}s`;
-  if (ms < 60000) return `${Math.round(ms / 1000)}s`;
-  const m = Math.floor(ms / 60000), s = Math.round((ms % 60000) / 1000);
-  return `${m}m ${String(s).padStart(2, "0")}s`;
-};
 const asText = (value: unknown) => (typeof value === "string" ? value : JSON.stringify(value, null, 2));
 
 function StateGlyph({ state }: { state: ToolCallState }) {

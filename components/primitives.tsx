@@ -480,6 +480,15 @@ export function IconTile({ icon, tone = "neutral", className = "" }: { icon: Ico
   );
 }
 
+/** milliseconds as a reader reads them: 0.8s, 12s, 1m 04s; shared by ToolCall and Terminal */
+export const formatDuration = (ms?: number) => {
+  if (ms === undefined) return "";
+  if (ms < 1000) return `${(ms / 1000).toFixed(1)}s`;
+  if (ms < 60000) return `${Math.round(ms / 1000)}s`;
+  const m = Math.floor(ms / 60000), s = Math.round((ms % 60000) / 1000);
+  return `${m}m ${String(s).padStart(2, "0")}s`;
+};
+
 /* ── Badge ─────────────────────────────────────────────── */
 export type BadgeTone = "green" | "red" | "orange" | "neutral";
 const BADGE_TONES: Record<BadgeTone, string> = {
