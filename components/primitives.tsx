@@ -11,7 +11,7 @@ import {
   IconAdjustmentsHorizontal, IconAlertTriangle, IconArchive, IconArrowBackUp, IconArrowForwardUp,
   IconArrowLeft, IconArrowRight, IconArrowsSort, IconBan, IconBattery, IconBolt, IconBookmark, IconBug,
   IconBuilding, IconChartLine, IconChartPie, IconChecks, IconCircleX, IconClipboard, IconCloud, IconCode,
-  IconCreditCard, IconDatabase, IconDotsVertical, IconDownload, IconFilter, IconFilterOff, IconFlag,
+  IconCreditCard, IconDatabase, IconDotsVertical, IconDownload, IconGripVertical, IconFilter, IconFilterOff, IconFlag,
   IconFolder, IconGift, IconHelpCircle, IconHistory, IconInbox, IconKey, IconLanguage, IconLayoutDashboard,
   IconLink, IconList, IconLock, IconLogin, IconMail, IconMapPin, IconMaximize, IconMinimize, IconPackage,
   IconPhone, IconPhoto, IconPin, IconPlayerPause, IconPlayerPlay, IconPrinter, IconQrcode, IconReceipt,
@@ -79,7 +79,7 @@ export type IconName =
    | "sidebar" | "message-question" | "sparkles" | "scissors" | "mood-smile" | "typography" | "chevron-right"
    | "copy" | "circle-check" | "alert" | "info" | "chevron-left" | "upload" | "calendar" | "download"
    | "filter" | "share" | "print" | "lock" | "star" | "mail" | "phone" | "map-pin" | "arrow-left"
-   | "arrow-right" | "sort" | "link" | "help" | "warning" | "dots-vertical" | "archive" | "tag" | "user"
+   | "arrow-right" | "sort" | "link" | "help" | "warning" | "dots-vertical" | "grip-vertical" | "archive" | "tag" | "user"
    | "users" | "building" | "credit-card" | "cart" | "package" | "truck" | "receipt" | "wallet" | "chart-line"
    | "chart-pie" | "database" | "cloud" | "key" | "shield" | "clipboard" | "folder" | "image" | "video"
    | "play" | "pause" | "zoom-in" | "zoom-out" | "maximize" | "minimize" | "flag" | "bookmark" | "history"
@@ -148,6 +148,7 @@ const ICONS: Record<IconName, TablerIcon> = {
   "help": IconHelpCircle,
   "warning": IconAlertTriangle,
   "dots-vertical": IconDotsVertical,
+  "grip-vertical": IconGripVertical,
   "archive": IconArchive,
   "tag": IconTag,
   "user": IconUser,

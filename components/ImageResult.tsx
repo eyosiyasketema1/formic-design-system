@@ -23,11 +23,10 @@ export type ImageResultState = "generating" | "done" | "error";
 export type ImageAspect = "square" | "landscape" | "portrait";
 const ASPECT: Record<ImageAspect, string> = { square: "aspect-square", landscape: "aspect-video", portrait: "aspect-[3/4]" };
 
-/* a studio poster drawn in SVG, so the demo ships without a binary:
-   Selam Coffee's menu board hero, a cup on a warm field */
-export const DEFAULT_IMAGE = "data:image/svg+xml," + encodeURIComponent(
-  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 400'><rect width='640' height='400' fill='#e8dccb'/><circle cx='470' cy='150' r='110' fill='#d9b382'/><rect x='80' y='230' width='300' height='24' rx='12' fill='#3d2b1f'/><rect x='80' y='270' width='220' height='14' rx='7' fill='#7a5c44'/><rect x='80' y='296' width='260' height='14' rx='7' fill='#7a5c44'/><path d='M420 250h120a40 40 0 0 1 0 80h-10v20a60 60 0 0 1-60 60h-10a60 60 0 0 1-60-60v-100z' fill='#3d2b1f'/><path d='M540 270a20 20 0 0 1 0 40' fill='none' stroke='#e8dccb' stroke-width='8'/></svg>`,
-);
+/* the demo picture: a latte being poured, for Selam Coffee's menu board
+   hero (Unsplash, free to use under its licence; the component itself
+   never loads it unless `src` is left at the default) */
+export const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=1200&q=80";
 
 export default function ImageResult({
   src = DEFAULT_IMAGE,
