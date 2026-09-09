@@ -5,6 +5,7 @@ A token-driven React + Tailwind v4 design system for AI product interfaces: chat
 **[Live site](https://formicai.dev/)** · **[Component gallery](https://formicai.dev/preview.html)**
 
 - 50+ components, 10 palettes x light/dark, plus a custom palette from any colour
+- Two gates for apps built on it: `scripts/formic_check.py` refuses generic UI (off-token colours, off-ramp type, drop shadows, raw buttons and tables, a second kit, a page importing nothing from the system) and `scripts/compose_check.py` judges what is on the screen
 - Composition intelligence: a brief before every screen, four registers (text, balanced, analytical, visual), an admission test for every element, and `scripts/compose_check.py` to catch the tells (AGENTS.md → Composition intelligence)
 - Tokens only: no hardcoded colors, sizes, radii, shadows, or easings
 - WCAG AA verified by script across every mode and palette
@@ -92,7 +93,7 @@ Light is the default everywhere. Dark is opt in:
 <html data-theme="dark">
 ```
 
-Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (default is paper). Two more global scales work the same way: `data-radius="sharp | rounded | full"` and `data-size="comfortable | spacious"`. For a runtime brand color, call `setAccent("#7c3aed")` from `components/theme.ts`, which derives AA-passing light and dark variants; `setAccent(null)` reverts.
+Palettes are token overrides: `data-palette="sage | twilight | clay | ocean"` (default is paper). Two more global scales work the same way: `data-radius="sharp | rounded | full"` (or any pixel value through `formic.config.json`, see the customizer), `data-corners="round"` for circular instead of squircle corners, and `data-size="comfortable | spacious"`. For a runtime brand color, call `setAccent("#7c3aed")` from `components/theme.ts`, which derives AA-passing light and dark variants; `setAccent(null)` reverts.
 
 All of these choices, plus the avatar fallback, the sidebar's first variant and chart motion, live in one file: `formic.config.json`. Make them at [formicai.dev/customize](https://formicai.dev/customize) (light and dark side by side), copy the block it gives you into your AI tool, or edit the file and run `python3 src/formic/scripts/apply_config.py`. It fits the accent for both modes, writes the `data-*` attributes on `<html>` and the component defaults in `components/config.ts`. Re-running the installer keeps the file and re-applies it.
 

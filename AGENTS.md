@@ -9,7 +9,7 @@ Gallery: https://formicai.dev/preview.html · Source: https://github.com/eyosiya
 - **This repo has `scripts/qa_check.py` and `styles/tokens.css` at its root.** You are inside Formic itself. Skip to "Changing Formic itself" at the bottom.
 - **Otherwise you are building an app that consumes Formic.** Follow the procedure below, in order, every time.
 
-## Procedure for building UI (consuming Formic)
+## Build protocol (consuming Formic)
 
 Generic Tailwind is the failure mode. It happens when the agent invents styles instead of importing the system. These steps prevent it.
 
@@ -43,23 +43,22 @@ import { Card, Chip, Icon } from "@/formic/components/primitives";
 import { StatCard, MetricRow } from "@/formic/components/StatCard";
 ```
 
-**Step 4: for anything new, compose primitives.** If a pattern is missing, build it from `primitives.tsx` (Icon, Chip, Card, Badge, Avatar, Popover, Switch, Skeleton, Disclosure, ...) and the token utilities. No raw `<svg>` icons, no new icon packages, no chart libraries, no UI kits.
+**Step 4: map the screen to the inventory before writing it.** List what the screen needs (a rail, a header, figures, a chart, a table, a form, a dialog) and name the Formic component for each from "What is in the box" below. Every row must resolve to a component; a row that resolves to "a div with classes" is where generic UI starts.
 
-**Step 5: self-check before you finish.** Grep your own output. Any hit is a bug:
+**Step 5: when nothing fits, build the component, do not fake it.** A missing piece is normal, and it is never solved inline in a page. Stop, say so ("Formic has no X; building `src/formic/components/X.tsx`"), then build it the way the system builds its own: one file, composed from `primitives.tsx` and token utilities, control metrics (24/32/36/40 heights, `.corner-smooth`, `.optical-text`), the ramp, a typed variant union, demo content as `DEFAULT_*` prop defaults, fluid root (`w-full` plus a `max-w-*` cap), correct ARIA and the shared focus rule, reduced motion through `useReducedMotion()`, both themes for free because it only reads tokens. Take the time it needs; a screen that ships with a hand-rolled table because the table was "not worth a component" is the slop this file exists to prevent. Tell the user what you built and why, so it can be pulled upstream.
 
-**Step 6: composition check.** `python3 src/formic/scripts/compose_check.py src/` must pass, then read the screen against its brief (next section) and remove whatever does not serve it. A page that passes every token rule and still carries a chart nobody asked a question of is not done.
+**Step 6: readability is not optional.** Body copy is `text-body text-ink`; secondary copy `text-caption` or `text-small` in `text-ink-2`; `text-ink-3` only at `text-small` and above; nothing under 12px in `text-ink-3`; never fade text with `opacity-*`; never `text-white` on a fill (use `text-canvas`); one accent button per view; numbers right-aligned with `tabular-nums`; labels in the reader's words. If a line is hard to read on the screenshot, it is a defect, not a style.
 
-```
-#[0-9a-fA-F]{3,6}     hardcoded colour      -> use text-ink, bg-surface, border-line, text-accent, ...
-text-\[[0-9]+px\]     arbitrary font size   -> use the ramp: text-small, text-caption, text-body, text-title, ...
-font-bold             banned weight         -> font-semibold is the maximum
-shadow-(sm|md|lg|xl)  drop shadow           -> shadow-card / shadow-btn / shadow-hairline (1px rings)
-cubic-bezier(         easing literal        -> var(--ease-out-quint)
-rounded-(lg|xl|2xl)   off-scale radius      -> rounded-control, rounded-md, rounded-card
-bg-(gray|slate|zinc|blue|green|red)-  raw Tailwind palette -> tokens only
+**Step 7: run both gates, fix every line, then report.** Not a grep by eye, the scripts:
+
+```bash
+python3 src/formic/scripts/formic_check.py src     # how it was built: tokens, ramp, radii, no raw elements, no second kit
+python3 src/formic/scripts/compose_check.py src    # what is on it: brief, register, budgets, real periods
 ```
 
-Also confirm at least one import from `src/formic/components` exists in every new UI file. If none does, the result is not Formic.
+Both must print clean. A line that is a real exception carries a `formic-ok` comment with the reason. Finish the task with a short report: the components used, any component built, and the two gates' output. Work is not done while either fails.
+
+**On prompt length.** The user's request can be one line. This file is the specification; do not ask for design detail the system already decides (spacing, radius, weights, colours, which rail, which chart). Ask only about the brief: who reads the screen, what question it answers, what they do next.
 
 ## Composition intelligence: nothing on a screen without a reason
 
@@ -181,7 +180,7 @@ It keeps the hue and saturation, darkens for light mode until the colour holds 4
 
 ## App configuration: `formic.config.json` is the source of truth
 
-The app's choices live in one file, `src/formic/formic.config.json`: `accent`, `palette` (paper, sage, twilight, clay, ocean, slate, sand, rose, plum, forest, or `custom` with `paletteColor`, the colour the neutrals are tinted toward; the script writes the custom blocks into `themes.css`), `radius`, `size`, `theme` (starting theme), `avatar` (people without a `src`: `initials`, `doodle`, or `photo`, a placeholder picture until real ones exist), `sidebar` (one of the three rails on the Sidebar page: `full` = AppSidebar, expanded with sub-menus and a collapse in the header; `inset` = ProjectSidebar with the page as a surface card beside it, `ProjectInset`; `edge` = ProjectSidebar with a hairline edge and a flat page; `topbar` = the full rail with its user row off plus a `TopBar` above the page carrying the title, search, theme, notifications and the account), `sidebarState` (`expanded` or `rail`: full collapses to an icon rail, inset and edge hide behind `ProjectSidebarTrigger`), `font` (one of the approved Google faces, all variable 300–800: Urbanist, Inter, Manrope, Plus Jakarta Sans, DM Sans, Outfit, Figtree, Sora, Geist, Onest, Public Sans, Nunito Sans, Work Sans, Rubik, Lexend, Albert Sans, Hanken Grotesk, Montserrat, Jost, Karla, Archivo, Mulish, Raleway, Bricolage Grotesque, Host Grotesk), `type` (`base`, `lg` or `xl`: the whole type ramp at a 14, 15 or 16px base, controls unchanged), `layout` (`compact` keeps page content in a 64rem column, `medium` 80rem, `full` runs edge to edge; wrap page content in `.page-content`, rails and headers stay outside) and `motion`. Users make them at https://formicai.dev/customize and paste a block that looks like this:
+The app's choices live in one file, `src/formic/formic.config.json`: `accent`, `palette` (paper, sage, twilight, clay, ocean, slate, sand, rose, plum, forest, or `custom` with `paletteColor`, the colour the neutrals are tinted toward; the script writes the custom blocks into `themes.css`), `radius` (a preset, `sharp` / `default` / `rounded` / `full`, or a number of pixels 0–32 for the control corner; the six `--radius-*` tokens scale from it, sm ×0.75, chip ×0.9, md +2, card +6, capsule ×2.75, and the script writes the block as `data-radius="custom"`), `corners` (`smooth`, the squircle corners controls carry, or `round`, plain circular arcs), `size`, `theme` (starting theme), `avatar` (people without a `src`: `initials`, `doodle`, or `photo`, a placeholder picture until real ones exist), `sidebar` (one of the three rails on the Sidebar page: `full` = AppSidebar, expanded with sub-menus and a collapse in the header; `inset` = ProjectSidebar with the page as a surface card beside it, `ProjectInset`; `edge` = ProjectSidebar with a hairline edge and a flat page; `topbar` = the full rail with its user row off plus a `TopBar` above the page carrying the title, search, theme, notifications and the account), `sidebarState` (`expanded` or `rail`: full collapses to an icon rail, inset and edge hide behind `ProjectSidebarTrigger`), `font` (one of the approved Google faces, all variable 300–800: Urbanist, Inter, Manrope, Plus Jakarta Sans, DM Sans, Outfit, Figtree, Sora, Geist, Onest, Public Sans, Nunito Sans, Work Sans, Rubik, Lexend, Albert Sans, Hanken Grotesk, Montserrat, Jost, Karla, Archivo, Mulish, Raleway, Bricolage Grotesque, Host Grotesk), `type` (`base`, `lg` or `xl`: the whole type ramp at a 14, 15 or 16px base, controls unchanged), `layout` (`compact` keeps page content in a 64rem column, `medium` 80rem, `full` runs edge to edge; wrap page content in `.page-content`, rails and headers stay outside) and `motion`. Users make them at https://formicai.dev/customize and paste a block that looks like this:
 
 ```
 Apply this Formic configuration and keep it as the source of truth:
@@ -213,7 +212,7 @@ When you build a page or a demo, the content is Formic's world: a design studio 
 
 ## What is in the box
 
-**Brand** (`brand.tsx`): FormicMark, BrandIcon (80+ company and social marks). **Helpers**: iconFor(label); `scripts/set_accent.py` and `setAccent()` for the brand colour; `formic.config.json` + `scripts/apply_config.py` for the app's choices (accent, palette, radius, size, theme, avatar, sidebar, motion), read by components through `config.ts`.
+**Brand** (`brand.tsx`): FormicMark, BrandIcon (80+ company and social marks). **Helpers**: iconFor(label); `scripts/set_accent.py` and `setAccent()` for the brand colour; `formic.config.json` + `scripts/apply_config.py` for the app's choices (accent, palette, radius in pixels or a preset, corners, size, theme, avatar, sidebar, font, type, layout, motion), read by components through `config.ts`.
 **Primitives** (`primitives.tsx`): Icon, Spinner, ShimmerLabel, StreamText, StreamCaret, Skeleton, Avatar (initials, `src` photo, or `doodle` — an illustrated face derived from the name), AvatarGroup (people overlapping with a +N tile), Tooltip, Progress, Separator, Chip, DiffStat, IconButton, SendButton, Switch, Checkbox, Disclosure, GlideMenu, Card, Badge, RadioCheck, AvatarStack, Popover.
 **Hooks** (`hooks.ts`): useSequence, useElapsed, useStream, useAnchoredLayer, useModalLayer, useReducedMotion.
 **Controls and forms:** Button, Field, Input, Textarea, Select, Switch, Checkbox, FilterBar, Slider (steps, editable readout, value on the thumb) and RangeSlider (two thumbs), OTPInput, FileDropzone, DatePicker, DateRangePicker, Calendar, ColorPicker, InputCopy (read-only value with a copy action), InputGroup + InputField (several fields as one block, label inside the row).

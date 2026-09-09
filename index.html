@@ -1117,7 +1117,7 @@ footer.site a:hover { color: var(--ink); }
         <div class="lp-card"><h3>Analytical</h3><p>Compare and decide: three to five figures that answer the question, the one chart that carries the trend, then the list to act on.</p></div>
         <div class="lp-card"><h3>Visual</h3><p>Browse and pick: cards with a picture or a mark, a filter. No figures, no charts.</p></div>
         <div class="lp-card"><h3>The brief</h3><p>Reader, question, action, register: four lines at the top of every screen file. The reviewer reads them first; every element is tested against them.</p></div>
-        <div class="lp-card"><h3>The check</h3><p><code>compose_check.py</code> flags a missing brief, a broken register, too many figures, deltas without a period, short sparklines, two-part donuts, placeholder copy.</p></div>
+        <div class="lp-card"><h3>The checks</h3><p><code>formic_check.py</code> refuses generic UI: off-token colours, off-ramp type, drop shadows, raw buttons and tables, a second kit. <code>compose_check.py</code> flags a missing brief, a broken register, too many figures, deltas without a period, two-part donuts, placeholder copy.</p></div>
       </div>
       <p class="section-sub" style="margin-top: 18px;">See it on one month of studio numbers, once per register, in the gallery's <a href="./preview.html#/composition">Composition</a> page.</p>
     </div>
@@ -1209,13 +1209,12 @@ Then build a settings page with a SidebarNav, a form of Field + Input + Switch, 
             <details class="ai-dev">
               <summary>For developers: the mechanical check</summary>
               <div class="lcode">
-                <div class="lcode-head">Terminal · both lines: first shows imports, second prints nothing</div>
-                <pre>grep -rn "formic/components" src --include=*.tsx | grep -v "^src/formic"
-grep -rnE "#[0-9a-fA-F]{6}|text-sm|text-lg|bg-gray|shadow-lg|font-bold" src --include=*.tsx | grep -v "^src/formic"
+                <div class="lcode-head">Terminal · two gates, both must print clean</div>
+                <pre>python3 src/formic/scripts/formic_check.py src
 python3 src/formic/scripts/compose_check.py src</pre>
               </div>
             </details>
-            <p>The third line is Formic's composition check. Looking right is half of it; the other half is that nothing is on the screen by habit. Every screen the agent builds starts with a four-line brief (who reads it, what question it answers, what they do next, whether it reads or shows), and the check refuses the usual tells: KPI cards with invented deltas, a chart for one number, a donut for two, an icon per card, placeholder copy. The system knows when a page should be prose, when it should be one panel, and when it earns a chart.</p>
+            <p>The first gate judges how it was built: it refuses hex colours and Tailwind's grey and blue, off-ramp type sizes, bold, drop shadows, off-scale radii, a raw button, input, table or svg where a component exists, a second icon or chart library, a page that imports nothing from the system, text faded with opacity. The second is the composition check. Looking right is half of it; the other half is that nothing is on the screen by habit. Every screen the agent builds starts with a four-line brief (who reads it, what question it answers, what they do next, whether it reads or shows), and the check refuses the usual tells: KPI cards with invented deltas, a chart for one number, a donut for two, an icon per card, placeholder copy. The system knows when a page should be prose, when it should be one panel, and when it earns a chart.</p>
           </li>
           <li>
             <div class="ai-step-title">Make it yours, once</div>
