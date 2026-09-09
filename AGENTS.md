@@ -116,6 +116,8 @@ An element goes on the screen only if all four are true. Write the answer in a c
 3. **It is not already said.** A number in a StatCard and again as the chart's last point and again in a table row is said three times; keep the one that lets the reader act.
 4. **Removing it would cost the reader something.** If the answer is "it would look empty", the fix is a smaller page or a better hierarchy, never filler.
 
+**Demo data is not an empty state.** When the user asks for a demo, sample, starter or test screen, fill it with the content the components ship as `DEFAULT_*` (Formic Studio, its clients, invoices in ETB, agents); an empty state is for a real app that has no data yet. A test prompt that comes back as zeros and "No data" has misread the brief.
+
 ### 4. Budgets (per screen, at a normal laptop width)
 
 - Headline figures: 0 in Text, at most 1 in Balanced, 3 to 5 in Analytical, 0 in Visual. Never a 2×2 grid of cards to make a square.

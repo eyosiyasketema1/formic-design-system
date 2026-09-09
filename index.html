@@ -1150,10 +1150,10 @@ footer.site a:hover { color: var(--ink); }
         <button type="button" class="qs-tab" role="tab" aria-selected="false" aria-controls="qs-existing" id="qs-tab-existing">Existing project</button>
       </div>
       <div id="qs-new" role="tabpanel" aria-labelledby="qs-tab-new">
-        <p class="qs-lead">A Vite + React + Tailwind app with the AI rule files, ready to run (needs git and Node).</p>
+        <p class="qs-lead">In an empty folder it scaffolds a Vite + React + Tailwind app with the AI rule files, ready to run (needs git and Node).</p>
         <div class="lcode">
-          <div class="lcode-head">Terminal · anywhere</div>
-          <pre>curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app &amp;&amp; cd my-app &amp;&amp; npm run dev</pre>
+          <div class="lcode-head">Terminal · inside your new, empty folder</div>
+          <pre>curl -fsSL https://formicai.dev/install.sh | bash &amp;&amp; npm run dev</pre>
         </div>
         <p class="qs-lead">Then <a href="#ai-tools">build with your AI tool</a>.</p>
       </div>
@@ -1174,18 +1174,18 @@ footer.site a:hover { color: var(--ink); }
         <ol class="ai-steps">
           <li>
             <div class="ai-step-title">Install and run</div>
-            <p>The browser opens a page that says Formic is working.</p>
+            <p>Make a folder for the app, go into it in the terminal, run this; the browser opens a page that says Formic is working.</p>
             <div class="lcode">
-              <div class="lcode-head">Terminal · anywhere</div>
-              <pre>curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app &amp;&amp; cd my-app &amp;&amp; npm run dev</pre>
+              <div class="lcode-head">Terminal · inside your project folder (empty, or an existing app)</div>
+              <pre>curl -fsSL https://formicai.dev/install.sh | bash &amp;&amp; npm run dev</pre>
             </div>
           </li>
           <li>
             <div class="ai-step-title">Point your AI tool at that folder and paste the test prompt</div>
-            <p>In the same terminal type <code>claude</code>, or open the <code>my-app</code> folder in Cursor or VS Code; the dashboard it builds is what Formic looks like.</p>
+            <p>In the same terminal type <code>claude</code>, or open that folder in Cursor or VS Code; the dashboard it builds is what Formic looks like.</p>
             <div class="lcode">
               <div class="lcode-head">Your AI tool</div>
-              <pre class="wrap">Use Formic (src/formic), read AGENTS.md, then replace the welcome page with a dashboard: the full rail, a page header, four figures, a revenue chart and a recent invoices table.</pre>
+              <pre class="wrap">Use Formic (src/formic), read AGENTS.md, then replace the welcome page with the studio dashboard: AppSidebar rail, page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.</pre>
             </div>
           </li>
         </ol>

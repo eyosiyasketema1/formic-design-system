@@ -24,11 +24,7 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
    ```bash
    curl -fsSL https://formicai.dev/install.sh | bash
    ```
-   In an empty folder, or when asked to "start a project", scaffold one instead (Vite + React + Tailwind v4 + demo dashboard, dependencies installed, nothing to edit):
-   ```bash
-   curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app
-   ```
-   Both copy `styles/` and `components/` into `src/formic/` and write `AGENTS.md`, a Cursor rule, Copilot instructions, and this skill into the project.
+   Run in an empty folder and the same command scaffolds a Vite + React + Tailwind v4 app (welcome page, dependencies installed, nothing to edit); `--new my-app` creates the folder for you. Both copy `styles/` and `components/` into `src/formic/` and write `AGENTS.md`, a Cursor rule, Copilot instructions, and this skill into the project.
 2. **Wire the CSS once** (Tailwind v4 global stylesheet, in this order; fix the relative path to `src/formic`):
    ```css
    @import "./formic/styles/fonts.css";    /* first: the Urbanist font */

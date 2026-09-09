@@ -20,14 +20,13 @@ Formic is vendored, not published to npm: you copy the files into your project a
 
 ### 1. One command (recommended)
 
-**New project.** Creates a Vite + React + Tailwind v4 app with Formic wired in, a demo dashboard, and the files AI coding tools read. Nothing to edit by hand.
+**One command, inside your project folder.** In an empty folder it scaffolds a Vite + React + Tailwind v4 app with Formic wired in, a welcome page, and the files AI coding tools read; in an existing Tailwind v4 app it vendors the system into `src/formic/`, adds the CSS imports and the icon package, and writes the instruction files. Re-run to update; nothing to edit by hand.
 
 ```bash
-curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app
-cd my-app && npm run dev
+curl -fsSL https://formicai.dev/install.sh | bash && npm run dev
 ```
 
-**Existing project.** From its root: copies the system into `src/formic/` and writes the instruction files. Re-run to update.
+Then open your AI tool in that folder and paste the test prompt the installer prints. (`--new my-app` still works when you want the installer to create the folder.)
 
 ```bash
 curl -fsSL https://formicai.dev/install.sh | bash
@@ -127,15 +126,15 @@ Open the [gallery](https://formicai.dev/preview.html): one page per component wi
 
 A rules file alone is not enough: if the components are not in the project, every agent (Claude Code, Cursor, Copilot, Codex) falls back to generic Tailwind no matter how good the prompt. So the install gives the agent the code and the rules together.
 
-**1. Get a project with Formic inside.** New: `curl -fsSL https://formicai.dev/install.sh | bash -s -- --new my-app`. Existing, from its root:
+**1. Get a project with Formic inside.** From the project folder (empty, or an existing app):
 
 ```bash
 curl -fsSL https://formicai.dev/install.sh | bash
 ```
 
-It copies `styles/` and `components/` into `src/formic/` (pass another folder as the first argument if you prefer) and writes `AGENTS.md`, `.cursor/rules/formic-design-system.mdc`, `.github/copilot-instructions.md`, `.claude/skills/formic-design-system/SKILL.md`, and a Formic section in `CLAUDE.md`. Re-run it to update; it never overwrites your own files. Read [`install.sh`](install.sh) first if you like to know what you are piping into bash.
+It copies `styles/` and `components/` into `src/formic/` (pass another folder as the first argument if you prefer), wires the CSS and the icon package when it can see where, adds a pre-commit hook that runs the two gates, and writes `AGENTS.md`, `.cursor/rules/formic-design-system.mdc`, `.github/copilot-instructions.md`, `.claude/skills/formic-design-system/SKILL.md`, and a Formic section in `CLAUDE.md`. Re-run it to update; it never overwrites your own files. Read [`install.sh`](install.sh) first if you like to know what you are piping into bash.
 
-**2. Wire the CSS** (Tailwind v4, three lines in this order) and `npm install @tabler/icons-react`. With `--new` this is already done.
+**2. Wire the CSS** (Tailwind v4, three lines in this order) and `npm install @tabler/icons-react`, only if the installer said it could not find your global stylesheet; a scaffolded app already has it.
 
 ```css
 @import "./formic/styles/fonts.css";    /* first: the Urbanist font */

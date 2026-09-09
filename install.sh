@@ -27,6 +27,12 @@ while [ $# -gt 0 ]; do
 done
 DEST="${DEST%/}"
 
+# No package.json here and nothing but dotfiles: an empty folder, so scaffold in place.
+# (The folder you cd into is the app; no --new needed.)
+if [ "$NEW" = 0 ] && [ ! -f package.json ] && [ -z "$(ls -A 2>/dev/null | grep -v '^\.' | head -1)" ]; then
+  NEW=1; APP="."
+fi
+
 say()  { printf '  \033[32m✓\033[0m %s\n' "$1"; }
 skip() { printf '  \033[90m–\033[0m %s\n' "$1"; }
 die()  { printf '  \033[31m✗\033[0m %s\n' "$1" >&2; exit 1; }
@@ -37,13 +43,13 @@ command -v git >/dev/null 2>&1 || die "git is required (https://git-scm.com)"
 # ── 0. --new: scaffold a Vite + React + Tailwind v4 app first ────
 if [ "$NEW" = 1 ]; then
   [ -n "$APP" ] || die "--new needs a folder name: install.sh --new my-app"
-  case "$APP" in /*|.|..|*..*|*/*) die "--new takes a simple folder name, e.g. my-app (got '$APP')" ;; esac
-  command -v npm >/dev/null 2>&1 || die "npm is required for --new (https://nodejs.org)"
-  [ -e "$APP" ] && die "$APP already exists; pick another name or run without --new inside it"
+  case "$APP" in /*|..|*..*|*/*) die "--new takes a simple folder name, e.g. my-app (got '$APP')" ;; esac
+  command -v npm >/dev/null 2>&1 || die "npm is required to scaffold an app (https://nodejs.org)"
+  if [ "$APP" = "." ]; then APPNAME="$(basename "$PWD" | tr 'A-Z ' 'a-z-')"; else APPNAME="$APP"; [ -e "$APP" ] && die "$APP already exists; cd into it and run the installer there"; fi
   mkdir -p "$APP/src/pages"
   cat > "$APP/package.json" <<EOF
 {
-  "name": "$APP",
+  "name": "$APPNAME",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -145,7 +151,7 @@ import Panel from "../formic/components/Panel";
 import { FormicMark } from "../formic/components/brand";
 import { Icon } from "../formic/components/primitives";
 
-const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page with a dashboard: the full rail, a page header, four figures, a revenue chart and a recent invoices table.";
+const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page with the studio dashboard: AppSidebar rail, page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.";
 const READY = [
   "Components and tokens in src/formic",
   "Tailwind wired: fonts, tokens, palettes",
@@ -339,7 +345,7 @@ fi
 # ── 5b. Existing project: wire the CSS and the icon package when it is unambiguous ──
 CSS_WIRED=0; DEPS_WIRED=0
 if [ "$NEW" != 1 ]; then
-  CSS_FILES="$(grep -rl --include=*.css '@import "tailwindcss"' src app styles 2>/dev/null | grep -v "/$DEST/" | head -5)"
+  CSS_FILES="$(grep -rl --include=*.css '@import "tailwindcss"' src app styles 2>/dev/null | grep -v "^$DEST/" | grep -v "/$DEST/" | head -5 || true)"
   if [ "$(printf '%s\n' "$CSS_FILES" | grep -c .)" = 1 ] && ! grep -q "formic.css" "$CSS_FILES"; then
     REL="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], os.path.dirname(sys.argv[2])))" "$DEST" "$CSS_FILES" 2>/dev/null || echo "$DEST")"
     case "$REL" in .*|/*) ;; *) REL="./$REL" ;; esac
@@ -377,9 +383,9 @@ if [ "$NEW" = 1 ]; then
   [ -d .git ] || { git init -q && git add -A && git -c user.name=formic -c user.email=formic@formicai.dev commit -qm "Formic starter" >/dev/null 2>&1 && say "git repository initialised"; } || true
   write_hook
   printf '\nDone. Run it:\n'
-  printf '  cd %s && npm run dev        # the browser opens a page that says Formic is working\n\n' "$APP"
-  printf 'Then, in that folder, open your AI tool (claude, or Cursor) and paste the test prompt:\n'
-  printf '  Use Formic (src/formic), read AGENTS.md, then replace the welcome page with a dashboard: the full rail, a page header, four figures, a revenue chart and a recent invoices table.\n\n'
+  if [ "$APP" = "." ]; then printf '  npm run dev        # the browser opens a page that says Formic is working\n\n'; else printf '  cd %s && npm run dev        # the browser opens a page that says Formic is working\n\n' "$APP"; fi
+  printf 'Then open your AI tool in this folder (type claude here, or open the folder in Cursor) and paste the test prompt:\n'
+  printf '  Use Formic (src/formic), read AGENTS.md, then replace the welcome page with the studio dashboard: AppSidebar rail, page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.\n\n'
   printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
   printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
   exit 0
@@ -393,6 +399,6 @@ else
   [ "$CSS_WIRED" = 1 ] || { printf '  • In your global CSS (Tailwind v4), in this order:\n'; printf '       @import "<path to>/%s/styles/fonts.css";\n       @import "tailwindcss";\n       @import "<path to>/%s/styles/formic.css";\n' "$DEST" "$DEST"; }
   printf 'Then open your AI tool in this folder and paste:\n'
 fi
-printf '  Use Formic (%s), read AGENTS.md, then build a dashboard page: the full rail, a page header, four figures, a revenue chart and a recent invoices table.\n\n' "$DEST"
+printf '  Use Formic (%s), read AGENTS.md, then build the studio dashboard: AppSidebar rail, page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.\n\n' "$DEST"
 printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
 printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
