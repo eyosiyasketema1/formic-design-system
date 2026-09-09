@@ -1,15 +1,16 @@
 "use client";
-import React, { useState, useRef, useEffect, type ReactNode } from "react";
-import { Icon, Popover } from "./primitives";
-import { BrandIcon } from "./brand";
+import { useState, useRef, useId, type ReactNode } from "react";
+import { Icon, Popover, AvatarStack, type IconName } from "./primitives";
+import { BrandIcon, type BrandName } from "./brand";
+import { useAnchoredLayer } from "./hooks";
 
 /* ─────────────────────────────────────────────────────────
  * SOURCES & INLINE CITATION
  * Provenance components for AI output:
- * 1. InlineCitation — a numbered marker [1] in text that opens
- *    a popover hover card with title, domain, quote & link.
- * 2. Sources / SourcesList — a collapsible source block below
- *    an AI answer with favicon preview and detailed cards.
+ * 1. InlineCitation — a quiet superscript marker [1] in prose
+ *    that opens an anchored hover card with title, quote & link.
+ * 2. SourcesList — a minimal collapsible source row below
+ *    an AI reply that expands to readable item rows.
  * ───────────────────────────────────────────────────────── */
 
 export interface Source {
@@ -19,11 +20,13 @@ export interface Source {
   title: string;
   /** Full URL of the source */
   url: string;
-  /** Domain name for display (e.g. "formicai.dev" or "w3.org") */
+  /** Domain name for display (e.g. "selamcoffee.com") */
   domain?: string;
-  /** BrandIcon or Tabler icon name for the source logo */
-  iconName?: string;
-  /** Optional favicon URL */
+  /** Brand mark name from BrandIcon */
+  brand?: BrandName;
+  /** Generic icon fallback name from ICONS */
+  icon?: IconName;
+  /** Optional favicon URL for AvatarStack */
   favicon?: string;
   /** Excerpt snippet / quoted text from the source */
   snippet?: string;
@@ -36,54 +39,48 @@ export interface Source {
 export const DEFAULT_SOURCES: Source[] = [
   {
     id: 1,
-    title: "Formic Design System Tokens & Specifications",
-    url: "https://formicai.dev/docs/tokens",
-    domain: "formicai.dev",
-    iconName: "github",
-    snippet: "All components read CSS variables from styles/tokens.css with zero hardcoded colors or spacing values.",
-    author: "Formic Docs",
+    title: "Northwind Bank — Commercial Onboarding Policy (v4.2)",
+    url: "https://compliance.northwind.internal/policies/kyc",
+    domain: "northwind.internal",
+    brand: "slack",
+    snippet: "Entity verification requires dual authorization for credit lines exceeding 250,000 ETB.",
+    author: "Compliance Dept",
     date: "Sep 2026",
   },
   {
     id: 2,
-    title: "WCAG 2.1 Contrast Standards & Palette Derivation",
-    url: "https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum",
-    domain: "w3.org",
-    iconName: "google",
-    snippet: "Text and images of text must have a contrast ratio of at least 4.5:1 for normal text and 3:1 for large text.",
-    author: "W3C Standards",
+    title: "Selam Coffee — Q3 Velocity & Single-Origin Margins",
+    url: "https://reports.selamcoffee.com/analytics/q3-margins",
+    domain: "selamcoffee.com",
+    brand: "stripe",
+    snippet: "Yirgacheffe washed beans maintain 44% margin; recommend increasing roast batch sizes before Friday.",
+    author: "Selam Analytics",
     date: "Aug 2026",
   },
   {
     id: 3,
-    title: "Composition Intelligence & Admission Tests",
-    url: "https://formicai.dev/docs/composition",
-    domain: "formicai.dev",
-    snippet: "Every screen declares a brief (reader, question, action, register) and passes mechanical validation via compose_check.py.",
-    author: "Formic Design",
-    date: "Sep 2026",
+    title: "Cold-Chain Supplier Audit & Dairy Delivery Checklist",
+    url: "https://ops.freshdairy.internal/sop/cold-chain",
+    domain: "freshdairy.internal",
+    brand: "notion",
+    snippet: "Refrigerated transport logs must verify unbroken temperature monitoring under 4°C at intake.",
+    author: "Quality Operations",
+    date: "Aug 2026",
   },
 ];
 
-/* Helper to render source icon (BrandIcon, favicon img, or fallback) */
-function SourceLogo({ source, size = "sm" }: { source: Source; size?: "sm" | "md" }) {
-  const sizeCls = size === "sm" ? "size-3.5" : "size-4";
-
+/* Helper to render source icon (BrandIcon, favicon img, or fallback Icon) */
+function SourceIcon({ source, size = 14 }: { source: Source; size?: number }) {
   if (source.favicon) {
-    return (
-      <img
-        src={source.favicon}
-        alt=""
-        className={`${sizeCls} rounded-full object-cover shadow-[0_0_0_1px_var(--line)]`}
-      />
-    );
+    return <img src={source.favicon} alt="" className="size-3.5 rounded-full object-cover shrink-0" />;
   }
-
-  if (source.iconName) {
-    return <BrandIcon name={source.iconName} className={`${sizeCls} text-ink-2 shrink-0`} />;
+  if (source.brand) {
+    return <BrandIcon name={source.brand} size={size} className="text-ink-2 shrink-0" />;
   }
-
-  return <Icon name="link" className={`${sizeCls} text-ink-3 shrink-0`} />;
+  if (source.icon) {
+    return <Icon name={source.icon} size={size} className="text-ink-3 shrink-0" />;
+  }
+  return <Icon name="file" size={size} className="text-ink-3 shrink-0" />;
 }
 
 /* ── InlineCitation ─────────────────────────────────────── */
@@ -101,121 +98,96 @@ export function InlineCitation({
   const sources = Array.isArray(source) ? source : [source];
   const primarySource = sources[0];
   const displayLabel =
-    label ?? (sources.length === 1 ? `[${primarySource.id}]` : `[${sources.map((s) => s.id).join(", ")}]`);
+    label ?? (sources.length === 1 ? String(primarySource?.id ?? "1") : sources.map((s) => s.id).join(", "));
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [popoverPos, setPopoverPos] = useState<{ x: number; top?: number; bottom?: number }>({ x: 0, top: 0 });
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const closeTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  const updatePos = () => {
-    if (!triggerRef.current) return;
-    const rect = triggerRef.current.getBoundingClientRect();
-    const width = 288; /* w-72 = 18rem = 288px */
-    const x = Math.max(12, Math.min(window.innerWidth - width - 12, rect.left + rect.width / 2 - width / 2));
-
-    /* flip popover above trigger if tight at bottom */
-    if (rect.bottom + 220 > window.innerHeight && rect.top > 220) {
-      setPopoverPos({ x, bottom: window.innerHeight - rect.top + 6 });
-    } else {
-      setPopoverPos({ x, top: rect.bottom + 6 });
-    }
-  };
+  const layerId = useId();
+  const { open, position, anchorRef, openAt, close } = useAnchoredLayer<HTMLButtonElement>(layerId);
+  const timerRef = useRef<number | null>(null);
 
   const handleMouseEnter = () => {
-    if (closeTimeout.current) clearTimeout(closeTimeout.current);
-    updatePos();
-    setIsOpen(true);
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    openAt({ estimatedHeight: 160, width: 280, align: "start" });
   };
 
   const handleMouseLeave = () => {
-    closeTimeout.current = setTimeout(() => {
-      setIsOpen(false);
-    }, 180);
+    timerRef.current = window.setTimeout(() => close(), 180);
   };
 
-  useEffect(() => {
-    return () => {
-      if (closeTimeout.current) clearTimeout(closeTimeout.current);
-    };
-  }, []);
+  const handleClick = () => {
+    if (open) close();
+    else openAt({ estimatedHeight: 160, width: 280, align: "start" });
+  };
 
   if (!primarySource) return null;
 
   return (
     <>
       <button
-        ref={triggerRef}
+        ref={anchorRef}
         type="button"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onFocus={handleMouseEnter}
-        onBlur={handleMouseLeave}
-        onClick={() => setIsOpen((prev) => !prev)}
-        aria-expanded={isOpen}
-        aria-label={`Citation ${displayLabel}`}
-        className={`corner-smooth inline-flex items-center justify-center align-baseline px-1.5 py-0.5 mx-0.5 rounded-sm font-mono text-micro font-semibold text-accent bg-accent-tint hover:bg-accent hover:text-canvas focus-visible:outline-none transition-colors duration-150 cursor-pointer select-none ${className}`}
+        onClick={handleClick}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-controls={open ? layerId : undefined}
+        aria-label={`Source citation ${displayLabel}`}
+        className={`align-super text-micro font-medium text-ink-3 hover:text-ink hover:underline cursor-pointer select-none leading-none px-0.5 ${className}`}
       >
-        {displayLabel}
+        [{displayLabel}]
       </button>
 
-      {isOpen && (
+      {open && position && (
         <Popover
-          x={popoverPos.x}
-          top={popoverPos.top}
-          bottom={popoverPos.bottom}
-          className="w-72 p-3 shadow-popover"
-          onClose={() => setIsOpen(false)}
+          id={layerId}
+          x={position.x}
+          top={position.top}
+          bottom={position.bottom}
+          width={position.width ?? 280}
+          role="dialog"
+          className="p-3 shadow-overlay"
+          onClose={close}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2.5">
             {sources.map((src, idx) => (
-              <div
-                key={src.id}
-                className={`flex flex-col gap-1.5 ${idx > 0 ? "pt-2 border-t border-line" : ""}`}
-              >
-                {/* Header: logo + domain + citation number */}
-                <div className="flex items-center justify-between gap-2">
+              <div key={src.id} className={`flex flex-col gap-1.5 ${idx > 0 ? "pt-2 border-t border-line" : ""}`}>
+                <div className="flex items-center justify-between gap-2 text-caption">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <SourceLogo source={src} size="sm" />
-                    <span className="text-micro font-medium text-ink-3 truncate">
+                    <SourceIcon source={src} size={13} />
+                    <span className="font-medium text-ink-3 truncate">
                       {src.domain || (src.url ? new URL(src.url).hostname.replace(/^www\./, "") : "Source")}
                     </span>
                   </div>
-                  <span className="rounded-sm bg-accent-tint px-1 py-0.2 font-mono text-micro font-medium text-accent">
-                    [{src.id}]
-                  </span>
+                  <span className="font-mono text-ink-3 shrink-0">[{src.id}]</span>
                 </div>
 
-                {/* Title */}
                 <a
                   href={src.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="animated-underline text-caption font-semibold text-ink hover:text-accent line-clamp-2"
+                  className="animated-underline text-body font-semibold text-ink hover:underline line-clamp-2"
                 >
                   {src.title}
                 </a>
 
-                {/* Snippet / quote */}
                 {src.snippet && (
-                  <p className="rounded-sm bg-inset px-2.5 py-1.5 border-l-2 border-accent text-caption leading-relaxed text-ink-2 line-clamp-3">
-                    “{src.snippet}”
+                  <p className="rounded-sm bg-inset p-2 text-caption leading-relaxed text-ink-2 line-clamp-3">
+                    {src.snippet}
                   </p>
                 )}
 
-                {/* Footer link */}
-                <div className="flex items-center justify-between pt-0.5 text-micro text-ink-3">
-                  <span>{src.author || src.date || "Verified citation"}</span>
+                <div className="flex items-center justify-between pt-0.5 text-caption text-ink-3">
+                  <span>{src.author || src.date || ""}</span>
                   <a
                     href={src.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 font-medium text-accent hover:underline"
+                    className="inline-flex items-center gap-1 font-medium text-ink hover:underline"
                   >
-                    <span>Visit source</span>
-                    <Icon name="external-link" className="size-3" />
+                    <span>Open</span>
+                    <Icon name="external" size={13} />
                   </a>
                 </div>
               </div>
@@ -231,16 +203,13 @@ export function InlineCitation({
 export function SourcesList({
   sources = DEFAULT_SOURCES,
   defaultExpanded = false,
-  title = "Sources",
   className = "",
   onSourceClick,
 }: {
   /** Array of sources to display */
   sources?: Source[];
-  /** Whether the list is expanded by default */
+  /** Initial expanded state */
   defaultExpanded?: boolean;
-  /** Section header title */
-  title?: string;
   className?: string;
   onSourceClick?: (source: Source) => void;
 }) {
@@ -248,101 +217,80 @@ export function SourcesList({
 
   if (!sources || sources.length === 0) return null;
 
+  const faviconSrcs = sources.map((s) => s.favicon).filter(Boolean) as string[];
+
   return (
     <div className={`flex w-full flex-col gap-2 ${className}`}>
-      {/* Collapsible Trigger Bar */}
+      {/* Quiet trigger: 32px (sm control scale) */}
       <button
         type="button"
         onClick={() => setIsExpanded((prev) => !prev)}
         aria-expanded={isExpanded}
-        className="corner-smooth group flex w-full items-center justify-between gap-3 rounded-control bg-surface px-3 py-2 text-small font-medium text-ink-2 shadow-hairline hover:bg-hover hover:text-ink transition-colors duration-150"
+        className="corner-smooth group flex h-8 w-fit items-center gap-2 rounded-control bg-surface px-2.5 text-caption font-medium text-ink-2 shadow-hairline hover:bg-hover hover:text-ink transition-colors duration-150 cursor-pointer select-none"
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <Icon name="bookmark" className="size-3.5 text-accent shrink-0" />
-          <span className="font-semibold text-ink">{title}</span>
-          <span className="rounded-full bg-accent-tint px-1.5 py-0.2 font-mono text-micro font-semibold text-accent">
-            {sources.length}
-          </span>
-
-          {/* Collapsed favicon strip */}
-          {!isExpanded && (
-            <div className="ml-1 hidden sm:flex items-center -space-x-1 overflow-hidden">
-              {sources.slice(0, 4).map((src) => (
-                <div
-                  key={src.id}
-                  className="size-4 rounded-full bg-surface shadow-[0_0_0_1.5px_var(--canvas)] flex items-center justify-center overflow-hidden shrink-0"
-                >
-                  <SourceLogo source={src} size="sm" />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1.5 text-ink-3 group-hover:text-ink">
-          <span className="text-micro hidden sm:inline">{isExpanded ? "Hide sources" : "Show sources"}</span>
-          <Icon
-            name="chevron-down"
-            className={`size-3.5 transition-transform duration-150 ${isExpanded ? "rotate-180" : ""}`}
-          />
-        </div>
+        {faviconSrcs.length > 0 && <AvatarStack srcs={faviconSrcs.slice(0, 3)} />}
+        <span>
+          {sources.length} {sources.length === 1 ? "source" : "sources"}
+        </span>
+        <Icon
+          name="chevron"
+          size={14}
+          className={`text-ink-3 transition-transform duration-150 group-hover:text-ink ${
+            isExpanded ? "rotate-180" : ""
+          }`}
+        />
       </button>
 
-      {/* Expanded Grid of Source Cards */}
+      {/* Expanded: Clean vertical list of rows for conversation replies */}
       {isExpanded && (
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 pt-1">
+        <div className="flex w-full flex-col divide-y divide-line rounded-control bg-surface shadow-hairline border border-line overflow-hidden">
           {sources.map((src) => (
             <div
               key={src.id}
-              className="corner-smooth group relative flex flex-col justify-between gap-2 rounded-control bg-surface p-3 shadow-hairline hover:shadow-card transition-all duration-150 border border-line/60 hover:border-line-strong"
+              className="flex items-start justify-between gap-3 p-2.5 hover:bg-hover transition-colors duration-150"
             >
-              <div className="flex flex-col gap-1.5">
-                {/* Header row: logo + domain + index badge */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <SourceLogo source={src} size="sm" />
-                    <span className="text-micro font-medium text-ink-3 truncate">
-                      {src.domain || (src.url ? new URL(src.url).hostname.replace(/^www\./, "") : "Source")}
-                    </span>
-                  </div>
-                  <span className="rounded-sm bg-accent-tint px-1.5 py-0.2 font-mono text-micro font-semibold text-accent">
-                    [{src.id}]
-                  </span>
+              <div className="flex items-start gap-2.5 min-w-0">
+                <span className="font-mono text-caption text-ink-3 shrink-0 pt-0.5">[{src.id}]</span>
+                <div className="mt-1 shrink-0">
+                  <SourceIcon source={src} size={14} />
                 </div>
-
-                {/* Title */}
-                <a
-                  href={src.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() => onSourceClick?.(src)}
-                  className="animated-underline text-caption font-semibold text-ink hover:text-accent line-clamp-2"
-                >
-                  {src.title}
-                </a>
-
-                {/* Snippet */}
-                {src.snippet && (
-                  <p className="text-caption leading-relaxed text-ink-2 line-clamp-2">
-                    {src.snippet}
-                  </p>
-                )}
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <a
+                    href={src.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => onSourceClick?.(src)}
+                    className="text-caption font-medium text-ink hover:underline truncate"
+                  >
+                    {src.title}
+                  </a>
+                  {src.snippet && (
+                    <p className="text-caption text-ink-2 line-clamp-1">
+                      {src.snippet}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2 text-caption text-ink-3">
+                    <span>{src.domain || (src.url ? new URL(src.url).hostname.replace(/^www\./, "") : "")}</span>
+                    {src.date && (
+                      <>
+                        <span>·</span>
+                        <span>{src.date}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* Footer */}
-              <div className="flex items-center justify-between pt-1 border-t border-line/40 text-micro text-ink-3">
-                <span className="truncate">{src.author || src.date || "Verified source"}</span>
-                <a
-                  href={src.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() => onSourceClick?.(src)}
-                  className="inline-flex items-center gap-1 font-medium text-accent hover:underline shrink-0"
-                >
-                  <span>Open</span>
-                  <Icon name="external-link" className="size-3" />
-                </a>
-              </div>
+              <a
+                href={src.url}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => onSourceClick?.(src)}
+                aria-label={`Open ${src.title}`}
+                className="p-1 text-ink-3 hover:text-ink shrink-0"
+              >
+                <Icon name="external" size={14} />
+              </a>
             </div>
           ))}
         </div>

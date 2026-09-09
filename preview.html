@@ -3716,140 +3716,143 @@ function RecommendationCard({
 const SRC_DEFAULT_SOURCES = [
   {
     id: 1,
-    title: "Formic Design System Tokens & Specifications",
-    url: "https://formicai.dev/docs/tokens",
-    domain: "formicai.dev",
-    iconName: "github",
-    snippet: "All components read CSS variables from styles/tokens.css with zero hardcoded colors or spacing values.",
-    author: "Formic Docs",
+    title: "Northwind Bank — Commercial Onboarding Policy (v4.2)",
+    url: "https://compliance.northwind.internal/policies/kyc",
+    domain: "northwind.internal",
+    brand: "slack",
+    snippet: "Entity verification requires dual authorization for credit lines exceeding 250,000 ETB.",
+    author: "Compliance Dept",
     date: "Sep 2026",
   },
   {
     id: 2,
-    title: "WCAG 2.1 Contrast Standards & Palette Derivation",
-    url: "https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum",
-    domain: "w3.org",
-    iconName: "google",
-    snippet: "Text and images of text must have a contrast ratio of at least 4.5:1 for normal text and 3:1 for large text.",
-    author: "W3C Standards",
+    title: "Selam Coffee — Q3 Velocity & Single-Origin Margins",
+    url: "https://reports.selamcoffee.com/analytics/q3-margins",
+    domain: "selamcoffee.com",
+    brand: "stripe",
+    snippet: "Yirgacheffe washed beans maintain 44% margin; recommend increasing roast batch sizes before Friday.",
+    author: "Selam Analytics",
     date: "Aug 2026",
   },
   {
     id: 3,
-    title: "Composition Intelligence & Admission Tests",
-    url: "https://formicai.dev/docs/composition",
-    domain: "formicai.dev",
-    snippet: "Every screen declares a brief (reader, question, action, register) and passes mechanical validation via compose_check.py.",
-    author: "Formic Design",
-    date: "Sep 2026",
+    title: "Cold-Chain Supplier Audit & Dairy Delivery Checklist",
+    url: "https://ops.freshdairy.internal/sop/cold-chain",
+    domain: "freshdairy.internal",
+    brand: "notion",
+    snippet: "Refrigerated transport logs must verify unbroken temperature monitoring under 4°C at intake.",
+    author: "Quality Operations",
+    date: "Aug 2026",
   },
 ];
 
-function SourceLogo({ source, size = "sm" }) {
-  const sizeCls = size === "sm" ? "size-3.5" : "size-4";
+function SourceIcon({ source, size = 14 }) {
   if (source.favicon) {
-    return <img src={source.favicon} alt="" className={`${sizeCls} rounded-full object-cover shadow-[0_0_0_1px_var(--line)]`} />;
+    return <img src={source.favicon} alt="" className="size-3.5 rounded-full object-cover shrink-0" />;
   }
-  if (source.iconName) {
-    return <BrandIcon name={source.iconName} className={`${sizeCls} text-ink-2 shrink-0`} />;
+  if (source.brand) {
+    return <BrandIcon name={source.brand} size={size} className="text-ink-2 shrink-0" />;
   }
-  return <Icon name="link" className={`${sizeCls} text-ink-3 shrink-0`} />;
+  if (source.icon) {
+    return <Icon name={source.icon} size={size} className="text-ink-3 shrink-0" />;
+  }
+  return <Icon name="file" size={size} className="text-ink-3 shrink-0" />;
 }
 
 function InlineCitation({ source, label, className = "" }) {
   const sources = Array.isArray(source) ? source : [source];
   const primarySource = sources[0];
-  const displayLabel = label ?? (sources.length === 1 ? `[${primarySource?.id}]` : `[${sources.map((s) => s.id).join(", ")}]`);
+  const displayLabel =
+    label ?? (sources.length === 1 ? String(primarySource?.id ?? "1") : sources.map((s) => s.id).join(", "));
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [popoverPos, setPopoverPos] = useState({ x: 0, top: 0 });
-  const triggerRef = useRef(null);
-  const closeTimeout = useRef(null);
-
-  const updatePos = () => {
-    if (!triggerRef.current) return;
-    const rect = triggerRef.current.getBoundingClientRect();
-    const width = 288;
-    const x = Math.max(12, Math.min(window.innerWidth - width - 12, rect.left + rect.width / 2 - width / 2));
-    if (rect.bottom + 220 > window.innerHeight && rect.top > 220) {
-      setPopoverPos({ x, bottom: window.innerHeight - rect.top + 6 });
-    } else {
-      setPopoverPos({ x, top: rect.bottom + 6 });
-    }
-  };
+  const layerId = useId();
+  const { open, position, anchorRef, openAt, close } = useAnchoredLayer(layerId);
+  const timerRef = useRef(null);
 
   const handleMouseEnter = () => {
-    if (closeTimeout.current) clearTimeout(closeTimeout.current);
-    updatePos();
-    setIsOpen(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    openAt({ estimatedHeight: 160, width: 280, align: "start" });
   };
 
   const handleMouseLeave = () => {
-    closeTimeout.current = setTimeout(() => setIsOpen(false), 180);
+    timerRef.current = setTimeout(() => close(), 180);
   };
 
-  useEffect(() => {
-    return () => {
-      if (closeTimeout.current) clearTimeout(closeTimeout.current);
-    };
-  }, []);
+  const handleClick = () => {
+    if (open) close();
+    else openAt({ estimatedHeight: 160, width: 280, align: "start" });
+  };
 
   if (!primarySource) return null;
 
   return (
     <>
       <button
-        ref={triggerRef}
+        ref={anchorRef}
         type="button"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onFocus={handleMouseEnter}
-        onBlur={handleMouseLeave}
-        onClick={() => setIsOpen((prev) => !prev)}
-        aria-expanded={isOpen}
-        aria-label={`Citation ${displayLabel}`}
-        className={`corner-smooth inline-flex items-center justify-center align-baseline px-1.5 py-0.5 mx-0.5 rounded-sm font-mono text-micro font-semibold text-accent bg-accent-tint hover:bg-accent hover:text-canvas focus-visible:outline-none transition-colors duration-150 cursor-pointer select-none ${className}`}
+        onClick={handleClick}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-controls={open ? layerId : undefined}
+        aria-label={`Source citation ${displayLabel}`}
+        className={`align-super text-micro font-medium text-ink-3 hover:text-ink hover:underline cursor-pointer select-none leading-none px-0.5 ${className}`}
       >
-        {displayLabel}
+        [{displayLabel}]
       </button>
 
-      {isOpen && (
+      {open && position && (
         <Popover
-          x={popoverPos.x}
-          top={popoverPos.top}
-          bottom={popoverPos.bottom}
-          className="w-72 p-3 shadow-popover"
-          onClose={() => setIsOpen(false)}
+          id={layerId}
+          x={position.x}
+          top={position.top}
+          bottom={position.bottom}
+          width={position.width ?? 280}
+          role="dialog"
+          className="p-3 shadow-overlay"
+          onClose={close}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2.5">
             {sources.map((src, idx) => (
               <div key={src.id} className={`flex flex-col gap-1.5 ${idx > 0 ? "pt-2 border-t border-line" : ""}`}>
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 text-caption">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <SourceLogo source={src} size="sm" />
-                    <span className="text-micro font-medium text-ink-3 truncate">
+                    <SourceIcon source={src} size={13} />
+                    <span className="font-medium text-ink-3 truncate">
                       {src.domain || (src.url ? new URL(src.url).hostname.replace(/^www\./, "") : "Source")}
                     </span>
                   </div>
-                  <span className="rounded-sm bg-accent-tint px-1 py-0.2 font-mono text-micro font-medium text-accent">
-                    [{src.id}]
-                  </span>
+                  <span className="font-mono text-ink-3 shrink-0">[{src.id}]</span>
                 </div>
-                <a href={src.url} target="_blank" rel="noreferrer" className="animated-underline text-caption font-semibold text-ink hover:text-accent line-clamp-2">
+
+                <a
+                  href={src.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="animated-underline text-body font-semibold text-ink hover:underline line-clamp-2"
+                >
                   {src.title}
                 </a>
+
                 {src.snippet && (
-                  <p className="rounded-sm bg-inset px-2.5 py-1.5 border-l-2 border-accent text-caption leading-relaxed text-ink-2 line-clamp-3">
-                    “{src.snippet}”
+                  <p className="rounded-sm bg-inset p-2 text-caption leading-relaxed text-ink-2 line-clamp-3">
+                    {src.snippet}
                   </p>
                 )}
-                <div className="flex items-center justify-between pt-0.5 text-micro text-ink-3">
-                  <span>{src.author || src.date || "Verified citation"}</span>
-                  <a href={src.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-accent hover:underline">
-                    <span>Visit source</span>
-                    <Icon name="external-link" className="size-3" />
+
+                <div className="flex items-center justify-between pt-0.5 text-caption text-ink-3">
+                  <span>{src.author || src.date || ""}</span>
+                  <a
+                    href={src.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 font-medium text-ink hover:underline"
+                  >
+                    <span>Open</span>
+                    <Icon name="external" size={13} />
                   </a>
                 </div>
               </div>
@@ -3861,9 +3864,17 @@ function InlineCitation({ source, label, className = "" }) {
   );
 }
 
-function SourcesList({ sources = SRC_DEFAULT_SOURCES, defaultExpanded = false, title = "Sources", className = "", onSourceClick }) {
+function SourcesList({
+  sources = SRC_DEFAULT_SOURCES,
+  defaultExpanded = false,
+  className = "",
+  onSourceClick,
+}) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
   if (!sources || sources.length === 0) return null;
+
+  const faviconSrcs = sources.map((s) => s.favicon).filter(Boolean);
 
   return (
     <div className={`flex w-full flex-col gap-2 ${className}`}>
@@ -3871,58 +3882,70 @@ function SourcesList({ sources = SRC_DEFAULT_SOURCES, defaultExpanded = false, t
         type="button"
         onClick={() => setIsExpanded((prev) => !prev)}
         aria-expanded={isExpanded}
-        className="corner-smooth group flex w-full items-center justify-between gap-3 rounded-control bg-surface px-3 py-2 text-small font-medium text-ink-2 shadow-hairline hover:bg-hover hover:text-ink transition-colors duration-150"
+        className="corner-smooth group flex h-8 w-fit items-center gap-2 rounded-control bg-surface px-2.5 text-caption font-medium text-ink-2 shadow-hairline hover:bg-hover hover:text-ink transition-colors duration-150 cursor-pointer select-none"
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <Icon name="bookmark" className="size-3.5 text-accent shrink-0" />
-          <span className="font-semibold text-ink">{title}</span>
-          <span className="rounded-full bg-accent-tint px-1.5 py-0.2 font-mono text-micro font-semibold text-accent">
-            {sources.length}
-          </span>
-          {!isExpanded && (
-            <div className="ml-1 hidden sm:flex items-center -space-x-1 overflow-hidden">
-              {sources.slice(0, 4).map((src) => (
-                <div key={src.id} className="size-4 rounded-full bg-surface shadow-[0_0_0_1.5px_var(--canvas)] flex items-center justify-center overflow-hidden shrink-0">
-                  <SourceLogo source={src} size="sm" />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5 text-ink-3 group-hover:text-ink">
-          <span className="text-micro hidden sm:inline">{isExpanded ? "Hide sources" : "Show sources"}</span>
-          <Icon name="chevron-down" className={`size-3.5 transition-transform duration-150 ${isExpanded ? "rotate-180" : ""}`} />
-        </div>
+        {faviconSrcs.length > 0 && <AvatarStack srcs={faviconSrcs.slice(0, 3)} />}
+        <span>
+          {sources.length} {sources.length === 1 ? "source" : "sources"}
+        </span>
+        <Icon
+          name="chevron"
+          size={14}
+          className={`text-ink-3 transition-transform duration-150 group-hover:text-ink ${
+            isExpanded ? "rotate-180" : ""
+          }`}
+        />
       </button>
 
       {isExpanded && (
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 pt-1">
+        <div className="flex w-full flex-col divide-y divide-line rounded-control bg-surface shadow-hairline border border-line overflow-hidden">
           {sources.map((src) => (
-            <div key={src.id} className="corner-smooth group relative flex flex-col justify-between gap-2 rounded-control bg-surface p-3 shadow-hairline hover:shadow-card transition-all duration-150 border border-line/60 hover:border-line-strong">
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <SourceLogo source={src} size="sm" />
-                    <span className="text-micro font-medium text-ink-3 truncate">
-                      {src.domain || (src.url ? new URL(src.url).hostname.replace(/^www\./, "") : "Source")}
-                    </span>
-                  </div>
-                  <span className="rounded-sm bg-accent-tint px-1.5 py-0.2 font-mono text-micro font-semibold text-accent">
-                    [{src.id}]
-                  </span>
+            <div
+              key={src.id}
+              className="flex items-start justify-between gap-3 p-2.5 hover:bg-hover transition-colors duration-150"
+            >
+              <div className="flex items-start gap-2.5 min-w-0">
+                <span className="font-mono text-caption text-ink-3 shrink-0 pt-0.5">[{src.id}]</span>
+                <div className="mt-1 shrink-0">
+                  <SourceIcon source={src} size={14} />
                 </div>
-                <a href={src.url} target="_blank" rel="noreferrer" onClick={() => onSourceClick?.(src)} className="animated-underline text-caption font-semibold text-ink hover:text-accent line-clamp-2">
-                  {src.title}
-                </a>
-                {src.snippet && <p className="text-caption leading-relaxed text-ink-2 line-clamp-2">{src.snippet}</p>}
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <a
+                    href={src.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => onSourceClick?.(src)}
+                    className="text-caption font-medium text-ink hover:underline truncate"
+                  >
+                    {src.title}
+                  </a>
+                  {src.snippet && (
+                    <p className="text-caption text-ink-2 line-clamp-1">
+                      {src.snippet}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2 text-caption text-ink-3">
+                    <span>{src.domain || (src.url ? new URL(src.url).hostname.replace(/^www\./, "") : "")}</span>
+                    {src.date && (
+                      <>
+                        <span>·</span>
+                        <span>{src.date}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center justify-between pt-1 border-t border-line/40 text-micro text-ink-3">
-                <span className="truncate">{src.author || src.date || "Verified source"}</span>
-                <a href={src.url} target="_blank" rel="noreferrer" onClick={() => onSourceClick?.(src)} className="inline-flex items-center gap-1 font-medium text-accent hover:underline shrink-0">
-                  <span>Open</span>
-                  <Icon name="external-link" className="size-3" />
-                </a>
-              </div>
+
+              <a
+                href={src.url}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => onSourceClick?.(src)}
+                aria-label={`Open ${src.title}`}
+                className="p-1 text-ink-3 hover:text-ink shrink-0"
+              >
+                <Icon name="external" size={14} />
+              </a>
             </div>
           ))}
         </div>
@@ -12059,7 +12082,7 @@ function Page_sources() {
       <GalleryCard label="Inline citations in markdown text" wide>
         <div className="flex flex-col gap-3 p-1">
           <p className="text-body leading-relaxed text-ink">
-            Pistachio is up 23% this month with the best margin on the board <InlineCitation source={SRC_DEFAULT_SOURCES[0]} />. Cold-chain checks pass before every weekend feature <InlineCitation source={SRC_DEFAULT_SOURCES[1]} />, and all layout compositions adhere to strict register rules <InlineCitation source={[SRC_DEFAULT_SOURCES[0], SRC_DEFAULT_SOURCES[2]]} />.
+            Northwind Bank approved the commercial credit policy for tier-1 partners <InlineCitation source={SRC_DEFAULT_SOURCES[0]} />. Selam Coffee reported a 44% margin on Yirgacheffe washed beans for Q3 <InlineCitation source={SRC_DEFAULT_SOURCES[1]} />, while dairy supplier intake passed all cold-chain refrigeration audit checks <InlineCitation source={[SRC_DEFAULT_SOURCES[1], SRC_DEFAULT_SOURCES[2]]} />.
           </p>
         </div>
       </GalleryCard>
