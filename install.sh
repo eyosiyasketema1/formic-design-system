@@ -106,7 +106,7 @@ EOF
 EOF
   cat > "$APP/index.html" <<EOF
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark" data-layout="medium">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -137,15 +137,15 @@ EOF
 EOF
   cat > "$APP/src/App.tsx" <<'EOF'
 import Welcome from "./pages/Welcome";
-import CustomizeNudge, { ThemeToggle } from "./CustomizeNudge";
+import CustomizeNudge from "./CustomizeNudge";
 
-/* App.tsx stays as the shell; pages come and go. The theme toggle and the
-   nudge outlive the welcome page; delete them when the look is yours. */
+/* App.tsx stays as the shell; pages come and go. The nudge outlives the
+   welcome page; delete it when the look is yours. The theme switch is in
+   the rail beside the profile, so no floating one. */
 export default function App() {
   return (
     <>
       <Welcome />
-      <ThemeToggle />
       <CustomizeNudge />
     </>
   );
@@ -154,43 +154,21 @@ EOF
   cat > "$APP/src/CustomizeNudge.tsx" <<'EOF'
 /* Brief
    Reader:   the person who just watched their AI tool build the first page
-   Question: this is the stock look; can I change it, and how does it read in dark?
-   Action:   flip the theme, or open the customizer in a new tab
+   Question: this is the stock look; can I change it?
+   Action:   open the customizer in a new tab
    Register: text
 */
-/* Two small things above whatever page is showing. ThemeToggle sits in the
-   top-right corner until a rail (with its own switch beside the profile)
-   takes over. CustomizeNudge is one card in
-   the bottom-right that says the look can be changed, with one link; Close
-   and Customize both dismiss it for good. Delete this file and its lines in
-   App.tsx once the look is yours. */
-import { useEffect, useState } from "react";
+/* One card in the bottom-right corner, above whatever page is showing, that
+   says the look can be changed, with one link; Close and Customize both
+   dismiss it for good. Delete this file and its line in App.tsx once the
+   look is yours. */
+import { useState } from "react";
 import Button from "./formic/components/Button";
-import { Card, Icon, IconButton, Tooltip } from "./formic/components/primitives";
-import { useTheme } from "./formic/components/hooks";
+import { Card, Icon, IconButton } from "./formic/components/primitives";
 
 const CUSTOMIZE_URL = "https://formicai.dev/customize";
 const STORAGE_KEY = "formic-nudge";
 const dismissed = () => { try { return localStorage.getItem(STORAGE_KEY) === "off"; } catch { return false; } };
-
-/* The theme switch, top-right, only while the page has no rail: once an
-   AppShell is on screen its rail carries the switch beside the profile, and
-   a second one would be noise. */
-export function ThemeToggle() {
-  const { theme, toggle } = useTheme();
-  const [hasRail, setHasRail] = useState(false);
-  useEffect(() => { setHasRail(!!document.querySelector("aside")); }, []);
-  if (hasRail) return null;
-  return (
-    <div className="fixed top-3 right-3 z-40">
-      <Tooltip label={theme === "dark" ? "Light mode" : "Dark mode"}>
-        <IconButton label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={toggle} className="size-9 rounded-control bg-surface text-ink-2 shadow-btn hover:bg-hover hover:text-ink">
-          <Icon name={theme === "dark" ? "sun" : "moon"} size={16} />
-        </IconButton>
-      </Tooltip>
-    </div>
-  );
-}
 
 export default function CustomizeNudge() {
   const [shown, setShown] = useState(() => !dismissed());
@@ -226,7 +204,7 @@ import Panel from "../formic/components/Panel";
 import { FormicMark } from "../formic/components/brand";
 import { Icon } from "../formic/components/primitives";
 
-const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx, CustomizeNudge and ThemeToggle) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report); four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a three-series revenue LineChart with a legend beside a one-third Panel holding a DonutChart of revenue by client; a full-width Panel with a recent invoices DataTable (toolbar search, status filter, selectable rows, pagination) beside a Panel with an activity Timeline. Everything must work: filters filter, rows select, the theme switch flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders.";
+const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report); four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a three-series revenue LineChart with a legend beside a one-third Panel holding a DonutChart of revenue by client; then a recent invoices DataTable on its own, filling the full width (toolbar search, status filter, selectable rows, pagination). Everything must work: filters filter, rows select, the theme switch beside the profile flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders.";
 const PREFIX = "Use Formic (src/formic), read AGENTS.md, then";
 
 export default function Welcome() {
@@ -474,7 +452,7 @@ if [ "$NEW" = 1 ]; then
   printf '\nDone. Run it:\n'
   if [ "$APP" = "." ]; then printf '  npm run dev        # the browser opens a page that says Formic is working\n\n'; else printf '  cd %s && npm run dev        # the browser opens a page that says Formic is working\n\n' "$APP"; fi
   printf 'Then open your AI tool (Claude Code, Cursor, Antigravity, Copilot, any of them) in this folder and paste the test prompt:\n'
-  printf '  %s\n\n' "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx, CustomizeNudge and ThemeToggle) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report); four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a three-series revenue LineChart with a legend beside a one-third Panel holding a DonutChart of revenue by client; a full-width Panel with a recent invoices DataTable (toolbar search, status filter, selectable rows, pagination) beside a Panel with an activity Timeline. Everything must work: filters filter, rows select, the theme switch flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders."
+  printf '  %s\n\n' "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report); four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a three-series revenue LineChart with a legend beside a one-third Panel holding a DonutChart of revenue by client; then a recent invoices DataTable on its own, filling the full width (toolbar search, status filter, selectable rows, pagination). Everything must work: filters filter, rows select, the theme switch beside the profile flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders."
   printf 'After that, start every prompt with:  %s  and say what you want.\n\n' "Use Formic (src/formic), read AGENTS.md, then"
   printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
   printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
