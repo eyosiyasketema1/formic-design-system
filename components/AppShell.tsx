@@ -88,7 +88,6 @@ export default function AppShell({
   const header = (title || actions) && !isTopBar && (
     <header className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
-        {isProject && <ProjectSidebarTrigger open={project.open} toggle={project.toggle} />}
         <div className="min-w-0">
           {title && <h1 className="truncate text-display font-semibold tracking-tight text-ink">{title}</h1>}
           {caption && <p className="mt-0.5 text-caption text-ink-2">{caption}</p>}
@@ -105,6 +104,13 @@ export default function AppShell({
     </div>
   );
   const height = fill ? "h-dvh" : "h-full";
+  /* the project rails' trigger: a slim strip in the page's top-left corner,
+     where every app keeps it, never beside a title the layout may centre */
+  const trigger = isProject && (
+    <div className="-mb-3 flex h-9 shrink-0 items-center px-2 pt-1">
+      <ProjectSidebarTrigger open={project.open} toggle={project.toggle} />
+    </div>
+  );
 
   if (isProject) {
     return (
@@ -120,9 +126,11 @@ export default function AppShell({
           onTheme={onTheme}
           onSearch={onSearch}
         />
+        {/* the rail's trigger sits in the page's top-left corner, where every
+            app keeps it, not beside a title that may be centred by the layout */}
         {rail === "inset"
-          ? <ProjectInset>{content}</ProjectInset>
-          : <main className="min-w-0 flex-1 overflow-y-auto">{content}</main>}
+          ? <ProjectInset>{trigger}{content}</ProjectInset>
+          : <main className="min-w-0 flex-1 overflow-y-auto">{trigger}{content}</main>}
       </div>
     );
   }

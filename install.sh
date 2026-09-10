@@ -137,15 +137,15 @@ EOF
 EOF
   cat > "$APP/src/App.tsx" <<'EOF'
 import Welcome from "./pages/Welcome";
-import CustomizeNudge from "./CustomizeNudge";
+import CustomizeNudge, { ThemeToggle } from "./CustomizeNudge";
 
-/* App.tsx stays as the shell; pages come and go. The nudge is the one thing
-   that outlives the welcome page: it sends you to the customizer once the
-   dashboard is on screen, and is deleted when the look is yours. */
+/* App.tsx stays as the shell; pages come and go. The theme toggle and the
+   nudge outlive the welcome page; delete them when the look is yours. */
 export default function App() {
   return (
     <>
       <Welcome />
+      <ThemeToggle />
       <CustomizeNudge />
     </>
   );
@@ -154,77 +154,57 @@ EOF
   cat > "$APP/src/CustomizeNudge.tsx" <<'EOF'
 /* Brief
    Reader:   the person who just watched their AI tool build the first page
-   Question: this is the stock look; how do I make it mine, and how does it read in dark?
-   Action:   flip the theme, open the customizer in a new tab, paste the block to the AI tool
+   Question: this is the stock look; can I change it, and how does it read in dark?
+   Action:   flip the theme, or open the customizer in a new tab
    Register: text
 */
-/* A dock in the corner, above whatever page is showing: a theme switch and a
-   "make it yours" card that folds to a pill. It remembers what you did:
-   folded stays folded across reloads, "Don't show again" keeps only the
-   theme switch. Starts folded on the welcome page, open once the AI tool has
-   replaced it. Delete this file and its line in App.tsx once the look is
-   yours. */
-import { useEffect, useState } from "react";
+/* Two small things above whatever page is showing. ThemeToggle sits in the
+   top-right corner, where every app keeps it. CustomizeNudge is one card in
+   the bottom-right that says the look can be changed, with one link; Close
+   and Customize both dismiss it for good. Delete this file and its lines in
+   App.tsx once the look is yours. */
+import { useState } from "react";
 import Button from "./formic/components/Button";
 import { Card, Icon, IconButton, Tooltip } from "./formic/components/primitives";
 
 const CUSTOMIZE_URL = "https://formicai.dev/customize";
-const STORAGE_KEY = "formic-dock";
-type DockState = "open" | "folded" | "off";
+const STORAGE_KEY = "formic-nudge";
 const readTheme = () => (document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
-const readDock = (): DockState | null => {
-  try { const v = localStorage.getItem(STORAGE_KEY); return v === "open" || v === "folded" || v === "off" ? v : null; } catch { return null; }
-};
-const writeDock = (v: DockState) => { try { localStorage.setItem(STORAGE_KEY, v); } catch { /* private mode: the choice lasts the session */ } };
+const dismissed = () => { try { return localStorage.getItem(STORAGE_KEY) === "off"; } catch { return false; } };
 
-export default function CustomizeNudge() {
-  const [dock, setDockState] = useState<DockState>("folded");
+export function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">(readTheme);
-  useEffect(() => {
-    const saved = readDock();
-    if (saved) { setDockState(saved); return; }
-    if (!document.querySelector("[data-formic-welcome]")) setDockState("open");
-  }, []);
-  const setDock = (v: DockState) => { setDockState(v); writeDock(v); };
   const flip = () => {
     const next = theme === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
     setTheme(next);
   };
-  const themeButton = (
-    <Tooltip label={theme === "dark" ? "Light mode" : "Dark mode"}>
-      <IconButton label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={flip} className="size-9 rounded-control bg-surface text-ink-2 shadow-btn hover:bg-hover hover:text-ink">
-        <Icon name={theme === "dark" ? "sun" : "moon"} size={16} />
-      </IconButton>
-    </Tooltip>
-  );
-  if (dock !== "open") {
-    return (
-      <div className="fixed right-4 bottom-4 z-40 flex items-center gap-2">
-        {themeButton}
-        {dock === "folded" && <Button variant="secondary" size="md" onClick={() => setDock("open")} icon={<Icon name="sparkles" />}>Make it yours</Button>}
-      </div>
-    );
-  }
   return (
-    <Card role="region" aria-label="Make it yours" className="fixed right-4 bottom-4 z-40 flex w-full max-w-sm flex-col gap-3 p-4">
-      <div className="flex items-start gap-3">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-accent-tint text-accent"><Icon name="sparkles" size={16} /></span>
-        <div className="min-w-0 flex-1">
-          <p className="text-body font-semibold text-ink">This is the stock look. Now make it yours.</p>
-          <p className="mt-0.5 text-caption text-ink-2">Pick the accent, palette, font, radius and rail; press Copy for your AI tool and paste the block into the same chat. Every page after that inherits it.</p>
-        </div>
-        <IconButton label="Fold away" onClick={() => setDock("folded")} className="-mt-1 -mr-1 shrink-0">
-          <Icon name="chevron" size={14} />
+    <div className="fixed top-3 right-3 z-40">
+      <Tooltip label={theme === "dark" ? "Light mode" : "Dark mode"}>
+        <IconButton label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={flip} className="size-9 rounded-control bg-surface text-ink-2 shadow-btn hover:bg-hover hover:text-ink">
+          <Icon name={theme === "dark" ? "sun" : "moon"} size={16} />
         </IconButton>
+      </Tooltip>
+    </div>
+  );
+}
+
+export default function CustomizeNudge() {
+  const [shown, setShown] = useState(() => !dismissed());
+  const close = () => { setShown(false); try { localStorage.setItem(STORAGE_KEY, "off"); } catch { /* private mode: the choice lasts the session */ } };
+  if (!shown) return null;
+  return (
+    <Card role="region" aria-label="Make it yours" className="fixed right-4 bottom-4 z-40 flex w-full max-w-xs items-start gap-3 p-4">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-accent-tint text-accent"><Icon name="sparkles" size={16} /></span>
+      <div className="min-w-0 flex-1">
+        <p className="text-body font-semibold text-ink">Make it yours</p>
+        <p className="mt-0.5 text-caption text-ink-2">Accent, palette, font, radius and rail can be changed any time, and every page follows.</p>
+        <Button variant="accent" size="sm" href={CUSTOMIZE_URL} target="_blank" icon={<Icon name="external" />} onClick={close} className="mt-3">Customize</Button>
       </div>
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          {themeButton}
-          <Button variant="ghost" size="sm" onClick={() => setDock("off")}>Don't show again</Button>
-        </div>
-        <Button variant="accent" size="sm" href={CUSTOMIZE_URL} target="_blank" icon={<Icon name="external" />}>Customize this page</Button>
-      </div>
+      <IconButton label="Close" onClick={close} className="-mt-1 -mr-1 shrink-0 text-ink-3 hover:bg-hover hover:text-ink">
+        <Icon name="close" size={14} />
+      </IconButton>
     </Card>
   );
 }

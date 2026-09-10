@@ -317,6 +317,12 @@ except Exception as e:
     print(f"note: preview parse check skipped ({e})")
 
 # ── Result ──────────────────────────────────────────────────
+# ── 3d. the version the gallery shows is the version in package.json ──
+_pkg_ver = re.search(r'"version":\s*"([^"]+)"', (ROOT / "package.json").read_text())
+_gal_ver = re.search(r'const FORMIC_VERSION = "([^"]+)"', (ROOT / "preview.html").read_text())
+if not _pkg_ver or not _gal_ver or _pkg_ver.group(1) != _gal_ver.group(1):
+    fails.append(f"version: package.json says {_pkg_ver and _pkg_ver.group(1)} but preview.html FORMIC_VERSION is {_gal_ver and _gal_ver.group(1)}; bump both (and CHANGELOG.md) together")
+
 if fails:
     print(f"QA FAILED — {len(fails)} issue(s):")
     for f in fails:

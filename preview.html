@@ -259,6 +259,7 @@
 /* Corner shape: smooth (squircle, the default) or round (a plain arc),
  * chosen once for the whole app by formic.config.json's `corners`. */
 :root[data-corners="round"] .corner-smooth, :root[data-corners="round"] .primitive-field { corner-shape: round; }
+.primitive-tooltip { --ink: var(--tooltip-fg); --ink-2: var(--tooltip-fg); --ink-3: var(--tooltip-muted); }
 .primitive-field { box-shadow: var(--shadow-field); transition: border-color 150ms; corner-shape: squircle; }
 .primitive-field:focus-within { border-color: var(--line-strong); }
 .primitive-field[data-invalid="true"], .primitive-field[data-invalid="true"]:focus-within { border-color: var(--red); }
@@ -948,6 +949,7 @@ const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useI
 /* mirror of components/config.ts — the defaults an app chooses at
    formicai.dev/customize (apply_config.py writes the real one) */
 const FORMIC_CONFIG = { avatar: "initials", sidebar: "full", sidebarState: "expanded", motion: true };
+const FORMIC_VERSION = "0.2.0"; /* mirrors package.json; the gate checks they agree */
 
 /* ═══════════ Primitives ═══════════ */
 /* Icons: real projects use @phosphor-icons/react through the Icon wrapper in
@@ -1725,7 +1727,7 @@ function Avatar({
 }
 /* The chip surface is shared with the chart tooltips below —
    extracted on second use so the two can never drift apart. */
-const TOOLTIP_CHIP = "rounded-chip px-2 py-1 text-tiny font-medium whitespace-nowrap";
+const TOOLTIP_CHIP = "primitive-tooltip rounded-chip px-2 py-1 text-tiny font-medium whitespace-nowrap";
 const TOOLTIP_CHIP_STYLE = { background: "var(--tooltip-bg)", color: "var(--tooltip-fg)" };
 function Tooltip({ label, delay = 250, children }) {
   const id = useId();
@@ -16293,11 +16295,13 @@ function DocsPage({ page, index, pg, state: givenState, set: givenSet, first = t
      scrolled into below it keeps its own knobs until it becomes current */
   const [ownState, ownSet] = usePlayground(pg ? pg.schema : [], page.id);
   const state = givenState ?? ownState, set = givenSet ?? ownSet;
-  const RAW = "https://raw.githubusercontent.com/eyosiyasketema1/formic-design-system/main";
+  /* the one thing to copy: a prompt that names the component and its file, for
+     whichever AI tool is open on a Formic project */
   const files = page.file.split(" ");
-  const install = files.map((f) => `curl --create-dirs -o src/${f} ${RAW}/${f}`).join(" && ");
+  const names = files.map((f) => f.replace(/^components\//, "").replace(/\.tsx?$/, ""));
+  const prompt = `Use Formic's ${page.title} component (src/formic/${files[0]}${files.length > 1 ? ` and ${files.slice(1).map((f) => `src/formic/${f}`).join(", ")}` : ""}) and read AGENTS.md first.`;
   const [copied, setCopied] = useState(false);
-  const copy = () => { try { navigator.clipboard.writeText(install); setCopied(true); setTimeout(() => setCopied(false), 1400); } catch {} };
+  const copy = () => { try { navigator.clipboard.writeText(prompt); setCopied(true); setTimeout(() => setCopied(false), 1400); } catch {} };
   const PageBody = page.Component;
   return (
     <div className="flex min-w-0 gap-8" data-page={page.id}>
@@ -16310,14 +16314,12 @@ function DocsPage({ page, index, pg, state: givenState, set: givenSet, first = t
         </header>
 
         <section className="mb-8">
-          <h2 className="text-title font-semibold text-ink">Installation</h2>
-          <div className="mt-3 flex items-center gap-2 rounded-control bg-field px-3 py-2">
-            <code className="min-w-0 flex-1 truncate font-mono text-small text-ink">{install}</code>
-            <IconButton label={copied ? "Copied" : "Copy install command"} onClick={copy} className="text-ink-3 hover:bg-hover hover:text-ink">
-              <Icon name={copied ? "check" : "copy"} size={14} strokeWidth={2} />
-            </IconButton>
+          <h2 className="text-title font-semibold text-ink">Use it in your app</h2>
+          <div className="mt-3 flex flex-col gap-2 rounded-card bg-surface p-3 shadow-card sm:flex-row sm:items-center">
+            <code className="min-w-0 flex-1 truncate font-mono text-small text-ink" title={prompt}>{prompt}</code>
+            <Button variant="accent-soft" size="sm" icon={<Icon name={copied ? "check" : "copy"} size={14} />} onClick={copy} className="shrink-0" aria-live="polite">{copied ? "Copied" : "Copy prompt"}</Button>
           </div>
-          <p className="mt-2 text-caption text-ink-3">Formic is vendored: copy the file in and own it. Tokens come from <code className="font-mono">styles/tokens.css</code>.</p>
+          <p className="mt-2 text-caption text-ink-3">Paste it into Claude Code, Cursor or any agent open on a Formic project. No project yet? <a href="./#start" className="text-ink underline decoration-line underline-offset-2 hover:decoration-ink">One command sets one up</a>.</p>
         </section>
 
         {pg && (
@@ -17536,7 +17538,6 @@ function AppShell({
   const header = (title || actions) && !isTopBar && (
     <header className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
-        {isProject && <ProjectSidebarTrigger open={project.open} toggle={project.toggle} />}
         <div className="min-w-0">
           {title && <h1 className="truncate text-display font-semibold tracking-tight text-ink">{title}</h1>}
           {caption && <p className="mt-0.5 text-caption text-ink-2">{caption}</p>}
@@ -17553,13 +17554,22 @@ function AppShell({
     </div>
   );
   const height = fill ? "h-dvh" : "h-full";
+  /* the project rails' trigger: a slim strip in the page's top-left corner,
+     where every app keeps it, never beside a title the layout may centre */
+  const trigger = isProject && (
+    <div className="-mb-3 flex h-9 shrink-0 items-center px-2 pt-1">
+      <ProjectSidebarTrigger open={project.open} toggle={project.toggle} />
+    </div>
+  );
   if (isProject) {
     return (
       <div className={`flex ${height} min-w-0 ${rail === "inset" ? "bg-sidebar" : ""} ${className}`}>
         <ProjectSidebar layout={rail} open={project.open} groups={sections ? toGroups(sections) : undefined} active={active} onSelect={onSelect} user={user} theme={theme} onTheme={onTheme} onSearch={onSearch} />
+        {/* the rail's trigger sits in the page's top-left corner, where every
+            app keeps it, not beside a title that may be centred by the layout */}
         {rail === "inset"
-          ? <ProjectInset>{content}</ProjectInset>
-          : <main className="min-w-0 flex-1 overflow-y-auto">{content}</main>}
+          ? <ProjectInset>{trigger}{content}</ProjectInset>
+          : <main className="min-w-0 flex-1 overflow-y-auto">{trigger}{content}</main>}
       </div>
     );
   }
@@ -18278,7 +18288,7 @@ function App() {
         <div className="sticky top-0 z-10 -mx-3 mb-3 border-b border-line bg-sidebar px-5 pt-6 pb-3">
           <BackToSite className="-ml-2 mb-2" />
           <p className="text-title font-semibold tracking-tight text-ink">Formic AI Design System</p>
-          <p className="mt-0.5 font-mono text-micro text-ink-3 tabular-nums">v0.1 · {componentCount} components</p>
+          <p className="mt-0.5 font-mono text-micro text-ink-3 tabular-nums">v{FORMIC_VERSION} · {componentCount} components</p>
           <p className="font-mono text-micro text-ink-3 tabular-nums">{variantCount} variants across {PAGES.length} pages</p>
           <div className="mt-2 flex items-center gap-1.5">
             <a href="./customize" className="corner-smooth inline-flex h-7 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-control bg-surface px-2 text-caption font-medium text-ink shadow-btn transition-colors duration-150 hover:bg-hover">
