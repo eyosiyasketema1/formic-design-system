@@ -12,7 +12,7 @@ A token-driven React + Tailwind v4 design system for AI product interfaces: chat
 - Tokens only: no hardcoded colors, sizes, radii, shadows, or easings
 - WCAG AA verified by script across every mode and palette
 - Flat elevation (hairline borders, no drop shadows), one easing curve
-- Two peer dependencies: React and Tabler icons
+- Two peer dependencies: React and Phosphor icons
 
 ---
 
@@ -46,7 +46,7 @@ Green **Code** button on this repo, then **Download ZIP**, and copy `styles/` an
 ### Peer dependencies
 
 ```bash
-npm install react react-dom @tabler/icons-react
+npm install react react-dom @phosphor-icons/react
 npm install @dicebear/core @dicebear/notionists   # only for doodle avatars; loaded on demand
 ```
 
@@ -132,7 +132,7 @@ curl -fsSL https://formicai.dev/install.sh | bash
 
 It copies `styles/` and `components/` into `src/formic/` (pass another folder as the first argument if you prefer), wires the CSS and the icon package when it can see where, adds a pre-commit hook that runs the two gates, and writes `AGENTS.md`, `.cursor/rules/formic-design-system.mdc`, `.github/copilot-instructions.md`, `.claude/skills/formic-design-system/SKILL.md`, and a Formic section in `CLAUDE.md`. Re-run it to update; it never overwrites your own files. Read [`install.sh`](install.sh) first if you like to know what you are piping into bash.
 
-**2. Wire the CSS** (Tailwind v4, three lines in this order) and `npm install @tabler/icons-react`, only if the installer said it could not find your global stylesheet; a scaffolded app already has it.
+**2. Wire the CSS** (Tailwind v4, three lines in this order) and `npm install @phosphor-icons/react`, only if the installer said it could not find your global stylesheet; a scaffolded app already has it.
 
 ```css
 @import "./formic/styles/fonts.css";    /* first: the Urbanist font */

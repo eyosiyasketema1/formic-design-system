@@ -62,7 +62,7 @@ if [ "$NEW" = 1 ]; then
   "dependencies": {
     "@dicebear/core": "^9.2.2",
     "@dicebear/notionists": "^9.2.2",
-    "@tabler/icons-react": "^3.31.0",
+    "@phosphor-icons/react": "^2.1.10",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
@@ -448,8 +448,8 @@ if [ "$NEW" != 1 ]; then
     CSS_WIRED=1
   fi
   if [ -f package.json ] && command -v npm >/dev/null 2>&1; then
-    if grep -q '"@tabler/icons-react"' package.json; then DEPS_WIRED=1
-    else npm install --silent --no-fund --no-audit @tabler/icons-react && DEPS_WIRED=1 && say "@tabler/icons-react installed"; fi
+    if grep -q '"@phosphor-icons/react"' package.json; then DEPS_WIRED=1
+    else npm install --silent --no-fund --no-audit @phosphor-icons/react && DEPS_WIRED=1 && say "@phosphor-icons/react installed"; fi
   fi
 fi
 
@@ -487,7 +487,7 @@ if [ "$CSS_WIRED" = 1 ] && [ "$DEPS_WIRED" = 1 ]; then
   printf '\nDone. Open your AI tool in this folder and paste:\n'
 else
   printf '\nDone, with one thing left by hand:\n'
-  [ "$DEPS_WIRED" = 1 ] || printf '  • npm install @tabler/icons-react\n'
+  [ "$DEPS_WIRED" = 1 ] || printf '  • npm install @phosphor-icons/react\n'
   [ "$CSS_WIRED" = 1 ] || { printf '  • In your global CSS (Tailwind v4), in this order:\n'; printf '       @import "<path to>/%s/styles/fonts.css";\n       @import "tailwindcss";\n       @import "<path to>/%s/styles/formic.css";\n' "$DEST" "$DEST"; }
   printf 'Then open your AI tool in this folder and paste:\n'
 fi

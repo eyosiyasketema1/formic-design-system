@@ -2,30 +2,30 @@
 import { cloneElement, createContext, isValidElement, useContext, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ElementType, type ReactElement, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
-  IconAlertCircle, IconAlignLeft, IconArrowUp, IconArrowUpRight, IconCalendar, IconChartBar, IconCheck,
-  IconCircleCheck, IconChevronDown, IconChevronLeft, IconChevronRight, IconClock, IconDots, IconFileText,
-  IconHome, IconCopy, IconInfoCircle, IconLayoutSidebarLeftCollapse, IconLogout, IconMessageQuestion,
-  IconMicrophone, IconMoodSmile, IconPaperclip, IconPencil, IconPlus, IconRefresh, IconScissors, IconBell,
-  IconEye, IconEyeOff, IconLayoutGrid, IconMinus, IconMoon, IconSun, IconTrash, IconSearch, IconSettings,
-  IconSparkles, IconStack2, IconTypography, IconUpload, IconUserPlus, IconWorld, IconX,
-  IconAdjustmentsHorizontal, IconAlertTriangle, IconArchive, IconArrowBackUp, IconArrowForwardUp,
-  IconArrowLeft, IconArrowRight, IconArrowsSort, IconBan, IconBattery, IconBolt, IconBookmark, IconBug,
-  IconBuilding, IconChartLine, IconChartPie, IconChecks, IconCircleX, IconClipboard, IconCloud, IconCode,
-  IconCreditCard, IconDatabase, IconDotsVertical, IconDownload, IconGripVertical, IconFilter, IconFilterOff, IconFlag,
-  IconFolder, IconGift, IconHelpCircle, IconHistory, IconInbox, IconKey, IconLanguage, IconLayoutDashboard,
-  IconLink, IconList, IconLock, IconLogin, IconMail, IconMapPin, IconMaximize, IconMinimize, IconPackage,
-  IconPhone, IconPhoto, IconPin, IconPlayerPause, IconPlayerPlay, IconPrinter, IconQrcode, IconReceipt,
-  IconRefreshAlert, IconRocket, IconSend, IconShare2, IconShield, IconShoppingCart, IconStar, IconSunHigh,
-  IconTable, IconTag, IconTarget, IconTerminal, IconTrophy, IconTruck, IconUser, IconUsers, IconVideo,
-  IconWallet, IconWifi, IconZoomIn, IconZoomOut, type Icon as TablerIcon,
-} from "@tabler/icons-react";
+  Archive, ArrowBendUpLeft, ArrowBendUpRight, ArrowClockwise, ArrowLeft, ArrowRight, ArrowUp, ArrowUpRight,
+  ArrowsClockwise, ArrowsDownUp, ArrowsIn, ArrowsOut, BatteryMedium, Bell, BookmarkSimple, Bug,
+  Buildings, CalendarBlank, CaretDown, CaretLeft, CaretRight, ChartBar, ChartLine, ChartPie,
+  ChatCircleText, Check, CheckCircle, Checks, Clipboard, Clock, ClockCounterClockwise, Cloud,
+  Code, Copy, CreditCard, Database, DotsSixVertical, DotsThree, DotsThreeVertical, DownloadSimple,
+  EnvelopeSimple, Eye, EyeSlash, FileText, Flag, Folder, Funnel, FunnelX,
+  Gear, Gift, Globe, House, Image, Info, Key, Lightning,
+  Link, List, Lock, MagnifyingGlass, MagnifyingGlassMinus, MagnifyingGlassPlus, MapPin, Microphone,
+  Minus, Moon, Package, PaperPlaneTilt, Paperclip, Pause, PencilSimple, Phone,
+  Play, Plus, Printer, Prohibit, PushPin, QrCode, Question, Receipt,
+  RocketLaunch, Scissors, ShareNetwork, Shield, ShoppingCart, SidebarSimple, SignIn, SignOut,
+  SlidersHorizontal, Smiley, Sparkle, SquaresFour, Stack, Star, Sun, SunDim,
+  Table, Tag, Target, TerminalWindow, TextAa, TextAlignLeft, Translate, Trash,
+  Tray, Trophy, Truck, UploadSimple, User, UserPlus, Users, VideoCamera,
+  Wallet, Warning, WarningCircle, WifiHigh, X, XCircle,
+  type Icon as PhosphorIcon,
+} from "@phosphor-icons/react";
 import { useStream } from "./hooks";
 import { photoFor, useDoodle } from "./doodle";
 import { FORMIC_CONFIG } from "./config";
 /* ─────────────────────────────────────────────────────────
  * PRIMITIVES — the atoms every component composes
  *
- *   Icon          shared stroke-icon set (Tabler, name-mapped)
+ *   Icon          shared icon set (Phosphor, name-mapped; strokeWidth picks the weight)
  *   Spinner       the one loading ring (currentColor)
  *   ShimmerLabel  gradient shimmer over a working label
  *   StreamText    word-by-word blur-in text stream
@@ -69,10 +69,13 @@ export const inertWhen = (hidden: boolean) => ({
   },
 });
 
-/* ── Icon — thin wrapper over @tabler/icons-react ──────── */
+/* ── Icon — thin wrapper over @phosphor-icons/react ────── */
 /* One icon library for the whole system. Add new names to the
  * ICONS map — never inline <svg>, never a second icon package.
- * The name-based API keeps components decoupled from Tabler. */
+ * The name-based API keeps components decoupled from Phosphor:
+ * `strokeWidth` stays the knob components turn, and the wrapper
+ * turns it into a Phosphor weight (2 and up is bold, the system's
+ * working weight; under 2 is regular, for quiet glyphs). */
 export type IconName =
    | "chevron" | "bell" | "grid" | "moon" | "sun" | "eye" | "eye-off" | "trash" | "minus" | "check" | "close"
    | "search" | "retry" | "arrow-up" | "plus" | "clock" | "ellipsis" | "mic" | "file" | "clip" | "chart"
@@ -88,129 +91,129 @@ export type IconName =
    | "language" | "filter-off" | "adjustments" | "table" | "list" | "layout" | "dashboard" | "inbox" | "send"
    | "reply" | "forward" | "attachment" | "pin" | "qr" | "wifi" | "battery" | "sun-high" | "check-all" | "ban"
    | "circle-x" | "refresh-alert";
-const ICONS: Record<IconName, TablerIcon> = {
-  chevron: IconChevronDown,
-  bell: IconBell,
-  grid: IconLayoutGrid,
-  moon: IconMoon,
-  sun: IconSun,
-  eye: IconEye,
-  "eye-off": IconEyeOff,
-  trash: IconTrash,
-  minus: IconMinus,
-  check: IconCheck,
-  close: IconX,
-  search: IconSearch,
-  retry: IconRefresh,
-  "arrow-up": IconArrowUp,
-  plus: IconPlus,
-  clock: IconClock,
-  ellipsis: IconDots,
-  mic: IconMicrophone,
-  file: IconFileText,
-  clip: IconPaperclip,
-  chart: IconChartBar,
-  layers: IconStack2,
-  globe: IconWorld,
-  lines: IconAlignLeft,
-  external: IconArrowUpRight,
-  edit: IconPencil,
-  home: IconHome,
-  gear: IconSettings,
-  "user-add": IconUserPlus,
-  "sign-out": IconLogout,
-  sidebar: IconLayoutSidebarLeftCollapse,
-  "message-question": IconMessageQuestion,
-  sparkles: IconSparkles,
-  scissors: IconScissors,
-  "mood-smile": IconMoodSmile,
-  typography: IconTypography,
-  "chevron-right": IconChevronRight,
-  copy: IconCopy,
-  "circle-check": IconCircleCheck,
-  alert: IconAlertCircle,
-  info: IconInfoCircle,
-  "chevron-left": IconChevronLeft,
-  upload: IconUpload,
-  calendar: IconCalendar,
-  "download": IconDownload,
-  "filter": IconFilter,
-  "share": IconShare2,
-  "print": IconPrinter,
-  "lock": IconLock,
-  "star": IconStar,
-  "mail": IconMail,
-  "phone": IconPhone,
-  "map-pin": IconMapPin,
-  "arrow-left": IconArrowLeft,
-  "arrow-right": IconArrowRight,
-  "sort": IconArrowsSort,
-  "link": IconLink,
-  "help": IconHelpCircle,
-  "warning": IconAlertTriangle,
-  "dots-vertical": IconDotsVertical,
-  "grip-vertical": IconGripVertical,
-  "archive": IconArchive,
-  "tag": IconTag,
-  "user": IconUser,
-  "users": IconUsers,
-  "building": IconBuilding,
-  "credit-card": IconCreditCard,
-  "cart": IconShoppingCart,
-  "package": IconPackage,
-  "truck": IconTruck,
-  "receipt": IconReceipt,
-  "wallet": IconWallet,
-  "chart-line": IconChartLine,
-  "chart-pie": IconChartPie,
-  "database": IconDatabase,
-  "cloud": IconCloud,
-  "key": IconKey,
-  "shield": IconShield,
-  "clipboard": IconClipboard,
-  "folder": IconFolder,
-  "image": IconPhoto,
-  "video": IconVideo,
-  "play": IconPlayerPlay,
-  "pause": IconPlayerPause,
-  "zoom-in": IconZoomIn,
-  "zoom-out": IconZoomOut,
-  "maximize": IconMaximize,
-  "minimize": IconMinimize,
-  "flag": IconFlag,
-  "bookmark": IconBookmark,
-  "history": IconHistory,
-  "code": IconCode,
-  "terminal": IconTerminal,
-  "bug": IconBug,
-  "rocket": IconRocket,
-  "bolt": IconBolt,
-  "target": IconTarget,
-  "trophy": IconTrophy,
-  "gift": IconGift,
-  "logout": IconLogout,
-  "login": IconLogin,
-  "language": IconLanguage,
-  "filter-off": IconFilterOff,
-  "adjustments": IconAdjustmentsHorizontal,
-  "table": IconTable,
-  "list": IconList,
-  "layout": IconLayoutDashboard,
-  "dashboard": IconLayoutDashboard,
-  "inbox": IconInbox,
-  "send": IconSend,
-  "reply": IconArrowBackUp,
-  "forward": IconArrowForwardUp,
-  "attachment": IconPaperclip,
-  "pin": IconPin,
-  "qr": IconQrcode,
-  "wifi": IconWifi,
-  "battery": IconBattery,
-  "sun-high": IconSunHigh,
-  "check-all": IconChecks,
-  "ban": IconBan,
-  "circle-x": IconCircleX,
-  "refresh-alert": IconRefreshAlert,
+const ICONS: Record<IconName, PhosphorIcon> = {
+  chevron: CaretDown,
+  bell: Bell,
+  grid: SquaresFour,
+  moon: Moon,
+  sun: Sun,
+  eye: Eye,
+  "eye-off": EyeSlash,
+  trash: Trash,
+  minus: Minus,
+  check: Check,
+  close: X,
+  search: MagnifyingGlass,
+  retry: ArrowClockwise,
+  "arrow-up": ArrowUp,
+  plus: Plus,
+  clock: Clock,
+  ellipsis: DotsThree,
+  mic: Microphone,
+  file: FileText,
+  clip: Paperclip,
+  chart: ChartBar,
+  layers: Stack,
+  globe: Globe,
+  lines: TextAlignLeft,
+  external: ArrowUpRight,
+  edit: PencilSimple,
+  home: House,
+  gear: Gear,
+  "user-add": UserPlus,
+  "sign-out": SignOut,
+  sidebar: SidebarSimple,
+  "message-question": ChatCircleText,
+  sparkles: Sparkle,
+  scissors: Scissors,
+  "mood-smile": Smiley,
+  typography: TextAa,
+  "chevron-right": CaretRight,
+  copy: Copy,
+  "circle-check": CheckCircle,
+  alert: WarningCircle,
+  info: Info,
+  "chevron-left": CaretLeft,
+  upload: UploadSimple,
+  calendar: CalendarBlank,
+  download: DownloadSimple,
+  filter: Funnel,
+  share: ShareNetwork,
+  print: Printer,
+  lock: Lock,
+  star: Star,
+  mail: EnvelopeSimple,
+  phone: Phone,
+  "map-pin": MapPin,
+  "arrow-left": ArrowLeft,
+  "arrow-right": ArrowRight,
+  sort: ArrowsDownUp,
+  link: Link,
+  help: Question,
+  warning: Warning,
+  "dots-vertical": DotsThreeVertical,
+  "grip-vertical": DotsSixVertical,
+  archive: Archive,
+  tag: Tag,
+  user: User,
+  users: Users,
+  building: Buildings,
+  "credit-card": CreditCard,
+  cart: ShoppingCart,
+  package: Package,
+  truck: Truck,
+  receipt: Receipt,
+  wallet: Wallet,
+  "chart-line": ChartLine,
+  "chart-pie": ChartPie,
+  database: Database,
+  cloud: Cloud,
+  key: Key,
+  shield: Shield,
+  clipboard: Clipboard,
+  folder: Folder,
+  image: Image,
+  video: VideoCamera,
+  play: Play,
+  pause: Pause,
+  "zoom-in": MagnifyingGlassPlus,
+  "zoom-out": MagnifyingGlassMinus,
+  maximize: ArrowsOut,
+  minimize: ArrowsIn,
+  flag: Flag,
+  bookmark: BookmarkSimple,
+  history: ClockCounterClockwise,
+  code: Code,
+  terminal: TerminalWindow,
+  bug: Bug,
+  rocket: RocketLaunch,
+  bolt: Lightning,
+  target: Target,
+  trophy: Trophy,
+  gift: Gift,
+  logout: SignOut,
+  login: SignIn,
+  language: Translate,
+  "filter-off": FunnelX,
+  adjustments: SlidersHorizontal,
+  table: Table,
+  list: List,
+  layout: SquaresFour,
+  dashboard: SquaresFour,
+  inbox: Tray,
+  send: PaperPlaneTilt,
+  reply: ArrowBendUpLeft,
+  forward: ArrowBendUpRight,
+  attachment: Paperclip,
+  pin: PushPin,
+  qr: QrCode,
+  wifi: WifiHigh,
+  battery: BatteryMedium,
+  "sun-high": SunDim,
+  "check-all": Checks,
+  ban: Prohibit,
+  "circle-x": XCircle,
+  "refresh-alert": ArrowsClockwise,
 };
 /* ── iconFor — the glyph a label is asking for ────────── */
 /* Agents kept pairing "Refresh" with an upload arrow. This resolves a
@@ -258,22 +261,26 @@ export function iconFor(label: string): IconName | undefined {
   return (ICON_FOR_VERB.find(([key]) => wordHit(l, key)) ?? ICON_FOR_NOUN.find(([key]) => wordHit(l, key)))?.[1];
 }
 
+export type IconWeight = "regular" | "bold" | "fill";
 export function Icon({
   name,
   size = 14,
   strokeWidth = 2.2,
+  weight,
   className,
   style,
 }: {
   name: IconName;
   size?: number;
+  /** the line weight, in the stroke terms the system has always used: 2 and up is bold, under 2 regular */
   strokeWidth?: number;
+  /** overrides strokeWidth; `fill` for a solid glyph (a full star, an active bookmark) */
+  weight?: IconWeight;
   className?: string;
   style?: CSSProperties;
 }) {
-  const TablerGlyph = ICONS[name];
-  /* Tabler names its width prop `stroke` — the wrapper keeps our API */
-  return <TablerGlyph aria-hidden size={size} stroke={strokeWidth} className={className} style={style} />;
+  const Glyph = ICONS[name];
+  return <Glyph aria-hidden size={size} weight={weight ?? (strokeWidth >= 2 ? "bold" : "regular")} className={className} style={style} />;
 }
 
 /* ── Spinner ───────────────────────────────────────────── */
@@ -831,8 +838,8 @@ export function Shortcut({ keys, quiet = false, className = "" }: { keys: string
 
 /* ── Rating ────────────────────────────────────────────── */
 /* Stars for a score out of five (or `max`). Full, half and empty
- * stars are the same Tabler glyph: filled via CSS, the half one a
- * filled star clipped to its left half over an empty one. Orange is
+ * stars are the same glyph at two weights: fill for a full star, the
+ * half one a filled star clipped to its left half over an empty one. Orange is
  * the one place the semantic warm colour reads as "stars", not a
  * warning. The number, if you want it, sits beside as text: the
  * stars are aria-hidden and the score is on the wrapper's label. */
@@ -855,9 +862,9 @@ export function Rating({
         const fill = Math.max(0, Math.min(1, v - i));
         return (
           <span key={i} aria-hidden className="relative inline-flex text-orange">
-            <Icon name="star" size={size} strokeWidth={1.8} className={fill >= 1 ? "fill-current" : "text-chart-track"} />
+            <Icon name="star" size={size} weight={fill >= 1 ? "fill" : "regular"} className={fill >= 1 ? "" : "text-chart-track"} />
             {fill > 0 && fill < 1 && (
-              <Icon name="star" size={size} strokeWidth={1.8} className="absolute inset-0 fill-current" style={{ clipPath: `inset(0 ${Math.round((1 - fill) * 100)}% 0 0)` }} />
+              <Icon name="star" size={size} weight="fill" className="absolute inset-0" style={{ clipPath: `inset(0 ${Math.round((1 - fill) * 100)}% 0 0)` }} />
             )}
           </span>
         );

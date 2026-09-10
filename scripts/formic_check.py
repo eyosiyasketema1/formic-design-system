@@ -23,7 +23,7 @@ What it catches:
   element    a raw <button>, <input>, <select>, <textarea>, <table> or <svg> in an
              app file; a Formic component exists for each and a hand-rolled one
              loses the control metrics, the focus rule and the theme
-  import     lucide, heroicons, react-icons, recharts, chart.js, MUI, antd, Chakra,
+  import     lucide, heroicons, react-icons, tabler, recharts, chart.js, MUI, antd, Chakra,
              Radix, shadcn, framer-motion: a second kit or a chart library
   formic     a file that renders JSX and imports nothing from src/formic
   shell      a page that mounts AppSidebar / ProjectSidebar / TopBar itself instead
@@ -60,8 +60,8 @@ LINE_RULES = [
     ("element", re.compile(r"<input\b(?![^>]*type=\"(?:hidden|file)\")"), "a raw <input>; use Input, Textarea, Select, Checkbox, Switch, Slider, DatePicker or OTPInput"),
     ("element", re.compile(r"<(?:select|textarea)\b"), "a raw form element; use Select / Textarea"),
     ("element", re.compile(r"<table\b"), "a raw <table>; use DataTable (columns, rows, selection, row actions, footer paging, empty state)"),
-    ("element", re.compile(r"<svg\b"), "an inline <svg>; icons are <Icon name=…/> from primitives (Tabler), charts come from charts.tsx"),
-    ("import", re.compile(r"from\s+[\"'](?:lucide-react|@heroicons/|react-icons|@phosphor-icons|@radix-ui|@mui/|antd|@chakra-ui|@headlessui|recharts|chart\.js|react-chartjs|victory|nivo|@nivo|framer-motion|motion/react|@shadcn|cmdk|vaul|sonner)"), "a second UI kit, icon set, chart or motion library; Formic ships all of these and a mix reads as two products"),
+    ("element", re.compile(r"<svg\b"), "an inline <svg>; icons are <Icon name=…/> from primitives (Phosphor), charts come from charts.tsx"),
+    ("import", re.compile(r"from\s+[\"'](?:lucide-react|@heroicons/|react-icons|@tabler/icons|@radix-ui|@mui/|antd|@chakra-ui|@headlessui|recharts|chart\.js|react-chartjs|victory|nivo|@nivo|framer-motion|motion/react|@shadcn|cmdk|vaul|sonner)"), "a second UI kit, icon set, chart or motion library; Formic ships all of these and a mix reads as two products"),
     ("readable", re.compile(r"\btext-nano\b[^\"'`]*\btext-ink-(?:2|3)\b|\btext-ink-(?:2|3)\b[^\"'`]*\btext-nano\b"), "8px letters in a muted ink; text-nano is for the letters inside a mini badge, in text-canvas on a fill, never running copy"),
     ("readable", re.compile(r"(?<![:\w-])text-ink-3\b[^\"'`]*(?<![:\w-])(?:text-body|text-lead)\b|(?<![:\w-])(?:text-body|text-lead)\b[^\"'`]*(?<![:\w-])text-ink-3\b"), "body copy in the mutest ink; text-ink-3 is for eyebrows, captions and hints, running text is text-ink or text-ink-2"),
 ]

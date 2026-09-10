@@ -25,7 +25,7 @@ If they are missing, stop and install before writing any UI:
 curl -fsSL https://formicai.dev/install.sh | bash
 ```
 
-Then make sure the global CSS imports the token stack (Tailwind v4) and `@tabler/icons-react` is a dependency:
+Then make sure the global CSS imports the token stack (Tailwind v4) and `@phosphor-icons/react` is a dependency:
 
 ```css
 @import "./formic/styles/fonts.css";    /* first: the Urbanist font */
@@ -209,7 +209,7 @@ When you build a page or a demo, the content is Formic's world: a design studio 
 8. **Accent carries the primary action.** One accent CTA per view, one destructive action per view; everything else is secondary, outline, or ghost.
 9. **Light by default.** Dark is opt in through `<html data-theme="dark">`. Components never branch on theme or palette, they only read tokens, so both modes come for free.
 10. **Contrast.** Keep WCAG AA in both modes and all ten palettes (and the custom one): text at least 4.5:1, non-text UI at least 3:1.
-11. **Icons.** Tabler only, through the shared `Icon` wrapper: `<Icon name="check" size={14} strokeWidth={2} />`. To add one, map a Tabler component into `ICONS` in `primitives.tsx`. Never inline SVG icon paths, never add a second icon package.
+11. **Icons.** Phosphor only, through the shared `Icon` wrapper: `<Icon name="check" size={14} strokeWidth={2} />` (`strokeWidth` 2 and up is the bold weight, under 2 regular; `weight="fill"` for a solid glyph). To add one, map a Phosphor component into `ICONS` in `primitives.tsx`. Never inline SVG icon paths, never add a second icon package.
 12. **Responsive by default.** Fluid roots (`w-full` plus a `max-w-*` cap), wide content scrolls inside its own `overflow-x-auto`, text truncates with `min-w-0 truncate`, touch targets at least 24px. Check the layout at about 360px wide before calling it done.
 
 ## What is in the box
