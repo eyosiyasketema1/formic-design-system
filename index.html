@@ -17,9 +17,9 @@
     if (mq && mq.addEventListener) mq.addEventListener("change", function () { try { stored = localStorage.getItem("ds-theme"); } catch (e) {} if (stored !== "light" && stored !== "dark") apply(); });
   })();
 </script>
-<meta name="description" content="A token-driven React + Tailwind v4 design system for AI product interfaces. 70+ components, WCAG AA in every mode, and a live hero you can play with." />
+<meta name="description" content="A design system AI coding tools can actually follow. 70+ React + Tailwind v4 components for chat, agents, dashboards and forms, tokens for everything, AA contrast in every theme, and gates that refuse generic UI." />
 <meta property="og:title" content="Formic AI Design System" />
-<meta property="og:description" content="Token-driven React + Tailwind components for AI product interfaces: chat threads, prompt bars, agent traces, and the whole app shell around them." />
+<meta property="og:description" content="Your AI tool builds the app; Formic makes sure it looks like yours. 70+ token-driven React + Tailwind v4 components for chat, agents, dashboards and forms, with gates that refuse generic UI." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://formicai.dev/" />
 <meta property="og:image" content="https://formicai.dev/assets/formic-logomark-512.png" />
@@ -740,6 +740,7 @@ main, footer.site { position: relative; z-index: 1; }
 @media (min-width: 1025px) { .hero h1 { font-size: var(--text-display-xl); line-height: 1.14; } }
 @media (max-width: 640px) { .hero h1 { font-size: var(--text-display); } }
 .hero .lede { font-size: var(--text-lead); color: var(--ink-2); max-width: 52ch; margin: 0 auto; }
+.hero-sub { margin: 18px auto 0; max-width: 62ch; font-size: var(--text-lead); line-height: 1.5; color: var(--ink-2); }
 .hero-ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 26px 0 22px; }
 .hero-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-bottom: 26px; font-size: var(--text-small); color: var(--ink-3); }
 /* live component bento — asymmetric tiles, everything visible, no scroll */
@@ -1074,12 +1075,13 @@ footer.site a:hover { color: var(--ink); }
           Open source · React + Tailwind v4
         </span>
         <h1 class="hero-lines">
-          <span>Tokens, not hardcoded values.</span>
-          <span>Components made for AI interfaces.</span>
-          <span>AA contrast in every theme.</span>
+          <span>Your AI tool builds the app.</span>
+          <span>Formic makes sure it looks like yours.</span>
+          <span>One command, then just prompt.</span>
         </h1>
+        <p class="hero-sub">A design system agents can actually follow: 70+ components for chat, agents, dashboards and forms, tokens for everything, AA contrast in every theme, and two gates that refuse generic UI before it reaches a commit.</p>
         <div class="hero-ctas">
-          <a class="lbtn lbtn-accent" href="https://github.com/eyosiyasketema1/formic-design-system"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"/></svg> View on GitHub</a>
+          <a class="lbtn lbtn-accent" href="#start">Get started<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14"/><path d="M18 13l-6 6"/><path d="M6 13l6 6"/></svg></a>
           <a class="lbtn lbtn-secondary" href="./preview.html">Open the live gallery</a>
         </div>
         <div class="hero-meta">
@@ -1127,7 +1129,7 @@ footer.site a:hover { color: var(--ink); }
   <section class="landing-section band" id="start">
     <div class="wrap">
       <div class="kicker">Quick start</div>
-      <h2>One command, no files to edit</h2>
+      <h2>One command, then your first prompt</h2>
       <p class="section-sub">The same command for a new project and an existing one; needs git and Node.</p>
       <div class="ai-note" id="ai-tools">
         <div class="ai-note-head">
