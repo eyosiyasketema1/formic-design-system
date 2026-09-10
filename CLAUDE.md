@@ -65,6 +65,7 @@ After every piece of work, look for extractable pieces and extract them:
 - `styles/tailwind-theme.css` — Tailwind v4 `@theme inline` bridge (generates `text-ink`, `bg-hover`, …)
 - `components/*.tsx` — React components; demo content as prop defaults
 - `preview.html` — standalone browser gallery (CDN React + Tailwind; duplicates styles inline)
+- `CHANGELOG.md` — one entry per release; a breaking change (a peer dependency, a removed prop, a renamed name) bumps the minor while 0.x and goes under **Breaking**
 - `AUDIT.md`, `QA-REPORT.md` — audit history; update when resolving findings
 - `scripts/qa_check.py` — the QA gate
 - `scripts/formic_check.py`, `scripts/compose_check.py` — the two gates apps run on their own `src/` (the installer copies them with `apply_config.py` and `palette.py`); AGENTS.md → Build protocol tells agents to run both and to build a missing component rather than fake it inline
@@ -85,6 +86,19 @@ git push -u origin <topic>
 # open the PR, wait for "Design system gate" to go green, merge, delete branch
 git checkout main && git pull && git branch -d <topic>
 ```
+
+### Releases
+
+A release is a tag on `main`. Bump `version` in `package.json`, add the entry to `CHANGELOG.md` in the same PR, merge, then tag and publish:
+
+```bash
+git checkout main && git pull
+git tag -a v0.2.0 -m "Formic 0.2.0"
+git push origin v0.2.0
+gh release create v0.2.0 --title "Formic 0.2.0" --notes-file <(sed -n '/^## 0.2.0/,/^## 0.1.0/p' CHANGELOG.md | sed '$d')
+```
+
+The installer reads `version` from `package.json` and writes it to the app's `src/formic/VERSION`, so the number in `package.json` is the one users see.
 
 Running `qa_check.py` locally is not optional politeness — CI runs the identical gate and the PR cannot merge until it passes, so a local run just saves you a round trip.
 
