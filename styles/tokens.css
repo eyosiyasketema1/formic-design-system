@@ -261,7 +261,11 @@ textarea:focus-visible {
 .corner-smooth { corner-shape: squircle; }
 /* Corner shape: smooth (squircle, the default) or round (a plain arc),
  * chosen once for the whole app by formic.config.json's `corners`. */
-:root[data-corners="round"] .corner-smooth, :root[data-corners="round"] .primitive-field { corner-shape: round; }
+:root[data-corners="round"] .corner-smooth, :root[data-corners="round"] /* the tooltip surface is dark in both themes, so anything inside that reads
+   the ink ramp (text-ink, text-ink-2, text-ink-3, border-ink-3) is re-pointed
+   at the tooltip's own foreground and muted tokens */
+.primitive-tooltip { --ink: var(--tooltip-fg); --ink-2: var(--tooltip-fg); --ink-3: var(--tooltip-muted); }
+.primitive-field { corner-shape: round; }
 /* Field wrapper focus: the wrapper (not the inner input) carries the
    ring. Plain CSS so no utility-ordering can swallow it. */
 .primitive-field {

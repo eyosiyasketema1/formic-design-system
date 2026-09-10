@@ -972,7 +972,7 @@ export function Avatar({
 /* ── Tooltip ───────────────────────────────────────────── */
 /* The chip surface is shared with the chart tooltips in charts.tsx —
  * extracted on second use so the two can never drift apart. */
-export const TOOLTIP_CHIP = "rounded-chip px-2 py-1 text-tiny font-medium whitespace-nowrap";
+export const TOOLTIP_CHIP = "primitive-tooltip rounded-chip px-2 py-1 text-tiny font-medium whitespace-nowrap";
 export const TOOLTIP_CHIP_STYLE: CSSProperties = {
   background: "var(--tooltip-bg)",
   color: "var(--tooltip-fg)",
