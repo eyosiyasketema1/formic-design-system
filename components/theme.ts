@@ -236,17 +236,20 @@ export function setPalette(color: string | null): ReturnType<typeof derivePalett
  * applies it at runtime as [data-radius="custom"], pair with
  * <html data-radius="custom">.
  * ───────────────────────────────────────────────────────── */
-export function radiusScale(n: number): { sm: number; chip: number; control: number; md: number; card: number; capsule: number } {
+export function radiusScale(n: number, card?: number | null, pill = false): { sm: number; chip: number; control: number; md: number; card: number; capsule: number; avatar: number } {
   n = Math.max(0, Math.min(32, Math.round(n)));
-  return { sm: Math.round(n * 0.75), chip: Math.round(n * 0.9), control: n, md: n === 0 ? 0 : n + 2, card: n === 0 ? 0 : n + 6, capsule: n === 0 ? 0 : Math.round(n * 2.75) };
+  const c = card == null ? (n === 0 ? 0 : n + 6) : Math.max(0, Math.min(32, Math.round(card)));
+  const md = card == null ? (n === 0 ? 0 : n + 2) : Math.round((n + c) / 2);
+  return { sm: Math.round(n * 0.75), chip: pill ? 999 : Math.round(n * 0.9), control: pill ? 999 : n, md, card: c, capsule: pill ? 999 : n === 0 ? 0 : Math.round(n * 2.75), avatar: pill ? 999 : n };
 }
-export function setRadius(px: number | null): void {
+/** the custom block at runtime: the control radius, an optional card radius of its own, capsule controls */
+export function setRadius(px: number | null, card?: number | null, pill = false): void {
   if (typeof document === "undefined") return;
   const id = "ds-radius-custom";
   const existing = document.getElementById(id);
   if (px === null) { existing?.remove(); return; }
-  const r = radiusScale(px);
+  const r = radiusScale(px, card, pill);
   const el = existing ?? Object.assign(document.createElement("style"), { id });
-  el.textContent = `:root[data-radius="custom"] { --radius-sm: ${r.sm}px; --radius-chip: ${r.chip}px; --radius-control: ${r.control}px; --radius-md: ${r.md}px; --radius-card: ${r.card}px; --radius-capsule: ${r.capsule}px; }`;
+  el.textContent = `:root[data-radius="custom"] { --radius-sm: ${r.sm}px; --radius-chip: ${r.chip}px; --radius-control: ${r.control}px; --radius-md: ${r.md}px; --radius-card: ${r.card}px; --radius-capsule: ${r.capsule}px; --radius-avatar: ${r.avatar}px; }`;
   if (!existing) document.head.appendChild(el);
 }

@@ -941,7 +941,7 @@ export function Avatar({
       <span
         role="img"
         aria-label={name}
-        className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-field [&>svg]:size-full ${edge} ${AVATAR_SIZES[size]} ${className}`}
+        className={`flex shrink-0 items-center justify-center overflow-hidden rounded-avatar bg-field [&>svg]:size-full ${edge} ${AVATAR_SIZES[size]} ${className}`}
         /* static SVG from DiceBear, generated from the name — not user content */
         dangerouslySetInnerHTML={{ __html: svg }}
       />
@@ -952,7 +952,7 @@ export function Avatar({
       <img
         src={photo}
         alt={name}
-        className={`source-avatar shrink-0 rounded-full bg-surface ${edge} ${AVATAR_SIZES[size]} ${className}`}
+        className={`source-avatar shrink-0 rounded-avatar bg-surface ${edge} ${AVATAR_SIZES[size]} ${className}`}
       />
     );
   }
@@ -960,7 +960,7 @@ export function Avatar({
     <span
       role="img"
       aria-label={name}
-      className={`flex shrink-0 items-center justify-center rounded-full font-medium ${edge} ${
+      className={`flex shrink-0 items-center justify-center rounded-avatar font-medium ${edge} ${
         tone !== undefined ? AVATAR_TONES[tone] : toneOf(name)
       } ${AVATAR_SIZES[size]} ${className}`}
     >
@@ -1077,7 +1077,7 @@ export function AvatarStack({ srcs, className = "" }: { srcs: string[]; classNam
           key={i}
           src={src}
           alt=""
-          className="source-avatar size-3.5 rounded-full bg-surface shadow-[0_0_0_1.5px_var(--canvas)]"
+          className="source-avatar size-3.5 rounded-avatar bg-surface shadow-[0_0_0_1.5px_var(--canvas)]"
         />
       ))}
     </span>
@@ -1126,7 +1126,7 @@ export function AvatarGroup({
       {rest > 0 && (
         <span
           aria-hidden="true"
-          className={`relative flex shrink-0 items-center justify-center rounded-full bg-inset font-medium text-ink-2 tabular-nums ${ringClass} ${AVATAR_SIZES[size]}`}
+          className={`relative flex shrink-0 items-center justify-center rounded-avatar bg-inset font-medium text-ink-2 tabular-nums ${ringClass} ${AVATAR_SIZES[size]}`}
         >
           +{rest}
         </span>

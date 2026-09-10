@@ -4,6 +4,7 @@ import AppSidebar, { type AppSidebarSection, type AppSidebarUser, type AppSideba
 import ProjectSidebar, { ProjectInset, ProjectSidebarTrigger, useProjectSidebar, type ProjectGroup } from "./ProjectSidebar";
 import TopBar from "./TopBar";
 import { FORMIC_CONFIG, type FormicConfig } from "./config";
+import { useTheme } from "./hooks";
 /* ─────────────────────────────────────────────────────────
  * APP SHELL — the rail the config chose, with the page beside it
  * One component instead of four layouts to remember. It reads
@@ -69,7 +70,7 @@ export default function AppShell({
   title?: ReactNode;
   caption?: ReactNode;
   actions?: ReactNode;
-  /** the theme switch, shown by the TopBar and the project rails when both are given */
+  /** the theme switch beside the profile (or in the TopBar). Omit both and the shell manages the theme itself through useTheme; give both to drive it from the app */
   theme?: "light" | "dark";
   onTheme?: () => void;
   /** unread count for the TopBar's bell */
@@ -83,6 +84,9 @@ export default function AppShell({
   children: ReactNode;
 }) {
   const project = useProjectSidebar(FORMIC_CONFIG.sidebarState === "expanded");
+  const own = useTheme();
+  const themeNow = theme ?? own.theme;
+  const onThemeNow = onTheme ?? own.toggle;
   const isProject = rail === "inset" || rail === "edge";
   const isTopBar = rail === "topbar";
   const header = (title || actions) && !isTopBar && (
@@ -122,8 +126,8 @@ export default function AppShell({
           active={active}
           onSelect={onSelect}
           user={user}
-          theme={theme}
-          onTheme={onTheme}
+          theme={themeNow}
+          onTheme={onThemeNow}
           onSearch={onSearch}
         />
         {/* the rail's trigger sits in the page's top-left corner, where every
@@ -143,13 +147,15 @@ export default function AppShell({
         workspace={workspace}
         user={isTopBar ? null : user}
         header={isTopBar ? "bar" : "plain"}
+        theme={isTopBar ? undefined : themeNow}
+        onTheme={isTopBar ? undefined : onThemeNow}
       />
       <div className="flex min-w-0 flex-1 flex-col">
         {isTopBar && (
           <TopBar
             title={title}
-            theme={theme}
-            onTheme={onTheme}
+            theme={themeNow}
+            onTheme={onThemeNow}
             notifications={notifications}
             user={user === null ? null : user ? { name: user.name, src: user.src, kind: user.kind } : undefined}
             onSearch={onSearch}

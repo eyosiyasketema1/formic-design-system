@@ -159,30 +159,32 @@ EOF
    Register: text
 */
 /* Two small things above whatever page is showing. ThemeToggle sits in the
-   top-right corner, where every app keeps it. CustomizeNudge is one card in
+   top-right corner until a rail (with its own switch beside the profile)
+   takes over. CustomizeNudge is one card in
    the bottom-right that says the look can be changed, with one link; Close
    and Customize both dismiss it for good. Delete this file and its lines in
    App.tsx once the look is yours. */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "./formic/components/Button";
 import { Card, Icon, IconButton, Tooltip } from "./formic/components/primitives";
+import { useTheme } from "./formic/components/hooks";
 
 const CUSTOMIZE_URL = "https://formicai.dev/customize";
 const STORAGE_KEY = "formic-nudge";
-const readTheme = () => (document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
 const dismissed = () => { try { return localStorage.getItem(STORAGE_KEY) === "off"; } catch { return false; } };
 
+/* The theme switch, top-right, only while the page has no rail: once an
+   AppShell is on screen its rail carries the switch beside the profile, and
+   a second one would be noise. */
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark">(readTheme);
-  const flip = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", next);
-    setTheme(next);
-  };
+  const { theme, toggle } = useTheme();
+  const [hasRail, setHasRail] = useState(false);
+  useEffect(() => { setHasRail(!!document.querySelector("aside")); }, []);
+  if (hasRail) return null;
   return (
     <div className="fixed top-3 right-3 z-40">
       <Tooltip label={theme === "dark" ? "Light mode" : "Dark mode"}>
-        <IconButton label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={flip} className="size-9 rounded-control bg-surface text-ink-2 shadow-btn hover:bg-hover hover:text-ink">
+        <IconButton label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={toggle} className="size-9 rounded-control bg-surface text-ink-2 shadow-btn hover:bg-hover hover:text-ink">
           <Icon name={theme === "dark" ? "sun" : "moon"} size={16} />
         </IconButton>
       </Tooltip>
@@ -224,12 +226,17 @@ import Panel from "../formic/components/Panel";
 import { FormicMark } from "../formic/components/brand";
 import { Icon } from "../formic/components/primitives";
 
-const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with the studio dashboard: an AppShell (it mounts the rail from the config) with the page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.";
+const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx, CustomizeNudge and ThemeToggle) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report); four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a three-series revenue LineChart with a legend beside a one-third Panel holding a DonutChart of revenue by client; a full-width Panel with a recent invoices DataTable (toolbar search, status filter, selectable rows, pagination) beside a Panel with an activity Timeline. Everything must work: filters filter, rows select, the theme switch flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders.";
+const PREFIX = "Use Formic (src/formic), read AGENTS.md, then";
 
 export default function Welcome() {
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | null>(null);
   useEffect(() => () => { if (timer.current) window.clearTimeout(timer.current); }, []);
+  const [copiedPrefix, setCopiedPrefix] = useState(false);
+  const copyPrefix = async () => {
+    try { await navigator.clipboard.writeText(PREFIX + " "); setCopiedPrefix(true); window.setTimeout(() => setCopiedPrefix(false), 1800); } catch { setCopiedPrefix(false); }
+  };
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(PROMPT);
@@ -260,6 +267,15 @@ export default function Welcome() {
                 {copied ? "Copied" : "Copy prompt"}
               </Button>
             </div>
+          </div>
+        </Panel>
+
+        <Panel title="Every prompt after that" caption="Start it the same way, then say what you want">
+          <div className="flex items-center justify-between gap-3">
+            <p className="min-w-0 flex-1 rounded-md bg-inset px-4 py-3 font-mono text-caption text-ink">{PREFIX} <span className="text-ink-3">add a clients page with a DataTable…</span></p>
+            <Button variant="secondary" size="md" onClick={copyPrefix} icon={<Icon name={copiedPrefix ? "check" : "copy"} />} aria-live="polite" className="shrink-0">
+              {copiedPrefix ? "Copied" : "Copy"}
+            </Button>
           </div>
         </Panel>
       </div>
@@ -458,7 +474,8 @@ if [ "$NEW" = 1 ]; then
   printf '\nDone. Run it:\n'
   if [ "$APP" = "." ]; then printf '  npm run dev        # the browser opens a page that says Formic is working\n\n'; else printf '  cd %s && npm run dev        # the browser opens a page that says Formic is working\n\n' "$APP"; fi
   printf 'Then open your AI tool (Claude Code, Cursor, Antigravity, Copilot, any of them) in this folder and paste the test prompt:\n'
-  printf '  Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with the studio dashboard: an AppShell (it mounts the rail from the config) with the page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.\n\n'
+  printf '  %s\n\n' "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx, CustomizeNudge and ThemeToggle) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report); four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a three-series revenue LineChart with a legend beside a one-third Panel holding a DonutChart of revenue by client; a full-width Panel with a recent invoices DataTable (toolbar search, status filter, selectable rows, pagination) beside a Panel with an activity Timeline. Everything must work: filters filter, rows select, the theme switch flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders."
+  printf 'After that, start every prompt with:  %s  and say what you want.\n\n' "Use Formic (src/formic), read AGENTS.md, then"
   printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
   printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
   exit 0

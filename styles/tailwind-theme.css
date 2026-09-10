@@ -67,6 +67,7 @@
   --radius-md: var(--radius-md);
   --radius-card: var(--radius-card);
   --radius-capsule: var(--radius-capsule);
+  --radius-avatar: var(--radius-avatar);
 
   /* Shadows */
   --shadow-btn: var(--shadow-btn);

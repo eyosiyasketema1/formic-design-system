@@ -2,6 +2,7 @@
   "accent": "#a5e12a",
   "palette": "paper",
   "radius": "default",
+  "cardRadius": "auto",
   "corners": "smooth",
   "controls": "scale",
   "size": "default",

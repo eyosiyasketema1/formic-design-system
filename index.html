@@ -871,6 +871,7 @@ main, footer.site { position: relative; z-index: 1; }
 }
 .copy-btn:hover { background: var(--hover-2); color: var(--ink); }
 .copy-btn.is-done { color: var(--green); }
+.lcode pre .ink-3 { color: var(--ink-3); }
 .lcode pre { padding: 14px 16px; font-family: var(--font-mono); font-size: var(--text-small); line-height: 1.7; color: var(--ink-2); overflow-x: auto; }
 .lcode .c { color: var(--ink-3); } .lcode .k { color: var(--accent); }
 .ai-note { margin-top: 24px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); padding: 18px; corner-shape: squircle; }
@@ -1177,7 +1178,12 @@ footer.site a:hover { color: var(--ink); }
             <p>In the same terminal type <code>claude</code>, or open that folder in Cursor or VS Code; the dashboard it builds is what Formic looks like.</p>
             <div class="lcode">
               <div class="lcode-head">Your AI tool</div>
-              <pre class="wrap">Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with the studio dashboard: an AppShell (it mounts the rail from the config) with the page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.</pre>
+              <pre class="wrap">Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx, CustomizeNudge and ThemeToggle) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report); four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a three-series revenue LineChart with a legend beside a one-third Panel holding a DonutChart of revenue by client; a full-width Panel with a recent invoices DataTable (toolbar search, status filter, selectable rows, pagination) beside a Panel with an activity Timeline. Everything must work: filters filter, rows select, the theme switch flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders.</pre>
+            </div>
+            <p>Every prompt after that starts the same way, then says what you want:</p>
+            <div class="lcode">
+              <div class="lcode-head">Every later prompt</div>
+              <pre class="wrap" data-copy="Use Formic (src/formic), read AGENTS.md, then ">Use Formic (src/formic), read AGENTS.md, then <span class="ink-3">add a clients page with a DataTable…</span></pre>
             </div>
           </li>
         </ol>
@@ -1383,7 +1389,8 @@ footer.site a:hover { color: var(--ink); }
     button.setAttribute("aria-label", "Copy to clipboard");
     button.innerHTML = COPY + "<span>Copy</span>";
     button.addEventListener("click", function () {
-      var text = pre.innerText;
+      /* a greyed example inside the block is a hint, not part of what is copied */
+      var text = pre.hasAttribute("data-copy") ? pre.getAttribute("data-copy") : pre.innerText;
       var done = function () {
         button.innerHTML = DONE + "<span>Copied</span>";
         button.classList.add("is-done");
