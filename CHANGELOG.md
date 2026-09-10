@@ -21,6 +21,9 @@ Formic is vendored, so a version is the state of `main` you copied. `src/formic/
 - Primitives: `OptionRow`, `IconTile` sizes, `formatDuration`, `Shortcut`, `useWidth`.
 - Gallery: theme follows the system until chosen, customizer remembers choices, ⌘K search, play-again on moving demos, favicon; each page has a copyable prompt for your AI tool.
 - Chart tooltips read the tooltip's own foreground tokens, so their labels are legible in light mode.
+- Config: `cardRadius` gives cards and panels a corner of their own; the customizer sets buttons and cards on two sliders with a Pill switch; avatars follow the control radius through `--radius-avatar` (square on sharp, a circle on pill).
+- `AppShell` manages the theme itself when the app does not, and the full rail carries the theme switch beside the profile; a `useTheme` hook in `hooks.ts`.
+- The installer's `apply_config.py` runs on Python 3.9 again.
 
 ### Removed
 

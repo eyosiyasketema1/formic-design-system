@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" href="./assets/favicon.png" />
 <link rel="apple-touch-icon" href="./assets/formic-logomark-512.png" />
 <script>
-  /* Apply the stored theme before first paint. useTheme sets this later from
+  /* Apply the stored theme before first paint. useGalleryTheme sets this later from
      React, which is far too late — dark users would get a white flash. */
   try {
     var _t = localStorage.getItem("ds-theme");
@@ -75,7 +75,7 @@
   --shadow-field: none;
   --text-lead: 16px; --text-body: 14px; --text-caption: 13px; --text-small: 12px; --text-tiny: 11px; --text-micro: 10px; --text-nano: 8px;
   --text-title: 18px; --text-heading: 20px; --text-display: 24px; --text-display-lg: 32px; --text-display-xl: 48px;
-  --radius-sm: 6px; --radius-chip: 7px; --radius-control: 8px; --radius-md: 10px; --radius-card: 14px; --radius-capsule: 22px;
+  --radius-sm: 6px; --radius-chip: 7px; --radius-control: 8px; --radius-md: 10px; --radius-card: 14px; --radius-capsule: 22px; --radius-avatar: var(--radius-control);
   --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
   --duration-fast: 150ms; --duration-base: 300ms; --duration-slow: 500ms;
 }
@@ -132,6 +132,7 @@
   --radius-md: var(--radius-md);
   --radius-card: var(--radius-card);
   --radius-capsule: var(--radius-capsule);
+  --radius-avatar: var(--radius-avatar);
   --color-sidebar: var(--sidebar);
   --shadow-btn: var(--shadow-btn);
   --shadow-card: var(--shadow-card);
@@ -456,11 +457,12 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 }
 :root[data-radius="full"] {
   --radius-sm: 10px; --radius-chip: 999px; --radius-control: 999px;
-  --radius-md: 14px; --radius-card: 20px; --radius-capsule: 999px;
+  --radius-md: 14px; --radius-card: 20px; --radius-capsule: 999px; --radius-avatar: 999px;
 }
 /* Controls alone: buttons, inputs, chips become capsules while cards,
-   panels and menus keep the scale; formic.config.json's `controls`. */
-:root[data-controls="pill"] { --radius-control: 999px; --radius-chip: 999px; }
+   panels and menus keep the scale; formic.config.json's `controls`. A pixel
+   scale folds this into its own [data-radius="custom"] block instead. */
+:root[data-controls="pill"]:not([data-radius="custom"]) { --radius-control: 999px; --radius-chip: 999px; --radius-avatar: 999px; }
 
 /* ── Global size (density) scale ───────────────────────── */
 /* Tailwind v4 derives every spacing and sizing utility from --spacing
@@ -1698,7 +1700,7 @@ function Avatar({
       <span
         role="img"
         aria-label={name}
-        className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-field [&>svg]:size-full ${edge} ${AVATAR_SIZES[size]} ${className}`}
+        className={`flex shrink-0 items-center justify-center overflow-hidden rounded-avatar bg-field [&>svg]:size-full ${edge} ${AVATAR_SIZES[size]} ${className}`}
         /* static SVG from DiceBear, generated from the name — not user content */
         dangerouslySetInnerHTML={{ __html: svg }}
       />
@@ -1709,7 +1711,7 @@ function Avatar({
       <img
         src={photo}
         alt={name}
-        className={`source-avatar shrink-0 rounded-full bg-surface ${edge} ${AVATAR_SIZES[size]} ${className}`}
+        className={`source-avatar shrink-0 rounded-avatar bg-surface ${edge} ${AVATAR_SIZES[size]} ${className}`}
       />
     );
   }
@@ -1717,7 +1719,7 @@ function Avatar({
     <span
       role="img"
       aria-label={name}
-      className={`flex shrink-0 items-center justify-center rounded-full font-medium ${edge} ${
+      className={`flex shrink-0 items-center justify-center rounded-avatar font-medium ${edge} ${
         tone !== undefined ? AVATAR_TONES[tone] : avatarTone(name)
       } ${AVATAR_SIZES[size]} ${className}`}
     >
@@ -1766,7 +1768,7 @@ function AvatarStack({ srcs, className = "" }) {
   return (
     <span className={`flex -space-x-1 ${className}`}>
       {srcs.map((src, i) => (
-        <img key={i} src={src} alt="" className="source-avatar size-3.5 rounded-full bg-surface shadow-[0_0_0_1.5px_var(--canvas)]" />
+        <img key={i} src={src} alt="" className="source-avatar size-3.5 rounded-avatar bg-surface shadow-[0_0_0_1.5px_var(--canvas)]" />
       ))}
     </span>
   );
@@ -1798,7 +1800,7 @@ function AvatarGroup({
       {rest > 0 && (
         <span
           aria-hidden="true"
-          className={`relative flex shrink-0 items-center justify-center rounded-full bg-inset font-medium text-ink-2 tabular-nums ${ringClass} ${AVATAR_SIZES[size]}`}
+          className={`relative flex shrink-0 items-center justify-center rounded-avatar bg-inset font-medium text-ink-2 tabular-nums ${ringClass} ${AVATAR_SIZES[size]}`}
         >
           +{rest}
         </span>
@@ -1877,6 +1879,19 @@ function useWidth() {
     return () => ro.disconnect();
   }, []);
   return [ref, width];
+}
+function useTheme() {
+  const read = () => (document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
+  const [theme, setTheme] = useState(read);
+  useEffect(() => {
+    let stored = null;
+    try { stored = localStorage.getItem("formic-theme"); } catch {}
+    if (stored === "dark" || stored === "light") { document.documentElement.setAttribute("data-theme", stored); setTheme(stored); }
+    else setTheme(read());
+  }, []);
+  const set = useCallback((next) => { document.documentElement.setAttribute("data-theme", next); try { localStorage.setItem("formic-theme", next); } catch {} setTheme(next); }, []);
+  const toggle = useCallback(() => set(read() === "dark" ? "light" : "dark"), [set]);
+  return { theme, toggle, set };
 }
 function useReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -11946,11 +11961,20 @@ function AppSidebar({
   header = "plain",
   user = APPSB_USER,
   footer,
+  theme,
+  onTheme,
   className = "",
 }) {
   const [own, setOwn] = useState(defaultVariant);
   const mode = variant ?? own;
   const rail = mode === "rail";
+  const themeButton = onTheme && (
+    <Tooltip label={theme === "dark" ? "Light mode" : "Dark mode"}>
+      <IconButton label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={onTheme} className="size-9 shrink-0 text-ink-3 hover:bg-hover-2 hover:text-ink">
+        <Icon name={theme === "dark" ? "sun" : "moon"} size={15} strokeWidth={1.8} />
+      </IconButton>
+    </Tooltip>
+  );
   const flip = () => {
     const next = rail ? "expanded" : "rail";
     if (variant === undefined) setOwn(next);
@@ -12145,20 +12169,26 @@ function AppSidebar({
       <div className={`mt-auto shrink-0 border-t border-line ${rail ? "flex flex-col items-center py-2" : "p-2.5"}`}>
         {footer !== undefined ? footer : user && (
           rail ? (
-            <Tooltip label={user.name}>
-              <button type="button" aria-label={user.name} className="flex size-9 items-center justify-center rounded-control hover:bg-hover-2">
-                <Avatar name={user.name} src={user.src} kind={user.kind} doodle={user.doodle} size="sm" />
-              </button>
-            </Tooltip>
+            <>
+              {themeButton}
+              <Tooltip label={user.name}>
+                <button type="button" aria-label={user.name} className="flex size-9 items-center justify-center rounded-control hover:bg-hover-2">
+                  <Avatar name={user.name} src={user.src} kind={user.kind} doodle={user.doodle} size="sm" />
+                </button>
+              </Tooltip>
+            </>
           ) : (
-            <button type="button" className="flex h-10 w-full items-center gap-2.5 rounded-control px-2 text-left hover:bg-hover-2">
-              <Avatar name={user.name} src={user.src} kind={user.kind} doodle={user.doodle} size="sm" />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-caption font-medium text-ink">{user.name}</span>
-                {user.detail && <span className="block truncate text-small text-ink-3">{user.detail}</span>}
-              </span>
-              <Icon name="ellipsis" size={14} strokeWidth={2} className="shrink-0 text-ink-3" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button type="button" className="flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-control px-2 text-left hover:bg-hover-2">
+                <Avatar name={user.name} src={user.src} kind={user.kind} doodle={user.doodle} size="sm" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-caption font-medium text-ink">{user.name}</span>
+                  {user.detail && <span className="block truncate text-small text-ink-3">{user.detail}</span>}
+                </span>
+                <Icon name="ellipsis" size={14} strokeWidth={2} className="shrink-0 text-ink-3" />
+              </button>
+              {themeButton}
+            </div>
           )
         )}
       </div>
@@ -12399,7 +12429,7 @@ function SwitchDemo() {
 }
 /* the system setting until the visitor chooses; a choice is kept (ds-theme,
    shared with the landing page) until they change it again */
-function useTheme() {
+function useGalleryTheme() {
   const [theme, setThemeState] = useState(() => {
     const stored = localStorage.getItem("ds-theme");
     if (stored === "light" || stored === "dark") return stored;
@@ -14848,7 +14878,7 @@ function Page_panel() {
 }
 
 function TopBarDemo() {
-  const [theme, setTheme] = useTheme();
+  const [theme, setTheme] = useGalleryTheme();
   const toast = useToast();
   return (
     <div className="flex h-[560px] overflow-hidden rounded-card border border-line">
@@ -14909,7 +14939,7 @@ function Page_projectsidebar() {
   const toast = useToast();
   const [active, setActive] = useState("report");
   const [search, setSearch] = useState("");
-  const [theme, setTheme] = useTheme();
+  const [theme, setTheme] = useGalleryTheme();
   const insetBar = useProjectSidebar();
   const edgeBar = useProjectSidebar();
   const groups = [
@@ -16299,7 +16329,7 @@ function DocsPage({ page, index, pg, state: givenState, set: givenSet, first = t
      whichever AI tool is open on a Formic project */
   const files = page.file.split(" ");
   const names = files.map((f) => f.replace(/^components\//, "").replace(/\.tsx?$/, ""));
-  const prompt = `Use Formic's ${page.title} component (src/formic/${files[0]}${files.length > 1 ? ` and ${files.slice(1).map((f) => `src/formic/${f}`).join(", ")}` : ""}) and read AGENTS.md first.`;
+  const prompt = `Use Formic (src/formic), read AGENTS.md, then use the ${page.title} component (src/formic/${files[0]}${files.length > 1 ? ` and ${files.slice(1).map((f) => `src/formic/${f}`).join(", ")}` : ""}) to `;
   const [copied, setCopied] = useState(false);
   const copy = () => { try { navigator.clipboard.writeText(prompt); setCopied(true); setTimeout(() => setCopied(false), 1400); } catch {} };
   const PageBody = page.Component;
@@ -16316,10 +16346,10 @@ function DocsPage({ page, index, pg, state: givenState, set: givenSet, first = t
         <section className="mb-8">
           <h2 className="text-title font-semibold text-ink">Use it in your app</h2>
           <div className="mt-3 flex flex-col gap-2 rounded-card bg-surface p-3 shadow-card sm:flex-row sm:items-center">
-            <code className="min-w-0 flex-1 truncate font-mono text-small text-ink" title={prompt}>{prompt}</code>
+            <code className="min-w-0 flex-1 truncate font-mono text-small text-ink" title={prompt}>{prompt}<span className="text-ink-3">…what you want it to show</span></code>
             <Button variant="accent-soft" size="sm" icon={<Icon name={copied ? "check" : "copy"} size={14} />} onClick={copy} className="shrink-0" aria-live="polite">{copied ? "Copied" : "Copy prompt"}</Button>
           </div>
-          <p className="mt-2 text-caption text-ink-3">Paste it into Claude Code, Cursor or any agent open on a Formic project. No project yet? <a href="./#start" className="text-ink underline decoration-line underline-offset-2 hover:decoration-ink">One command sets one up</a>.</p>
+          <p className="mt-2 text-caption text-ink-3">Paste it into Claude Code, Cursor or any agent open on a Formic project and finish the sentence. No project yet? <a href="./#start" className="text-ink underline decoration-line underline-offset-2 hover:decoration-ink">One command sets one up</a>.</p>
         </section>
 
         {pg && (
@@ -17528,6 +17558,9 @@ function AppShell({
   children,
 }) {
   const project = useProjectSidebar(FORMIC_CONFIG.sidebarState === "expanded");
+  const own = useTheme();
+  const themeNow = theme ?? own.theme;
+  const onThemeNow = onTheme ?? own.toggle;
   const isProject = rail === "inset" || rail === "edge";
   const isTopBar = rail === "topbar";
   const toGroups = (list) => list.map((section, index) => ({
@@ -17564,7 +17597,7 @@ function AppShell({
   if (isProject) {
     return (
       <div className={`flex ${height} min-w-0 ${rail === "inset" ? "bg-sidebar" : ""} ${className}`}>
-        <ProjectSidebar layout={rail} open={project.open} groups={sections ? toGroups(sections) : undefined} active={active} onSelect={onSelect} user={user} theme={theme} onTheme={onTheme} onSearch={onSearch} />
+        <ProjectSidebar layout={rail} open={project.open} groups={sections ? toGroups(sections) : undefined} active={active} onSelect={onSelect} user={user} theme={themeNow} onTheme={onThemeNow} onSearch={onSearch} />
         {/* the rail's trigger sits in the page's top-left corner, where every
             app keeps it, not beside a title that may be centred by the layout */}
         {rail === "inset"
@@ -17575,9 +17608,9 @@ function AppShell({
   }
   return (
     <div className={`flex ${height} min-w-0 ${className}`}>
-      <AppSidebar sections={sections} active={active} onSelect={onSelect} workspace={workspace} user={isTopBar ? null : user} header={isTopBar ? "bar" : "plain"} />
+      <AppSidebar sections={sections} active={active} onSelect={onSelect} workspace={workspace} user={isTopBar ? null : user} header={isTopBar ? "bar" : "plain"} theme={isTopBar ? undefined : themeNow} onTheme={isTopBar ? undefined : onThemeNow} />
       <div className="flex min-w-0 flex-1 flex-col">
-        {isTopBar && <TopBar title={title} theme={theme} onTheme={onTheme} notifications={notifications} user={user === null ? null : user ? { name: user.name, src: user.src, kind: user.kind } : undefined} onSearch={onSearch} actions={actions} />}
+        {isTopBar && <TopBar title={title} theme={themeNow} onTheme={onThemeNow} notifications={notifications} user={user === null ? null : user ? { name: user.name, src: user.src, kind: user.kind } : undefined} onSearch={onSearch} actions={actions} />}
         <main className="min-w-0 flex-1 overflow-y-auto">{content}</main>
       </div>
     </div>
@@ -17585,7 +17618,7 @@ function AppShell({
 }
 function AppShellDemo() {
   const [rail, setRail] = useState(FORMIC_CONFIG.sidebar);
-  const [theme, setTheme] = useTheme();
+  const [theme, setTheme] = useGalleryTheme();
   const [page, setPage] = useState("overview");
   return (
     <div className="flex w-full min-w-0 flex-col gap-3">
@@ -17615,8 +17648,8 @@ function AppShellDemo() {
    two panes are scoped copies of the real token blocks, built from
    the live stylesheet, so they cannot drift. State lives in the URL,
    so a designer can send the link to a developer. */
-const CZ_KEYS = ["accent", "palette", "paletteColor", "radius", "corners", "controls", "size", "type", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"];
-const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", paletteColor: "#a5e12a", radius: "default", corners: "smooth", controls: "scale", size: "default", type: "base", theme: "light", avatar: "initials", sidebar: "full", sidebarState: "expanded", font: "Urbanist", layout: "compact", motion: true };
+const CZ_KEYS = ["accent", "palette", "paletteColor", "radius", "cardRadius", "corners", "controls", "size", "type", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"];
+const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", paletteColor: "#a5e12a", radius: "default", cardRadius: "auto", corners: "smooth", controls: "scale", size: "default", type: "base", theme: "light", avatar: "initials", sidebar: "full", sidebarState: "expanded", font: "Urbanist", layout: "compact", motion: true };
 /* the approved faces (mirror of FONTS in scripts/apply_config.py): variable
    weight through 300–800 on Google Fonts, a full x-height range, tabular figures */
 const CZ_FONTS = [
@@ -17663,8 +17696,7 @@ const CZ_CHOICES = {
 const CZ_HELP = {
   accent: "Bring the brand colour. Light and dark each get their own value, fitted to AA on their surfaces.",
   palette: "The neutral family under everything: canvas, surfaces, lines, ink. Custom tints paper's neutrals toward a colour you bring, every pair still passing AA.",
-  radius: "One scale for every corner. Pick a preset or a control radius in pixels; the rest of the scale follows (rows a little tighter, cards a little rounder) and every value is shown.",
-  controls: "Scale keeps buttons, inputs and chips on the radius scale. Pill makes them full capsules while cards, panels and menus keep the scale.",
+  radius: "Two corners to set: buttons, fields and chips on one slider, cards and panels on the other. A preset sets both; Pill makes the controls full capsules and leaves the cards alone. People (avatars) follow the controls.",
   corners: "Smooth draws corners as squircles, the way Figma's corner smoothing does; Round is the plain arc. Browsers without corner-shape draw round either way.",
   size: "Control heights, padding and gaps move together. Type does not follow; that is the next choice.",
   type: "The whole type ramp one or two steps up, still integer pixels: base reads at 14, lg at 15, xl at 16. Controls keep their heights.",
@@ -17691,14 +17723,23 @@ function czLoadFont(id) {
 const czStack = (font) => `"${font}", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
 /* the pixel scale: a control radius in, the six tokens out (mirror of
    radius_scale in scripts/apply_config.py and radiusScale in theme.ts) */
-function radiusScale(n) {
+function radiusScale(n, card = null, pill = false) {
   n = Math.max(0, Math.min(32, Math.round(n)));
-  return { sm: Math.round(n * 0.75), chip: Math.round(n * 0.9), control: n, md: n === 0 ? 0 : n + 2, card: n === 0 ? 0 : n + 6, capsule: n === 0 ? 0 : Math.round(n * 2.75) };
+  const c = card == null ? (n === 0 ? 0 : n + 6) : Math.max(0, Math.min(32, Math.round(card)));
+  const md = card == null ? (n === 0 ? 0 : n + 2) : Math.round((n + c) / 2);
+  return { sm: Math.round(n * 0.75), chip: pill ? 999 : Math.round(n * 0.9), control: pill ? 999 : n, md, card: c, capsule: pill ? 999 : n === 0 ? 0 : Math.round(n * 2.75), avatar: pill ? 999 : n };
 }
 const RADIUS_PRESETS = { sharp: 0, default: 8, rounded: 12, full: 999 };
-function radiusCss(n, selector = ':root[data-radius="custom"]') {
-  const r = radiusScale(n);
-  return `${selector} { --radius-sm: ${r.sm}px; --radius-chip: ${r.chip}px; --radius-control: ${r.control}px; --radius-md: ${r.md}px; --radius-card: ${r.card}px; --radius-capsule: ${r.capsule}px; }\n`;
+/* the three config keys as radiusScale wants them (twin of radius_inputs in apply_config.py) */
+function radiusInputs(cfg) {
+  const pill = cfg.controls === "pill" || cfg.radius === "full";
+  const n = cfg.radius === "full" ? 12 : typeof cfg.radius === "number" ? cfg.radius : RADIUS_PRESETS[cfg.radius];
+  return [n, cfg.cardRadius === "auto" ? null : cfg.cardRadius, pill];
+}
+const radiusIsCustom = (cfg) => typeof cfg.radius === "number" || cfg.cardRadius !== "auto";
+function radiusCss(cfg, selector = ':root[data-radius="custom"]') {
+  const r = radiusScale(...radiusInputs(cfg));
+  return `${selector} { --radius-sm: ${r.sm}px; --radius-chip: ${r.chip}px; --radius-control: ${r.control}px; --radius-md: ${r.md}px; --radius-card: ${r.card}px; --radius-capsule: ${r.capsule}px; --radius-avatar: ${r.avatar}px; }\n`;
 }
 function czIsCustomize() {
   return /\/customize\/?$/.test(location.pathname) || /^#\/?customize$/.test(location.hash);
@@ -17719,6 +17760,7 @@ function czRead() {
     if (v === null) continue;
     if (k === "accent" || k === "paletteColor") { const h = "#" + v.replace("#", "").toLowerCase(); if (isHex(h)) cfg[k] = h; }
     else if (k === "radius" && /^\d+$/.test(v)) cfg.radius = Math.max(0, Math.min(32, Number(v)));
+    else if (k === "cardRadius") cfg.cardRadius = /^\d+$/.test(v) ? Math.max(0, Math.min(32, Number(v))) : "auto";
     else if (k === "motion") cfg.motion = !["off", "false", "0"].includes(v);
     else if (CZ_CHOICES[k].includes(v)) cfg[k] = v;
   }
@@ -17729,7 +17771,7 @@ function czWrite(cfg) {
   for (const k of CZ_KEYS) {
     if (cfg[k] === CZ_DEFAULTS[k]) continue;
     if (k === "paletteColor" && cfg.palette !== "custom") continue;
-    if (k === "radius" && typeof cfg.radius === "number") { q.set(k, String(cfg.radius)); continue; }
+    if ((k === "radius" || k === "cardRadius") && typeof cfg[k] === "number") { q.set(k, String(cfg[k])); continue; }
     q.set(k, k === "accent" || k === "paletteColor" ? cfg[k].slice(1) : k === "motion" ? (cfg.motion ? "on" : "off") : cfg[k]);
   }
   const s = q.toString();
@@ -17841,10 +17883,10 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
   useEffect(() => {
     const id = "cz-custom-radius";
     let el = document.getElementById(id);
-    if (typeof cfg.radius !== "number") { el?.remove(); return; }
+    if (!radiusIsCustom(cfg)) { el?.remove(); return; }
     if (!el) { el = document.createElement("style"); el.id = id; document.head.appendChild(el); }
-    el.textContent = radiusCss(cfg.radius, '.cz-scope[data-radius="custom"]');
-  }, [cfg.radius]);
+    el.textContent = radiusCss(cfg, '.cz-scope[data-radius="custom"]');
+  }, [cfg.radius, cfg.cardRadius, cfg.controls]);
   /* a custom palette is written the way a built-in is, scoped to the pane */
   useEffect(() => {
     const id = "cz-custom-palette";
@@ -17921,7 +17963,7 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
       className={`cz-scope flex min-w-0 shrink-0 flex-col overflow-hidden rounded-card bg-canvas text-ink shadow-card transition-opacity duration-150 ${ready ? "" : "opacity-0"}`}
       data-theme={mode}
       data-palette={cfg.palette !== "paper" ? cfg.palette : undefined}
-      data-radius={typeof cfg.radius === "number" ? "custom" : cfg.radius !== "default" ? cfg.radius : undefined}
+      data-radius={radiusIsCustom(cfg) ? "custom" : cfg.radius !== "default" ? cfg.radius : undefined}
       data-corners={cfg.corners !== "smooth" ? cfg.corners : undefined}
       data-controls={cfg.controls !== "scale" ? cfg.controls : undefined}
       data-size={cfg.size !== "default" ? cfg.size : undefined}
@@ -18073,26 +18115,36 @@ function CustomizeApp() {
             <p className="mt-2 text-display-lg leading-none font-semibold text-ink" style={{ fontFamily: czStack(cfg.font) }} aria-hidden>Aa <span className="font-light">Bb</span> <span className="font-medium">Cc</span> <span className="text-title tabular-nums">0123</span></p>
           </div>
           <div>
-            <CzChoice label="Radius" value={typeof cfg.radius === "number" ? "custom" : cfg.radius} options={[...RADII, { id: "custom", label: "Custom" }]} onChange={(v) => set("radius", v === "custom" ? (typeof cfg.radius === "number" ? cfg.radius : RADIUS_PRESETS[cfg.radius] === 999 ? 12 : RADIUS_PRESETS[cfg.radius] ?? 8) : v)} />
-            {typeof cfg.radius === "number" && (
-              <div className="mt-2">
-                <Slider min={0} max={24} step={1} value={cfg.radius} onChange={(v) => set("radius", v)} label="Control radius" showValue formatValue={(v) => `${v}px`} />
-              </div>
-            )}
+            <CzChoice label="Radius" value={radiusIsCustom(cfg) ? "custom" : cfg.radius} options={[...RADII, { id: "custom", label: "Custom" }]} onChange={(v) => { if (v === "custom") { set("radius", typeof cfg.radius === "number" ? cfg.radius : cfg.radius === "full" ? 12 : RADIUS_PRESETS[cfg.radius]); return; } set("radius", v); set("cardRadius", "auto"); set("controls", v === "full" ? "pill" : "scale"); }} />
             {(() => {
-              const r = typeof cfg.radius === "number" ? radiusScale(cfg.radius) : cfg.radius === "full" ? { sm: 10, chip: "pill", control: "pill", md: 14, card: 20, capsule: "pill" } : cfg.radius === "rounded" ? { sm: 8, chip: 10, control: 12, md: 14, card: 18, capsule: 26 } : cfg.radius === "sharp" ? { sm: 0, chip: 0, control: 0, md: 0, card: 0, capsule: 0 } : { sm: 6, chip: 7, control: 8, md: 10, card: 14, capsule: 22 };
-              const px = (v) => (typeof v === "number" ? `${v}px` : v);
+              const [n, card, pill] = radiusInputs(cfg);
+              const r = radiusScale(n, card, pill);
+              const px = (v) => (v >= 999 ? "pill" : `${v}px`);
+              /* moving either slider leaves the preset: the numbers become the choice */
+              const setControls = (v) => { set("radius", v); };
+              const setCards = (v) => { set("cardRadius", v); if (typeof cfg.radius !== "number") set("radius", n); };
               return (
-                <dl className="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 font-mono text-micro text-ink-3">
-                  {[["sm", r.sm], ["chip", r.chip], ["control", r.control], ["md", r.md], ["card", r.card], ["capsule", r.capsule]].map(([k, v]) => (
-                    <span key={k} className="flex items-center gap-1.5"><span aria-hidden className="size-3.5 shrink-0 border border-line-strong" style={{ borderRadius: typeof v === "number" ? Math.min(v, 7) : 7 }} /><dt>{k}</dt><dd className="text-ink-2">{px(v)}</dd></span>
-                  ))}
-                </dl>
+                <div className="mt-3 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <Slider min={0} max={24} step={1} value={n} onChange={setControls} label="Buttons, fields and chips" showValue formatValue={(v) => (pill ? "pill" : `${v}px`)} disabled={pill} />
+                    </div>
+                    <label className="flex shrink-0 items-center gap-2 text-caption text-ink-2">
+                      <Switch on={pill} onToggle={() => { set("controls", pill ? "scale" : "pill"); if (cfg.radius === "full") set("radius", 12); }} label="Pill" />
+                      Pill
+                    </label>
+                  </div>
+                  <Slider min={0} max={32} step={1} value={r.card} onChange={setCards} label="Cards and panels" showValue formatValue={(v) => `${v}px`} />
+                  <dl className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-micro text-ink-3">
+                    {[["control", r.control], ["card", r.card], ["chip", r.chip], ["md", r.md], ["avatar", r.avatar], ["sm", r.sm]].map(([k, v]) => (
+                      <span key={k} className="flex items-center gap-1.5"><span aria-hidden className="size-3.5 shrink-0 border border-line-strong" style={{ borderRadius: Math.min(v, 7) }} /><dt>{k}</dt><dd className="text-ink-2">{px(v)}</dd></span>
+                    ))}
+                  </dl>
+                </div>
               );
             })()}
             <p className="mt-1.5 text-small text-ink-3">{CZ_HELP.radius}</p>
           </div>
-          <CzChoice label="Controls" help={CZ_HELP.controls} value={cfg.controls} options={[{ id: "scale", label: "On the scale" }, { id: "pill", label: "Pill" }]} onChange={(v) => set("controls", v)} />
           <CzChoice label="Corners" help={CZ_HELP.corners} value={cfg.corners} options={[{ id: "smooth", label: "Smooth" }, { id: "round", label: "Round" }]} onChange={(v) => set("corners", v)} />
           <CzChoice label="Size" help={CZ_HELP.size} value={cfg.size} options={SIZES} onChange={(v) => set("size", v)} />
           <CzChoice label="Type size" help={CZ_HELP.type} value={cfg.type} options={[{ id: "base", label: "Base" }, { id: "lg", label: "LG" }, { id: "xl", label: "XL" }]} onChange={(v) => set("type", v)} />
@@ -18188,7 +18240,7 @@ function SearchModal({ open, onClose }) {
 }
 
 function App() {
-  const [theme, setTheme] = useTheme();
+  const [theme, setTheme] = useGalleryTheme();
   const [palette, setPalette] = usePalette();
   const [accent, setAccentState] = useAccent();
   const [radius, setRadius] = useRadius();

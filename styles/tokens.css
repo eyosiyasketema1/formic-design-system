@@ -94,6 +94,7 @@
   --radius-md: 10px;      /* inset panels, media cards */
   --radius-card: 14px;    /* cards */
   --radius-capsule: 22px; /* collapsed capsule rows */
+  --radius-avatar: var(--radius-control); /* people follow the control radius: square on sharp, a capsule on pill */
 
   /* Shadows */
   --shadow-btn: 0 0 0 1px rgba(0, 0, 0, 0.07);
@@ -163,12 +164,13 @@
 }
 :root[data-radius="full"] {
   --radius-sm: 10px; --radius-chip: 999px; --radius-control: 999px;
-  --radius-md: 14px; --radius-card: 20px; --radius-capsule: 999px;
+  --radius-md: 14px; --radius-card: 20px; --radius-capsule: 999px; --radius-avatar: 999px;
 }
 
 /* Controls alone: buttons, inputs, chips become capsules while cards,
-   panels and menus keep the scale; formic.config.json's `controls`. */
-:root[data-controls="pill"] { --radius-control: 999px; --radius-chip: 999px; }
+   panels and menus keep the scale; formic.config.json's `controls`. A pixel
+   scale folds this into its own [data-radius="custom"] block instead. */
+:root[data-controls="pill"]:not([data-radius="custom"]) { --radius-control: 999px; --radius-chip: 999px; --radius-avatar: 999px; }
 
 /* ── Global size (density) scale ───────────────────────── */
 /* Tailwind v4 derives every spacing and sizing utility from --spacing

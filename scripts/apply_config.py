@@ -13,9 +13,10 @@ edited by hand. Every key is optional; a missing key keeps the system default.
       "accent":  "#29E0C2",        any colour — both modes are derived from it
       "palette": "paper",          paper | sage | twilight | clay | ocean | slate | sand | rose | plum | forest | custom
       "paletteColor": "#7C3AED",   with palette "custom": the colour the neutrals are tinted toward (scripts/palette.py)
-      "radius":  "default",        sharp | default | rounded | full, or a number: the control radius in px (0-32), the scale derives from it
+      "radius":  "default",        sharp | default | rounded | full, or a number: the radius of buttons, fields and chips in px (0-32); everything else derives from it
+      "cardRadius": "auto",        auto (derived from radius) or a number: the radius of cards and panels in px (0-32), on its own
       "corners": "smooth",         smooth (squircle) | round
-      "controls": "scale",         scale | pill   (pill: buttons, inputs and chips become capsules; cards keep the scale)
+      "controls": "scale",         scale | pill   (pill: buttons, fields and chips become capsules; cards keep their radius)
       "size":    "default",        default | comfortable | spacious   (control density)
       "type":    "base",           base | lg | xl   (the type ramp: 14, 15 or 16px base)
       "theme":   "light",          light | dark   (the app's starting theme)
@@ -64,6 +65,7 @@ DEFAULTS = {
     "palette": "paper",
     "paletteColor": None,
     "radius": "default",
+    "cardRadius": "auto",
     "corners": "smooth",
     "controls": "scale",
     "size": "default",
@@ -105,13 +107,30 @@ FONTS = {
     "Bricolage Grotesque": "Bricolage+Grotesque:wght@300..800",
     "Host Grotesk": "Host+Grotesk:wght@300..800",
 }
-RADIUS_PRESETS = ("sharp", "default", "rounded", "full")
+RADIUS_PRESETS = {"sharp": 0, "default": 8, "rounded": 12, "full": 999}
 
 
-def radius_scale(n):
-    """the six radius tokens from one control radius (twin of radiusScale in theme.ts)"""
+def radius_scale(n, card=None, pill=False):
+    """the radius tokens from the control radius, an optional card radius of its own,
+    and whether controls are capsules (twin of radiusScale in theme.ts)"""
     n = max(0, min(32, int(round(n))))
-    return {"sm": round(n * 0.75), "chip": round(n * 0.9), "control": n, "md": 0 if n == 0 else n + 2, "card": 0 if n == 0 else n + 6, "capsule": 0 if n == 0 else round(n * 2.75)}
+    c = (0 if n == 0 else n + 6) if card is None else max(0, min(32, int(round(card))))
+    md = (0 if n == 0 else n + 2) if card is None else round((n + c) / 2)
+    return {"sm": round(n * 0.75), "chip": 999 if pill else round(n * 0.9), "control": 999 if pill else n, "md": md, "card": c,
+            "capsule": 999 if pill else (0 if n == 0 else round(n * 2.75)), "avatar": 999 if pill else n}
+
+
+def radius_inputs(cfg):
+    """(control px, card px or None, pill) for radius_scale, from the config's three keys"""
+    pill = cfg["controls"] == "pill" or cfg["radius"] == "full"
+    n = 12 if cfg["radius"] == "full" else (RADIUS_PRESETS[cfg["radius"]] if cfg["radius"] in RADIUS_PRESETS else cfg["radius"])
+    return n, (None if cfg["cardRadius"] == "auto" else cfg["cardRadius"]), pill
+
+
+def radius_is_custom(cfg):
+    """a pixel radius, a card radius of its own, or pill controls on a pixel scale:
+    all of these become one written block; presets with pill keep the CSS rule"""
+    return isinstance(cfg["radius"], int) or cfg["cardRadius"] != "auto"
 
 
 RADIUS_BLOCK = re.compile(r'\n?/\* ═══ CUSTOM RADIUS[^\n]*\n:root\[data-radius="custom"\] \{[^}]*\}\n')
@@ -126,11 +145,11 @@ def write_custom_radius(cfg):
             continue
         src = p.read_text()
         new = RADIUS_BLOCK.sub("", src)
-        if isinstance(cfg["radius"], int):
-            r = radius_scale(cfg["radius"])
-            block = (f"\n/* ═══ CUSTOM RADIUS — control {cfg['radius']}px (apply_config) ═══ */\n:root[data-radius=\"custom\"] {{\n"
+        if radius_is_custom(cfg):
+            r = radius_scale(*radius_inputs(cfg))
+            block = (f"\n/* ═══ CUSTOM RADIUS — controls {r['control']}px, cards {r['card']}px (apply_config) ═══ */\n:root[data-radius=\"custom\"] {{\n"
                      f"  --radius-sm: {r['sm']}px; --radius-chip: {r['chip']}px; --radius-control: {r['control']}px;\n"
-                     f"  --radius-md: {r['md']}px; --radius-card: {r['card']}px; --radius-capsule: {r['capsule']}px;\n}}\n")
+                     f"  --radius-md: {r['md']}px; --radius-card: {r['card']}px; --radius-capsule: {r['capsule']}px; --radius-avatar: {r['avatar']}px;\n}}\n")
             anchor = ':root[data-radius="full"] {'
             i = new.index(anchor); j = new.index("}\n", i) + 2
             new = new[:j] + block.lstrip("\n") + new[j:]
@@ -181,6 +200,10 @@ def load(path):
         raise SystemExit(f"{path}: radius must be sharp, default, rounded, full, or a number of pixels from 0 to 32 (got {cfg['radius']!r})")
     if isinstance(cfg["radius"], float):
         cfg["radius"] = int(round(cfg["radius"]))
+    if isinstance(cfg["cardRadius"], bool) or not (cfg["cardRadius"] == "auto" or (isinstance(cfg["cardRadius"], (int, float)) and 0 <= cfg["cardRadius"] <= 32)):
+        raise SystemExit(f"{path}: cardRadius must be auto or a number of pixels from 0 to 32 (got {cfg['cardRadius']!r})")
+    if isinstance(cfg["cardRadius"], float):
+        cfg["cardRadius"] = int(round(cfg["cardRadius"]))
     if not isinstance(cfg["motion"], bool):
         raise SystemExit(f"{path}: motion must be true or false")
     if cfg["accent"] is not None:
@@ -221,7 +244,7 @@ def write_preview_mirrors(cfg):
         return None
     src = path.read_text()
     fc = f'const FORMIC_CONFIG = {{ avatar: "{cfg["avatar"]}", sidebar: "{cfg["sidebar"]}", sidebarState: "{cfg["sidebarState"]}", motion: {"true" if cfg["motion"] else "false"} }};'
-    cz = (f'const CZ_DEFAULTS = {{ accent: "{(cfg["accent"] or DEFAULTS_ACCENT).lower()}", palette: "{cfg["palette"]}", paletteColor: "{(cfg["paletteColor"] or cfg["accent"] or DEFAULTS_ACCENT).lower()}", radius: {cfg["radius"] if isinstance(cfg["radius"], int) else json.dumps(cfg["radius"])}, corners: "{cfg["corners"]}", controls: "{cfg["controls"]}", '
+    cz = (f'const CZ_DEFAULTS = {{ accent: "{(cfg["accent"] or DEFAULTS_ACCENT).lower()}", palette: "{cfg["palette"]}", paletteColor: "{(cfg["paletteColor"] or cfg["accent"] or DEFAULTS_ACCENT).lower()}", radius: {cfg["radius"] if isinstance(cfg["radius"], int) else json.dumps(cfg["radius"])}, cardRadius: {cfg["cardRadius"] if isinstance(cfg["cardRadius"], int) else json.dumps(cfg["cardRadius"])}, corners: "{cfg["corners"]}", controls: "{cfg["controls"]}", '
           f'size: "{cfg["size"]}", type: "{cfg["type"]}", theme: "{cfg["theme"]}", avatar: "{cfg["avatar"]}", sidebar: "{cfg["sidebar"]}", sidebarState: "{cfg["sidebarState"]}", '
           f'font: "{cfg["font"]}", layout: "{cfg["layout"]}", motion: {"true" if cfg["motion"] else "false"} }};')
     new, n1 = re.subn(r"const FORMIC_CONFIG = \{[^}]*\};", fc, src, count=1)
@@ -240,7 +263,7 @@ def app_index():
     lib/ui/formic all work). None inside the design-system repo."""
     if set_accent.in_repo(ROOT):
         return None
-    for parent in ROOT.parents[:4]:
+    for parent in list(ROOT.parents)[:4]:
         cand = parent / "index.html"
         if cand.exists() and 'id="root"' in cand.read_text():
             return cand
@@ -259,7 +282,7 @@ def write_html_attrs(path, cfg):
         add.append('data-theme="dark"')
     if cfg["palette"] != "paper":
         add.append(f'data-palette="{cfg["palette"]}"')
-    if isinstance(cfg["radius"], int):
+    if radius_is_custom(cfg):
         add.append('data-radius="custom"')
     elif cfg["radius"] != "default":
         add.append(f'data-radius="{cfg["radius"]}"')
@@ -379,9 +402,9 @@ def main():
 
     # radius (a number only writes)
     t = write_custom_radius(cfg)
-    if isinstance(cfg["radius"], int):
-        r = radius_scale(cfg["radius"])
-        print(f"  radius   control {cfg['radius']}px -> sm {r['sm']} chip {r['chip']} md {r['md']} card {r['card']} capsule {r['capsule']} -> {', '.join(t) if t else 'unchanged'}")
+    if radius_is_custom(cfg):
+        r = radius_scale(*radius_inputs(cfg))
+        print(f"  radius   controls {r['control']}px, cards {r['card']}px -> sm {r['sm']} chip {r['chip']} md {r['md']} capsule {r['capsule']} avatar {r['avatar']} -> {', '.join(t) if t else 'unchanged'}")
     elif t:
         print(f"  radius   {cfg['radius']} (custom block removed from {', '.join(t)})")
 
@@ -401,7 +424,7 @@ def main():
 
     # component defaults
     if cfg["avatar"] == "doodle":
-        pkg = next((par / "package.json" for par in [ROOT, *ROOT.parents[:4]] if (par / "package.json").exists()), None)
+        pkg = next((par / "package.json" for par in [ROOT, *list(ROOT.parents)[:4]] if (par / "package.json").exists()), None)
         if pkg and "@dicebear/core" not in pkg.read_text():
             print("  ! doodle avatars need two packages this app does not list yet — run: npm i @dicebear/core @dicebear/notionists"
                   "\n    (until then people show initials, and the console says why)")

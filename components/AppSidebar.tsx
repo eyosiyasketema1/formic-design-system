@@ -80,6 +80,8 @@ export default function AppSidebar({
   header = "plain",
   user = DEFAULT_USER,
   footer,
+  theme,
+  onTheme,
   className = "",
 }: {
   workspace?: AppSidebarWorkspace;
@@ -101,11 +103,22 @@ export default function AppSidebar({
   header?: "plain" | "bar";
   /** replaces the account row entirely */
   footer?: ReactNode;
+  /** the theme switch beside the profile, shown when both are given (AppShell gives them) */
+  theme?: "light" | "dark";
+  onTheme?: () => void;
   className?: string;
 }) {
   const [own, setOwn] = useState<AppSidebarVariant>(defaultVariant);
   const mode = variant ?? own;
   const rail = mode === "rail";
+  /* the theme switch lives beside the profile: the one place a reader looks for it */
+  const themeButton = onTheme && (
+    <Tooltip label={theme === "dark" ? "Light mode" : "Dark mode"}>
+      <IconButton label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={onTheme} className="size-9 shrink-0 text-ink-3 hover:bg-hover-2 hover:text-ink">
+        <Icon name={theme === "dark" ? "sun" : "moon"} size={15} strokeWidth={1.8} />
+      </IconButton>
+    </Tooltip>
+  );
   const flip = () => {
     const next: AppSidebarVariant = rail ? "expanded" : "rail";
     if (variant === undefined) setOwn(next);
@@ -300,20 +313,26 @@ export default function AppSidebar({
       <div className={`mt-auto shrink-0 border-t border-line ${rail ? "flex flex-col items-center py-2" : "p-2.5"}`}>
         {footer !== undefined ? footer : user && (
           rail ? (
-            <Tooltip label={user.name}>
-              <button type="button" aria-label={user.name} className="flex size-9 items-center justify-center rounded-control hover:bg-hover-2">
-                <Avatar name={user.name} src={user.src} kind={user.kind} doodle={user.doodle} size="sm" />
-              </button>
-            </Tooltip>
+            <>
+              {themeButton}
+              <Tooltip label={user.name}>
+                <button type="button" aria-label={user.name} className="flex size-9 items-center justify-center rounded-control hover:bg-hover-2">
+                  <Avatar name={user.name} src={user.src} kind={user.kind} doodle={user.doodle} size="sm" />
+                </button>
+              </Tooltip>
+            </>
           ) : (
-            <button type="button" className="flex h-10 w-full items-center gap-2.5 rounded-control px-2 text-left hover:bg-hover-2">
-              <Avatar name={user.name} src={user.src} kind={user.kind} doodle={user.doodle} size="sm" />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-caption font-medium text-ink">{user.name}</span>
-                {user.detail && <span className="block truncate text-small text-ink-3">{user.detail}</span>}
-              </span>
-              <Icon name="ellipsis" size={14} strokeWidth={2} className="shrink-0 text-ink-3" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button type="button" className="flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-control px-2 text-left hover:bg-hover-2">
+                <Avatar name={user.name} src={user.src} kind={user.kind} doodle={user.doodle} size="sm" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-caption font-medium text-ink">{user.name}</span>
+                  {user.detail && <span className="block truncate text-small text-ink-3">{user.detail}</span>}
+                </span>
+                <Icon name="ellipsis" size={14} strokeWidth={2} className="shrink-0 text-ink-3" />
+              </button>
+              {themeButton}
+            </div>
           )
         )}
       </div>

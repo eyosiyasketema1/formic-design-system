@@ -206,6 +206,29 @@ export function useElapsed() {
   return `${Math.floor(total / 60)}m ${(total % 60).toFixed(1)}s`;
 }
 
+/* ── useTheme ───────────────────────────────────────────── */
+/* The app's theme, read from and written to <html data-theme>. Light is the
+ * default (rule 8: no OS auto-detect); a choice is kept in localStorage under
+ * "formic-theme" so a reload keeps it. AppShell uses this when the app does
+ * not manage the theme itself, so the switch beside the profile always works. */
+export function useTheme(): { theme: "light" | "dark"; toggle: () => void; set: (next: "light" | "dark") => void } {
+  const read = (): "light" | "dark" => (typeof document !== "undefined" && document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
+  const [theme, setTheme] = useState<"light" | "dark">(read);
+  useEffect(() => {
+    let stored: string | null = null;
+    try { stored = localStorage.getItem("formic-theme"); } catch { /* storage unavailable */ }
+    if (stored === "dark" || stored === "light") { document.documentElement.setAttribute("data-theme", stored); setTheme(stored); }
+    else setTheme(read());
+  }, []);
+  const set = useCallback((next: "light" | "dark") => {
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("formic-theme", next); } catch { /* storage unavailable */ }
+    setTheme(next);
+  }, []);
+  const toggle = useCallback(() => set(read() === "dark" ? "light" : "dark"), [set]);
+  return { theme, toggle, set };
+}
+
 /* ── useReducedMotion ────────────────────────────────────── */
 /* The global CSS rule already collapses every CSS animation under
  * prefers-reduced-motion. This is for motion driven from JavaScript —
