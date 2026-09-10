@@ -2,7 +2,7 @@
 
 A token-driven React + Tailwind v4 design system for AI product interfaces: chat threads, prompt bars, streaming text, tool calls, terminals, file trees, sources and citations, approval cards, and the whole app shell around them.
 
-**[Live site](https://formicai.dev/)** · **[Component gallery](https://formicai.dev/preview.html)**
+**[Live site](https://formicai.dev/)** · **[Component gallery](https://formicai.dev/preview.html)** · **[Changelog](CHANGELOG.md)**
 
 - 70+ components, 10 palettes x light/dark, plus a custom palette from any colour
 - The agent surface is first-class: ToolCall, Terminal, FileTree, SplitPane (chat and canvas), Sources + InlineCitation, ImageResult, ContextMeter, ModelSelector, CommandPalette, NotificationList, all on the same tokens as the buttons and tables around them
@@ -130,7 +130,7 @@ A rules file alone is not enough: if the components are not in the project, ever
 curl -fsSL https://formicai.dev/install.sh | bash
 ```
 
-It copies `styles/` and `components/` into `src/formic/` (pass another folder as the first argument if you prefer), wires the CSS and the icon package when it can see where, adds a pre-commit hook that runs the two gates, and writes `AGENTS.md`, `.cursor/rules/formic-design-system.mdc`, `.github/copilot-instructions.md`, `.claude/skills/formic-design-system/SKILL.md`, and a Formic section in `CLAUDE.md`. Re-run it to update; it never overwrites your own files. Read [`install.sh`](install.sh) first if you like to know what you are piping into bash.
+It copies `styles/` and `components/` into `src/formic/` (pass another folder as the first argument if you prefer), wires the CSS and the icon package when it can see where, adds a pre-commit hook that runs the two gates, and writes `AGENTS.md`, `.cursor/rules/formic-design-system.mdc`, `.github/copilot-instructions.md`, `.claude/skills/formic-design-system/SKILL.md`, and a Formic section in `CLAUDE.md`. Re-run it to update (`src/formic/VERSION` says which release you have); it never overwrites your own files. Read [`install.sh`](install.sh) first if you like to know what you are piping into bash.
 
 **2. Wire the CSS** (Tailwind v4, three lines in this order) and `npm install @phosphor-icons/react`, only if the installer said it could not find your global stylesheet; a scaffolded app already has it.
 

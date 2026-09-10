@@ -306,6 +306,7 @@ trap 'rm -rf "$TMP"' EXIT
 printf '\nFormic AI Design System → %s\n\n' "$DEST"
 git clone --quiet --depth 1 "$REPO" "$TMP/formic" || die "clone failed"
 SHA="$(git -C "$TMP/formic" rev-parse --short HEAD)"
+VER="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$TMP/formic/package.json" | head -1)"
 
 # ── 1. The system itself ───────────────────────────────────
 mkdir -p "$DEST"
@@ -318,8 +319,8 @@ cp "$TMP/formic/scripts/apply_config.py" "$DEST/scripts/apply_config.py"
 cp "$TMP/formic/scripts/palette.py" "$DEST/scripts/palette.py"
 cp "$TMP/formic/scripts/compose_check.py" "$DEST/scripts/compose_check.py"
 cp "$TMP/formic/scripts/formic_check.py" "$DEST/scripts/formic_check.py"
-printf 'formic-design-system %s\nhttps://github.com/eyosiyasketema1/formic-design-system\nre-run install.sh to update\n' "$SHA" > "$DEST/VERSION"
-say "$DEST/styles, $DEST/components and $DEST/scripts (commit $SHA)"
+printf 'formic-design-system %s (%s)\nhttps://github.com/eyosiyasketema1/formic-design-system\nre-run install.sh to update\n' "$VER" "$SHA" > "$DEST/VERSION"
+say "$DEST/styles, $DEST/components and $DEST/scripts (Formic $VER, commit $SHA)"
 
 # ── 1b. formic.config.json — the app's choices, kept across updates ──
 # styles/ and components/ were just replaced, so the accent and the
