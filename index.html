@@ -891,8 +891,11 @@ main, footer.site { position: relative; z-index: 1; }
 .qs-tab:hover { color: var(--ink); }
 .qs-tab.is-active { background: var(--hover-2); color: var(--ink); font-weight: 600; }
 .ai-steps { list-style: none; counter-reset: step; margin: 18px 0 0; padding: 0; display: grid; gap: 12px; }
-.ai-steps li { counter-increment: step; position: relative; padding: 14px 14px 14px 46px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--canvas); corner-shape: squircle; min-width: 0; }
-.ai-steps li::before { content: counter(step); position: absolute; left: 14px; top: 14px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--accent); color: var(--canvas); font-size: var(--text-small); font-weight: 600; }
+.ai-steps > li { counter-increment: step; position: relative; padding: 14px 14px 14px 46px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--canvas); corner-shape: squircle; min-width: 0; }
+.ai-steps > li::before { content: counter(step); position: absolute; left: 14px; top: 14px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--accent); color: var(--canvas); font-size: var(--text-small); font-weight: 600; }
+.qs-list { margin: 8px 0 10px; padding-left: 18px; list-style: disc; font-size: var(--text-caption); color: var(--ink-2); max-width: 70ch; }
+.qs-list li { margin: 4px 0; padding: 0; border: none; background: none; counter-increment: none; }
+.qs-list code { font-size: var(--text-small); }
 .ai-step-title { font-size: var(--text-body); font-weight: 600; color: var(--ink); }
 .ai-steps p { margin: 4px 0 0; max-width: 70ch; font-size: var(--text-caption); color: var(--ink-2); }
 .ai-steps .lcode { margin-top: 10px; background: var(--surface); }
@@ -1144,10 +1147,29 @@ footer.site a:hover { color: var(--ink); }
               <button type="button" class="qs-tab" role="tab" aria-selected="false" aria-controls="qs-existing" id="qs-tab-existing">Existing project</button>
             </div>
             <p id="qs-new" role="tabpanel" aria-labelledby="qs-tab-new">Make an empty folder, go into it in the terminal, run this; it scaffolds the app and the browser opens a page that says Formic is working.</p>
-            <p id="qs-existing" role="tabpanel" aria-labelledby="qs-tab-existing" hidden>From the root of your Tailwind v4 app, run this; it adds <code>src/formic</code>, the CSS imports, the icon package and the AI rules, then starts the dev server.</p>
+            <div id="qs-existing" role="tabpanel" aria-labelledby="qs-tab-existing" hidden>
+              <p>From the root of your Tailwind v4 app, run the command below. The installer does all of this for you; it never overwrites your own files, and you can re-run it to update:</p>
+              <ul class="qs-list">
+                <li>copies the system into <code>src/formic/</code>: styles, components, and the scripts behind the config and the two gates</li>
+                <li>writes <code>src/formic/formic.config.json</code> and applies it: accent, palette, radius, rail</li>
+                <li>adds the three CSS imports to your global stylesheet and installs <code>@tabler/icons-react</code></li>
+                <li>writes the rules your AI tool reads: <code>AGENTS.md</code>, <code>CLAUDE.md</code>, <code>.cursor/rules/</code>, <code>.github/copilot-instructions.md</code>, <code>.claude/skills/</code></li>
+                <li>adds <code>npm run formic</code> and a pre-commit hook so the gates run before every commit</li>
+                <li>starts the dev server</li>
+              </ul>
+            </div>
             <div class="lcode">
               <div class="lcode-head">Terminal · inside your project folder</div>
               <pre>curl -fsSL https://formicai.dev/install.sh | bash &amp;&amp; npm run dev</pre>
+            </div>
+            <div id="qs-existing-css" hidden>
+              <p>The one thing it may ask of you: if it cannot find your global stylesheet, it says so, and you add these three lines yourself, in this order.</p>
+              <div class="lcode">
+                <div class="lcode-head">src/index.css · only if the installer asks</div>
+                <pre>@import "./formic/styles/fonts.css";
+@import "tailwindcss";
+@import "./formic/styles/formic.css";</pre>
+              </div>
             </div>
           </li>
           <li>
@@ -1346,6 +1368,8 @@ footer.site a:hover { color: var(--ink); }
         t.classList.toggle("is-active", on);
         t.setAttribute("aria-selected", on ? "true" : "false");
         document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+        var extra = document.getElementById(t.getAttribute("aria-controls") + "-css");
+        if (extra) extra.hidden = !on;
       });
     });
   });
