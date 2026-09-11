@@ -158,11 +158,11 @@ EOF
    Action:   open the customizer in a new tab
    Register: text
 */
-/* One card in the bottom-right corner, above whatever page is showing, that
-   says the look can be changed, with one link; Close and Customize both
-   dismiss it for good. Delete this file and its line in App.tsx once the
+/* One card in the bottom-right corner, above the first page the AI tool
+   builds (not the welcome page), that says the look can be changed, with one
+   link; Close and Customize both dismiss it for good. Delete this file and its line in App.tsx once the
    look is yours. */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "./formic/components/Button";
 import { Card, Icon, IconButton } from "./formic/components/primitives";
 
@@ -171,7 +171,10 @@ const STORAGE_KEY = "formic-nudge";
 const dismissed = () => { try { return localStorage.getItem(STORAGE_KEY) === "off"; } catch { return false; } };
 
 export default function CustomizeNudge() {
-  const [shown, setShown] = useState(() => !dismissed());
+  /* waits for the first real page: on the welcome page the prompt is the one
+     thing to read, so the card appears once the AI tool has replaced it */
+  const [shown, setShown] = useState(false);
+  useEffect(() => { setShown(!dismissed() && !document.querySelector("[data-formic-welcome]")); }, []);
   const close = () => { setShown(false); try { localStorage.setItem(STORAGE_KEY, "off"); } catch { /* private mode: the choice lasts the session */ } };
   if (!shown) return null;
   return (
@@ -204,7 +207,7 @@ import Panel from "../formic/components/Panel";
 import { FormicMark } from "../formic/components/brand";
 import { Icon } from "../formic/components/primitives";
 
-const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report); four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a three-series revenue LineChart with a legend beside a one-third Panel holding a DonutChart of revenue by client; then a recent invoices DataTable on its own, filling the full width (toolbar search, status filter, selectable rows, pagination). Everything must work: filters filter, rows select, the theme switch beside the profile flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders.";
+const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report; the label is the verb, the icon comes from iconFor and never enters the label); a filter row under the header with a status Select and a time-range choice (Tabs segmented: 7 days, 30 days, 90 days) that change the numbers and charts below; four StatCards in one row with deltas and sparklines; a full-width Panel holding a BarChart of revenue by month (grouped by stream, with a legend and a value axis) that fills the panel; then a recent invoices DataTable on its own, filling the full width (toolbar search, status filter, selectable rows, pagination). Everything must work: filters filter, rows select, the theme switch beside the profile flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders.";
 const PREFIX = "Use Formic (src/formic), read AGENTS.md, then";
 
 export default function Welcome() {
@@ -452,7 +455,7 @@ if [ "$NEW" = 1 ]; then
   printf '\nDone. Run it:\n'
   if [ "$APP" = "." ]; then printf '  npm run dev        # the browser opens a page that says Formic is working\n\n'; else printf '  cd %s && npm run dev        # the browser opens a page that says Formic is working\n\n' "$APP"; fi
   printf 'Then open your AI tool (Claude Code, Cursor, Antigravity, Copilot, any of them) in this folder and paste the test prompt:\n'
-  printf '  %s\n\n' "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report); four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a three-series revenue LineChart with a legend beside a one-third Panel holding a DonutChart of revenue by client; then a recent invoices DataTable on its own, filling the full width (toolbar search, status filter, selectable rows, pagination). Everything must work: filters filter, rows select, the theme switch beside the profile flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders."
+  printf '  %s\n\n' "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report; the label is the verb, the icon comes from iconFor and never enters the label); a filter row under the header with a status Select and a time-range choice (Tabs segmented: 7 days, 30 days, 90 days) that change the numbers and charts below; four StatCards in one row with deltas and sparklines; a full-width Panel holding a BarChart of revenue by month (grouped by stream, with a legend and a value axis) that fills the panel; then a recent invoices DataTable on its own, filling the full width (toolbar search, status filter, selectable rows, pagination). Everything must work: filters filter, rows select, the theme switch beside the profile flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders."
   printf 'After that, start every prompt with:  %s  and say what you want.\n\n' "Use Formic (src/formic), read AGENTS.md, then"
   printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
   printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
