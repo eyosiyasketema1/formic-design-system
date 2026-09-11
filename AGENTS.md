@@ -33,7 +33,7 @@ Then make sure the global CSS imports the token stack (Tailwind v4) and `@phosph
 @import "./formic/styles/formic.css";   /* tokens, palettes, Tailwind bridge, component sheets */
 ```
 
-**Step 2: read before you write, but only what the screen uses.** Open `src/formic/styles/tokens.css` (the tokens and their names), list `src/formic/components/` (what already exists), then read the head comment and the props of the components this screen will mount, nothing more: the inventory at the end of this file already says what each one does, and every component ships its own demo data as prop defaults, so a dashboard is one pass of composition, not a study of the whole system. Do not write a component that already exists there.
+**Step 2: read before you write.** Open `src/formic/styles/tokens.css` (the tokens and their names) and list `src/formic/components/` (what already exists). Do not write a component that already exists there.
 
 **Step 3: import, do not re-create.** Every button, input, card, chip, badge, table, chart, modal, chat surface, and dashboard tile comes from `src/formic/components/`. Import it and pass props. Never copy a component's markup into a page, and never edit a component's internals to bend it into a one-off shape.
 
