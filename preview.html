@@ -10937,8 +10937,8 @@ function DonutChart({
         >
           <span className={`size-2 shrink-0 rounded-full ${SERIES_BG[tone]}`} />
           <span className={list ? "min-w-0 flex-1 truncate text-left" : undefined}>{seg.name}</span>
-          {list && <span className="w-10 shrink-0 text-right font-medium text-ink tabular-nums">{format(seg.value)}</span>}
-          <span className={`text-ink-3 tabular-nums ${list ? "w-10 shrink-0 text-right text-small" : ""}`}>{Math.round((seg.value / total) * 100)}%</span>
+          {list && <span className="min-w-10 shrink-0 text-right font-medium whitespace-nowrap text-ink tabular-nums">{format(seg.value)}</span>}
+          <span className={`text-ink-3 tabular-nums ${list ? "w-9 shrink-0 text-right text-small" : ""}`}>{Math.round((seg.value / total) * 100)}%</span>
         </button>
       </li>
     );
@@ -17538,6 +17538,12 @@ function useProjectSidebar(defaultOpen = true) {
   const [open, setOpen] = useState(defaultOpen);
   return { open, setOpen, toggle: () => setOpen((o) => !o) };
 }
+/* the project rails read AppSidebar's nav shape: the rail is a placement, not a different app */
+const toGroups = (list) => list.map((section, index) => ({
+  key: section.title ? section.title.toLowerCase().replace(/\s+/g, "-") : `group-${index}`,
+  label: section.title ?? "Pages",
+  items: section.items.map((item) => ({ key: item.key, label: item.label, icon: item.icon, children: item.children?.map((child) => ({ key: child.key, label: child.label })) })),
+}));
 function AppShell({
   rail = FORMIC_CONFIG.sidebar,
   sections,
@@ -17563,11 +17569,6 @@ function AppShell({
   const onThemeNow = onTheme ?? own.toggle;
   const isProject = rail === "inset" || rail === "edge";
   const isTopBar = rail === "topbar";
-  const toGroups = (list) => list.map((section, index) => ({
-    key: section.title ? section.title.toLowerCase().replace(/\s+/g, "-") : `group-${index}`,
-    label: section.title ?? "Pages",
-    items: section.items.map((item) => ({ key: item.key, label: item.label, icon: item.icon, children: item.children?.map((child) => ({ key: child.key, label: child.label })) })),
-  }));
   const header = (title || actions) && !isTopBar && (
     <header className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
@@ -17597,7 +17598,7 @@ function AppShell({
   if (isProject) {
     return (
       <div className={`flex ${height} min-w-0 ${rail === "inset" ? "bg-sidebar" : ""} ${className}`}>
-        <ProjectSidebar layout={rail} open={project.open} groups={sections ? toGroups(sections) : undefined} active={active} onSelect={onSelect} user={user} theme={themeNow} onTheme={onThemeNow} onSearch={onSearch} />
+        <ProjectSidebar layout={rail} open={project.open} groups={toGroups(sections ?? APPSB_SECTIONS)} active={active} onSelect={onSelect} user={user} theme={themeNow} onTheme={onThemeNow} onSearch={onSearch} />
         {/* the rail's trigger sits in the page's top-left corner, where every
             app keeps it, not beside a title that may be centred by the layout */}
         {rail === "inset"
@@ -17702,7 +17703,7 @@ const CZ_HELP = {
   type: "The whole type ramp one or two steps up, still integer pixels: base reads at 14, lg at 15, xl at 16. Controls keep their heights.",
   theme: "Where the app starts. Users can still switch.",
   avatar: "People without a photo of their own: initials, a drawn face derived from the name, or a placeholder photo until real ones exist.",
-  sidebar: "The rails on the Sidebar page. Full view: expanded with a sub-menu open, collapse in the header. Inset: the page is a surface card beside the rail; the trigger hides and shows it. Edge: hairline on the right, same page. Top bar: the full rail without its user row, and a strip above the page with search, theme, notifications and the account.",
+  sidebar: "Where the navigation sits; the pages in it stay the same on every rail. Full view: expanded with a sub-menu open, collapse in the header. Inset: the page is a surface card beside the rail; the trigger hides and shows it. Edge: hairline on the right, same page. Top bar: the full rail without its user row, and a strip above the page with search, theme, notifications and the account.",
   sidebarState: "How the rail first opens. Full view collapses to an icon rail; Inset and Edge hide behind their trigger.",
   font: "Every face on the list is variable through 300 to 800 on Google Fonts, so the weight ramp stays real. The type scale never changes.",
   layout: "Compact keeps page content to a column of 64rem, Medium 80rem, both centred. Full lets it run edge to edge. Rails and headers are outside all three.",
@@ -17903,7 +17904,7 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
   const project = cfg.sidebar === "inset" || cfg.sidebar === "edge";
   const topbar = cfg.sidebar === "topbar";
   const rail = project
-    ? <ProjectSidebar key={k} open={projectOpen} user={me} layout={cfg.sidebar} active="northwind" onSelect={() => {}} />
+    ? <ProjectSidebar key={k} open={projectOpen} user={me} layout={cfg.sidebar} groups={toGroups(APPSB_SECTIONS)} active="reports-sales" onSelect={() => {}} />
     : <AppSidebar key={k} variant={variant} onVariantChange={setVariant} active="reports-sales" onSelect={() => {}} user={topbar ? null : me} header={topbar ? "bar" : "plain"} />;
   const content = (
     <div className="page-content flex min-w-0 flex-col gap-3">

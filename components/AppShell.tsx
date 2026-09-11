@@ -1,13 +1,16 @@
 "use client";
 import type { ReactNode } from "react";
-import AppSidebar, { type AppSidebarSection, type AppSidebarUser, type AppSidebarWorkspace } from "./AppSidebar";
+import AppSidebar, { DEFAULT_SECTIONS, type AppSidebarSection, type AppSidebarUser, type AppSidebarWorkspace } from "./AppSidebar";
 import ProjectSidebar, { ProjectInset, ProjectSidebarTrigger, useProjectSidebar, type ProjectGroup } from "./ProjectSidebar";
 import TopBar from "./TopBar";
 import { FORMIC_CONFIG, type FormicConfig } from "./config";
 import { useTheme } from "./hooks";
 /* ─────────────────────────────────────────────────────────
  * APP SHELL — the rail the config chose, with the page beside it
- * One component instead of four layouts to remember. It reads
+ * One component instead of four layouts to remember. The rail is a
+ * placement, never a different app: every shell shows the same
+ * navigation (`sections`, or AppSidebar's default), so switching the
+ * config from full to inset moves the nav, it does not replace it. It reads
  * `sidebar` and `sidebarState` from formic.config.json (through
  * config.ts) and mounts the matching shell:
  *
@@ -122,7 +125,7 @@ export default function AppShell({
         <ProjectSidebar
           layout={rail}
           open={project.open}
-          groups={sections ? toGroups(sections) : undefined}
+          groups={toGroups(sections ?? DEFAULT_SECTIONS)}
           active={active}
           onSelect={onSelect}
           user={user}
