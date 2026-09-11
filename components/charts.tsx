@@ -703,8 +703,8 @@ export function DonutChart({
         >
           <span className={`size-2 shrink-0 rounded-full ${SERIES_BG[tone]}`} />
           <span className={list ? "min-w-0 flex-1 truncate text-left" : undefined}>{seg.name}</span>
-          {list && <span className="w-10 shrink-0 text-right font-medium text-ink tabular-nums">{format(seg.value)}</span>}
-          <span className={`text-ink-3 tabular-nums ${list ? "w-10 shrink-0 text-right text-small" : ""}`}>{Math.round((seg.value / total) * 100)}%</span>
+          {list && <span className="min-w-10 shrink-0 text-right font-medium whitespace-nowrap text-ink tabular-nums">{format(seg.value)}</span>}
+          <span className={`text-ink-3 tabular-nums ${list ? "w-9 shrink-0 text-right text-small" : ""}`}>{Math.round((seg.value / total) * 100)}%</span>
         </button>
       </li>
     );

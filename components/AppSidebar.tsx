@@ -39,7 +39,7 @@ export type AppSidebarVariant = "expanded" | "rail";
 
 export type AppSidebarWorkspace = { name: string; /** a letter in an ink square */ monogram?: string; /** replaces the monogram — the Formic mark by default */ logo?: ReactNode };
 const DEFAULT_WORKSPACE: AppSidebarWorkspace = { name: "Formic Studio", logo: <FormicMark size={22} className="text-accent" /> };
-const DEFAULT_SECTIONS: AppSidebarSection[] = [
+export const DEFAULT_SECTIONS: AppSidebarSection[] = [
   {
     items: [
       { key: "overview", label: "Overview", icon: "home" },
