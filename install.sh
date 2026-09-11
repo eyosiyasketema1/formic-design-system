@@ -167,7 +167,9 @@ import Button from "./formic/components/Button";
 import { Card, Icon, IconButton } from "./formic/components/primitives";
 
 const CUSTOMIZE_URL = "https://formicai.dev/customize";
-const STORAGE_KEY = "formic-nudge";
+/* one key per install, so a card dismissed in an earlier project on the same
+   localhost port does not stay dismissed in this one */
+const STORAGE_KEY = "formic-nudge-__FORMIC_INSTALL__";
 const dismissed = () => { try { return localStorage.getItem(STORAGE_KEY) === "off"; } catch { return false; } };
 
 export default function CustomizeNudge() {
@@ -192,6 +194,7 @@ export default function CustomizeNudge() {
   );
 }
 EOF
+  sed -i.bak "s/__FORMIC_INSTALL__/$(date +%s)/" "$APP/src/CustomizeNudge.tsx" && rm -f "$APP/src/CustomizeNudge.tsx.bak"
   cat > "$APP/src/pages/Welcome.tsx" <<'EOF'
 /* Brief
    Reader:   the person who just ran the installer, in the browser it opened
@@ -207,7 +210,7 @@ import Panel from "../formic/components/Panel";
 import { FormicMark } from "../formic/components/brand";
 import { Icon } from "../formic/components/primitives";
 
-const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report; the label is the verb, the icon comes from iconFor and never enters the label); a filter row under the header with a status Select and a time-range choice (Tabs segmented: 7 days, 30 days, 90 days) that change the numbers and charts below; four StatCards in one row with deltas and sparklines; a full-width Panel holding a BarChart of revenue by month (grouped by stream, with a legend and a value axis) that fills the panel; then a recent invoices DataTable on its own, filling the full width (toolbar search, status filter, selectable rows, pagination). Everything must work: filters filter, rows select, the theme switch beside the profile flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders.";
+const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report; the label is the verb, the icon comes from iconFor and never enters the label); a filter row under the header with a status Select and a time-range choice (Tabs segmented: 7 days, 30 days, 90 days) that change the numbers and charts below; four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a LineChart of revenue by month with dashed guides and one series that goes below zero (the gallery's \"LineChart · dashed guides, and a series that goes below zero\" variant, with a legend) beside a one-third Panel holding a DonutChart of revenue by client with a list legend beside the ring showing each count and share and the total in the middle (the gallery's \"DonutChart · a list legend beside the ring\" variant); then a recent invoices DataTable on its own, filling the full width (toolbar search, status filter, selectable rows, pagination). Everything must work: filters filter, rows select, the theme switch beside the profile flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders.";
 const PREFIX = "Use Formic (src/formic), read AGENTS.md, then";
 
 export default function Welcome() {
@@ -455,7 +458,7 @@ if [ "$NEW" = 1 ]; then
   printf '\nDone. Run it:\n'
   if [ "$APP" = "." ]; then printf '  npm run dev        # the browser opens a page that says Formic is working\n\n'; else printf '  cd %s && npm run dev        # the browser opens a page that says Formic is working\n\n' "$APP"; fi
   printf 'Then open your AI tool (Claude Code, Cursor, Antigravity, Copilot, any of them) in this folder and paste the test prompt:\n'
-  printf '  %s\n\n' "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report; the label is the verb, the icon comes from iconFor and never enters the label); a filter row under the header with a status Select and a time-range choice (Tabs segmented: 7 days, 30 days, 90 days) that change the numbers and charts below; four StatCards in one row with deltas and sparklines; a full-width Panel holding a BarChart of revenue by month (grouped by stream, with a legend and a value axis) that fills the panel; then a recent invoices DataTable on its own, filling the full width (toolbar search, status filter, selectable rows, pagination). Everything must work: filters filter, rows select, the theme switch beside the profile flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders."
+  printf '  %s\n\n' "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with Formic Studio's dashboard, composed the way the gallery's Dashboard widgets page is: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report; the label is the verb, the icon comes from iconFor and never enters the label); a filter row under the header with a status Select and a time-range choice (Tabs segmented: 7 days, 30 days, 90 days) that change the numbers and charts below; four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a LineChart of revenue by month with dashed guides and one series that goes below zero (the gallery's "LineChart · dashed guides, and a series that goes below zero" variant, with a legend) beside a one-third Panel holding a DonutChart of revenue by client with a list legend beside the ring showing each count and share and the total in the middle (the gallery's "DonutChart · a list legend beside the ring" variant); then a recent invoices DataTable on its own, filling the full width (toolbar search, status filter, selectable rows, pagination). Everything must work: filters filter, rows select, the theme switch beside the profile flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders."
   printf 'After that, start every prompt with:  %s  and say what you want.\n\n' "Use Formic (src/formic), read AGENTS.md, then"
   printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
   printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
