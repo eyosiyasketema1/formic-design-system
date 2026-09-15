@@ -674,15 +674,6 @@ header.site.is-full {
 header.site .hero-icon-btn { color: #fff; corner-shape: squircle; transition: all 150ms; }
 header.site .hero-icon-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
 .hero-gh-btn { background: #1c1c1b; color: #fff; border: 1px solid rgba(255,255,255,0.1); transition: all 150ms; }
-
-/* When header gets the solid surface background (on scroll) */
-header.site.header-blur .hero-icon-btn { color: var(--ink); }
-header.site.header-blur .hero-icon-btn:hover { background: var(--line); color: var(--ink); }
-header.site.header-blur .site-nav a.hero-link { color: var(--ink); }
-header.site.header-blur .site-nav a.hero-link:hover { background: var(--line); color: var(--ink); }
-header.site.header-blur .hero-invert { filter: none; }
-header.site.header-blur .hero-gh-btn { background: var(--surface); color: var(--ink); border-color: var(--line); }
-header.site.header-blur .hero-gh-btn:hover { background: var(--canvas); }
 .hero-gh-btn:hover { background: #000; }
 
 /* Inverted states when scrolled down over the white page */
@@ -755,7 +746,6 @@ header.site[data-nav-open="true"] .header-blur { opacity: 1; }
 .lbtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: var(--radius-control); font-size: var(--text-lead); font-weight: 500; line-height: 1; text-decoration: none; transition: opacity 150ms, background-color 150ms, transform 150ms; corner-shape: squircle; }
 .lbtn:active { transform: scale(0.98); }
 .lbtn-md { height: 36px; padding: 0 14px; font-size: var(--text-body); }
-.lbtn-lg { height: 48px; padding: 0 20px; font-size: 16px; }
 .lbtn-accent { background: var(--accent); color: var(--surface); }
 .lbtn-accent:hover { opacity: 0.9; }
 .lbtn-secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
@@ -769,7 +759,7 @@ main, footer.site { position: relative; z-index: 1; }
 .hero-card {
   --hero-inset: 100px;
   position: absolute;
-  inset: 16px 16px 56px 16px;
+  inset: 16px;
   border-radius: 20px;
   overflow: hidden;
   display: flex;
@@ -816,88 +806,44 @@ header.site .wrap {
   padding: 0 var(--hero-inset) 80px;
   text-align: left;
 }
-@keyframes heroFadeUp {
-  from { opacity: 0; transform: translateY(80px) scale(0.97); filter: blur(4px); }
-  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-}
-@keyframes heroFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-header.site { animation: heroFadeUp 1.2s var(--ease-out-quint) 0s backwards; }
-.hero h1 {
-  animation: heroFadeUp 1.2s var(--ease-out-quint) 0.1s backwards;
-}
-.hero-sub {
-  animation: heroFadeUp 1.2s var(--ease-out-quint) 0.25s backwards;
-}
-.hero-ctas {
-  animation: heroFadeUp 1.2s var(--ease-out-quint) 0.4s backwards;
-}
-.hero-theme-picker {
-  animation: heroFadeUp 1.2s var(--ease-out-quint) 0.55s backwards;
-}
-
-.hero-copy { }
+.hero-copy { max-width: 1200px; }
 .hero h1 {
   font-size: 96px; font-weight: 500; letter-spacing: -0.02em;
   line-height: 1.05; color: #fff; margin: 0 0 20px;
 }
-@media (max-width: 1024px) {
-  .hero h1 { font-size: 72px; }
-  .hero-theme-picker { margin-left: 0; width: 100%; justify-content: flex-start; margin-top: 8px; }
-}
+@media (max-width: 1024px) { .hero h1 { font-size: 72px; } }
 @media (max-width: 640px) { .hero h1 { font-size: 48px; } }
 .hero-sub {
   max-width: 480px; font-size: var(--text-lead); line-height: 1.55;
   color: rgba(255,255,255,0.8); margin: 0 0 28px;
 }
-.hero-ctas { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.hero-ctas { display: flex; flex-wrap: wrap; gap: 10px; }
 /* hero buttons override: on a photo, they need their own colors */
-.hero-ctas .lbtn { border-radius: 99px; }
 .hero .lbtn-accent { background: var(--accent); color: var(--surface); }
-.hero .lbtn-secondary { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); }
-.hero .lbtn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
-
-:root {
-  --picker-lime: #557611;
-  --picker-amber: #8a6314;
-  --picker-teal: #117867;
-  --picker-blue: #1b6bbb;
-  --picker-violet: #9429e0;
-  --picker-pink: #c81d73;
-  --picker-ink: #1a1a1a;
-  --picker-white: #6b6b6b;
-}
-:root[data-theme="dark"] {
-  --picker-lime: #a5e12a;
-  --picker-amber: #e0a329;
-  --picker-teal: #29e0c2;
-  --picker-blue: #3f92e3;
-  --picker-violet: #b56cea;
-  --picker-pink: #e75aa1;
-  --picker-ink: #8d8d8d;
-  --picker-white: #ffffff;
-}
+.hero .lbtn-secondary { background: #1c1c1b; color: #fff; border: 1px solid rgba(255,255,255,0.1); }
+.hero .lbtn-secondary:hover { background: #000; }
 
 /* Option 1: Floating Glass Pill */
 .hero-theme-picker {
-  display: inline-flex; align-items: center; gap: 12px;
-  height: 48px;
-  margin-left: auto;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  position: absolute;
+  bottom: 80px;
+  right: var(--hero-inset);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
   padding: 0 12px 0 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 99px;
   backdrop-filter: blur(12px) url(#glass-distortion);
   -webkit-backdrop-filter: blur(12px) url(#glass-distortion);
   z-index: 10;
-  color: #fff;
-  animation: heroFadeUp 1.2s var(--ease-out-quint) 0.55s backwards;
 }
 .theme-label {
-  font-size: 13px; font-weight: 500;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
 }
 .theme-dots {
   display: flex;
@@ -1143,8 +1089,7 @@ footer.site a:hover { color: var(--ink); }
 
 /* ── Mobile: tighten the rhythm and stack the CTAs ── */
 @media (max-width: 640px) {
-  .hero-card { inset: 10px 10px 50px 10px; border-radius: 16px; }
-  .hero-theme-picker { margin-left: 0; width: 100%; justify-content: flex-start; margin-top: 8px; }
+  .hero-card { inset: 10px; border-radius: 16px; }
   .hero { padding: 0 24px 32px; }
   .landing-section { padding: 44px 0; }
   .rail-wrap { padding-bottom: 44px; }
@@ -1247,7 +1192,7 @@ footer.site a:hover { color: var(--ink); }
     </div>
   </header>
 
-<div class="hero-container" style="height: calc(100vh + 40px); height: calc(100dvh + 40px); position: relative;">
+<div class="hero-container" style="height: 100vh; height: 100dvh; position: relative; background: var(--canvas);">
 <div class="hero-card" id="hero-card" style="position: absolute;">
   <div class="hero-card-bg" aria-hidden="true" style="position:absolute;inset:0;z-index:0;overflow:hidden;"><img src="./assets/hero-bg.jpg" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
 
@@ -1267,26 +1212,26 @@ footer.site a:hover { color: var(--ink); }
       <h1>A design system agents<br>can actually follow</h1>
       <p class="hero-sub">70+ components. 235+ Variants for chat, agents, dashboards and forms, tokens for everything. AA contrast in every theme, and two gates that refuse generic UI before it reaches a commit.</p>
       <div class="hero-ctas">
-        <a class="lbtn lbtn-lg lbtn-accent" href="#start">Get started<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14"/><path d="M18 13l-6 6"/><path d="M6 13l6 6"/></svg></a>
-        <a class="lbtn lbtn-lg lbtn-secondary" href="./preview.html">Open the live gallery<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></a>
-
-        <!-- Accent Picker (Option 1: Floating Glass Pill) -->
-        <div class="hero-theme-picker">
-          <span class="theme-label">Pick an accent</span>
-          <div class="theme-dots">
-            <button class="theme-dot" style="--dot-color: var(--picker-lime);" aria-label="Lime" onclick="pickHeroAccent('lime')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-amber);" aria-label="Amber" onclick="pickHeroAccent('amber')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-teal);" aria-label="Teal" onclick="pickHeroAccent('teal')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-blue);" aria-label="Blue" onclick="pickHeroAccent('blue')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-violet);" aria-label="Violet" onclick="pickHeroAccent('violet')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-pink);" aria-label="Pink" onclick="pickHeroAccent('pink')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-ink);" aria-label="Ink" onclick="pickHeroAccent('ink')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-white);" aria-label="White" onclick="pickHeroAccent('white')"></button>
-          </div>
-        </div>
+        <a class="lbtn lbtn-accent" href="#start">Get started<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14"/><path d="M18 13l-6 6"/><path d="M6 13l6 6"/></svg></a>
+        <a class="lbtn lbtn-secondary" href="./preview.html">Open the live gallery</a>
       </div>
     </div>
-</div>
+
+    <!-- Accent Picker (Option 1: Floating Glass Pill) -->
+    <div class="hero-theme-picker">
+      <span class="theme-label">Pick an accent</span>
+      <div class="theme-dots">
+        <button class="theme-dot" style="--dot-color: #a5e12a;" aria-label="Lime" onclick="pickHeroAccent('lime')"></button>
+        <button class="theme-dot" style="--dot-color: #e0a329;" aria-label="Amber" onclick="pickHeroAccent('amber')"></button>
+        <button class="theme-dot" style="--dot-color: #29e0c2;" aria-label="Teal" onclick="pickHeroAccent('teal')"></button>
+        <button class="theme-dot" style="--dot-color: #2985e0;" aria-label="Blue" onclick="pickHeroAccent('blue')"></button>
+        <button class="theme-dot" style="--dot-color: #9429e0;" aria-label="Violet" onclick="pickHeroAccent('violet')"></button>
+        <button class="theme-dot" style="--dot-color: #e02985;" aria-label="Pink" onclick="pickHeroAccent('pink')"></button>
+        <button class="theme-dot" style="--dot-color: #1a1a1a;" aria-label="Ink" onclick="pickHeroAccent('ink')"></button>
+        <button class="theme-dot" style="--dot-color: #ffffff;" aria-label="White" onclick="pickHeroAccent('white')"></button>
+      </div>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -1417,9 +1362,9 @@ footer.site a:hover { color: var(--ink); }
 
       <div class="lstats">
         <div class="lp-card lstat"><div class="v">70+</div><div class="k">Components, 240+ variants</div></div>
+        <div class="lp-card lstat"><div class="v">20</div><div class="k">Themes (10 palettes × 2 modes)</div></div>
         <div class="lp-card lstat"><div class="v">AA</div><div class="k">Contrast, machine-verified</div></div>
-        <div class="lp-card lstat"><div class="v">2</div><div class="k">Gates in your project that refuse generic UI</div></div>
-        <div class="lp-card lstat"><div class="v">Make it yours</div><div class="k">Colour, radius, font, rail, one config file, nothing to rewrite</div></div>
+        <div class="lp-card lstat"><div class="v">4</div><div class="k">Registers a screen can be in</div></div>
       </div>
     </div>
   </section>
