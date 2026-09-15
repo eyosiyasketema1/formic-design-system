@@ -5,6 +5,7 @@ import ProjectSidebar, { ProjectInset, ProjectSidebarTrigger, useProjectSidebar,
 import TopBar from "./TopBar";
 import { FORMIC_CONFIG, type FormicConfig } from "./config";
 import { useTheme } from "./hooks";
+import { Icon, IconButton, Tooltip } from "./primitives";
 /* ─────────────────────────────────────────────────────────
  * APP SHELL — the rail the config chose, with the page beside it
  * One component instead of four layouts to remember. The rail is a
@@ -18,6 +19,15 @@ import { useTheme } from "./hooks";
  *   inset   ProjectSidebar with the page as a surface card beside it
  *   edge    ProjectSidebar with a hairline edge, the page flat beside it
  *   topbar  AppSidebar without its user row, plus a TopBar above the page
+ *   none    no rail: a slim header strip with the title, the actions and
+ *           the theme switch, for a page that stands alone (sign-in,
+ *           onboarding, a public form). `none` is a prop, never a config
+ *           value: the config says what the app's rail looks like, the
+ *           page's kind says whether it has one.
+ *
+ * Every page goes through this shell, so the theme switch is in the
+ * same corner on every page: beside the profile on a rail, in the
+ * TopBar, or at the right of the header strip when there is no rail.
  *
  * The page header (title, caption, actions) is rendered here too, so
  * it lands in the TopBar when there is one and above the content
@@ -26,7 +36,7 @@ import { useTheme } from "./hooks";
  * (compact / medium / full) applies. Change the config, run the
  * script, and every page moves to the new rail; nothing to rewrite.
  * ───────────────────────────────────────────────────────── */
-export type AppShellRail = FormicConfig["sidebar"];
+export type AppShellRail = FormicConfig["sidebar"] | "none";
 
 const toGroups = (sections: AppSidebarSection[]): ProjectGroup[] =>
   sections.map((section, index) => ({
@@ -59,7 +69,7 @@ export default function AppShell({
   className = "",
   children,
 }: {
-  /** which shell; defaults to the config, a prop still wins */
+  /** which shell; defaults to the config, a prop still wins. `none` is a standalone page: header strip, no rail */
   rail?: AppShellRail;
   /** the navigation, in AppSidebar's shape; the project rails read the same list */
   sections?: AppSidebarSection[];
@@ -92,7 +102,8 @@ export default function AppShell({
   const onThemeNow = onTheme ?? own.toggle;
   const isProject = rail === "inset" || rail === "edge";
   const isTopBar = rail === "topbar";
-  const header = (title || actions) && !isTopBar && (
+  const isBare = rail === "none";
+  const header = (title || actions) && !isTopBar && !isBare && (
     <header className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
         <div className="min-w-0">
@@ -119,6 +130,28 @@ export default function AppShell({
     </div>
   );
 
+  if (isBare) {
+    return (
+      <div className={`flex ${height} min-w-0 flex-col ${className}`}>
+        {/* the strip: what the TopBar is to a rail, for a page with none */}
+        <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-4">
+          <div className="flex min-w-0 items-baseline gap-2">
+            {title && <h1 className="truncate text-lead font-semibold tracking-tight text-ink">{title}</h1>}
+            {caption && <p className="hidden truncate text-caption text-ink-3 sm:block">{caption}</p>}
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {actions}
+            <Tooltip label={themeNow === "dark" ? "Light mode" : "Dark mode"}>
+              <IconButton label={themeNow === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={onThemeNow} className="text-ink-3 hover:bg-hover hover:text-ink">
+                <Icon name={themeNow === "dark" ? "sun" : "moon"} size={15} strokeWidth={1.8} />
+              </IconButton>
+            </Tooltip>
+          </div>
+        </header>
+        <main className="min-w-0 flex-1 overflow-y-auto">{content}</main>
+      </div>
+    );
+  }
   if (isProject) {
     return (
       <div className={`flex ${height} min-w-0 ${rail === "inset" ? "bg-sidebar" : ""} ${className}`}>
