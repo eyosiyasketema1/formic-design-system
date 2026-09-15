@@ -17569,7 +17569,8 @@ function AppShell({
   const onThemeNow = onTheme ?? own.toggle;
   const isProject = rail === "inset" || rail === "edge";
   const isTopBar = rail === "topbar";
-  const header = (title || actions) && !isTopBar && (
+  const isBare = rail === "none";
+  const header = (title || actions) && !isTopBar && !isBare && (
     <header className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
         <div className="min-w-0">
@@ -17595,6 +17596,28 @@ function AppShell({
       <ProjectSidebarTrigger open={project.open} toggle={project.toggle} />
     </div>
   );
+  if (isBare) {
+    return (
+      <div className={`flex ${height} min-w-0 flex-col ${className}`}>
+        {/* the strip: what the TopBar is to a rail, for a page with none */}
+        <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-4">
+          <div className="flex min-w-0 items-baseline gap-2">
+            {title && <h1 className="truncate text-lead font-semibold tracking-tight text-ink">{title}</h1>}
+            {caption && <p className="hidden truncate text-caption text-ink-3 sm:block">{caption}</p>}
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {actions}
+            <Tooltip label={themeNow === "dark" ? "Light mode" : "Dark mode"}>
+              <IconButton label={themeNow === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={onThemeNow} className="text-ink-3 hover:bg-hover hover:text-ink">
+                <Icon name={themeNow === "dark" ? "sun" : "moon"} size={15} strokeWidth={1.8} />
+              </IconButton>
+            </Tooltip>
+          </div>
+        </header>
+        <main className="min-w-0 flex-1 overflow-y-auto">{content}</main>
+      </div>
+    );
+  }
   if (isProject) {
     return (
       <div className={`flex ${height} min-w-0 ${rail === "inset" ? "bg-sidebar" : ""} ${className}`}>
@@ -17624,8 +17647,8 @@ function AppShellDemo() {
   return (
     <div className="flex w-full min-w-0 flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        <Tabs variant="segmented" value={rail} onChange={setRail} tabs={[{ key: "full", label: "Full view" }, { key: "inset", label: "Inset" }, { key: "edge", label: "Edge" }, { key: "topbar", label: "Top bar" }]} />
-        <span className="text-small text-ink-3">The app reads this from formic.config.json; the switch stands in for it here.</span>
+        <Tabs variant="segmented" value={rail} onChange={setRail} tabs={[{ key: "full", label: "Full view" }, { key: "inset", label: "Inset" }, { key: "edge", label: "Edge" }, { key: "topbar", label: "Top bar" }, { key: "none", label: "None" }]} />
+        <span className="text-small text-ink-3">The app reads this from formic.config.json; the switch stands in for it here. None is a prop for a page that stands alone (sign-in, onboarding, a public form): a header strip, the theme switch still in the corner.</span>
       </div>
       <div className="h-[560px] overflow-hidden rounded-card border border-line">
         <AppShell key={rail} rail={rail} fill={false} active={page} onSelect={setPage} title="Overview" caption="Last 30 days" theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")} notifications={3}
@@ -17779,24 +17802,43 @@ function czWrite(cfg) {
   history.replaceState(null, "", location.pathname + (s ? "?" + s : "") + location.hash);
   try { s ? localStorage.setItem(CZ_STORE, JSON.stringify(cfg)) : localStorage.removeItem(CZ_STORE); } catch {}
 }
-function czJson(cfg) {
-  const { paletteColor, ...rest } = cfg;
-  const out = { ...rest, accent: cfg.accent.toUpperCase() };
-  if (cfg.palette === "custom") out.paletteColor = paletteColor.toUpperCase();
+/* the keys the user changed; a custom palette carries its colour with it */
+function czChanged(cfg) {
+  return CZ_KEYS.filter((k) => k !== "paletteColor" && cfg[k] !== CZ_DEFAULTS[k]);
+}
+function czJson(cfg, keys = CZ_KEYS) {
+  const out = {};
+  for (const k of keys) {
+    if (k === "paletteColor") continue;
+    out[k] = k === "accent" ? cfg.accent.toUpperCase() : cfg[k];
+  }
+  if (keys.includes("palette") && cfg.palette === "custom") out.paletteColor = cfg.paletteColor.toUpperCase();
   return JSON.stringify(out, null, 2);
 }
-function czBlock(cfg) {
+/* the block the user pastes: by default only what they changed, so it
+   reads as "set these" and never restates a default the agent might take
+   for a request (a sidebar line on a sign-in page); `all` for moving every
+   choice to another project */
+function czBlock(cfg, all = false) {
+  const keys = all ? CZ_KEYS : czChanged(cfg);
+  if (keys.length === 0) return "";
   return [
-    "Apply this Formic configuration and keep it as the source of truth:",
-    "save it as src/formic/formic.config.json, then run",
-    "  python3 src/formic/scripts/apply_config.py",
+    all
+      ? "Apply this Formic configuration and keep it as the source of truth:"
+      : "Change these Formic choices and keep the config as the source of truth:",
+    all
+      ? "save it as src/formic/formic.config.json, then run"
+      : "set these keys in src/formic/formic.config.json (leave the others as",
+    all ? "  python3 src/formic/scripts/apply_config.py" : "they are), then run",
+    ...(all ? [] : ["  python3 src/formic/scripts/apply_config.py"]),
     "and restart the dev server. Do not set --accent, the html data-*",
     "attributes or these prop defaults by hand; the script derives them.",
     "Every page sits inside <AppShell> from src/formic/components, which",
-    "mounts the rail this config names (sidebar, sidebarState); a page that",
-    "mounts AppSidebar, ProjectSidebar or TopBar directly moves onto AppShell.",
+    "mounts the rail the config names (sidebar, sidebarState) on pages inside",
+    "the app; a page that stands alone (sign-in, onboarding, a public form)",
+    "takes rail=\"none\". A page that mounts a rail directly moves onto AppShell.",
     "",
-    czJson(cfg),
+    czJson(cfg, keys),
     "",
   ].join("\n");
 }
@@ -18051,11 +18093,11 @@ function CustomizeApp() {
       dark: TH_contrast(d, TH_hexToRgb(TH_DARK_ANCHOR)),
     };
   }, [variants]);
-  const changed = CZ_KEYS.filter((k) => cfg[k] !== CZ_DEFAULTS[k]).length;
-  const copy = async () => {
+  const changed = czChanged(cfg).length;
+  const copy = async (all = false) => {
     try {
-      await navigator.clipboard.writeText(czBlock(cfg));
-      toast({ tone: "success", title: "Copied", description: "Paste it into your AI tool. It saves the file and runs the script." });
+      await navigator.clipboard.writeText(czBlock(cfg, all));
+      toast({ tone: "success", title: "Copied", description: all ? "Every choice. Paste it into your AI tool; it saves the file and runs the script." : "Only what you changed. Paste it into your AI tool; it updates the file and runs the script." });
     } catch {
       toast({ tone: "error", title: "Could not copy", description: "Select the block below and copy it by hand." });
     }
@@ -18073,7 +18115,7 @@ function CustomizeApp() {
           {changed > 0 && (
             <Button variant="ghost" size="sm" onClick={() => setCfg({ ...CZ_DEFAULTS })}>Reset</Button>
           )}
-          <Button variant="accent" size="sm" icon={<Icon name="copy" size={14} />} onClick={copy}>Copy for your AI tool</Button>
+          <Button variant="accent" size="sm" icon={<Icon name="copy" size={14} />} disabled={changed === 0} onClick={() => copy(false)}>Copy for your AI tool</Button>
         </div>
       </header>
       {/* two columns that scroll on their own: the choices stay reachable
@@ -18170,10 +18212,17 @@ function CustomizeApp() {
                 <h2 id="cz-how" className="text-title font-semibold text-ink">Then, in your AI tool</h2>
                 <p className="mt-1 max-w-2xl text-body text-ink-2">Copy the block and paste it into Claude Code, Cursor, Copilot or whichever agent builds your app. It saves <code className="font-mono text-caption text-ink">formic.config.json</code> next to the vendored system and runs <code className="font-mono text-caption text-ink">apply_config.py</code>, which fits the accent for both modes, loads the font, sets the html attributes and the component defaults. From then on every prompt inherits these choices.</p>
               </div>
-              <Button variant="primary" size="sm" icon={<Icon name="copy" size={14} />} onClick={copy}>Copy</Button>
+              <div className="flex shrink-0 items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => copy(true)}>Copy all</Button>
+                <Button variant="primary" size="sm" icon={<Icon name="copy" size={14} />} disabled={changed === 0} onClick={() => copy(false)}>Copy</Button>
+              </div>
             </div>
-            <pre className="mt-4 overflow-x-auto rounded-md bg-inset p-4 font-mono text-small leading-relaxed whitespace-pre text-ink-2" aria-label="Configuration block">{czBlock(cfg)}</pre>
-            <p className="mt-3 text-small text-ink-3">Not using an agent? Save the JSON as <code className="font-mono">src/formic/formic.config.json</code> and run the script yourself. This URL holds the same choices, so it can be sent to whoever does.</p>
+            {changed === 0 ? (
+              <p className="mt-4 rounded-md bg-inset p-4 text-caption text-ink-3">Nothing changed yet. The defaults are already in your project; change a choice above and it appears here. Copy all hands over every choice, for moving them to another project.</p>
+            ) : (
+              <pre className="mt-4 overflow-x-auto rounded-md bg-inset p-4 font-mono text-small leading-relaxed whitespace-pre text-ink-2" aria-label="Configuration block">{czBlock(cfg)}</pre>
+            )}
+            <p className="mt-3 text-small text-ink-3">The block carries only what you changed; the rest is already in the project. Not using an agent? Set the same keys in <code className="font-mono">src/formic/formic.config.json</code> and run the script yourself. This URL holds the same choices, so it can be sent to whoever does.</p>
           </section>
         </main>
       </div>
