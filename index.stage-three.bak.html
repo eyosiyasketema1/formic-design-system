@@ -674,15 +674,6 @@ header.site.is-full {
 header.site .hero-icon-btn { color: #fff; corner-shape: squircle; transition: all 150ms; }
 header.site .hero-icon-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
 .hero-gh-btn { background: #1c1c1b; color: #fff; border: 1px solid rgba(255,255,255,0.1); transition: all 150ms; }
-
-/* When header gets the solid surface background (on scroll) */
-header.site.header-blur .hero-icon-btn { color: var(--ink); }
-header.site.header-blur .hero-icon-btn:hover { background: var(--line); color: var(--ink); }
-header.site.header-blur .site-nav a.hero-link { color: var(--ink); }
-header.site.header-blur .site-nav a.hero-link:hover { background: var(--line); color: var(--ink); }
-header.site.header-blur .hero-invert { filter: none; }
-header.site.header-blur .hero-gh-btn { background: var(--surface); color: var(--ink); border-color: var(--line); }
-header.site.header-blur .hero-gh-btn:hover { background: var(--canvas); }
 .hero-gh-btn:hover { background: #000; }
 
 /* Inverted states when scrolled down over the white page */
@@ -839,65 +830,45 @@ header.site { animation: heroFadeUp 1.2s var(--ease-out-quint) 0s backwards; }
   animation: heroFadeUp 1.2s var(--ease-out-quint) 0.55s backwards;
 }
 
-.hero-copy { }
+.hero-copy { max-width: 1200px; }
 .hero h1 {
   font-size: 96px; font-weight: 500; letter-spacing: -0.02em;
   line-height: 1.05; color: #fff; margin: 0 0 20px;
 }
-@media (max-width: 1024px) {
-  .hero h1 { font-size: 72px; }
-  .hero-theme-picker { margin-left: 0; width: 100%; justify-content: flex-start; margin-top: 8px; }
-}
+@media (max-width: 1024px) { .hero h1 { font-size: 72px; } }
 @media (max-width: 640px) { .hero h1 { font-size: 48px; } }
 .hero-sub {
   max-width: 480px; font-size: var(--text-lead); line-height: 1.55;
   color: rgba(255,255,255,0.8); margin: 0 0 28px;
 }
-.hero-ctas { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.hero-ctas { display: flex; flex-wrap: wrap; gap: 10px; }
 /* hero buttons override: on a photo, they need their own colors */
 .hero-ctas .lbtn { border-radius: 99px; }
 .hero .lbtn-accent { background: var(--accent); color: var(--surface); }
 .hero .lbtn-secondary { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); }
 .hero .lbtn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
 
-:root {
-  --picker-lime: #557611;
-  --picker-amber: #8a6314;
-  --picker-teal: #117867;
-  --picker-blue: #1b6bbb;
-  --picker-violet: #9429e0;
-  --picker-pink: #c81d73;
-  --picker-ink: #1a1a1a;
-  --picker-white: #6b6b6b;
-}
-:root[data-theme="dark"] {
-  --picker-lime: #a5e12a;
-  --picker-amber: #e0a329;
-  --picker-teal: #29e0c2;
-  --picker-blue: #3f92e3;
-  --picker-violet: #b56cea;
-  --picker-pink: #e75aa1;
-  --picker-ink: #8d8d8d;
-  --picker-white: #ffffff;
-}
-
 /* Option 1: Floating Glass Pill */
 .hero-theme-picker {
-  display: inline-flex; align-items: center; gap: 12px;
-  height: 48px;
-  margin-left: auto;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  position: absolute;
+  bottom: 80px;
+  right: var(--hero-inset);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
   padding: 0 12px 0 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 99px;
   backdrop-filter: blur(12px) url(#glass-distortion);
   -webkit-backdrop-filter: blur(12px) url(#glass-distortion);
   z-index: 10;
-  color: #fff;
-  animation: heroFadeUp 1.2s var(--ease-out-quint) 0.55s backwards;
 }
 .theme-label {
-  font-size: 13px; font-weight: 500;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
 }
 .theme-dots {
   display: flex;
@@ -1144,7 +1115,6 @@ footer.site a:hover { color: var(--ink); }
 /* ── Mobile: tighten the rhythm and stack the CTAs ── */
 @media (max-width: 640px) {
   .hero-card { inset: 10px 10px 50px 10px; border-radius: 16px; }
-  .hero-theme-picker { margin-left: 0; width: 100%; justify-content: flex-start; margin-top: 8px; }
   .hero { padding: 0 24px 32px; }
   .landing-section { padding: 44px 0; }
   .rail-wrap { padding-bottom: 44px; }
@@ -1269,24 +1239,24 @@ footer.site a:hover { color: var(--ink); }
       <div class="hero-ctas">
         <a class="lbtn lbtn-lg lbtn-accent" href="#start">Get started<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14"/><path d="M18 13l-6 6"/><path d="M6 13l6 6"/></svg></a>
         <a class="lbtn lbtn-lg lbtn-secondary" href="./preview.html">Open the live gallery<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></a>
-
-        <!-- Accent Picker (Option 1: Floating Glass Pill) -->
-        <div class="hero-theme-picker">
-          <span class="theme-label">Pick an accent</span>
-          <div class="theme-dots">
-            <button class="theme-dot" style="--dot-color: var(--picker-lime);" aria-label="Lime" onclick="pickHeroAccent('lime')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-amber);" aria-label="Amber" onclick="pickHeroAccent('amber')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-teal);" aria-label="Teal" onclick="pickHeroAccent('teal')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-blue);" aria-label="Blue" onclick="pickHeroAccent('blue')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-violet);" aria-label="Violet" onclick="pickHeroAccent('violet')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-pink);" aria-label="Pink" onclick="pickHeroAccent('pink')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-ink);" aria-label="Ink" onclick="pickHeroAccent('ink')"></button>
-            <button class="theme-dot" style="--dot-color: var(--picker-white);" aria-label="White" onclick="pickHeroAccent('white')"></button>
-          </div>
-        </div>
       </div>
     </div>
-</div>
+
+    <!-- Accent Picker (Option 1: Floating Glass Pill) -->
+    <div class="hero-theme-picker">
+      <span class="theme-label">Pick an accent</span>
+      <div class="theme-dots">
+        <button class="theme-dot" style="--dot-color: #a5e12a;" aria-label="Lime" onclick="pickHeroAccent('lime')"></button>
+        <button class="theme-dot" style="--dot-color: #e0a329;" aria-label="Amber" onclick="pickHeroAccent('amber')"></button>
+        <button class="theme-dot" style="--dot-color: #29e0c2;" aria-label="Teal" onclick="pickHeroAccent('teal')"></button>
+        <button class="theme-dot" style="--dot-color: #2985e0;" aria-label="Blue" onclick="pickHeroAccent('blue')"></button>
+        <button class="theme-dot" style="--dot-color: #9429e0;" aria-label="Violet" onclick="pickHeroAccent('violet')"></button>
+        <button class="theme-dot" style="--dot-color: #e02985;" aria-label="Pink" onclick="pickHeroAccent('pink')"></button>
+        <button class="theme-dot" style="--dot-color: #1a1a1a;" aria-label="Ink" onclick="pickHeroAccent('ink')"></button>
+        <button class="theme-dot" style="--dot-color: #ffffff;" aria-label="White" onclick="pickHeroAccent('white')"></button>
+      </div>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -1417,9 +1387,9 @@ footer.site a:hover { color: var(--ink); }
 
       <div class="lstats">
         <div class="lp-card lstat"><div class="v">70+</div><div class="k">Components, 240+ variants</div></div>
+        <div class="lp-card lstat"><div class="v">20</div><div class="k">Themes (10 palettes × 2 modes)</div></div>
         <div class="lp-card lstat"><div class="v">AA</div><div class="k">Contrast, machine-verified</div></div>
-        <div class="lp-card lstat"><div class="v">2</div><div class="k">Gates in your project that refuse generic UI</div></div>
-        <div class="lp-card lstat"><div class="v">Make it yours</div><div class="k">Colour, radius, font, rail, one config file, nothing to rewrite</div></div>
+        <div class="lp-card lstat"><div class="v">4</div><div class="k">Registers a screen can be in</div></div>
       </div>
     </div>
   </section>
