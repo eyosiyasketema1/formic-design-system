@@ -280,6 +280,26 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 :root[data-theme="dark"] { color-scheme: dark; }
 body { background: var(--canvas); color: var(--ink); font-family: "Urbanist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; transition: background-color 250ms ease, color 250ms ease; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.primitive-icon-button { display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; }
+.optical-text { text-box: trim-both cap alphabetic; }
+.corner-smooth { corner-shape: squircle; }
+/* Corner shape: smooth (squircle, the default) or round (a plain arc),
+ * chosen once for the whole app by formic.config.json's `corners`. */
+:root[data-corners="round"] .corner-smooth, :root[data-corners="round"] .primitive-field { corner-shape: round; }
+.primitive-tooltip { --ink: var(--tooltip-fg); --ink-2: var(--tooltip-fg); --ink-3: var(--tooltip-muted); }
+.primitive-field { box-shadow: var(--shadow-field); transition: border-color 150ms; corner-shape: squircle; }
+.primitive-field:focus-within { border-color: var(--line-strong); }
+.primitive-field[data-invalid="true"], .primitive-field[data-invalid="true"]:focus-within { border-color: var(--red); }
+.primitive-slider { appearance: none; height: 24px; background: transparent; }
+.primitive-slider::-webkit-slider-runnable-track { height: var(--slider-track, 6px); border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--slider-fill, 0%), var(--inset) var(--slider-fill, 0%)); box-shadow: 0 0 0 1px var(--line); }
+.primitive-slider::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; margin-top: calc((var(--slider-track, 6px) - 16px) / 2); border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn); }
+.primitive-slider::-moz-range-track { height: var(--slider-track, 6px); border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--slider-fill, 0%), var(--inset) var(--slider-fill, 0%)); box-shadow: 0 0 0 1px var(--line); }
+.primitive-slider::-moz-range-thumb { width: 13px; height: 13px; border: none; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1.5px var(--line-strong), var(--shadow-btn); }
+input[type="range"].primitive-slider:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+a:focus-visible { border-radius: var(--radius-sm); }
+.primitive-slider.is-layered { pointer-events: none; }
+.primitive-slider.is-layered::-webkit-slider-runnable-track { background: transparent; box-shadow: none; }
+.primitive-slider.is-layered::-moz-range-track { background: transparent; box-shadow: none; }
 /* ─────────────────────────────────────────────────────────
  * RECORDS TABLE — component stylesheet
  * Import after tokens.css when using components/RecordsTable.
@@ -777,7 +797,7 @@ header.site.header-over-cards .hero-gh-btn:hover { background: #000 !important; 
 .lbtn:active { transform: scale(0.98); }
 .lbtn-md { height: 36px; padding: 0 14px; font-size: var(--text-body); }
 .lbtn-lg { height: 48px; padding: 0 20px; font-size: 16px; }
-.lbtn-accent { background: var(--accent); color: var(--surface); }
+.lbtn-accent { background: var(--accent); color: rgba(255, 255, 255, 0.9); }
 .lbtn-accent:hover { opacity: 0.9; }
 .lbtn-secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
 .lbtn-secondary:hover { background: var(--hover); }
@@ -837,27 +857,21 @@ header.site .wrap {
   padding: 0 var(--hero-inset) 80px;
   text-align: left;
 }
-@keyframes heroFadeUp {
-  from { opacity: 0; transform: translateY(80px) scale(0.97); filter: blur(4px); }
-  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+@keyframes heroLift {
+  from { opacity: 0; transform: translateY(80px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 @keyframes heroFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-header.site { animation: heroFadeUp 1.2s var(--ease-out-quint) 0s backwards; }
+header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
 .hero h1 {
-  animation: heroFadeUp 1.2s var(--ease-out-quint) 0.1s backwards;
+  animation: heroLift 1.2s var(--ease-out-quint) 0.15s backwards;
 }
-.hero-sub {
-  animation: heroFadeUp 1.2s var(--ease-out-quint) 0.25s backwards;
-}
-.hero-ctas {
-  animation: heroFadeUp 1.2s var(--ease-out-quint) 0.4s backwards;
-}
-.hero-theme-picker {
-  animation: heroFadeUp 1.2s var(--ease-out-quint) 0.55s backwards;
+.hero-sub, .hero-ctas, .hero-theme-picker {
+  animation: heroLift 1.2s var(--ease-out-quint) 0.3s backwards;
 }
 
 .hero-copy { }
@@ -877,7 +891,7 @@ header.site { animation: heroFadeUp 1.2s var(--ease-out-quint) 0s backwards; }
 .hero-ctas { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 /* hero buttons override: on a photo, they need their own colors */
 .hero-ctas .lbtn { border-radius: 99px; }
-.hero .lbtn-accent { background: var(--accent); color: var(--surface); }
+.hero .lbtn-accent { background: var(--accent); color: rgba(255, 255, 255, 0.9); }
 .hero .lbtn-secondary { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); }
 .hero .lbtn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
 
@@ -1053,7 +1067,7 @@ header.site { animation: heroFadeUp 1.2s var(--ease-out-quint) 0s backwards; }
 .clip-reveal.is-visible:nth-child(4) { animation-delay: 0.36s; }
 
 /* ── Value proposition section ── */
-.value-section { padding: 80px 0 0; --value-inset: 100px; }
+.value-section { padding: 70px 0 0; --value-inset: 100px; }
 .value-section .wrap { max-width: none; padding: 0 var(--value-inset); }
 .value-headline {
   font-size: 48px; font-weight: 400; letter-spacing: -0.02em;
@@ -1077,10 +1091,10 @@ header.site { animation: heroFadeUp 1.2s var(--ease-out-quint) 0s backwards; }
 .value-card-desc {
   font-size: 14px; line-height: 1.5; opacity: 0.8;
 }
-.value-card-1 { background: var(--accent); color: #fff; }
-.value-card-2 { background: color-mix(in oklch, var(--accent) 50%, #2a2a2a); color: #fff; }
-.value-card-3 { background: color-mix(in oklch, var(--accent) 25%, #d4d4c8); color: #000; }
-.value-card-4 { background: #f0f0ed; color: #1c1c1b; }
+.value-card-1 { background: var(--accent); color: var(--canvas); }
+.value-card-2 { background: color-mix(in oklch, var(--accent) 30%, var(--surface)); color: var(--ink); }
+.value-card-3 { background: color-mix(in oklch, var(--accent) 10%, var(--field)); color: var(--ink); }
+.value-card-4 { background: var(--inset); color: var(--ink); }
 
 @media (max-width: 1024px) {
   .value-section { --value-inset: 48px; }
@@ -1094,7 +1108,7 @@ header.site { animation: heroFadeUp 1.2s var(--ease-out-quint) 0s backwards; }
 }
 
 /* ── Live Components section ── */
-.live-section { padding: 80px 0; --live-inset: 180px; }
+.live-section { padding: 100px 0 80px; --live-inset: 180px; }
 .live-wrap { max-width: none; padding: 0 var(--live-inset); margin: 0 auto; }
 .live-container {
   position: relative;
@@ -1237,8 +1251,8 @@ footer.site a:hover { color: var(--ink); }
 @media (max-width: 820px) {
   /* the panel leaves the flow, so the button cluster takes over the auto margin */
   .nav-toggle { display: flex; margin-left: auto; }
-  .nav-gh { width: 36px; padding: 0; }       /* icon only, keeps the 36px control height */
-  .gh-label { display: none; }
+  /* the coffee button keeps its label on phones; it is the one ask on the page */
+  .hero-gh-btn { white-space: nowrap; }
   .site-menu {
     position: absolute; top: 100%; left: 0; right: 0;
     display: none; padding: 8px var(--gutter) 14px;
@@ -1275,6 +1289,108 @@ footer.site a:hover { color: var(--ink); }
   .hero-ctas .lbtn { width: 100%; }
   .site-row { height: 52px; }
   footer.site .links { margin-left: 0; row-gap: 8px; flex-wrap: wrap; }
+}
+
+/* ── Fat Footer ── */
+.site-fat {
+  position: relative;
+  min-height: 800px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: var(--canvas);
+  overflow: hidden;
+  margin-top: 100px;
+}
+.fat-bg {
+  position: absolute;
+  top: 140px;
+  left: 0;
+  right: 0;
+  bottom: -140px;
+  /* Use the live background as a placeholder until the user swaps it */
+  background-image: url('./assets/live-bg.jpg');
+  background-size: cover;
+  background-position: center bottom;
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 10%, black 50%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 10%, black 50%);
+  z-index: 0;
+}
+.fat-content {
+  position: relative;
+  z-index: 1;
+  padding-top: 100px;
+  width: 100%;
+}
+.fat-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 48px;
+}
+.fat-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--text-lead);
+  font-weight: 600;
+  color: var(--ink);
+}
+.fat-brand img { width: 24px; height: 24px; }
+[data-theme="dark"] .fat-brand img { filter: brightness(0) invert(1); }
+.fat-links {
+  display: flex;
+  gap: 80px;
+  flex-wrap: wrap;
+}
+.fat-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.fat-col h4 {
+  font-size: var(--text-body);
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.fat-col a {
+  font-size: var(--text-small);
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: color 150ms;
+}
+.fat-col a:hover {
+  color: var(--ink);
+}
+.fat-copy {
+  margin-top: 40px;
+  font-size: var(--text-caption);
+  color: var(--ink-3);
+}
+.fat-giant {
+  position: relative;
+  z-index: 1;
+  font-size: 26vw;
+  font-weight: 700;
+  line-height: 0.75;
+  letter-spacing: -0.04em;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
+  /* slight tint to blend into the image */
+  mix-blend-mode: normal;
+  margin-bottom: -4vw; /* let it sit tight to the bottom */
+}
+@media (max-width: 820px) {
+  .fat-links { gap: 40px; }
+  .fat-giant { font-size: 28vw; margin-bottom: -2vw; }
+}
+@media (max-width: 640px) {
+  .fat-top { flex-direction: column; gap: 48px; }
+  .fat-links { width: 100%; justify-content: space-between; gap: 24px; }
+  .fat-copy { margin-top: 24px; }
+  .site-fat { min-height: 600px; margin-top: 60px; }
 }
 </style>
 <style>
@@ -1366,7 +1482,7 @@ footer.site a:hover { color: var(--ink); }
         <svg id="icon-moon" width="16" style="display:none" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"/></svg>
         <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/></svg>
       </button>
-      <a class="lbtn lbtn-md hero-gh-btn" href="https://github.com/eyosiyasketema1/formic-design-system" aria-label="GitHub"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"/></svg><span class="gh-label">GitHub</span></a>
+      <a class="lbtn lbtn-md hero-gh-btn" href="https://buymeacoffee.com/eyosiyaskei" target="_blank" rel="noopener" aria-label="Buy me a coffee"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2M10 2v2M14 2v2"/></svg><span class="gh-label">Buy me a coffee</span></a>
     </div>
   </header>
 
@@ -1417,7 +1533,11 @@ footer.site a:hover { color: var(--ink); }
   <!-- ══ Value proposition ══ -->
   <section class="value-section">
     <div class="wrap">
-      <h2 class="value-headline scroll-lift">Your AI tool builds the app.<br>Formic makes sure it look yours.<br>One command, then just prompt.</h2>
+      <h2 class="value-headline scroll-lift">
+        <span style="color: var(--ink);">Your AI tool builds the app.</span><br>
+        <span style="color: var(--ink-3);">Formic makes sure it looks yours.</span><br>
+        <span style="color: var(--ink-3);">One command, then just prompt.</span>
+      </h2>
     </div>
     <div class="value-cards">
       <div class="value-card value-card-1 clip-reveal">
@@ -1591,32 +1711,46 @@ footer.site a:hover { color: var(--ink); }
         </div>
       </div>
 
-      <div class="lstats">
-        <div class="lp-card lstat"><div class="v">70+</div><div class="k">Components, 240+ variants</div></div>
-        <div class="lp-card lstat"><div class="v">AA</div><div class="k">Contrast, machine-verified</div></div>
-        <div class="lp-card lstat"><div class="v">2</div><div class="k">Gates in your project that refuse generic UI</div></div>
-        <div class="lp-card lstat"><div class="v">Make it yours</div><div class="k">Colour, radius, font, rail, one config file, nothing to rewrite</div></div>
-      </div>
+
     </div>
   </section>
 </main>
 
-<footer class="site">
-  <div class="wrap frow">
-    <span class="brand" style="font-size: var(--text-caption);">
-      <img class="logo-img" src="./assets/formic-logomark.png" alt="" width="22" height="22" style="width: 22px; height: 22px;" />
-      Formic AI Design System
-    </span>
-    <div class="links">
-      <a href="https://github.com/eyosiyasketema1/formic-design-system">GitHub</a>
-      <a href="./preview.html">Live gallery</a>
-      <a href="./customize">Customize</a>
-      <a href="https://github.com/eyosiyasketema1/formic-design-system#readme">Docs</a>
-      <a href="https://github.com/eyosiyasketema1/formic-design-system/blob/main/CONTRIBUTING.md">Contributing</a>
-      <a href="https://github.com/eyosiyasketema1/formic-design-system/issues">Issues</a>
-      <a href="mailto:eyosiyasketema@gmail.com">eyosiyasketema@gmail.com</a>
+<footer class="site-fat">
+  <div class="fat-bg"></div>
+  <div class="wrap fat-content">
+    <div class="fat-top">
+      <div class="fat-brand">
+        <img class="logo-img" src="./assets/formic-logomark.png" alt="" />
+        <span>Formic</span>
+      </div>
+      <div class="fat-links">
+        <div class="fat-col">
+          <h4>Navigation</h4>
+          <a href="https://github.com/eyosiyasketema1/formic-design-system#readme">Docs</a>
+          <a href="./preview.html">Components</a>
+          <a href="./customize">Customize</a>
+          <a href="https://github.com/eyosiyasketema1/formic-design-system">GitHub</a>
+        </div>
+        <div class="fat-col">
+          <h4>Legal</h4>
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+          <a href="#">Security</a>
+          <a href="#">Cookies</a>
+        </div>
+        <div class="fat-col">
+          <h4>Contact & Socials</h4>
+          <a href="mailto:eyosiyasketema@gmail.com">Email</a>
+          <a href="#">Telegram</a>
+          <a href="#">WhatsApp</a>
+          <a href="#">LinkedIn</a>
+          <p class="fat-copy">&copy; 2026 Formic. All rights reserved.</p>
+        </div>
+      </div>
     </div>
   </div>
+  <div class="fat-giant">Formic</div>
 </footer>
 
 <script>
