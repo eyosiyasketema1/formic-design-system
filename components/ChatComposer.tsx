@@ -8,7 +8,7 @@ import { Card, fadeUp, Icon, IconButton, SendButton, type IconName } from "./pri
  * deliberately ships no tracking of its own.
  * ───────────────────────────────────────────────────────── */
 type Phase = "idle" | "sent" | "reply1" | "reply2" | "done";
-const DEFAULT_TABS = ["Flavors", "Suppliers"];
+const DEFAULT_TABS = ["Clients", "Proposals"];
 const HEADER_ACTIONS: { name: IconName; label: string }[] = [
   { name: "plus", label: "New chat" },
   { name: "clock", label: "History" },
@@ -16,8 +16,8 @@ const HEADER_ACTIONS: { name: IconName; label: string }[] = [
 ];
 export type Reply = { label: string; sub: string; time: string; body: string };
 const DEFAULT_REPLIES: Reply[] = [
-  { label: "Sales History", sub: "Flavor Data", time: "4s", body: "Pulled 3 summers of mint chip sales for comparison." },
-  { label: "Comparison", sub: "Trend Detection", time: "2s", body: "Mint chip is up 12% with stronger weekend peaks." },
+  { label: "Traffic history", sub: "Site data", time: "4s", body: "Pulled three months of Northwind's traffic for comparison." },
+  { label: "Comparison", sub: "Trend detection", time: "2s", body: "Visits are up 12% with stronger weekday peaks since the audit." },
 ];
 function ReplySection({
   label,
@@ -55,8 +55,8 @@ function ReplySection({
 }
 export default function ChatComposer({
   tabs = DEFAULT_TABS,
-  placeholder = "Prompt or tag a flavor with @",
-  initialMessage = "Compare mint chip to last summer",
+  placeholder = "Prompt or tag a client with @",
+  initialMessage = "Compare Northwind to last quarter",
   replies = DEFAULT_REPLIES,
   onSend,
 }: {

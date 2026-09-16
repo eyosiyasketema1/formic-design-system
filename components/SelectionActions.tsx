@@ -15,11 +15,11 @@ import { useReducedMotion } from "./hooks";
  * review once the rewrite streams in. The bar re-anchors as
  * the streamed text reflows the selection.
  * ───────────────────────────────────────────────────────── */
-const DEFAULT_LEAD = "Pistachio holds the top slot all weekend. ";
+const DEFAULT_LEAD = "Northwind's refresh runs in two phases. ";
 const DEFAULT_SELECTED =
-  "Churn it first thing Saturday so the batch has time to firm up before the afternoon rush.";
+  "Phase one covers the mark, the type and the colour system so the site can start before the print work.";
 const DEFAULT_REWRITE =
-  "Churn pistachio first thing Saturday so the batch has time to fully firm before the afternoon rush.";
+  "Phase one covers the mark, the type and the colour system, so the site work can start before print.";
 type Mode = "idle" | "thinking" | "streaming" | "result";
 const QUICK_ACTIONS = [
   { label: "Shorten", icon: "scissors", busy: "Shortening" },

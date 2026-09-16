@@ -67,7 +67,7 @@ export default function LoadingState({
 }) {
   const elapsed = useElapsed();
   const surfer = variant === "Surfer";
-  const resolvedLabel = label ?? (surfer ? "Subway surfing" : "Churning");
+  const resolvedLabel = label ?? (surfer ? "Subway surfing" : "Working");
   const [videoOk, setVideoOk] = useState(true);
   const { delays, dur, round } = PATTERNS[variant] ?? PATTERNS.Drive;
   const labelEl = <ShimmerLabel>{resolvedLabel}</ShimmerLabel>;

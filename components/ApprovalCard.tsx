@@ -21,19 +21,19 @@ export type Answer = {
  * (extraction rule 2: never leave two copies alive). */
 export const DEFAULT_QUESTIONS: Question[] = [
   {
-    q: "How many flavors should we launch?",
+    q: "How should we phase the Northwind refresh?",
     type: "radio",
-    options: ["Three (core line)", "Five (full case)", "Just one hero"],
+    options: ["Two phases (brand, then site)", "One phase (all by December)", "Brand only for now"],
   },
   {
-    q: "Which mix-ins should we stock?",
+    q: "What goes in phase one?",
     type: "check",
-    options: ["Chocolate chips", "Waffle bits", "Sprinkles"],
+    options: ["Logo and mark", "Type and colour", "Stationery"],
   },
   {
-    q: "Which market do we enter first?",
+    q: "Who reviews the proposal first?",
     type: "radio",
-    options: ["Food trucks", "Grocery freezers", "Scoop shops"],
+    options: ["The design lead", "The client", "The whole team"],
   },
 ];
 export default function ApprovalCard({

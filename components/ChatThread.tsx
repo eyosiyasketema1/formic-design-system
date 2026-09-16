@@ -12,17 +12,17 @@ import { fadeUp, StreamCaret, StreamText } from "./primitives";
 export type ChatRole = "user" | "assistant";
 export type ChatMessage = { id: string; role: ChatRole; text: string };
 const DEFAULT_MESSAGES: ChatMessage[] = [
-  { id: "m1", role: "user", text: "Which flavor should we push this weekend?" },
+  { id: "m1", role: "user", text: "Which proposal should we chase this week?" },
   {
     id: "m2",
     role: "assistant",
-    text: "Pistachio is the strongest candidate — sales are up 23% this month and it carries the best margin on the menu.",
+    text: "Northwind Bank. Their brand refresh is the largest open proposal at ETB 724,000, and their legal team signed off on Friday.",
   },
-  { id: "m3", role: "user", text: "Draft the weekend plan for it." },
+  { id: "m3", role: "user", text: "Draft the follow-up." },
   {
     id: "m4",
     role: "assistant",
-    text: "Here's the plan: churn a double batch Friday night, feature it on the A-board Saturday morning, and pair it with the waffle special through Sunday close.",
+    text: "Here it is: thank them for the sign-off, confirm the two phases starting 6 October, and ask for the purchase order so phase one can be invoiced.",
   },
 ];
 export function MessageBubble({

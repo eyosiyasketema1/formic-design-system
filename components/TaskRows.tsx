@@ -78,34 +78,34 @@ export default function TaskRows({
   const rows: TaskRowData[] = rowsProp ?? [
     {
       key: "verify",
-      label: "Verified vendor records",
-      amount: "12 suppliers",
+      label: "Verified client records",
+      amount: "12 clients",
       status: "completed",
       details: [
-        { label: "Matched tax and contact IDs", meta: "12/12" },
+        { label: "Matched contacts and tax IDs", meta: "12/12" },
         { label: "Flagged stale records", meta: "0" },
       ],
     },
     {
       key: "index",
-      label: "Build reorder task list",
-      amount: "7 SKUs",
+      label: "Build the invoice list",
+      amount: "7 invoices",
       status: "active",
       step: 2,
       details: [
-        { label: "Reading POS export", meta: "3 files" },
-        { label: "Scoring stockout risk", meta: "68%" },
+        { label: "Reading the timesheet export", meta: "3 files" },
+        { label: "Scoring overdue risk", meta: "68%" },
       ],
     },
     {
       key: "draft",
-      label: "Draft supplier emails",
+      label: "Draft client emails",
       amount: "2 messages",
       status: draftStatus,
       step: 3,
       details: [
-        { label: "Cone supplier follow-up", meta: "draft" },
-        { label: "Pistachio reorder note", meta: "draft" },
+        { label: "Northwind kickoff note", meta: "draft" },
+        { label: "Creamery invoice reminder", meta: "draft" },
       ],
     },
   ];

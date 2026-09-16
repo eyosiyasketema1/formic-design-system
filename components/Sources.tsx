@@ -43,7 +43,7 @@ export const DEFAULT_SOURCES: Source[] = [
   {
     id: 1,
     title: "Brand guidelines, second edition",
-    url: "https://northwindbank.et/brand/guidelines-2026.pdf",
+    url: "https://formicai.dev/preview.html#/sources",
     domain: "northwindbank.et",
     quote: "Use the wordmark on white or on Northwind blue only. On photography, use the reversed mark inside the safe area.",
     meta: "Northwind Bank · Aug 2026",
@@ -51,7 +51,7 @@ export const DEFAULT_SOURCES: Source[] = [
   {
     id: 2,
     title: "Site analytics, July to August",
-    url: "https://selamcoffee.com/reports/site-summer-2026",
+    url: "https://formicai.dev/preview.html#/sources",
     domain: "selamcoffee.com",
     quote: "Mobile is 71% of sessions; the menu page carries 38% of exits, most of them on the price table.",
     meta: "Selam Coffee · 2 Sep 2026",
@@ -59,7 +59,7 @@ export const DEFAULT_SOURCES: Source[] = [
   {
     id: 3,
     title: "Supplier price list, Q3",
-    url: "https://creamery.et/suppliers/q3-2026",
+    url: "https://formicai.dev/preview.html#/sources",
     domain: "creamery.et",
     quote: "Pistachio paste rises 12% from 1 October; cocoa holds until the December tender.",
     meta: "Creamery · 28 Aug 2026",

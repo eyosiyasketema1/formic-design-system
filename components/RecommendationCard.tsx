@@ -36,11 +36,11 @@ const DEFAULT_OPTIONS: RecommendationOption[] = [
     key: "high",
     body: (
       <>
-        Reorder waffle cones from {codeChip("cone_king", "accent")} with lead time{" "}
+        Move the Northwind launch to {codeChip("oct_6", "accent")} with a buffer of{" "}
         {codeChip("7_days", "accent")}.
       </>
     ),
-    short: "Reorder from cone_king · 7-day lead",
+    short: "Launch oct_6 · 7-day buffer",
     signal: 3,
     tone: "var(--green)",
     label: "High confidence",
@@ -51,10 +51,10 @@ const DEFAULT_OPTIONS: RecommendationOption[] = [
     key: "review",
     body: (
       <>
-        Switch vanilla to {codeChip("vanilla_madagascar", "orange")} for peak season.
+        Move Creamery's hosting to {codeChip("plan_pro", "orange")} before the menu goes live.
       </>
     ),
-    short: "Switch to vanilla_madagascar",
+    short: "Move to plan_pro",
     signal: 2,
     tone: "var(--orange)",
     label: "Needs review",
@@ -65,14 +65,14 @@ const DEFAULT_OPTIONS: RecommendationOption[] = [
     key: "none",
     body: (
       <>
-        Fall back to a <span className="font-medium text-ink">full restock</span> across every SKU.
+        Fall back to a <span className="font-medium text-ink">full audit</span> across every client site.
       </>
     ),
-    short: "Full restock across every SKU",
+    short: "Full audit across every site",
     signal: 0,
     tone: "var(--ink-3)",
     label: "No signal",
-    cta: "Accept full restock",
+    cta: "Accept full audit",
     ctaVariant: "primary",
   },
 ];

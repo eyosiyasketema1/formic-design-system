@@ -25,15 +25,15 @@ export type DiffAddition = {
   email: string;
 };
 const DEFAULT_ROWS: DiffRow[] = [
-  { key: "rocky", id: "Rocky Road", dept: "Classic", email: "aurora-scoops", removed: true },
-  { key: "bubblegum", id: "Bubblegum", dept: "Retro", email: "kumo-creamery", removed: true },
-  { key: "mint", id: "Mint Chip", dept: "Classic", email: "maple-orbit", removed: false },
+  { key: "pricing-v1", id: "Pricing v1", dept: "Legacy", email: "creamery", removed: true },
+  { key: "team", id: "Team page", dept: "Legacy", email: "northwind-bank", removed: true },
+  { key: "home", id: "Home", dept: "Marketing", email: "selam-coffee", removed: false },
 ];
-const DEFAULT_ADDED: DiffAddition = { key: "pistachio", id: "Pistachio", dept: "Seasonal", email: "maple-orbit" };
+const DEFAULT_ADDED: DiffAddition = { key: "pricing-v2", id: "Pricing v2", dept: "Launch", email: "creamery" };
 const DOT: Record<string, string> = {
-  Classic: "bg-accent",
-  Retro: "bg-ink-3",
-  Seasonal: "bg-orange",
+  Marketing: "bg-accent",
+  Legacy: "bg-ink-3",
+  Launch: "bg-orange",
 };
 function IncludedMark({ included, tone }: { included: boolean; tone: "red" | "green" }) {
   return (
@@ -95,7 +95,7 @@ export default function DiffTable({
           </colgroup>
           <thead>
             <tr className="border-b border-line">
-              {["Flavor", "Category", "Supplier"].map((h) => (
+              {["Page", "Section", "Client"].map((h) => (
                 <th key={h} className="primitive-table-cell text-small font-medium text-ink-3">
                   {h}
                 </th>
