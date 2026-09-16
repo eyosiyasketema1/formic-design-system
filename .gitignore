@@ -3,3 +3,14 @@ node_modules/
 dist/
 *.log
 __pycache__/
+
+# one-off edit scripts and backups left by AI sessions
+patch_*.py
+fix_*.py
+extract_*.py
+append_*.py
+revert.py
+test_*
+*.bak.html
+*.jsx
+!landing.jsx
