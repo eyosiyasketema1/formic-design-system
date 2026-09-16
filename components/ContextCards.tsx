@@ -25,19 +25,19 @@ const TONES: Record<ChunkTone, string> = {
 };
 const DEFAULT_CHUNKS: Chunk[] = [
   {
-    title: "Vendor onboarding rule",
+    title: "Client onboarding rule",
     chars: "290 characters",
-    body: "Cold-chain certification must be verified before a new dairy can be added to the reorder workflow.",
-    source: "Dairy Onboarding SOP.pdf",
+    body: "A signed proposal and a purchase order must be on file before work is scheduled for a new client.",
+    source: "Client Onboarding SOP.pdf",
     badge: "PDF",
     tone: "red",
     href: "#",
   },
   {
-    title: "Seasonal demand row",
+    title: "Quarterly traffic row",
     chars: "1,250 characters",
-    body: "Q4 velocity table: pistachio +18%, vanilla +6%, rocky road -11%; retire flavors below 40 scoops weekly.",
-    source: "Sales Velocity Export.csv",
+    body: "Q4 traffic table: Northwind +18%, Creamery +6%, Lucy Tours -11%; flag any site below 400 visits a week.",
+    source: "Site Traffic Export.csv",
     badge: "CSV",
     tone: "green",
     href: "#",

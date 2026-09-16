@@ -20,7 +20,7 @@ import { Badge, Card, Icon, IconButton } from "./primitives";
  * Deltas use --green / --red because they mean better and worse.
  * ───────────────────────────────────────────────────────── */
 export const formatPercent = (v: number) => `${v > 0 ? "+" : ""}${v.toFixed(2)}%`;
-export const formatMoney = (v: number) => `$${Math.round(v).toLocaleString("en-US")}`;
+export const formatMoney = (v: number) => `ETB ${Math.round(v).toLocaleString("en-US")}`;
 
 /* an inline @entity mention */
 export function Entity({ name, color = 1 }: { name: string; color?: ChartColor }) {
@@ -53,8 +53,8 @@ function Stage({ caption, action, children }: { caption: ReactNode; action?: Rea
 /* ── 1. compare: two series, legend with the latest delta ── */
 export type CompareSeries = { name: string; values: number[]; sub: string; color: ChartColor };
 const COMPARE: CompareSeries[] = [
-  { name: "Mint Chip", values: [-2.9, -3.4, -3.05, -3.86, -3.52, -4.1, -3.82, -4.41], sub: "-$2,377.66", color: 2 },
-  { name: "Pistachio", values: [0.22, 0.58, 0.42, 0.91, 0.76, 1.08, 0.96, 1.15], sub: "+$617.22", color: 1 },
+  { name: "Habesha Textiles", values: [-2.9, -3.4, -3.05, -3.86, -3.52, -4.1, -3.82, -4.41], sub: "-ETB 23,800", color: 2 },
+  { name: "Northwind Bank", values: [0.22, 0.58, 0.42, 0.91, 0.76, 1.08, 0.96, 1.15], sub: "+ETB 61,700", color: 1 },
 ];
 const WEEKS = ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8"];
 export function CompareCard({ series = COMPARE, labels = WEEKS }: { series?: CompareSeries[]; labels?: string[] }) {
@@ -85,16 +85,16 @@ export function CompareCard({ series = COMPARE, labels = WEEKS }: { series?: Com
 /* ── 2. anomaly: a spike against a threshold, two metrics ── */
 export type AnomalyData = { spend: number[]; usage: number[]; labels?: string[]; spendThreshold: number; usageThreshold: number };
 const ANOMALY: AnomalyData = {
-  spend: [274, 289, 264, 307, 331, 1210, 1718, 2112],
+  spend: [2740, 2890, 2640, 3070, 3310, 12100, 17180, 21120],
   usage: [18, 19, 17, 21, 22, 58, 81, 96],
-  spendThreshold: 900,
+  spendThreshold: 9000,
   usageThreshold: 40,
 };
-export function AnomalyCard({ data = ANOMALY, title = "High freezer spend", delta = "+$1,834.66", compare = "vs 3 months" }: { data?: AnomalyData; title?: string; delta?: string; compare?: string }) {
+export function AnomalyCard({ data = ANOMALY, title = "High hosting spend", delta = "+ETB 18,300", compare = "vs 3 months" }: { data?: AnomalyData; title?: string; delta?: string; compare?: string }) {
   const [metric, setMetric] = useState<"spend" | "usage">("spend");
   const values = metric === "spend" ? data.spend : data.usage;
   const threshold = metric === "spend" ? data.spendThreshold : data.usageThreshold;
-  const fmt = (v: number) => (metric === "spend" ? formatMoney(v) : `${Math.round(v)} kWh`);
+  const fmt = (v: number) => (metric === "spend" ? formatMoney(v) : `${Math.round(v)} GB`);
   const spike = values.findIndex((v) => v > threshold);
   const last = data.spend[data.spend.length - 1] ?? 0;
   return (
@@ -107,7 +107,7 @@ export function AnomalyCard({ data = ANOMALY, title = "High freezer spend", delt
         <Badge>Snapshot</Badge>
       </div>
       <Stage
-        caption={`${fmt(threshold)} threshold`}
+        caption={`Over ${metric === "spend" ? `ETB ${Math.round(threshold / 1000)}K` : fmt(threshold)}`}
         action={
           <Tabs
             variant="segmented"
@@ -132,11 +132,11 @@ export function AnomalyCard({ data = ANOMALY, title = "High freezer spend", delt
 /* ── 3. allocation: hero number, segmented bar, legend that inspects ── */
 export type AllocationSegment = { name: string; label: string; pct: number; amount: string; color: ChartColor };
 const ALLOCATION: AllocationSegment[] = [
-  { name: "VAN", label: "Vanilla", pct: 72.5, amount: "$51,785", color: 1 },
-  { name: "CHOC", label: "Chocolate", pct: 22.8, amount: "$16,278", color: 2 },
-  { name: "MINT", label: "Mint", pct: 4.7, amount: "$3,357", color: 3 },
+  { name: "NWB", label: "Northwind Bank", pct: 72.5, amount: "ETB 724,000", color: 1 },
+  { name: "CRM", label: "Creamery", pct: 22.8, amount: "ETB 228,000", color: 2 },
+  { name: "SLM", label: "Selam Coffee", pct: 4.7, amount: "ETB 47,000", color: 3 },
 ];
-export function AllocationCard({ segments = ALLOCATION, title = "Vanilla allocation", note = "Contribution across current inventory value. Picking a segment changes what is inspected without moving the card." }: { segments?: AllocationSegment[]; title?: string; note?: string }) {
+export function AllocationCard({ segments = ALLOCATION, title = "Client concentration", note = "Share of billings this quarter. Picking a segment changes what is inspected without moving the card." }: { segments?: AllocationSegment[]; title?: string; note?: string }) {
   const [selected, setSelected] = useState(segments[0]?.name);
   const active = segments.find((s) => s.name === selected) ?? segments[0];
   return (
@@ -192,21 +192,21 @@ export type InsightPage = { key: string; prose: ReactNode; Card: ComponentType; 
 const DEFAULT_PAGES: InsightPage[] = [
   {
     key: "compare",
-    prose: <>The worst performer in your <Entity name="Creamery" color={2} /> is Rocky Road, down <Delta tone="down">-6%</Delta> or <Delta tone="down">-$2,453.44</Delta>.</>,
+    prose: <>The weakest account in your <Entity name="Retainers" color={2} /> is Habesha Textiles, down <Delta tone="down">-6%</Delta> or <Delta tone="down">-ETB 23,800</Delta>.</>,
     Card: CompareCard,
-    prompt: "Should I rebalance flavours?",
+    prompt: "Should I rebalance the retainers?",
   },
   {
     key: "anomaly",
-    prose: <>Unusually high freezer bill on <span className="font-medium text-ink">Dec 13</span>: <Delta tone="down">+$1,834.66</Delta> above your average.</>,
+    prose: <>Unusually high hosting bill on <span className="font-medium text-ink">Dec 13</span>: <Delta tone="down">+ETB 18,300</Delta> above your average.</>,
     Card: AnomalyCard,
-    prompt: "Get tips on cutting freezer costs",
+    prompt: "Get tips on cutting hosting costs",
   },
   {
     key: "allocation",
-    prose: <>You are heavily invested in <Entity name="Vanilla" /> at <span className="font-medium text-ink">72.5%</span> of your case.</>,
+    prose: <>You are heavily concentrated in <Entity name="Northwind Bank" /> at <span className="font-medium text-ink">72.5%</span> of your billings.</>,
     Card: AllocationCard,
-    prompt: "If we look at seasonals, what changes?",
+    prompt: "If both open proposals sign, what changes?",
   },
 ];
 

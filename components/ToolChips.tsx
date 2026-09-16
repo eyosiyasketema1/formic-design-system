@@ -29,58 +29,58 @@ export type DiffLine = { text: string; tone: "add" | "del" | "ctx" };
 export type FileDiff = { file: string; add: number; del: number };
 const DEFAULT_ROWS: ToolRow[] = [
   {
-    icon: "think", label: "Thinking", chip: "Planning the churn schedule…",
+    icon: "think", label: "Thinking", chip: "Planning the launch…",
     detail: [
-      { text: "Weekend demand carries pistachio, so it churns first." },
-      { text: "Batch capacity leaves two evening freezer windows." },
+      { text: "The pricing page loses the most visitors, so it ships first." },
+      { text: "Two evening windows are free for the deploy." },
     ],
   },
   {
-    icon: "write", label: "Write 204 lines", chip: "ChurnSchedule.tsx", mono: true, detailMono: true,
+    icon: "write", label: "Write 204 lines", chip: "Pricing.tsx", mono: true, detailMono: true,
     detail: [
-      { text: "+ const windows = slots.filter((s) => s.temp <= -12)", tone: "add" },
-      { text: "+ return schedule(windows, { hero: \"pistachio\" })", tone: "add" },
+      { text: "+ const plans = tiers.filter((t) => t.public)", tone: "add" },
+      { text: "+ return <PlanGrid plans={plans} lead=\"studio\" />", tone: "add" },
     ],
   },
   {
-    icon: "run", label: "Rebuild and verify", chip: "npm run freeze", mono: true, detailMono: true,
+    icon: "run", label: "Rebuild and verify", chip: "npm run build", mono: true, detailMono: true,
     detail: [
       { text: "✓ built in 1.2s" },
       { text: "✓ 34 checks passed" },
     ],
   },
   {
-    icon: "read", label: "Read image", chip: "flavor-chart.png", mono: true,
+    icon: "read", label: "Read image", chip: "traffic-chart.png", mono: true,
     detail: [
-      { text: "1280 × 720 · line chart, three summers." },
-      { text: "Mint chip trends up 12% through July." },
+      { text: "1280 × 720 · line chart, three months." },
+      { text: "Visits trend up 12% through July." },
     ],
   },
 ];
 const DEFAULT_DIFFS: FileDiff[] = [
-  { file: "flavors.css", add: 13, del: 0 },
-  { file: "ChurnSchedule.tsx", add: 74, del: 41 },
-  { file: "menu.ts", add: 8, del: 2 },
+  { file: "pricing.css", add: 13, del: 0 },
+  { file: "Pricing.tsx", add: 74, del: 41 },
+  { file: "nav.ts", add: 8, del: 2 },
 ];
 /* hovering a file chip opens its diff — green added, red removed */
 const DEFAULT_DIFF_LINES: Record<string, DiffLine[]> = {
-  "flavors.css": [
-    { text: ".scoop-card {", tone: "ctx" },
+  "pricing.css": [
+    { text: ".plan-card {", tone: "ctx" },
     { text: "  gap: 14px;", tone: "del" },
     { text: "  gap: 12px;", tone: "add" },
     { text: "  container-type: inline-size;", tone: "add" },
     { text: "}", tone: "ctx" },
   ],
-  "ChurnSchedule.tsx": [
-    { text: "const slots = coldSlots(week);", tone: "ctx" },
-    { text: "const windows = slots;", tone: "del" },
-    { text: "const windows = slots.filter(", tone: "add" },
-    { text: "  (s) => s.temp <= -12,", tone: "add" },
+  "Pricing.tsx": [
+    { text: "const tiers = allTiers(plan);", tone: "ctx" },
+    { text: "const plans = tiers;", tone: "del" },
+    { text: "const plans = tiers.filter(", tone: "add" },
+    { text: "  (t) => t.public,", tone: "add" },
     { text: ");", tone: "add" },
   ],
-  "menu.ts": [
-    { text: "export const hero = \"mint-chip\";", tone: "del" },
-    { text: "export const hero = \"pistachio\";", tone: "add" },
+  "nav.ts": [
+    { text: "export const lead = \"work\";", tone: "del" },
+    { text: "export const lead = \"pricing\";", tone: "add" },
   ],
 };
 const DEFAULT_SUMMARY = "4 tool calls, 2 messages";

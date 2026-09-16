@@ -2094,7 +2094,7 @@ function LoaderGrid({ delays, dur, round }) {
 }
 function LoadingState({ label, variant = "Drive" }) {
   const elapsed = useElapsed();
-  const resolvedLabel = label ?? "Churning";
+  const resolvedLabel = label ?? "Working";
   const { delays, dur, round } = PATTERNS[variant] ?? PATTERNS.Drive;
   return (
     <div role="status" className="flex w-fit items-center gap-2.5">
@@ -2111,34 +2111,34 @@ const THINK_VARIANTS = {
   Steps: {
     active: "Thinking", done: "Thought for 4 seconds",
     rows: [
-      { primary: "Reading flavor briefs" },
-      { primary: "Scanning supplier lists" },
-      { primary: "Comparing tasting notes", secondary: "6 flavors" },
-      { primary: "Writing the scoop report" },
+      { primary: "Reading the brief" },
+      { primary: "Checking the client's site" },
+      { primary: "Comparing three layouts", secondary: "3 options" },
+      { primary: "Writing the summary" },
     ],
   },
   Reasoning: {
     active: "Thinking", done: "Thought for 4 seconds",
     rows: [
-      { primary: "Summer demand spikes for stone-fruit flavors — peach and apricot lead." },
-      { primary: "I should check cone inventory before promoting a waffle-bowl special." },
+      { primary: "Most visitors leave at the pricing section, so the redesign should start there." },
+      { primary: "I should check the analytics before proposing a new navigation." },
     ],
   },
   Search: {
     active: "Searching the web", done: "Searched the web",
-    query: "best waffle cone supplier",
+    query: "design system for the redesign",
     rows: [
-      { primary: "Joy Cone", secondary: "joycone.com", href: "https://joycone.com/fs_products/waffle-cones/" },
-      { primary: "WebstaurantStore", secondary: "webstaurantstore.com", href: "https://www.webstaurantstore.com/ice-cream-shop-supplies.html" },
-      { primary: "The Konery", secondary: "thekonery.com", href: "https://www.thekonery.com/" },
+      { primary: "Formic AI Design System", secondary: "formicai.dev", href: "https://formicai.dev/" },
+      { primary: "Gallery", secondary: "formicai.dev/preview.html", href: "https://formicai.dev/preview.html" },
+      { primary: "Customize", secondary: "formicai.dev/customize", href: "https://formicai.dev/customize" },
     ],
   },
   Coding: {
     active: "Running tools", done: "Ran 3 tools",
     rows: [
-      { primary: "Read", secondary: "flavors.ts", mono: true },
-      { primary: "Edit", secondary: "ChurnSchedule.tsx", mono: true, add: 74, del: 41 },
-      { primary: "Run", secondary: "npm run freeze", mono: true },
+      { primary: "Read", secondary: "brief.md", mono: true },
+      { primary: "Edit", secondary: "Pricing.tsx", mono: true, add: 74, del: 41 },
+      { primary: "Run", secondary: "npm run build", mono: true },
     ],
   },
 };
@@ -2254,9 +2254,9 @@ function ThinkingState({ variant = "Steps" }) {
 
 /* ═══════════ ApprovalCard ═══════════ */
 const QUESTIONS = [
-  { q: "How many flavors should we launch?", type: "radio", options: ["Three (core line)", "Five (full case)", "Just one hero"] },
-  { q: "Which mix-ins should we stock?", type: "check", options: ["Chocolate chips", "Waffle bits", "Sprinkles"] },
-  { q: "Which market do we enter first?", type: "radio", options: ["Food trucks", "Grocery freezers", "Scoop shops"] },
+  { q: "How should we phase the Northwind refresh?", type: "radio", options: ["Two phases (brand, then site)", "One phase (all by December)", "Brand only for now"] },
+  { q: "What goes in phase one?", type: "check", options: ["Logo and mark", "Type and colour", "Stationery"] },
+  { q: "Who reviews the proposal first?", type: "radio", options: ["The design lead", "The client", "The whole team"] },
 ];
 function ApprovalCard({ resettable = true }) {
   const [qi, setQi] = useState(0);
@@ -2378,20 +2378,20 @@ function ApprovalCard({ resettable = true }) {
 const WORD_MS = 55;
 const HOLD_MS = 3400;
 const STREAM_TOKENS = [
-  ..."Pistachio is your fastest-growing flavor — sales are up 23% this month and margins beat vanilla by 8 points.".split(" ").map((text) => ({ text })),
+  ..."Formic ships 70+ components in 240+ variants, and every one passes AA contrast in light and dark.".split(" ").map((text) => ({ text })),
   { text: "", cite: true },
-  ..."Stone-fruit flavors are trending in the same range.".split(" ").map((text) => ({ text })),
+  ..."The install is one command; after that you only prompt.".split(" ").map((text) => ({ text })),
 ];
-const FOLLOW_UPS = ["Which flavors sell best in winter", "Compare gelato and soft serve margins"];
+const FOLLOW_UPS = ["Which rail should the app use", "Compare the ten palettes"];
 const SOURCE_IMAGES = {
   scoop: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231f7a5f'/%3E%3Cpath d='M20 36c0 7 5.4 12 12 12s12-5 12-12H20Z' fill='%23fff'/%3E%3Ccircle cx='32' cy='25' r='11' fill='%23bff3dd'/%3E%3Cpath d='M24 24c4-7 13-7 17 0' fill='none' stroke='%231f7a5f' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E",
   trends: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232f6fec'/%3E%3Cpath d='M15 43 27 31l8 7 14-18' fill='none' stroke='%23fff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='49' cy='20' r='5' fill='%23bfe0ff'/%3E%3C/svg%3E",
   market: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23e56d24'/%3E%3Cpath d='M17 45V25h8v20h-8Zm11 0V16h8v29h-8Zm11 0V30h8v15h-8Z' fill='%23fff'/%3E%3Cpath d='M16 49h32' stroke='%23ffd6b8' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E",
 };
 const SOURCES = [
-  { name: "Scoop Data", domain: "scoopdata.io", href: "https://scoopdata.io/", image: SOURCE_IMAGES.scoop },
-  { name: "Trends Index", domain: "trends.google.com", href: "https://trends.google.com/trends/", image: SOURCE_IMAGES.trends },
-  { name: "Market Basket", domain: "marketbasket.io", href: "https://marketbasket.io/", image: SOURCE_IMAGES.market },
+  { name: "Formic", domain: "formicai.dev", href: "https://formicai.dev/", image: SOURCE_IMAGES.scoop },
+  { name: "Gallery", domain: "formicai.dev/preview", href: "https://formicai.dev/preview.html", image: SOURCE_IMAGES.trends },
+  { name: "Customize", domain: "formicai.dev/customize", href: "https://formicai.dev/customize", image: SOURCE_IMAGES.market },
 ];
 function SourceChip() {
   const source = SOURCES[0];
@@ -2666,29 +2666,29 @@ const TC_ICONS = {
   read: <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></g>,
 };
 const TC_ROWS = [
-  { icon: "think", label: "Thinking", chip: "Planning the churn schedule…",
-    detail: [{ text: "Weekend demand carries pistachio, so it churns first." }, { text: "Batch capacity leaves two evening freezer windows." }] },
-  { icon: "write", label: "Write 204 lines", chip: "ChurnSchedule.tsx", mono: true, detailMono: true,
-    detail: [{ text: "+ const windows = slots.filter((s) => s.temp <= -12)", tone: "add" }, { text: "+ return schedule(windows, { hero: \"pistachio\" })", tone: "add" }] },
-  { icon: "run", label: "Rebuild and verify", chip: "npm run freeze", mono: true, detailMono: true,
+  { icon: "think", label: "Thinking", chip: "Planning the launch…",
+    detail: [{ text: "The pricing page loses the most visitors, so it ships first." }, { text: "Two evening windows are free for the deploy." }] },
+  { icon: "write", label: "Write 204 lines", chip: "Pricing.tsx", mono: true, detailMono: true,
+    detail: [{ text: "+ const plans = tiers.filter((t) => t.public)", tone: "add" }, { text: "+ return <PlanGrid plans={plans} lead=\"studio\" />", tone: "add" }] },
+  { icon: "run", label: "Rebuild and verify", chip: "npm run build", mono: true, detailMono: true,
     detail: [{ text: "✓ built in 1.2s" }, { text: "✓ 34 checks passed" }] },
-  { icon: "read", label: "Read image", chip: "flavor-chart.png", mono: true,
-    detail: [{ text: "1280 × 720 · line chart, three summers." }, { text: "Mint chip trends up 12% through July." }] },
+  { icon: "read", label: "Read image", chip: "traffic-chart.png", mono: true,
+    detail: [{ text: "1280 × 720 · line chart, three months." }, { text: "Visits trend up 12% through July." }] },
 ];
 const TC_DIFFS = [
-  { file: "flavors.css", add: 13, del: 0 },
-  { file: "ChurnSchedule.tsx", add: 74, del: 41 },
-  { file: "menu.ts", add: 8, del: 2 },
+  { file: "pricing.css", add: 13, del: 0 },
+  { file: "Pricing.tsx", add: 74, del: 41 },
+  { file: "nav.ts", add: 8, del: 2 },
 ];
 const TC_DIFF_LINES = {
-  "flavors.css": [
-    { text: ".scoop-card {", tone: "ctx" }, { text: "  gap: 14px;", tone: "del" }, { text: "  gap: 12px;", tone: "add" },
+  "pricing.css": [
+    { text: ".plan-card {", tone: "ctx" }, { text: "  gap: 14px;", tone: "del" }, { text: "  gap: 12px;", tone: "add" },
     { text: "  container-type: inline-size;", tone: "add" }, { text: "}", tone: "ctx" }],
-  "ChurnSchedule.tsx": [
-    { text: "const slots = coldSlots(week);", tone: "ctx" }, { text: "const windows = slots;", tone: "del" },
-    { text: "const windows = slots.filter(", tone: "add" }, { text: "  (s) => s.temp <= -12,", tone: "add" }, { text: ");", tone: "add" }],
-  "menu.ts": [
-    { text: "export const hero = \"mint-chip\";", tone: "del" }, { text: "export const hero = \"pistachio\";", tone: "add" }],
+  "Pricing.tsx": [
+    { text: "const tiers = allTiers(plan);", tone: "ctx" }, { text: "const plans = tiers;", tone: "del" },
+    { text: "const plans = tiers.filter(", tone: "add" }, { text: "  (t) => t.public,", tone: "add" }, { text: ");", tone: "add" }],
+  "nav.ts": [
+    { text: "export const lead = \"work\";", tone: "del" }, { text: "export const lead = \"pricing\";", tone: "add" }],
 };
 function ToolChips({ rows = TC_ROWS, diffs = TC_DIFFS, diffLines = TC_DIFF_LINES, summary = "4 tool calls, 2 messages", more = "+2 more" }) {
   const [step, setStep] = useState(0);
@@ -2853,12 +2853,12 @@ function TaskRows({ variant = "Capsules", rows: rowsProp }) {
   const demo = rowsProp === undefined;
   const draftStatus = tick < 3 ? "pending" : tick === 3 ? "failed" : "completed";
   const rows = rowsProp ?? [
-    { key: "verify", label: "Verified vendor records", amount: "12 suppliers", status: "completed",
-      details: [{ label: "Matched tax and contact IDs", meta: "12/12" }, { label: "Flagged stale records", meta: "0" }] },
-    { key: "index", label: "Build reorder task list", amount: "7 SKUs", status: "active", step: 2,
-      details: [{ label: "Reading POS export", meta: "3 files" }, { label: "Scoring stockout risk", meta: "68%" }] },
-    { key: "draft", label: "Draft supplier emails", amount: "2 messages", status: draftStatus, step: 3,
-      details: [{ label: "Cone supplier follow-up", meta: "draft" }, { label: "Pistachio reorder note", meta: "draft" }] },
+    { key: "verify", label: "Verified client records", amount: "12 clients", status: "completed",
+      details: [{ label: "Matched contacts and tax IDs", meta: "12/12" }, { label: "Flagged stale records", meta: "0" }] },
+    { key: "index", label: "Build the invoice list", amount: "7 invoices", status: "active", step: 2,
+      details: [{ label: "Reading the timesheet export", meta: "3 files" }, { label: "Scoring overdue risk", meta: "68%" }] },
+    { key: "draft", label: "Draft client emails", amount: "2 messages", status: draftStatus, step: 3,
+      details: [{ label: "Northwind kickoff note", meta: "draft" }, { label: "Creamery invoice reminder", meta: "draft" }] },
   ];
   const badgeFor = (row) =>
     row.status === "completed" ? (
@@ -2919,15 +2919,15 @@ function TaskRows({ variant = "Capsules", rows: rowsProp }) {
 }
 
 /* ═══════════ ChatComposer ═══════════ */
-const CC_TABS = ["Flavors", "Suppliers"];
+const CC_TABS = ["Clients", "Proposals"];
 const CC_ACTIONS = [
   { name: "plus", label: "New chat" },
   { name: "clock", label: "History" },
   { name: "ellipsis", label: "More options" },
 ];
 const CC_REPLIES = [
-  { label: "Sales History", sub: "Flavor Data", time: "4s", body: "Pulled 3 summers of mint chip sales for comparison." },
-  { label: "Comparison", sub: "Trend Detection", time: "2s", body: "Mint chip is up 12% with stronger weekend peaks." },
+  { label: "Traffic history", sub: "Site data", time: "4s", body: "Pulled three months of Northwind's traffic for comparison." },
+  { label: "Comparison", sub: "Trend detection", time: "2s", body: "Visits are up 12% with stronger weekday peaks since the audit." },
 ];
 function ReplySection({ label, sub, time, body, resolving }) {
   return (
@@ -2951,7 +2951,7 @@ function ReplySection({ label, sub, time, body, resolving }) {
     </div>
   );
 }
-function ChatComposer({ tabs = CC_TABS, placeholder = "Prompt or tag a flavor with @", initialMessage = "Compare mint chip to last summer", replies = CC_REPLIES, onSend }) {
+function ChatComposer({ tabs = CC_TABS, placeholder = "Prompt or tag a client with @", initialMessage = "Compare Northwind to last quarter", replies = CC_REPLIES, onSend }) {
   const [phase, setPhase] = useState(initialMessage ? "done" : "idle");
   const [draft, setDraft] = useState("");
   const [submitted, setSubmitted] = useState(initialMessage);
@@ -3051,18 +3051,18 @@ const PB_BRANDS = {
 };
 const PB_SOURCES = [
   { key: "attach", name: "Add photos & files", desc: "Upload from your computer", glyph: "clip", attach: true },
-  { key: "scoop", name: "Scoop Data", desc: "Sales & churn metrics", glyph: "chart" },
-  { key: "flavors", name: "Flavor records", desc: "26 makers, tags, links", glyph: "layers" },
-  { key: "web", name: "Web search", desc: "Real-time news and info", glyph: "globe" },
+  { key: "books", name: "Studio Books", desc: "Invoices and payments", glyph: "chart" },
+  { key: "clients", name: "Client records", desc: "24 clients, contacts, links", glyph: "layers" },
+  { key: "web", name: "Web search", desc: "Search the live web", glyph: "globe" },
   { key: "figma", name: "Figma", desc: "Design-to-code workflows", brand: "figma" },
   { key: "slack", name: "Slack", desc: "Read and manage Slack", brand: "slack" },
   { key: "gmail", name: "Gmail", desc: "Read and manage Gmail", brand: "gmail", connect: true }
 ];
 const PB_COMMANDS = [
-  { key: "compare", name: "/compare", desc: "Flavor vs. last summer" },
-  { key: "churn-plan", name: "/churn-plan", desc: "Draft a churn schedule" },
-  { key: "restock", name: "/restock", desc: "Build a reorder list" },
-  { key: "draft-email", name: "/draft-email", desc: "Write a supplier email" },
+  { key: "compare", name: "/compare", desc: "Client vs. last quarter" },
+  { key: "proposal", name: "/proposal", desc: "Draft a proposal" },
+  { key: "invoice", name: "/invoice", desc: "Build an invoice from the timesheet" },
+  { key: "draft-email", name: "/draft-email", desc: "Write a client email" },
   { key: "summarize", name: "/summarize", desc: "Digest the thread so far" }
 ];
 const PB_MODELS = [
@@ -3618,10 +3618,10 @@ const RC_OPTIONS = [
   {
     key: "high",
     body: <>
-        Reorder waffle cones from {rcCodeChip("cone_king", "accent")} with lead time{" "}
+        Move the Northwind launch to {rcCodeChip("oct_6", "accent")} with a buffer of{" "}
         {rcCodeChip("7_days", "accent")}.
       </>,
-    short: "Reorder from cone_king \xB7 7-day lead",
+    short: "Launch oct_6 · 7-day buffer",
     signal: 3,
     tone: "var(--green)",
     label: "High confidence",
@@ -3631,9 +3631,9 @@ const RC_OPTIONS = [
   {
     key: "review",
     body: <>
-        Switch vanilla to {rcCodeChip("vanilla_madagascar", "orange")} for peak season.
+        Move Creamery's hosting to {rcCodeChip("plan_pro", "orange")} before the menu goes live.
       </>,
-    short: "Switch to vanilla_madagascar",
+    short: "Move to plan_pro",
     signal: 2,
     tone: "var(--orange)",
     label: "Needs review",
@@ -3643,13 +3643,13 @@ const RC_OPTIONS = [
   {
     key: "none",
     body: <>
-        Fall back to a <span className="font-medium text-ink">full restock</span> across every SKU.
+        Fall back to a <span className="font-medium text-ink">full audit</span> across every client site.
       </>,
-    short: "Full restock across every SKU",
+    short: "Full audit across every site",
     signal: 0,
     tone: "var(--ink-3)",
     label: "No signal",
-    cta: "Accept full restock",
+    cta: "Accept full audit",
     ctaVariant: "primary"
   }
 ];
@@ -3742,7 +3742,7 @@ const SRC_DEFAULT_SOURCES = [
   {
     id: 1,
     title: "Brand guidelines, second edition",
-    url: "https://northwindbank.et/brand/guidelines-2026.pdf",
+    url: "https://formicai.dev/preview.html#/sources",
     domain: "northwindbank.et",
     quote: "Use the wordmark on white or on Northwind blue only. On photography, use the reversed mark inside the safe area.",
     meta: "Northwind Bank · Aug 2026",
@@ -3750,7 +3750,7 @@ const SRC_DEFAULT_SOURCES = [
   {
     id: 2,
     title: "Site analytics, July to August",
-    url: "https://selamcoffee.com/reports/site-summer-2026",
+    url: "https://formicai.dev/preview.html#/sources",
     domain: "selamcoffee.com",
     quote: "Mobile is 71% of sessions; the menu page carries 38% of exits, most of them on the price table.",
     meta: "Selam Coffee · 2 Sep 2026",
@@ -3758,7 +3758,7 @@ const SRC_DEFAULT_SOURCES = [
   {
     id: 3,
     title: "Supplier price list, Q3",
-    url: "https://creamery.et/suppliers/q3-2026",
+    url: "https://formicai.dev/preview.html#/sources",
     domain: "creamery.et",
     quote: "Pistachio paste rises 12% from 1 October; cocoa holds until the December tender.",
     meta: "Creamery · 28 Aug 2026",
@@ -5400,19 +5400,19 @@ const CTX_TONES = {
 };
 const CTX_CHUNKS = [
   {
-    title: "Vendor onboarding rule",
+    title: "Client onboarding rule",
     chars: "290 characters",
-    body: "Cold-chain certification must be verified before a new dairy can be added to the reorder workflow.",
-    source: "Dairy Onboarding SOP.pdf",
+    body: "A signed proposal and a purchase order must be on file before work is scheduled for a new client.",
+    source: "Client Onboarding SOP.pdf",
     badge: "PDF",
     tone: "red",
     href: "#"
   },
   {
-    title: "Seasonal demand row",
+    title: "Quarterly traffic row",
     chars: "1,250 characters",
-    body: "Q4 velocity table: pistachio +18%, vanilla +6%, rocky road -11%; retire flavors below 40 scoops weekly.",
-    source: "Sales Velocity Export.csv",
+    body: "Q4 traffic table: Northwind +18%, Creamery +6%, Lucy Tours -11%; flag any site below 400 visits a week.",
+    source: "Site Traffic Export.csv",
     badge: "CSV",
     tone: "green",
     href: "#"
@@ -5480,15 +5480,15 @@ function ContextCards({
 /* ═══════════ DiffTable ═══════════ */
 const DT_STAGE_DELAYS = [180, 260, 0];
 const DT_ROWS = [
-  { key: "rocky", id: "Rocky Road", dept: "Classic", email: "aurora-scoops", removed: true },
-  { key: "bubblegum", id: "Bubblegum", dept: "Retro", email: "kumo-creamery", removed: true },
-  { key: "mint", id: "Mint Chip", dept: "Classic", email: "maple-orbit", removed: false }
+  { key: "pricing-v1", id: "Pricing v1", dept: "Legacy", email: "creamery", removed: true },
+  { key: "team", id: "Team page", dept: "Legacy", email: "northwind-bank", removed: true },
+  { key: "home", id: "Home", dept: "Marketing", email: "selam-coffee", removed: false }
 ];
-const DT_ADDED = { key: "pistachio", id: "Pistachio", dept: "Seasonal", email: "maple-orbit" };
+const DT_ADDED = { key: "pricing-v2", id: "Pricing v2", dept: "Launch", email: "creamery" };
 const DT_DOT = {
-  Classic: "bg-accent",
-  Retro: "bg-ink-3",
-  Seasonal: "bg-orange"
+  Marketing: "bg-accent",
+  Legacy: "bg-ink-3",
+  Launch: "bg-orange"
 };
 function DtIncludedMark({ included, tone }) {
   return <span
@@ -5534,7 +5534,7 @@ function DiffTable({
           </colgroup>
           <thead>
             <tr className="border-b border-line">
-              {["Flavor", "Category", "Supplier"].map((h) => <th key={h} className="primitive-table-cell text-small font-medium text-ink-3">
+              {["Page", "Section", "Client"].map((h) => <th key={h} className="primitive-table-cell text-small font-medium text-ink-3">
                   {h}
                 </th>)}
             </tr>
@@ -5706,91 +5706,91 @@ const RT_TAG_PALETTE = {
   pink: { base: "oklch(0.67 0.19 3)" }
 };
 const RT_TAG_COLORS = {
-  B2B: RT_TAG_PALETTE.amber,
-  B2C: RT_TAG_PALETTE.lime,
-  Cafe: RT_TAG_PALETTE.red,
-  Catering: RT_TAG_PALETTE.magenta,
-  "Dairy-free": RT_TAG_PALETTE.cyan,
-  Gelato: RT_TAG_PALETTE.purple,
-  Imports: RT_TAG_PALETTE.orange,
+  Brand: RT_TAG_PALETTE.purple,
+  Web: RT_TAG_PALETTE.cyan,
+  Print: RT_TAG_PALETTE.orange,
+  Retainer: RT_TAG_PALETTE.amber,
+  Project: RT_TAG_PALETTE.lime,
   Local: RT_TAG_PALETTE.green,
-  Seasonal: RT_TAG_PALETTE.yellow,
-  Sorbet: RT_TAG_PALETTE.pink,
-  Vegan: RT_TAG_PALETTE.lime,
-  Wholesale: RT_TAG_PALETTE.amber
+  Cafe: RT_TAG_PALETTE.red,
+  Retail: RT_TAG_PALETTE.pink,
+  Hospitality: RT_TAG_PALETTE.yellow,
+  Finance: RT_TAG_PALETTE.amber,
+  Fitness: RT_TAG_PALETTE.lime,
+  Nonprofit: RT_TAG_PALETTE.magenta
 };
 const RT_ROWS = [
-  { id: "aurora", name: "Aurora Scoops \u2014 Reykjav\xEDk", tags: ["Gelato", "Seasonal"], last: "9 days ago", strength: "strong", website: "aurora-scoops.example.com" },
-  { id: "kumo", name: "Kumo Creamery \u2014 Tokyo", tags: ["B2C", "Cafe", "Vegan"], last: "3 weeks ago", strength: "strong", website: "kumo-creamery.example.com" },
-  { id: "sol-nieve", name: "Sol y Nieve \u2014 Buenos Aires", tags: ["Gelato", "Local"], last: "2 months ago", strength: "weak", website: "sol-y-nieve.example.com" },
-  { id: "maple-orbit", name: "Maple Orbit \u2014 Montr\xE9al", tags: ["B2B", "Wholesale", "Seasonal"], last: "15 days ago", strength: "weak", website: "maple-orbit.example.com" },
-  { id: "blue-fig", name: "Blue Fig Gelato \u2014 Florence", tags: ["Gelato", "Cafe"], last: "over 1 year ago", strength: "veryweak", website: "blue-fig.example.com" },
-  { id: "sahara-swirl", name: "Sahara Swirl \u2014 Marrakech", tags: ["Sorbet", "Local"], last: "5 months ago", strength: "veryweak" },
-  { id: "cloudberry", name: "Cloudberry Cone \u2014 Helsinki", tags: ["Dairy-free", "Seasonal"], last: "No contact", strength: "none", website: "cloudberry-cone.example.com" },
-  { id: "palm-sugar", name: "Palm Sugar Creamery \u2014 Bangkok", tags: ["B2C", "Vegan"], last: "3 months ago", strength: "veryweak", website: "palm-sugar.example.com" },
-  { id: "cape-vanilla", name: "Cape Vanilla Co. \u2014 Cape Town", tags: ["Wholesale", "Imports"], last: "over 1 year ago", strength: "veryweak", website: "cape-vanilla.example.com" },
-  { id: "andes-snow", name: "Andes Snow Creamery \u2014 Quito", tags: ["Gelato", "Catering"], last: "almost 2 years ago", strength: "veryweak" },
-  { id: "tasman-sea", name: "Tasman Sea Gelato \u2014 Hobart", tags: ["Gelato", "Local"], last: "2 months ago", strength: "weak", website: "tasman-sea.example.com" },
-  { id: "silk-road", name: "Silk Road Sorbet \u2014 Tbilisi", tags: ["Sorbet", "Imports"], last: "about 1 month ago", strength: "weak", website: "silk-road.example.com" },
-  { id: "rosewater", name: "Rosewater Kulfi \u2014 Jaipur", tags: ["B2C", "Seasonal"], last: "2 months ago", strength: "veryweak" },
-  { id: "lumen", name: "Lumen Soft Serve \u2014 Copenhagen", tags: ["Dairy-free", "Cafe"], last: "8 months ago", strength: "weak", website: "lumen-soft-serve.example.com" },
-  { id: "cacao-norte", name: "Cacao Norte \u2014 Oaxaca", tags: ["B2B", "Local", "Wholesale"], last: "about 2 years ago", strength: "none", website: "cacao-norte.example.com" },
-  { id: "pine-pistachio", name: "Pine & Pistachio \u2014 Istanbul", tags: ["Gelato", "Catering"], last: "about 1 month ago", strength: "veryweak" },
-  { id: "ember-cone", name: "Ember Cone Company \u2014 Seoul", tags: ["B2C", "Vegan"], last: "15 days ago", strength: "weak", website: "ember-cone.example.com" },
-  { id: "coral-coast", name: "Coral Coast Sorbet \u2014 Honolulu", tags: ["Sorbet", "Local"], last: "9 days ago", strength: "strong", website: "coral-coast.example.com" },
-  { id: "sunbird", name: "Sunbird Gelateria \u2014 Lisbon", tags: ["Gelato", "Cafe"], last: "over 2 years ago", strength: "none", website: "sunbird.example.com" },
-  { id: "mooncake", name: "Mooncake Ice Cream \u2014 Singapore", tags: ["B2B", "Wholesale"], last: "about 1 month ago", strength: "veryweak", website: "mooncake-ice-cream.example.com" },
-  { id: "juniper", name: "Juniper & Cream \u2014 Vancouver", tags: ["Dairy-free", "Catering"], last: "No contact", strength: "none" },
-  { id: "mango-moon", name: "Mango Moon Gelato \u2014 Nairobi", tags: ["Sorbet", "Vegan"], last: "almost 2 years ago", strength: "veryweak", website: "mango-moon.example.com" },
-  { id: "fjord-fizz", name: "Fjord Fizz Ice \u2014 Oslo", tags: ["Dairy-free", "Seasonal"], last: "No contact", strength: "none" },
-  { id: "pampa", name: "Pampa Creamery \u2014 C\xF3rdoba", tags: ["B2C", "Local"], last: "12 months ago", strength: "veryweak", website: "pampa-creamery.example.com" },
-  { id: "lotus-leaf", name: "Lotus Leaf Scoops \u2014 Hanoi", tags: ["Vegan", "Cafe"], last: "15 days ago", strength: "weak" },
-  { id: "saffron-sky", name: "Saffron Sky Kulfi \u2014 Dubai", tags: ["Imports", "Catering"], last: "almost 2 years ago", strength: "veryweak", website: "saffron-sky.example.com" },
-  { id: "alpine-churn", name: "Alpine Churn \u2014 Z\xFCrich", tags: ["B2B", "Gelato", "Wholesale"], last: "4 days ago", strength: "strong", website: "alpine-churn.example.com" },
-  { id: "monsoon-mango", name: "Monsoon Mango \u2014 Mumbai", tags: ["Sorbet", "Vegan", "Catering"], last: "18 days ago", strength: "weak", website: "monsoon-mango.example.com" },
-  { id: "cedar-spoon", name: "Cedar Spoon \u2014 Beirut", tags: ["Cafe", "Local", "Seasonal"], last: "6 days ago", strength: "strong", website: "cedar-spoon.example.com" },
-  { id: "baltic-berry", name: "Baltic Berry \u2014 Tallinn", tags: ["Dairy-free", "Seasonal", "B2C"], last: "5 weeks ago", strength: "weak", website: "baltic-berry.example.com" },
-  { id: "delta-dairy", name: "Delta Dairy Works \u2014 New Orleans", tags: ["B2B", "Wholesale", "Local"], last: "2 days ago", strength: "strong", website: "delta-dairy.example.com" },
-  { id: "yuzu-yard", name: "Yuzu Yard \u2014 Kyoto", tags: ["Sorbet", "Cafe", "Seasonal"], last: "11 days ago", strength: "strong", website: "yuzu-yard.example.com" },
-  { id: "copper-cone", name: "Copper Cone \u2014 Melbourne", tags: ["Gelato", "Cafe", "B2C"], last: "about 1 month ago", strength: "weak", website: "copper-cone.example.com" },
-  { id: "mint-medina", name: "Mint Medina \u2014 Tunis", tags: ["Dairy-free", "Vegan", "Local"], last: "No contact", strength: "none" },
-  { id: "glacier-grove", name: "Glacier Grove \u2014 Anchorage", tags: ["Seasonal", "Local", "Catering"], last: "7 weeks ago", strength: "weak", website: "glacier-grove.example.com" },
-  { id: "orchard-cloud", name: "Orchard Cloud \u2014 Lyon", tags: ["Gelato", "Seasonal", "Cafe"], last: "5 days ago", strength: "strong", website: "orchard-cloud.example.com" },
-  { id: "tamarind-tide", name: "Tamarind Tide \u2014 Chennai", tags: ["Vegan", "Sorbet", "B2C"], last: "9 months ago", strength: "veryweak", website: "tamarind-tide.example.com" },
-  { id: "amber-scoop", name: "Amber Scoop \u2014 Prague", tags: ["Gelato", "B2B"], last: "over 1 year ago", strength: "none" },
-  { id: "boreal-batch", name: "Boreal Batch \u2014 Yellowknife", tags: ["Dairy-free", "Local", "Seasonal"], last: "8 days ago", strength: "strong", website: "boreal-batch.example.com" },
-  { id: "coconut-commons", name: "Coconut Commons \u2014 Manila", tags: ["Vegan", "B2C", "Cafe"], last: "24 days ago", strength: "weak", website: "coconut-commons.example.com" },
-  { id: "dolomite-dairy", name: "Dolomite Dairy \u2014 Bolzano", tags: ["Gelato", "Wholesale"], last: "3 days ago", strength: "strong", website: "dolomite-dairy.example.com" },
-  { id: "equator-cream", name: "Equator Cream \u2014 Kampala", tags: ["B2B", "Catering", "Local"], last: "10 months ago", strength: "veryweak", website: "equator-cream.example.com" },
-  { id: "hibiscus-house", name: "Hibiscus House \u2014 Accra", tags: ["Sorbet", "Cafe"], last: "6 weeks ago", strength: "weak", website: "hibiscus-house.example.com" },
-  { id: "lagoon-ladle", name: "Lagoon Ladle \u2014 Venice", tags: ["Gelato", "Seasonal", "Catering"], last: "7 days ago", strength: "strong", website: "lagoon-ladle.example.com" },
-  { id: "midnight-milk", name: "Midnight Milk \u2014 Troms\xF8", tags: ["Dairy-free", "Vegan", "Wholesale"], last: "No contact", strength: "none" },
-  { id: "nomad-nougat", name: "Nomad Nougat \u2014 Ulaanbaatar", tags: ["Imports", "B2B"], last: "almost 2 years ago", strength: "none", website: "nomad-nougat.example.com" },
-  { id: "olive-snow", name: "Olive Snow \u2014 Athens", tags: ["Gelato", "Cafe", "Local"], last: "4 days ago", strength: "strong", website: "olive-snow.example.com" },
-  { id: "pacific-pear", name: "Pacific Pear \u2014 Valpara\xEDso", tags: ["Sorbet", "Seasonal"], last: "2 months ago", strength: "weak", website: "pacific-pear.example.com" },
-  { id: "quartz-cone", name: "Quartz Cone \u2014 Denver", tags: ["B2C", "Wholesale"], last: "10 days ago", strength: "strong", website: "quartz-cone.example.com" },
-  { id: "red-lantern", name: "Red Lantern Creamery \u2014 Taipei", tags: ["Cafe", "Vegan"], last: "about 1 month ago", strength: "weak", website: "red-lantern.example.com" },
-  { id: "salt-silk", name: "Salt & Silk \u2014 Muscat", tags: ["Imports", "Catering", "Gelato"], last: "8 months ago", strength: "veryweak", website: "salt-and-silk.example.com" },
-  { id: "tropic-churn", name: "Tropic Churn \u2014 San Juan", tags: ["Sorbet", "Local", "B2C"], last: "6 days ago", strength: "strong", website: "tropic-churn.example.com" },
-  { id: "umber-cream", name: "Umber Cream \u2014 Warsaw", tags: ["B2B", "Wholesale", "Cafe"], last: "5 weeks ago", strength: "weak", website: "umber-cream.example.com" },
-  { id: "vanilla-vale", name: "Vanilla Vale \u2014 Antananarivo", tags: ["Imports", "Local"], last: "No contact", strength: "none" },
-  { id: "willow-whip", name: "Willow Whip \u2014 Portland", tags: ["Dairy-free", "Vegan", "Cafe"], last: "3 days ago", strength: "strong", website: "willow-whip.example.com" },
-  { id: "zenith-gelato", name: "Zenith Gelato \u2014 Auckland", tags: ["Gelato", "Seasonal"], last: "3 weeks ago", strength: "weak", website: "zenith-gelato.example.com" },
-  { id: "apricot-atlas", name: "Apricot Atlas \u2014 Algiers", tags: ["Sorbet", "Imports"], last: "11 months ago", strength: "veryweak", website: "apricot-atlas.example.com" },
-  { id: "black-sesame", name: "Black Sesame Social \u2014 Bandung", tags: ["Vegan", "Cafe", "B2C"], last: "9 days ago", strength: "strong", website: "black-sesame.example.com" },
-  { id: "crimson-clover", name: "Crimson Clover \u2014 Brussels", tags: ["Gelato", "Wholesale", "Catering"], last: "2 months ago", strength: "weak", website: "crimson-clover.example.com" },
-  { id: "dragonfruit-dock", name: "Dragonfruit Dock \u2014 Shenzhen", tags: ["Sorbet", "B2B", "Wholesale"], last: "No contact", strength: "none" }
+  { id: "northwind-bank", name: "Northwind Bank — Addis Ababa", tags: ["Finance", "Brand", "Retainer"], last: "9 days ago", strength: "strong", website: "northwind-bank.example.com" },
+  { id: "creamery", name: "Creamery — Addis Ababa", tags: ["Cafe", "Web"], last: "3 weeks ago", strength: "strong", website: "creamery.example.com" },
+  { id: "selam-coffee", name: "Selam Coffee — Hawassa", tags: ["Cafe", "Print", "Project"], last: "2 months ago", strength: "weak", website: "selam-coffee.example.com" },
+  { id: "addis-yoga", name: "Addis Yoga — Addis Ababa", tags: ["Fitness", "Brand"], last: "15 days ago", strength: "weak", website: "addis-yoga.example.com" },
+  { id: "habesha-textiles", name: "Habesha Textiles — Bahir Dar", tags: ["Retail", "Web", "Project"], last: "over 1 year ago", strength: "veryweak", website: "habesha-textiles.example.com" },
+  { id: "lucy-tours", name: "Lucy Tours — Lalibela", tags: ["Hospitality", "Print"], last: "5 months ago", strength: "veryweak" },
+  { id: "blue-nile-press", name: "Blue Nile Press — Bahir Dar", tags: ["Retail", "Brand", "Project"], last: "No contact", strength: "none", website: "blue-nile-press.example.com" },
+  { id: "entoto-trail-runs", name: "Entoto Trail Runs — Addis Ababa", tags: ["Fitness", "Web"], last: "3 months ago", strength: "veryweak", website: "entoto-trail-runs.example.com" },
+  { id: "meskel-flowers", name: "Meskel Flowers — Addis Ababa", tags: ["Retail", "Print", "Project"], last: "over 1 year ago", strength: "veryweak", website: "meskel-flowers.example.com" },
+  { id: "sheba-spa", name: "Sheba Spa — Addis Ababa", tags: ["Hospitality", "Brand"], last: "almost 2 years ago", strength: "veryweak" },
+  { id: "bole-dental", name: "Bole Dental — Addis Ababa", tags: ["Local", "Web", "Project"], last: "2 months ago", strength: "weak", website: "bole-dental.example.com" },
+  { id: "tana-boats", name: "Tana Boats — Bahir Dar", tags: ["Hospitality", "Print"], last: "about 1 month ago", strength: "weak", website: "tana-boats.example.com" },
+  { id: "zion-bakery", name: "Zion Bakery — Addis Ababa", tags: ["Cafe", "Brand", "Project"], last: "2 months ago", strength: "veryweak" },
+  { id: "axum-books", name: "Axum Books — Axum", tags: ["Retail", "Web"], last: "8 months ago", strength: "weak", website: "axum-books.example.com" },
+  { id: "harar-coffee-roasters", name: "Harar Coffee Roasters — Harar", tags: ["Cafe", "Print", "Project"], last: "about 2 years ago", strength: "none", website: "harar-coffee-roasters.example.com" },
+  { id: "piazza-hotel", name: "Piazza Hotel — Addis Ababa", tags: ["Hospitality", "Brand"], last: "about 1 month ago", strength: "veryweak" },
+  { id: "sidama-honey", name: "Sidama Honey — Hawassa", tags: ["Retail", "Web", "Project"], last: "15 days ago", strength: "weak", website: "sidama-honey.example.com" },
+  { id: "abyssinia-bikes", name: "Abyssinia Bikes — Addis Ababa", tags: ["Retail", "Print"], last: "9 days ago", strength: "strong", website: "abyssinia-bikes.example.com" },
+  { id: "kaldi-s-kitchen", name: "Kaldi's Kitchen — Addis Ababa", tags: ["Cafe", "Brand", "Project"], last: "over 2 years ago", strength: "none", website: "kaldi-s-kitchen.example.com" },
+  { id: "lalibela-guides", name: "Lalibela Guides — Lalibela", tags: ["Hospitality", "Web"], last: "about 1 month ago", strength: "veryweak", website: "lalibela-guides.example.com" },
+  { id: "gondar-gallery", name: "Gondar Gallery — Gondar", tags: ["Nonprofit", "Print", "Project"], last: "No contact", strength: "none" },
+  { id: "dire-logistics", name: "Dire Logistics — Dire Dawa", tags: ["Local", "Brand"], last: "almost 2 years ago", strength: "veryweak", website: "dire-logistics.example.com" },
+  { id: "bahir-dar-marina", name: "Bahir Dar Marina — Bahir Dar", tags: ["Hospitality", "Web", "Project"], last: "No contact", strength: "none" },
+  { id: "arba-minch-lodge", name: "Arba Minch Lodge — Arba Minch", tags: ["Hospitality", "Print"], last: "12 months ago", strength: "veryweak", website: "arba-minch-lodge.example.com" },
+  { id: "sodo-solar", name: "Sodo Solar — Sodo", tags: ["Local", "Brand", "Project"], last: "15 days ago", strength: "weak" },
+  { id: "mekelle-motors", name: "Mekelle Motors — Mekelle", tags: ["Retail", "Web"], last: "almost 2 years ago", strength: "veryweak", website: "mekelle-motors.example.com" },
+  { id: "jimma-tea-house", name: "Jimma Tea House — Jimma", tags: ["Cafe", "Print", "Retainer"], last: "4 days ago", strength: "strong", website: "jimma-tea-house.example.com" },
+  { id: "awash-insurance", name: "Awash Insurance — Addis Ababa", tags: ["Finance", "Brand"], last: "18 days ago", strength: "weak", website: "awash-insurance.example.com" },
+  { id: "nazret-cinema", name: "Nazret Cinema — Adama", tags: ["Local", "Web", "Retainer"], last: "6 days ago", strength: "strong", website: "nazret-cinema.example.com" },
+  { id: "debre-dairy", name: "Debre Dairy — Debre Zeit", tags: ["Retail", "Print"], last: "5 weeks ago", strength: "weak", website: "debre-dairy.example.com" },
+  { id: "omo-adventures", name: "Omo Adventures — Jinka", tags: ["Hospitality", "Brand", "Retainer"], last: "2 days ago", strength: "strong", website: "omo-adventures.example.com" },
+  { id: "semien-outfitters", name: "Semien Outfitters — Debark", tags: ["Retail", "Web"], last: "11 days ago", strength: "strong", website: "semien-outfitters.example.com" },
+  { id: "adama-pharmacy", name: "Adama Pharmacy — Adama", tags: ["Local", "Print", "Project"], last: "about 1 month ago", strength: "weak", website: "adama-pharmacy.example.com" },
+  { id: "hawassa-fish-market", name: "Hawassa Fish Market — Hawassa", tags: ["Retail", "Brand"], last: "No contact", strength: "none" },
+  { id: "shashemene-studio", name: "Shashemene Studio — Shashemene", tags: ["Local", "Web", "Project"], last: "7 weeks ago", strength: "weak", website: "shashemene-studio.example.com" },
+  { id: "ambo-water", name: "Ambo Water — Ambo", tags: ["Retail", "Print"], last: "5 days ago", strength: "strong", website: "ambo-water.example.com" },
+  { id: "dessie-textiles", name: "Dessie Textiles — Dessie", tags: ["Retail", "Brand", "Project"], last: "9 months ago", strength: "veryweak", website: "dessie-textiles.example.com" },
+  { id: "wolkite-furniture", name: "Wolkite Furniture — Wolkite", tags: ["Retail", "Web"], last: "over 1 year ago", strength: "none" },
+  { id: "assosa-gold", name: "Assosa Gold — Assosa", tags: ["Finance", "Print", "Retainer"], last: "8 days ago", strength: "strong", website: "assosa-gold.example.com" },
+  { id: "gambela-rice", name: "Gambela Rice — Gambela", tags: ["Retail", "Brand"], last: "24 days ago", strength: "weak", website: "gambela-rice.example.com" },
+  { id: "jijiga-camels", name: "Jijiga Camels — Jijiga", tags: ["Hospitality", "Web", "Retainer"], last: "3 days ago", strength: "strong", website: "jijiga-camels.example.com" },
+  { id: "bishoftu-resort", name: "Bishoftu Resort — Bishoftu", tags: ["Hospitality", "Print"], last: "10 months ago", strength: "veryweak", website: "bishoftu-resort.example.com" },
+  { id: "ziway-wines", name: "Ziway Wines — Ziway", tags: ["Retail", "Brand", "Project"], last: "6 weeks ago", strength: "weak", website: "ziway-wines.example.com" },
+  { id: "kombolcha-steel", name: "Kombolcha Steel — Kombolcha", tags: ["Local", "Web"], last: "7 days ago", strength: "strong", website: "kombolcha-steel.example.com" },
+  { id: "butajira-bakery", name: "Butajira Bakery — Butajira", tags: ["Cafe", "Print", "Project"], last: "No contact", strength: "none" },
+  { id: "nekemte-coffee", name: "Nekemte Coffee — Nekemte", tags: ["Cafe", "Brand"], last: "almost 2 years ago", strength: "none", website: "nekemte-coffee.example.com" },
+  { id: "goba-trekking", name: "Goba Trekking — Goba", tags: ["Hospitality", "Web", "Retainer"], last: "4 days ago", strength: "strong", website: "goba-trekking.example.com" },
+  { id: "yirga-cafe", name: "Yirga Cafe — Yirgalem", tags: ["Cafe", "Print"], last: "2 months ago", strength: "weak", website: "yirga-cafe.example.com" },
+  { id: "merkato-market-hall", name: "Merkato Market Hall — Addis Ababa", tags: ["Retail", "Brand", "Retainer"], last: "10 days ago", strength: "strong", website: "merkato-market-hall.example.com" },
+  { id: "sarbet-clinic", name: "Sarbet Clinic — Addis Ababa", tags: ["Local", "Web"], last: "about 1 month ago", strength: "weak", website: "sarbet-clinic.example.com" },
+  { id: "kazanchis-coworking", name: "Kazanchis Coworking — Addis Ababa", tags: ["Local", "Print", "Project"], last: "8 months ago", strength: "veryweak", website: "kazanchis-coworking.example.com" },
+  { id: "megenagna-music", name: "Megenagna Music — Addis Ababa", tags: ["Nonprofit", "Brand"], last: "6 days ago", strength: "strong", website: "megenagna-music.example.com" },
+  { id: "gerji-gym", name: "Gerji Gym — Addis Ababa", tags: ["Fitness", "Web", "Project"], last: "5 weeks ago", strength: "weak", website: "gerji-gym.example.com" },
+  { id: "lideta-law", name: "Lideta Law — Addis Ababa", tags: ["Finance", "Print"], last: "No contact", strength: "none" },
+  { id: "kirkos-kids", name: "Kirkos Kids — Addis Ababa", tags: ["Nonprofit", "Brand", "Retainer"], last: "3 days ago", strength: "strong", website: "kirkos-kids.example.com" },
+  { id: "arada-art-school", name: "Arada Art School — Addis Ababa", tags: ["Nonprofit", "Web"], last: "3 weeks ago", strength: "weak", website: "arada-art-school.example.com" },
+  { id: "yeka-bikes", name: "Yeka Bikes — Addis Ababa", tags: ["Retail", "Print", "Project"], last: "11 months ago", strength: "veryweak", website: "yeka-bikes.example.com" },
+  { id: "gulele-gardens", name: "Gulele Gardens — Addis Ababa", tags: ["Nonprofit", "Brand"], last: "9 days ago", strength: "strong", website: "gulele-gardens.example.com" },
+  { id: "akaki-print-works", name: "Akaki Print Works — Addis Ababa", tags: ["Local", "Web", "Project"], last: "2 months ago", strength: "weak", website: "akaki-print-works.example.com" },
+  { id: "nifas-silk-studio", name: "Nifas Silk Studio — Addis Ababa", tags: ["Local", "Print"], last: "No contact", strength: "none" }
 ];
 const RT_AI_LABEL = "Competitors";
 const RT_POOL = [
-  "Frost & Ladle",
-  "Polar Pint Co.",
-  "Meltwater Creamery",
-  "Cirrus Scoops",
-  "Golden Churn",
-  "Velvet Freeze",
-  "North Cone Collective",
-  "Sundae Syndicate"
+  "Ember Studio",
+  "Northline Design",
+  "Paper & Pixel",
+  "Studio Kite",
+  "Halftone Co.",
+  "Meridian Creative",
+  "Fold Collective",
+  "Ninefold"
 ];
 const rtCompetitorsFor = (index) => `${RT_POOL[index % 8]}, ${RT_POOL[(index + 3) % 8]}`;
 function RtGlyph({ children, size = 14, strokeWidth = 1.8 }) {
@@ -5817,7 +5817,7 @@ const RT_TOOL_GLYPHS = {
 };
 const RT_COLUMN_META = {
   Company: { type: "Text", tool: "User input", toolKind: "user" },
-  Categories: { type: "Multi select", tool: "Sprinkles 5", toolKind: "model", inputs: "Company", prompt: { before: "RtTag each ", chip: "Company", after: " with its market categories." } },
+  Categories: { type: "Multi select", tool: "Sprinkles 5", toolKind: "model", inputs: "Company", prompt: { before: "RtTag each ", chip: "Company", after: " with its sector and the services we provide." } },
   "Last interaction": { type: "Date", tool: "User input", toolKind: "user" },
   "Connection strength": { type: "Single select", tool: "Sprinkles 5", toolKind: "model", inputs: "Last interaction", prompt: { before: "Score the relationship from ", chip: "Last interaction", after: "." } },
   Links: { type: "URL", tool: "Web search", toolKind: "web", inputs: "Company", prompt: { before: "Find the website for ", chip: "Company", after: "." } },
@@ -6545,11 +6545,11 @@ function RecordsTable({
 
 /* ═══════════ FilterTable ═══════════ */
 const FT_ROWS = [
-  { task: "Restock mango sorbet", date: "Dec 03", status: "todo", owner: "Mango Moon Gelato" },
-  { task: "Churn black sesame", date: "Sep 22", status: "progress", owner: "Kumo Creamery" },
-  { task: "Print summer menu", date: "Jan 02", status: "todo", owner: "Coral Coast Sorbet" },
-  { task: "Taste-test batch 42", date: "Nov 08", status: "progress", owner: "Maple Orbit" },
-  { task: "Order waffle cones", date: "Apr 14", status: "done", owner: "Aurora Scoops" }
+  { task: "Send the Northwind proposal", date: "Dec 03", status: "todo", owner: "Northwind Bank" },
+  { task: "Redesign the pricing page", date: "Sep 22", status: "progress", owner: "Creamery" },
+  { task: "Print the summer menu", date: "Jan 02", status: "todo", owner: "Selam Coffee" },
+  { task: "Review the photo selects", date: "Nov 08", status: "progress", owner: "Addis Yoga" },
+  { task: "Launch the booking site", date: "Apr 14", status: "done", owner: "Lucy Tours" }
 ];
 const FT_STATUS = {
   todo: { label: "To do", pill: "status-pill-todo", dot: "var(--status-todo)" },
@@ -7007,17 +7007,17 @@ function SidebarNav({
 
 /* ═══════════ SearchList ═══════════ */
 const SL_ITEMS = [
-  "Forecast summer demand",
-  "Find waffle cone suppliers",
-  "Compare seasonal flavors",
-  "Draft flavor launch plan",
-  "Check cold-chain status",
-  "Audit sugar costs",
-  "Retire low sellers"
+  "Forecast next quarter's billings",
+  "Find overdue invoices",
+  "Compare client traffic",
+  "Draft a launch plan",
+  "Check hosting status",
+  "Audit subscription costs",
+  "Retire unused pages"
 ];
 function SearchList({
   items = SL_ITEMS,
-  placeholder = "Search flavors\u2026",
+  placeholder = "Search tasks\u2026",
   onPick
 } = {}) {
   const [query, setQuery] = useState("");
@@ -7079,9 +7079,9 @@ function SearchList({
 }
 
 /* ═══════════ SelectionActions ═══════════ */
-const SA_DEFAULT_LEAD = "Pistachio holds the top slot all weekend. ";
-const SA_DEFAULT_SELECTED = "Churn it first thing Saturday so the batch has time to firm up before the afternoon rush.";
-const SA_DEFAULT_REWRITE = "Churn pistachio first thing Saturday so the batch has time to fully firm before the afternoon rush.";
+const SA_DEFAULT_LEAD = "Northwind's refresh runs in two phases. ";
+const SA_DEFAULT_SELECTED = "Phase one covers the mark, the type and the colour system so the site can start before the print work.";
+const SA_DEFAULT_REWRITE = "Phase one covers the mark, the type and the colour system, so the site work can start before print.";
 const SA_QUICK_ACTIONS = [
   { label: "Shorten", icon: "scissors", busy: "Shortening" },
   { label: "Change tone", short: "Tone", icon: "mood-smile", busy: "Changing tone" },
@@ -7440,17 +7440,17 @@ function SelectionActions({
 
 /* ═══════════ ChatThread ═══════════ */
 const CT_DEFAULT_MESSAGES = [
-  { id: "m1", role: "user", text: "Which flavor should we push this weekend?" },
+  { id: "m1", role: "user", text: "Which proposal should we chase this week?" },
   {
     id: "m2",
     role: "assistant",
-    text: "Pistachio is the strongest candidate \u2014 sales are up 23% this month and it carries the best margin on the menu."
+    text: "Northwind Bank. Their brand refresh is the largest open proposal at ETB 724,000, and their legal team signed off on Friday."
   },
-  { id: "m3", role: "user", text: "Draft the weekend plan for it." },
+  { id: "m3", role: "user", text: "Draft the follow-up." },
   {
     id: "m4",
     role: "assistant",
-    text: "Here's the plan: churn a double batch Friday night, feature it on the A-board Saturday morning, and pair it with the waffle special through Sunday close."
+    text: "Here it is: thank them for the sign-off, confirm the two phases starting 6 October, and ask for the purchase order so phase one can be invoiced."
   }
 ];
 function MessageBubble({
@@ -9426,10 +9426,10 @@ const TL_TONE_DOTS = {
   red: "bg-red"
 };
 const TL_DEFAULT_ITEMS = [
-  { key: "queued", title: "Batch queued", time: "07:12", tone: "neutral", description: "Double pistachio, drum 2." },
-  { key: "churn", title: "Churn started", time: "07:30", tone: "accent" },
-  { key: "fault", title: "Cold-chain dip", time: "09:02", tone: "red", description: "Drum 2 rose to \u22129\xB0C for 4 minutes \u2014 flagged for QA taste check." },
-  { key: "cased", title: "Cased and set", time: "11:45", tone: "green", description: "Passed taste check; on the board for the weekend." }
+  { key: "sent", title: "Proposal sent", time: "09:12", tone: "neutral", description: "Northwind Bank brand refresh, two phases." },
+  { key: "opened", title: "Opened by the client", time: "09:40", tone: "accent" },
+  { key: "question", title: "Pricing questioned", time: "11:02", tone: "red", description: "Phase two came in 15% above their budget; flagged for a revised quote." },
+  { key: "signed", title: "Signed", time: "14:45", tone: "green", description: "Revised quote accepted; kickoff booked for Monday." }
 ];
 function Timeline({
   items = TL_DEFAULT_ITEMS,
@@ -13148,7 +13148,7 @@ function Page_primitives() {
       </GalleryCard>
       <GalleryCard label="GlideMenu">
         <GlideMenu className="flex w-44 flex-col gap-px">
-          {["Sprinkles 5", "Vanilla 1", "Freezer Burn 0.4"].map((item) => (
+          {["Formic 5", "Formic 5 Mini", "Formic 4"].map((item) => (
             <button key={item} data-menu-row type="button" className="relative z-10 flex h-8 w-full items-center rounded-control px-2 text-left text-body text-ink">
               {item}
             </button>
@@ -13834,7 +13834,7 @@ function Page_approvalflow() {
     <>
       <GalleryCard label="Three questions · radio, check, radio" wide><ApprovalFlow /></GalleryCard>
       <GalleryCard label="Single question" wide>
-        <ApprovalFlow questions={[{ q: "Ship the pistachio batch tonight?", type: "radio", options: ["Ship it", "Hold for QA", "Split the batch"] }]} labels={{ send: "Approve" }} />
+        <ApprovalFlow questions={[{ q: "Send the Northwind proposal tonight?", type: "radio", options: ["Send it", "Hold for Sara's review", "Send phase one only"] }]} labels={{ send: "Approve" }} />
       </GalleryCard>
     </>
   );
@@ -13905,7 +13905,7 @@ function PromptBarStreamingDemo() {
   const toast = useToast();
   const [status, setStatus] = useState("idle");
   const [queue, setQueue] = useState([]);
-  const [history, setHistory] = useState(["Summarise the Q2 numbers", "Draft the release note"]);
+  const [history, setHistory] = useState(["Summarise the quarter's billings", "Draft the Northwind follow-up"]);
   const timer = useRef(null);
   const send = (text) => {
     setHistory((h) => [...h, text]);
@@ -13919,7 +13919,7 @@ function PromptBarStreamingDemo() {
       <div className="flex items-center gap-3 text-caption text-ink-3">
         <span className="flex items-center gap-1.5"><span className={`size-1.5 rounded-full ${status === "streaming" ? "bg-accent" : "bg-ink-3"}`} />{status === "streaming" ? "Answer streaming for 4s: send again to queue, or press Stop" : "Idle: send a message to start streaming"}</span>
       </div>
-      <PromptBar demo={false} status={status} onStop={() => { if (timer.current) clearTimeout(timer.current); setStatus("idle"); }} queue={queue} onQueueChange={setQueue} history={history} suggestion="Ask about last week's incidents" suggestions={["What changed in the build?", "Explain the failing test", "Draft a status update"]} onSend={send} />
+      <PromptBar demo={false} status={status} onStop={() => { if (timer.current) clearTimeout(timer.current); setStatus("idle"); }} queue={queue} onQueueChange={setQueue} history={history} suggestion="Ask which invoices are overdue" suggestions={["Which proposals are waiting on us?", "Compare Creamery to last quarter", "Draft a status update for Northwind"]} onSend={send} />
     </div>
   );
 }
@@ -15108,9 +15108,9 @@ function Page_askuserquestions() {
         </div>
       </GalleryCard>
       <GalleryCard label="One question, no progress line" wide>
-        <AskUserQuestions questions={[{ id: "file", title: "Which file should the new hook live in?", options: [
-          { id: "hooks", title: "hooks.ts", description: "With the other shared hooks" },
-          { id: "own", title: "Its own file", description: "useProximity.ts next to the component" },
+        <AskUserQuestions questions={[{ id: "invoice", title: "Which invoice should phase one go on?", options: [
+          { id: "existing", title: "INV-0231", description: "Add it to the open Northwind invoice" },
+          { id: "new", title: "A new invoice", description: "Phase one on its own, due in 30 days" },
         ] }]} onComplete={(a) => toast({ title: `Chose ${Object.values(a)[0].selectedIds[0]}` })} />
       </GalleryCard>
     </>
@@ -16404,7 +16404,7 @@ function RailPanels({ page, pg, knobs, pgState, pgSet, pgReset }) {
  * Deltas use --green / --red because they mean better and worse.
  * ───────────────────────────────────────────────────────── */
 const formatPercent = (v) => `${v > 0 ? "+" : ""}${v.toFixed(2)}%`;
-const formatMoney = (v) => `$${Math.round(v).toLocaleString("en-US")}`;
+const formatMoney = (v) => `ETB ${Math.round(v).toLocaleString("en-US")}`;
 
 /* an inline @entity mention */
 function IC_Entity({ name, color = 1 }) {
@@ -16436,8 +16436,8 @@ function IC_Stage({ caption, action, children }) {
 
 /* ── 1. compare: two series, legend with the latest delta ── */
 const IC_COMPARE = [
-  { name: "Mint Chip", values: [-2.9, -3.4, -3.05, -3.86, -3.52, -4.1, -3.82, -4.41], sub: "-$2,377.66", color: 2 },
-  { name: "Pistachio", values: [0.22, 0.58, 0.42, 0.91, 0.76, 1.08, 0.96, 1.15], sub: "+$617.22", color: 1 },
+  { name: "Habesha Textiles", values: [-2.9, -3.4, -3.05, -3.86, -3.52, -4.1, -3.82, -4.41], sub: "-ETB 23,800", color: 2 },
+  { name: "Northwind Bank", values: [0.22, 0.58, 0.42, 0.91, 0.76, 1.08, 0.96, 1.15], sub: "+ETB 61,700", color: 1 },
 ];
 const IC_WEEKS = ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8"];
 function CompareCard({ series = IC_COMPARE, labels = IC_WEEKS }) {
@@ -16467,16 +16467,16 @@ function CompareCard({ series = IC_COMPARE, labels = IC_WEEKS }) {
 
 /* ── 2. anomaly: a spike against a threshold, two metrics ── */
 const IC_ANOMALY = {
-  spend: [274, 289, 264, 307, 331, 1210, 1718, 2112],
+  spend: [2740, 2890, 2640, 3070, 3310, 12100, 17180, 21120],
   usage: [18, 19, 17, 21, 22, 58, 81, 96],
-  spendThreshold: 900,
+  spendThreshold: 9000,
   usageThreshold: 40,
 };
-function AnomalyCard({ data = IC_ANOMALY, title = "High freezer spend", delta = "+$1,834.66", compare = "vs 3 months" }) {
+function AnomalyCard({ data = IC_ANOMALY, title = "High hosting spend", delta = "+ETB 18,300", compare = "vs 3 months" }) {
   const [metric, setMetric] = useState("spend");
   const values = metric === "spend" ? data.spend : data.usage;
   const threshold = metric === "spend" ? data.spendThreshold : data.usageThreshold;
-  const fmt = (v) => (metric === "spend" ? formatMoney(v) : `${Math.round(v)} kWh`);
+  const fmt = (v) => (metric === "spend" ? formatMoney(v) : `${Math.round(v)} GB`);
   const spike = values.findIndex((v) => v > threshold);
   const last = data.spend[data.spend.length - 1] ?? 0;
   return (
@@ -16489,7 +16489,7 @@ function AnomalyCard({ data = IC_ANOMALY, title = "High freezer spend", delta = 
         <Badge>Snapshot</Badge>
       </div>
       <IC_Stage
-        caption={`${fmt(threshold)} threshold`}
+        caption={`Over ${metric === "spend" ? `ETB ${Math.round(threshold / 1000)}K` : fmt(threshold)}`}
         action={
           <Tabs
             variant="segmented"
@@ -16513,11 +16513,11 @@ function AnomalyCard({ data = IC_ANOMALY, title = "High freezer spend", delta = 
 
 /* ── 3. allocation: hero number, segmented bar, legend that inspects ── */
 const IC_ALLOCATION = [
-  { name: "VAN", label: "Vanilla", pct: 72.5, amount: "$51,785", color: 1 },
-  { name: "CHOC", label: "Chocolate", pct: 22.8, amount: "$16,278", color: 2 },
-  { name: "MINT", label: "Mint", pct: 4.7, amount: "$3,357", color: 3 },
+  { name: "NWB", label: "Northwind Bank", pct: 72.5, amount: "ETB 724,000", color: 1 },
+  { name: "CRM", label: "Creamery", pct: 22.8, amount: "ETB 228,000", color: 2 },
+  { name: "SLM", label: "Selam Coffee", pct: 4.7, amount: "ETB 47,000", color: 3 },
 ];
-function AllocationCard({ segments = IC_ALLOCATION, title = "Vanilla allocation", note = "Contribution across current inventory value. Picking a segment changes what is inspected without moving the card." }) {
+function AllocationCard({ segments = IC_ALLOCATION, title = "Client concentration", note = "Share of billings this quarter. Picking a segment changes what is inspected without moving the card." }) {
   const [selected, setSelected] = useState(segments[0]?.name);
   const active = segments.find((s) => s.name === selected) ?? segments[0];
   return (
@@ -16572,21 +16572,21 @@ function AllocationCard({ segments = IC_ALLOCATION, title = "Vanilla allocation"
 const IC_DEFAULT_PAGES = [
   {
     key: "compare",
-    prose: <>The worst performer in your <IC_Entity name="Creamery" color={2} /> is Rocky Road, down <IC_Delta tone="down">-6%</IC_Delta> or <IC_Delta tone="down">-$2,453.44</IC_Delta>.</>,
+    prose: <>The weakest account in your <IC_Entity name="Retainers" color={2} /> is Habesha Textiles, down <IC_Delta tone="down">-6%</IC_Delta> or <IC_Delta tone="down">-ETB 23,800</IC_Delta>.</>,
     Card: CompareCard,
-    prompt: "Should I rebalance flavours?",
+    prompt: "Should I rebalance the retainers?",
   },
   {
     key: "anomaly",
-    prose: <>Unusually high freezer bill on <span className="font-medium text-ink">Dec 13</span>: <IC_Delta tone="down">+$1,834.66</IC_Delta> above your average.</>,
+    prose: <>Unusually high hosting bill on <span className="font-medium text-ink">Dec 13</span>: <IC_Delta tone="down">+ETB 18,300</IC_Delta> above your average.</>,
     Card: AnomalyCard,
-    prompt: "Get tips on cutting freezer costs",
+    prompt: "Get tips on cutting hosting costs",
   },
   {
     key: "allocation",
-    prose: <>You are heavily invested in <IC_Entity name="Vanilla" /> at <span className="font-medium text-ink">72.5%</span> of your case.</>,
+    prose: <>You are heavily concentrated in <IC_Entity name="Northwind Bank" /> at <span className="font-medium text-ink">72.5%</span> of your billings.</>,
     Card: AllocationCard,
-    prompt: "If we look at seasonals, what changes?",
+    prompt: "If both open proposals sign, what changes?",
   },
 ];
 
@@ -16851,33 +16851,33 @@ function ThinkingIndicator({
 const AUQ_DEFAULT_QUESTIONS = [
   {
     id: "scope",
-    title: "How far should I take the refactor?",
-    description: "The module compiles either way; this decides how much I touch.",
+    title: "How much of the Northwind proposal should I rewrite?",
+    description: "The draft is complete either way; this decides how much I touch.",
     options: [
-      { id: "minimal", title: "Minimal", description: "Fix the failing path only" },
-      { id: "module", title: "This module", description: "Clean up everything in the file" },
-      { id: "callers", title: "Module and callers", description: "Also update the three call sites" },
+      { id: "minimal", title: "Minimal", description: "Fix the pricing table only" },
+      { id: "scope", title: "The scope section", description: "Rewrite it around the two phases" },
+      { id: "timeline", title: "Scope and timeline", description: "Also move both phases to October" },
     ],
     allowOther: true,
     otherPlaceholder: "Something else…",
   },
   {
     id: "checks",
-    title: "Which checks should run before I open the PR?",
+    title: "What should I check before I send it?",
     options: [
-      { id: "types", title: "Type check" },
-      { id: "unit", title: "Unit tests" },
-      { id: "lint", title: "Lint" },
-      { id: "e2e", title: "End-to-end", description: "Slow: about four minutes" },
+      { id: "pricing", title: "Pricing adds up" },
+      { id: "names", title: "Names and dates" },
+      { id: "brand", title: "Brand terms" },
+      { id: "legal", title: "Legal review", description: "Slow: about two days" },
     ],
     multiSelect: true,
     skippable: true,
   },
   {
     id: "notes",
-    title: "Anything I should know about this code?",
+    title: "Anything I should know about this client?",
     freeText: true,
-    freeTextPlaceholder: "Conventions, gotchas, who owns it…",
+    freeTextPlaceholder: "Who signs, what they pushed back on last time…",
     skippable: true,
   },
 ];

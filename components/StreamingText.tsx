@@ -12,17 +12,17 @@ const HOLD_MS = 3400;
 export type StreamToken = { text: string; /** index into `sources` for an inline citation chip */ cite?: number };
 export type Source = { name: string; domain: string; href: string; image: string };
 const DEFAULT_TOKENS: StreamToken[] = [
-  ..."Pistachio is your fastest-growing flavor — sales are up 23% this month and margins beat vanilla by 8 points."
+  ..."Formic ships 70+ components in 240+ variants, and every one passes AA contrast in light and dark."
     .split(" ")
     .map((text) => ({ text })),
   { text: "", cite: 0 },
-  ..."Stone-fruit flavors are trending in the same range."
+  ..."The install is one command; after that you only prompt."
     .split(" ")
     .map((text) => ({ text })),
 ];
 const DEFAULT_FOLLOW_UPS = [
-  "Which flavors sell best in winter",
-  "Compare gelato and soft serve margins",
+  "Which rail should the app use",
+  "Compare the ten palettes",
 ];
 const SOURCE_IMAGES = {
   scoop:
@@ -33,9 +33,9 @@ const SOURCE_IMAGES = {
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23e56d24'/%3E%3Cpath d='M17 45V25h8v20h-8Zm11 0V16h8v29h-8Zm11 0V30h8v15h-8Z' fill='%23fff'/%3E%3Cpath d='M16 49h32' stroke='%23ffd6b8' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E",
 };
 const DEFAULT_SOURCES: Source[] = [
-  { name: "Scoop Data", domain: "scoopdata.io", href: "https://scoopdata.io/", image: SOURCE_IMAGES.scoop },
-  { name: "Trends Index", domain: "trends.google.com", href: "https://trends.google.com/trends/", image: SOURCE_IMAGES.trends },
-  { name: "Market Basket", domain: "marketbasket.io", href: "https://marketbasket.io/", image: SOURCE_IMAGES.market },
+  { name: "Formic", domain: "formicai.dev", href: "https://formicai.dev/", image: SOURCE_IMAGES.scoop },
+  { name: "Gallery", domain: "formicai.dev/preview", href: "https://formicai.dev/preview.html", image: SOURCE_IMAGES.trends },
+  { name: "Customize", domain: "formicai.dev/customize", href: "https://formicai.dev/customize", image: SOURCE_IMAGES.market },
 ];
 function sourceImage(source: Source) {
   return source.image;

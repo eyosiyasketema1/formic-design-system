@@ -8,11 +8,11 @@ import { Disclosure } from "./primitives";
 export type Status = "todo" | "progress" | "done";
 export type FilterRow = { task: string; date: string; status: Status; owner: string };
 const DEFAULT_ROWS: FilterRow[] = [
-  { task: "Restock mango sorbet", date: "Dec 03", status: "todo", owner: "Mango Moon Gelato" },
-  { task: "Churn black sesame", date: "Sep 22", status: "progress", owner: "Kumo Creamery" },
-  { task: "Print summer menu", date: "Jan 02", status: "todo", owner: "Coral Coast Sorbet" },
-  { task: "Taste-test batch 42", date: "Nov 08", status: "progress", owner: "Maple Orbit" },
-  { task: "Order waffle cones", date: "Apr 14", status: "done", owner: "Aurora Scoops" },
+  { task: "Send the Northwind proposal", date: "Dec 03", status: "todo", owner: "Northwind Bank" },
+  { task: "Redesign the pricing page", date: "Sep 22", status: "progress", owner: "Creamery" },
+  { task: "Print the summer menu", date: "Jan 02", status: "todo", owner: "Selam Coffee" },
+  { task: "Review the photo selects", date: "Nov 08", status: "progress", owner: "Addis Yoga" },
+  { task: "Launch the booking site", date: "Apr 14", status: "done", owner: "Lucy Tours" },
 ];
 /* pill classes + dot colors both derive from the --status-* base hues */
 const STATUS: Record<Status, { label: string; pill: string; dot: string }> = {

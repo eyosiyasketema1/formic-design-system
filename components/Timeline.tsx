@@ -21,10 +21,10 @@ const TONE_DOTS: Record<TimelineTone, string> = {
   red: "bg-red",
 };
 const DEFAULT_ITEMS: TimelineItem[] = [
-  { key: "queued", title: "Batch queued", time: "07:12", tone: "neutral", description: "Double pistachio, drum 2." },
-  { key: "churn", title: "Churn started", time: "07:30", tone: "accent" },
-  { key: "fault", title: "Cold-chain dip", time: "09:02", tone: "red", description: "Drum 2 rose to −9°C for 4 minutes — flagged for QA taste check." },
-  { key: "cased", title: "Cased and set", time: "11:45", tone: "green", description: "Passed taste check; on the board for the weekend." },
+  { key: "sent", title: "Proposal sent", time: "09:12", tone: "neutral", description: "Northwind Bank brand refresh, two phases." },
+  { key: "opened", title: "Opened by the client", time: "09:40", tone: "accent" },
+  { key: "question", title: "Pricing questioned", time: "11:02", tone: "red", description: "Phase two came in 15% above their budget; flagged for a revised quote." },
+  { key: "signed", title: "Signed", time: "14:45", tone: "green", description: "Revised quote accepted; kickoff booked for Monday." },
 ];
 export default function Timeline({
   items = DEFAULT_ITEMS,

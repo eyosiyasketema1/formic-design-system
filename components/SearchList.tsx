@@ -6,17 +6,17 @@ import { GlideMenu, Icon } from "./primitives";
  * The field, clear action, and results are directly usable.
  * ───────────────────────────────────────────────────────── */
 const DEFAULT_ITEMS = [
-  "Forecast summer demand",
-  "Find waffle cone suppliers",
-  "Compare seasonal flavors",
-  "Draft flavor launch plan",
-  "Check cold-chain status",
-  "Audit sugar costs",
-  "Retire low sellers",
+  "Forecast next quarter's billings",
+  "Find overdue invoices",
+  "Compare client traffic",
+  "Draft a launch plan",
+  "Check hosting status",
+  "Audit subscription costs",
+  "Retire unused pages",
 ];
 export default function SearchList({
   items = DEFAULT_ITEMS,
-  placeholder = "Search flavors…",
+  placeholder = "Search tasks…",
   onPick,
 }: {
   /** searchable entries; defaults to demo content */
