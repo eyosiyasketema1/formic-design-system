@@ -88,6 +88,70 @@
 </script>
 <link rel="icon" type="image/png" href="./assets/favicon.png" />
 <link rel="apple-touch-icon" href="./assets/formic-logomark-512.png" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is Formic?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Formic is an open-source React and Tailwind v4 design system built for AI coding tools. It ships 70+ token-driven components for chat, agents, dashboards and forms, passes WCAG AA contrast in light, dark and ten palettes, and includes two gates that refuse generic UI. It is MIT licensed."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which AI coding tools does Formic work with?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Any agent that reads a project's AGENTS.md: Claude Code, Cursor, GitHub Copilot, OpenAI Codex, Gemini CLI, Windsurf and similar. The installer writes the rule files each tool looks for, and there is a Claude skill for Claude.ai."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I install Formic?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Run one command in your project folder: curl -fsSL https://formicai.dev/install.sh | bash. Add -s -- --new my-app to scaffold a new Vite project. It vendors the system into src/formic, writes the config and the agent rules, and prints your first prompt. It needs git and Node."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I use Formic after installing it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Start every prompt to your AI tool with: Use Formic (src/formic), read AGENTS.md, then ... and describe the screen you want. The agent composes it from Formic's components and runs the two gates before it finishes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the two gates?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "formic_check.py fails any UI that is not built on the system (a second component kit, hardcoded colours, an off-scale font size), and compose_check.py fails screens with no reason for what is on them (a stat card with no period, charts of unrelated things side by side, placeholder content). Both run on the app's own src folder, and the agent must pass them."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use my own colours, font and layout?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The customizer at formicai.dev/customize sets the accent, palette, corner radius, font, type size, sidebar style and content width, then copies a block you paste to your AI tool. The accent is fitted to pass AA in both modes automatically."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Formic work in an existing project?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, the same command adds it to an existing Vite, Next.js or other React project without touching your pages; you then add three CSS imports and prompt as usual."
+      }
+    }
+  ]
+}
+</script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" integrity="sha512-QVs8Lo43F9lSuBykadDb0oSXDL/BbZ588urWVCRwSIoewQv/Ewg1f84mK3U790bZ0FfhFa1YSQUmIhG+pIRKeg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" integrity="sha512-6a1107rTlA4gYpgHAqbwLAtxmWipBdJFcq8y5S/aTge3Bp+VAklABm2LO+Kg51vOWR9JMZq1Ovjl5tpluNpTeQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <link rel="preload" as="image" href="./assets/hero-bg.webp" imagesrcset="./assets/hero-bg-1280.webp 1280w, ./assets/hero-bg.webp 1920w" imagesizes="100vw" />
@@ -541,6 +605,48 @@ spline-viewer::part(logo) {
     </div>
   </section>
 
+  <!-- ══ FAQ: the questions people (and answer engines) ask ══ -->
+  <section class="live-section" id="faq" style="padding-top: 0;">
+    <div class="live-wrap">
+      <div class="feat-container">
+        <div class="feat-header">
+          <h2>Questions</h2>
+          <p class="section-sub">Short answers to what people ask before they run the command.</p>
+        </div>
+        <div class="faq-list">
+        <details class="faq-item">
+          <summary>What is Formic?</summary>
+          <p>Formic is an open-source React and Tailwind v4 design system built for AI coding tools. It ships 70+ token-driven components for chat, agents, dashboards and forms, passes WCAG AA contrast in light, dark and ten palettes, and includes two gates that refuse generic UI. It is MIT licensed.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Which AI coding tools does Formic work with?</summary>
+          <p>Any agent that reads a project&#x27;s AGENTS.md: Claude Code, Cursor, GitHub Copilot, OpenAI Codex, Gemini CLI, Windsurf and similar. The installer writes the rule files each tool looks for, and there is a Claude skill for Claude.ai.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How do I install Formic?</summary>
+          <p>Run one command in your project folder: curl -fsSL https://formicai.dev/install.sh | bash. Add -s -- --new my-app to scaffold a new Vite project. It vendors the system into src/formic, writes the config and the agent rules, and prints your first prompt. It needs git and Node.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How do I use Formic after installing it?</summary>
+          <p>Start every prompt to your AI tool with: Use Formic (src/formic), read AGENTS.md, then ... and describe the screen you want. The agent composes it from Formic&#x27;s components and runs the two gates before it finishes.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What are the two gates?</summary>
+          <p>formic_check.py fails any UI that is not built on the system (a second component kit, hardcoded colours, an off-scale font size), and compose_check.py fails screens with no reason for what is on them (a stat card with no period, charts of unrelated things side by side, placeholder content). Both run on the app&#x27;s own src folder, and the agent must pass them.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can I use my own colours, font and layout?</summary>
+          <p>Yes. The customizer at formicai.dev/customize sets the accent, palette, corner radius, font, type size, sidebar style and content width, then copies a block you paste to your AI tool. The accent is fitted to pass AA in both modes automatically.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Does Formic work in an existing project?</summary>
+          <p>Yes, the same command adds it to an existing Vite, Next.js or other React project without touching your pages; you then add three CSS imports and prompt as usual.</p>
+        </details>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ══ Components ══ -->
   <section class="landing-section" id="components">
     <div class="comp-marquee">
@@ -664,6 +770,7 @@ spline-viewer::part(logo) {
           <h4>Navigation</h4>
           <a href="./preview.html">Components</a>
           <a href="./customize">Customize</a>
+          <a href="#faq">Questions</a>
         </div>
         <div class="fat-col">
           <h4>Legal</h4>
