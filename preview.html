@@ -3,7 +3,29 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Formic AI Design System — Preview</title>
+<title>Component gallery · Formic AI Design System</title>
+<meta name="description" content="Every Formic component live: chat, agents, approvals, dashboards, charts, tables and forms, in light, dark and ten palettes. Copy a prompt for your AI tool from any page, or customize the accent, radius, font and rail." />
+<link rel="canonical" href="https://formicai.dev/preview.html" id="canonical" />
+<meta property="og:site_name" content="Formic AI Design System" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Component gallery · Formic AI Design System" />
+<meta property="og:description" content="Every Formic component live, in light, dark and ten palettes. Copy a prompt for your AI tool from any page." />
+<meta property="og:url" content="https://formicai.dev/preview.html" />
+<meta property="og:image" content="https://formicai.dev/assets/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://formicai.dev/assets/og-image.png" />
+<meta name="robots" content="index, follow, max-image-preview:large" />
+<script>
+  /* /customize is this file served under another path: give it its own title
+     and canonical so the two are not read as duplicates */
+  if (location.pathname.replace(/\/$/, "") === "/customize") {
+    document.title = "Customize · Formic AI Design System";
+    var c = document.getElementById("canonical"); if (c) c.href = "https://formicai.dev/customize";
+    var u = document.querySelector('meta[property="og:url"]'); if (u) u.content = "https://formicai.dev/customize";
+  }
+</script>
 <link rel="icon" type="image/png" href="./assets/favicon.png" />
 <link rel="apple-touch-icon" href="./assets/formic-logomark-512.png" />
 <script>

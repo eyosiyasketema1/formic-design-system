@@ -1,0 +1,18 @@
+# Formic AI Design System
+
+> An open-source React + Tailwind v4 design system built for AI coding tools (Claude Code, Cursor, Copilot, Codex): 70+ token-driven components for chat, agents, dashboards and forms, WCAG AA contrast in light, dark and ten palettes, and two gates that refuse generic UI. One command installs it into a project; after that you only prompt.
+
+- Install: `curl -fsSL https://formicai.dev/install.sh | bash` (new project: add `-s -- --new my-app`). Needs git and Node.
+- Every prompt afterwards starts with: `Use Formic (src/formic), read AGENTS.md, then ...`
+
+## Pages
+
+- [Landing page](https://formicai.dev/): what Formic is, quick start, the rules in short.
+- [Component gallery](https://formicai.dev/preview.html): every component live, with a copyable prompt per page.
+- [Customize](https://formicai.dev/customize): accent, palette, radius, font, rail and layout; copies a config block for your AI tool.
+
+## For agents
+
+- [AGENTS.md](https://github.com/eyosiyasketema1/formic-design-system/blob/main/AGENTS.md): the build protocol and composition rules an agent follows inside a project that uses Formic.
+- [SKILL.md](https://github.com/eyosiyasketema1/formic-design-system/blob/main/skill/SKILL.md): the same, packaged as a Claude skill.
+- [Source](https://github.com/eyosiyasketema1/formic-design-system): components, tokens, scripts and the QA gate.
