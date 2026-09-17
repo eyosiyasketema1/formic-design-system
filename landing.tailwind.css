@@ -1365,14 +1365,32 @@ header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
 .kicker { font-size: var(--text-micro); font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-3); }
 .landing-section h2 { font-size: var(--text-display); font-weight: 600; letter-spacing: -0.01em; margin: 6px 0 8px; text-wrap: balance; color: var(--ink); }
 .section-sub { color: var(--ink-2); max-width: 60ch; }
-/* FAQ: plain disclosure rows; the answers stay in the HTML so crawlers and answer engines read them */
-.faq-list { display: flex; flex-direction: column; border-top: 1px solid var(--line); margin-top: 8px; }
+/* Footer modals (FAQ and the legal pages): one native dialog pattern on the
+   system's surface, a strip of the footer photograph across the top */
+.site-modal { padding: 0; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); color: var(--ink); width: min(640px, calc(100vw - 32px)); max-height: min(84vh, 760px); margin: auto; box-shadow: none; overflow: hidden; corner-shape: squircle; }
+.site-modal::backdrop { background: var(--scrim); }
+.site-modal[open] { animation: modalIn 360ms var(--ease-out-quint); }
+@keyframes modalIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.modal-panel { position: relative; max-height: min(84vh, 760px); overflow-y: auto; }
+.modal-hero { height: 140px; overflow: hidden; background: var(--inset); }
+.modal-hero img { width: 100%; height: 100%; object-fit: cover; object-position: center 70%; display: block; }
+.modal-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(19,19,18,0.55); color: #fff; cursor: pointer; backdrop-filter: blur(6px); transition: background 150ms; }
+.modal-close:hover { background: rgba(19,19,18,0.8); }
+.modal-body { padding: 22px 28px 12px; }
+.modal-head { margin-bottom: 8px; }
+.modal-head h2 { font-size: var(--text-heading); font-weight: 600; letter-spacing: -0.01em; margin: 0 0 4px; }
+.modal-head p { margin: 0; color: var(--ink-2); font-size: var(--text-caption); }
+.modal-body h3 { font-size: var(--text-body); font-weight: 600; margin: 18px 0 4px; color: var(--ink); }
+.modal-body > p { margin: 0 0 10px; color: var(--ink-2); font-size: var(--text-caption); line-height: 1.6; max-width: 70ch; }
+@media (max-width: 640px) { .modal-hero { height: 110px; } .modal-body { padding: 18px 18px 8px; } }
+/* the rows; the answers stay in the HTML so crawlers and answer engines read them */
+.faq-list { display: flex; flex-direction: column; border-top: 1px solid var(--line); margin-top: 12px; }
 .faq-item { border-bottom: 1px solid var(--line); }
-.faq-item summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; cursor: pointer; list-style: none; font-size: var(--text-lead); font-weight: 500; color: var(--ink); }
+.faq-item summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; cursor: pointer; list-style: none; font-size: var(--text-body); font-weight: 500; color: var(--ink); }
 .faq-item summary::-webkit-details-marker { display: none; }
 .faq-item summary::after { content: ""; flex: 0 0 auto; width: 9px; height: 9px; margin-right: 6px; border-right: 1.5px solid var(--ink-3); border-bottom: 1.5px solid var(--ink-3); transform: rotate(45deg); transition: transform 200ms var(--ease-out-quint); }
 .faq-item[open] summary::after { transform: rotate(-135deg); }
-.faq-item p { margin: 0 0 20px; max-width: 70ch; color: var(--ink-2); line-height: 1.6; }
+.faq-item p { margin: 0 0 16px; max-width: 70ch; color: var(--ink-2); font-size: var(--text-caption); line-height: 1.6; }
 .faq-item summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 .principles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 28px; }
 .lp-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 16px; corner-shape: squircle; }
