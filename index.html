@@ -980,7 +980,15 @@ spline-viewer::part(logo) {
       statement.classList.remove("scroll-lift");
       statement.classList.add("scrub");
       statement.querySelectorAll(":scope > span").forEach((line) => {
-        line.innerHTML = line.textContent.trim().split(/\s+/).map((w) => `<span class="w">${w}</span>`).join(" ");
+        const words = line.textContent.trim().split(/\s+/);
+        line.textContent = "";
+        words.forEach((w, i) => {
+          const span = document.createElement("span");
+          span.className = "w";
+          span.textContent = w;
+          line.appendChild(span);
+          if (i < words.length - 1) line.appendChild(document.createTextNode(" "));
+        });
       });
       gsap.fromTo(statement.querySelectorAll(".w"), { opacity: 0.16 }, {
         opacity: 1, ease: "none", stagger: 0.06,
