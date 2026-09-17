@@ -353,6 +353,7 @@ a:focus-visible { border-radius: var(--radius-sm); }
   width: 100%;
   height: 35px;
   min-width: 0;
+  min-height: 0;
   padding: 0 10px;
   font: inherit;
   color: inherit;
@@ -467,7 +468,8 @@ tfoot .records-sticky-cell { z-index: 5; }
 }
 .records-company-name {
   min-width: 0;
-  flex: 1;
+  min-height: 0;
+  flex: 1 1 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -579,7 +581,8 @@ tfoot .records-sticky-cell { z-index: 5; }
   transition: color 150ms;
 }
 .records-link:hover { color: var(--ink); text-decoration: underline; }
-.records-link-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.records-link-label { min-width: 0;
+  min-height: 0; overflow: hidden; text-overflow: ellipsis; }
 
 /* ── footer calculation row ────────────────────────────── */
 .records-calculation-row .records-cell {
@@ -700,7 +703,7 @@ header.site.is-full {
 .site-nav a.hero-link:hover { color: #fff; background: rgba(255,255,255,0.1); }
 header.site .hero-icon-btn { color: #fff; corner-shape: squircle; transition: all 150ms; }
 header.site .hero-icon-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
-.hero-gh-btn { background: #1c1c1b; color: #fff; border: 1px solid rgba(255,255,255,0.1); transition: all 150ms; }
+.hero-gh-btn { background: var(--accent); color: var(--canvas); border: 1px solid transparent; transition: all 150ms; }
 
 /* When header gets the solid surface background (on scroll) */
 header.site.header-blur .hero-icon-btn { color: var(--ink); }
@@ -708,9 +711,9 @@ header.site.header-blur .hero-icon-btn:hover { background: var(--line); color: v
 header.site.header-blur .site-nav a.hero-link { color: var(--ink); }
 header.site.header-blur .site-nav a.hero-link:hover { background: var(--line); color: var(--ink); }
 header.site.header-blur .hero-invert { filter: none; }
-header.site.header-blur .hero-gh-btn { background: var(--surface); color: var(--ink); border-color: var(--line); }
-header.site.header-blur .hero-gh-btn:hover { background: var(--canvas); }
-.hero-gh-btn:hover { background: #000; }
+header.site.header-blur .hero-gh-btn { background: var(--accent); color: var(--canvas); border: 1px solid transparent; }
+header.site.header-blur .hero-gh-btn:hover { filter: brightness(1.1); }
+.hero-gh-btn:hover { filter: brightness(1.1); }
 
 /* Inverted states when scrolled down over the white page */
 header.site[data-scrolled="true"] .hero-invert { filter: none; }
@@ -720,8 +723,8 @@ header.site[data-scrolled="true"] .site-nav a.hero-link { color: var(--ink-2); }
 header.site[data-scrolled="true"] .site-nav a.hero-link:hover { color: var(--ink); background: var(--hover-2); }
 header.site[data-scrolled="true"] .hero-icon-btn { color: var(--ink-2); }
 header.site[data-scrolled="true"] .hero-icon-btn:hover { color: var(--ink); background: var(--hover-2); }
-header.site[data-scrolled="true"] .hero-gh-btn { background: var(--surface); color: var(--ink); border-color: var(--line); backdrop-filter: none; -webkit-backdrop-filter: none; }
-header.site[data-scrolled="true"] .hero-gh-btn:hover { background: var(--hover); }
+header.site[data-scrolled="true"] .hero-gh-btn { background: var(--accent); color: var(--canvas); border-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+header.site[data-scrolled="true"] .hero-gh-btn:hover { filter: brightness(1.1); }
 
 /* Progressive blur: three stacked backdrop layers, each blurrier than the
    last and masked to reach less far down. Where they overlap at the top the
@@ -774,12 +777,16 @@ header.site.header-over-cards .site-nav a.hero-link { color: #fff !important; }
 header.site.header-over-cards .site-nav a.hero-link:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
 header.site.header-over-cards .hero-icon-btn { color: #fff !important; }
 header.site.header-over-cards .hero-icon-btn:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
-header.site.header-over-cards .hero-gh-btn { background: #1c1c1b !important; color: #fff !important; border-color: rgba(255,255,255,0.1) !important; }
-header.site.header-over-cards .hero-gh-btn:hover { background: #000 !important; }
+header.site.header-over-cards .hero-gh-btn { background: var(--accent) !important; color: var(--canvas) !important; border-color: transparent !important; }
+header.site.header-over-cards .hero-gh-btn:hover { filter: brightness(1.1) !important; }
 
 .site-row { display: flex; align-items: center; gap: 10px; height: 56px; }
 .brand { display: flex; align-items: center; gap: 9px; font-size: var(--text-lead); font-weight: 600; color: var(--ink); text-decoration: none; white-space: nowrap; }
 @media (max-width: 820px) { .brand-rest { display: none; } }
+@media (max-width: 380px) {
+  /* the logomark alone; the wordmark would run into the menu button */
+  .brand > span { display: none; }
+}
 .logo-img { width: 28px; height: 28px; object-fit: contain; }
 [data-theme="dark"] .logo-img { filter: brightness(0) invert(1); }
 .site-row { position: relative; }
@@ -797,7 +804,7 @@ header.site.header-over-cards .hero-gh-btn:hover { background: #000 !important; 
 .lbtn:active { transform: scale(0.98); }
 .lbtn-md { height: 36px; padding: 0 14px; font-size: var(--text-body); }
 .lbtn-lg { height: 48px; padding: 0 20px; font-size: 16px; }
-.lbtn-accent { background: var(--accent); color: rgba(255, 255, 255, 0.9); }
+.lbtn-accent { background: var(--accent); color: var(--canvas); border: 1px solid transparent; }
 .lbtn-accent:hover { opacity: 0.9; }
 .lbtn-secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
 .lbtn-secondary:hover { background: var(--hover); }
@@ -850,7 +857,7 @@ header.site .wrap {
 }
 
 .hero {
-  flex: 1;
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -891,7 +898,7 @@ header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
 .hero-ctas { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 /* hero buttons override: on a photo, they need their own colors */
 .hero-ctas .lbtn { border-radius: 99px; }
-.hero .lbtn-accent { background: var(--accent); color: rgba(255, 255, 255, 0.9); }
+.hero .lbtn-accent { background: var(--accent); color: var(--canvas); border: 1px solid transparent; }
 .hero .lbtn-secondary { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); }
 .hero .lbtn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
 
@@ -968,7 +975,8 @@ header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
   grid-auto-flow: dense;
 }
 .bento-card {
-  position: relative; min-width: 0; display: flex; flex-direction: column;
+  position: relative; min-width: 0;
+  min-height: 0; display: flex; flex-direction: column;
   border: 1px solid var(--line); border-radius: var(--radius-card);
   background: var(--surface); padding: 16px; corner-shape: squircle;
   transition: border-color 300ms var(--ease-out-quint);
@@ -1003,7 +1011,8 @@ header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
 .bento-card.sp6 { grid-column: span 6; }
 .bento-card.center { grid-column: 3 / span 2; }
 .bento-label { font-size: var(--text-micro); font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px; }
-.bento-body { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+.bento-body { min-width: 0;
+  min-height: 0; flex: 1; display: flex; flex-direction: column; }
 /* centre a capped component inside a wider tile */
 .bento-card.body-center > .bento-body { align-items: center; justify-content: center; }
 /* let a capped component stretch to the tile width */
@@ -1025,6 +1034,208 @@ header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
   .bento { grid-template-columns: 1fr; }
   .bento-card.sp2, .bento-card.sp3, .bento-card.sp4, .bento-card.sp6,
   .bento-card.center, .bento-card:last-child { grid-column: span 1; }
+}
+
+/* ── Features bento grid ── */
+.feat-container {
+  background: rgba(0, 0, 0, 0.025);
+  border-radius: 24px;
+  padding: 40px 100px 50px 100px;
+  corner-shape: squircle;
+}
+[data-theme="dark"] .feat-container { background: rgba(255, 255, 255, 0.04); }
+.feat-container .kicker { margin-bottom: 6px; }
+.feat-container h2 { margin-bottom: 8px; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+.feat-container .section-sub { margin-bottom: 28px; }
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    "promo promo promo tokens"
+    "midrow midrow midrow statement"
+    "icon1 icon2 icon3 statement";
+  gap: 14px;
+}
+.feat-midrow {
+  grid-area: midrow;
+  display: flex;
+  gap: 14px;
+}
+.feat-promo {
+  min-width: 0;
+  min-height: 0;
+  grid-area: promo;
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 200px;
+  display: flex;
+  align-items: flex-end;
+  corner-shape: squircle;
+}
+.feat-promo-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #25231B, #11110E);
+}
+
+.feat-promo-content {
+  position: relative;
+  z-index: 2;
+  padding: 28px;
+}
+.feat-promo h3 {
+  font-size: var(--text-display);
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+}
+.feat-promo p {
+  font-size: var(--text-body);
+  color: rgba(255,255,255,0.7);
+  max-width: 42ch;
+  line-height: 1.6;
+}
+.feat-card {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 200px;
+  background: var(--canvas);
+  border: none;
+  border-radius: 16px;
+  padding: 24px;
+  corner-shape: squircle;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.feat-grid > .feat-card {
+  grid-area: tokens;
+}
+.feat-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.feat-card p {
+  font-size: var(--text-caption);
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+/* Row 2 cards get grid areas */
+.feat-card:nth-child(2) { grid-area: tokens; }
+
+
+.feat-icon-card {
+  min-width: 0;
+  min-height: 200px;
+  background: var(--canvas);
+  border: none;
+  border-radius: 16px;
+  padding: 24px;
+  corner-shape: squircle;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+}
+.feat-grid > .feat-icon-card:nth-child(4) { grid-area: icon1; }
+.feat-grid > .feat-icon-card:nth-child(5) { grid-area: icon2; }
+.feat-grid > .feat-icon-card:nth-child(6) { grid-area: icon3; }
+.feat-icon-circle {
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.feat-icon-card h4 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.feat-icon-card p {
+  font-size: var(--text-caption);
+  color: var(--ink-3);
+}
+.feat-statement {
+  min-width: 0;
+  min-height: 0;
+  grid-area: statement;
+  background: var(--canvas);
+  border: none;
+  border-radius: 16px;
+  padding: 24px;
+  corner-shape: squircle;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  position: relative;
+  overflow: hidden;
+}
+.feat-statement spline-viewer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.feat-statement h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #000;
+  line-height: 1.3;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+@media (max-width: 820px) {
+  .feat-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "promo" "tokens" "midrow"
+      "icon1" "icon2" "icon3" "statement";
+  }
+  .feat-midrow { flex-direction: column; }
+}
+
+/* ── Component marquee strip ── */
+.comp-marquee {
+  overflow: hidden;
+  margin-top: 32px;
+  padding: 20px 0;
+}
+.comp-track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: max-content;
+  animation: marquee-scroll 80s linear infinite;
+}
+.comp-track:hover { animation-play-state: paused; }
+.comp-item {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+  padding: 0 12px;
+  transition: color 150ms;
+}
+.comp-item:hover { color: var(--ink); }
+.comp-item.ai { color: var(--accent); }
+.comp-dot {
+  font-size: 10px;
+  color: var(--ink-3);
+  padding: 0 6px;
+  flex-shrink: 0;
+}
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 .principle-deck { position: relative; }
 .principle-card {
@@ -1116,7 +1327,7 @@ header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
   background-image: url('./assets/live-bg.jpg');
   background-size: cover;
   background-position: center;
-  padding: 40px 100px 100px 100px;
+  padding: 40px 100px 50px 100px;
   min-height: 700px;
   overflow: hidden;
   box-shadow: 0 4px 24px rgba(0,0,0,0.04);
@@ -1158,7 +1369,7 @@ header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
 @media (max-width: 640px) {
   .live-section { padding: 56px 0; --live-inset: 24px; }
   .live-header { flex-direction: column; gap: 24px; }
-  .live-container { padding: 24px; border-radius: 16px; min-height: 500px; }
+  .live-container, .feat-container { padding: 24px; border-radius: 16px; min-height: 500px; }
 }
 
 .landing-section { padding: 64px 0; }
@@ -1193,13 +1404,28 @@ header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
 .lcode .c { color: var(--ink-3); } .lcode .k { color: var(--accent); }
 .ai-note { margin-top: 24px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); padding: 18px; corner-shape: squircle; }
 .landing-section.band .ai-note { background: var(--surface); }
-.ai-note-head { display: flex; align-items: center; gap: 8px; font-size: var(--text-lead); font-weight: 600; color: var(--ink); }
+.ai-note-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-lead);
+  font-weight: 600;
+  color: var(--ink);
+}
 .ai-note-head svg { color: var(--accent); }
 .ai-note p { margin-top: 6px; max-width: 62ch; font-size: var(--text-caption); color: var(--ink-2); }
 .ai-note .lcode { margin-top: 14px; background: var(--canvas); }
 .ai-ways { display: grid; gap: 14px; margin-top: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.ai-way { min-width: 0; border: 1px solid var(--line); border-radius: var(--radius-md); padding: 14px; background: var(--canvas); corner-shape: squircle; }
-.ai-way-title { font-size: var(--text-body); font-weight: 600; color: var(--ink); }
+.ai-way {
+  min-width: 0;
+  min-height: 0;
+  border: none;
+  border-radius: 16px;
+  padding: 24px;
+  background: var(--canvas);
+  corner-shape: squircle;
+}
+.ai-way-title { font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
 .ai-way p { margin: 4px 0 10px; font-size: var(--text-small); color: var(--ink-3); }
 .ai-way .lcode { margin-top: 0; background: var(--surface); }
 .ai-way .lcode pre { font-size: var(--text-micro); }
@@ -1209,8 +1435,33 @@ header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
 .qs-tab:hover { color: var(--ink); }
 .qs-tab.is-active { background: var(--hover-2); color: var(--ink); font-weight: 600; }
 .ai-steps { list-style: none; counter-reset: step; margin: 18px 0 0; padding: 0; display: grid; gap: 12px; }
-.ai-steps > li { counter-increment: step; position: relative; padding: 14px 14px 14px 46px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--canvas); corner-shape: squircle; min-width: 0; }
-.ai-steps > li::before { content: counter(step); position: absolute; left: 14px; top: 14px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--accent); color: var(--canvas); font-size: var(--text-small); font-weight: 600; }
+.ai-steps > li {
+  counter-increment: step;
+  position: relative;
+  padding: 24px 24px 24px 64px;
+  border: none;
+  border-radius: 16px;
+  background: var(--canvas);
+  corner-shape: squircle;
+  min-width: 0;
+  min-height: 0;
+}
+.ai-steps > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 24px;
+  top: 24px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--canvas);
+  font-size: 13px;
+  font-weight: 700;
+}
 .qs-list { margin: 8px 0 10px; padding-left: 18px; list-style: disc; font-size: var(--text-caption); color: var(--ink-2); max-width: 70ch; }
 .qs-list li { margin: 4px 0; padding: 0; border: none; background: none; counter-increment: none; }
 .qs-list code { font-size: var(--text-small); }
@@ -1253,6 +1504,9 @@ footer.site a:hover { color: var(--ink); }
   .nav-toggle { display: flex; margin-left: auto; }
   /* the coffee button keeps its label on phones; it is the one ask on the page */
   .hero-gh-btn { white-space: nowrap; }
+  .brand { min-width: 0;
+  min-height: 0; }
+  .brand > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .site-menu {
     position: absolute; top: 100%; left: 0; right: 0;
     display: none; padding: 8px var(--gutter) 14px;
@@ -1392,6 +1646,141 @@ footer.site a:hover { color: var(--ink); }
   .fat-copy { margin-top: 24px; }
   .site-fat { min-height: 600px; margin-top: 60px; }
 }
+
+
+
+
+
+
+.feat-statement .spline-tint {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  mix-blend-mode: color;
+  pointer-events: none;
+  z-index: 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+.feat-statement .statement-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 110px; /* From their Figma height: 110px */
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 100%);
+  filter: blur(0px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+
+
+spline-viewer::part(logo) {
+  display: none !important;
+}
+#logo {
+  display: none !important;
+}
+
+
+.feat-promo .promo-spline-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+.feat-promo iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% + 80px);
+  height: calc(100% + 80px);
+  pointer-events: none; /* Let text be clickable if needed */
+}
+
+
+.qs-example-btn {
+  background: transparent;
+  border: none;
+  color: var(--ink-2);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: var(--radius-control);
+  transition: background-color 150ms, color 150ms;
+}
+.qs-example-btn:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+
+
+
+
+
+
+
+/* Image Modal */
+.image-modal {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: 90vw;
+  max-height: 90vh;
+  margin: auto;
+  box-shadow: none; /* Just to be absolutely sure browsers don't add default dialog shadows */
+  overflow: visible; /* Prevents cropping if anything spills over */
+}
+.image-modal::backdrop {
+  background: transparent; /* No dark background! */
+}
+.image-modal .modal-content {
+  position: relative;
+  border-radius: 12px;
+}
+.image-modal img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(90vh - 16px);
+  border-radius: 6px;
+  object-fit: contain;
+}
+.image-modal .modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--ink);
+  color: var(--canvas);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: transform 150ms;
+}
+.image-modal .modal-close:hover {
+  transform: scale(1.1);
+}
+
 </style>
 <style>
   /* Boot styling — plain CSS, applied the moment the page parses.
@@ -1435,6 +1824,141 @@ footer.site a:hover { color: var(--ink); }
   @media (prefers-reduced-motion: reduce) {
     #boot i { animation: none; }   /* the 9s deadlines stay — they are a safety net */
   }
+
+
+
+
+
+
+.feat-statement .spline-tint {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  mix-blend-mode: color;
+  pointer-events: none;
+  z-index: 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+.feat-statement .statement-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 110px; /* From their Figma height: 110px */
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 100%);
+  filter: blur(0px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+
+
+spline-viewer::part(logo) {
+  display: none !important;
+}
+#logo {
+  display: none !important;
+}
+
+
+.feat-promo .promo-spline-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+.feat-promo iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% + 80px);
+  height: calc(100% + 80px);
+  pointer-events: none; /* Let text be clickable if needed */
+}
+
+
+.qs-example-btn {
+  background: transparent;
+  border: none;
+  color: var(--ink-2);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: var(--radius-control);
+  transition: background-color 150ms, color 150ms;
+}
+.qs-example-btn:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+
+
+
+
+
+
+
+/* Image Modal */
+.image-modal {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: 90vw;
+  max-height: 90vh;
+  margin: auto;
+  box-shadow: none; /* Just to be absolutely sure browsers don't add default dialog shadows */
+  overflow: visible; /* Prevents cropping if anything spills over */
+}
+.image-modal::backdrop {
+  background: transparent; /* No dark background! */
+}
+.image-modal .modal-content {
+  position: relative;
+  border-radius: 12px;
+}
+.image-modal img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(90vh - 16px);
+  border-radius: 6px;
+  object-fit: contain;
+}
+.image-modal .modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--ink);
+  color: var(--canvas);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: transform 150ms;
+}
+.image-modal .modal-close:hover {
+  transform: scale(1.1);
+}
+
 </style>
 </head>
 <body>
@@ -1599,34 +2123,82 @@ footer.site a:hover { color: var(--ink); }
   </section>
 
   <!-- ══ Principles ══ -->
-  <section class="landing-section band" id="principles">
-    <div class="wrap">
-      <div class="kicker">Principles</div>
-      <h2>Opinionated where it matters</h2>
-      <p class="section-sub">Five rules do most of the work. Stack them, spread them, or list them out.</p>
-      <div id="principles-cards" style="margin-top: 28px;"></div>
-    </div>
-  </section>
+  <section class="live-section" id="principles" style="padding-top: 0;">
+    <div class="live-wrap">
+      <div class="feat-container">
+        <div class="kicker">Principles</div>
+        <h2>Opinionated where it matters</h2>
+        <p class="section-sub">Five rules do most of the work. Every component follows them.</p>
+        <div class="feat-grid">
+        <!-- Row 1: promo (2/3) + card (1/3) -->
+        <div class="feat-promo">
+          <div class="feat-promo-bg"></div>
+          <div class="promo-spline-wrapper">
+             <iframe src='https://my.spline.design/claritystream-mlfSVWg3cbbhDpmVZGZgYavY/' frameborder='0'></iframe>
+          </div>
+          <div class="feat-promo-content">
+            <h3>New component every week</h3>
+            <p>The system grows with your product. Every week a new component ships, tested across light, dark, and all palettes, with AA contrast and the gates already passing.</p>
+          </div>
+        </div>
+        <div class="feat-card">
+          <h3>Tokens only</h3>
+          <p>No hardcoded colors, sizes, radii, shadows, or easings. Every component reads CSS variables, so themes and palettes come for free.</p>
+        </div>
 
-  <!-- ══ Components ══ -->
-  <section class="landing-section" id="components">
-    <div class="wrap">
-      <div class="kicker">Components</div>
-      <h2>Built for AI products, not adapted to them</h2>
-      <p class="section-sub">The AI-specific surface is first-class, highlighted below, and the everyday controls around it match to the pixel.</p>
-      <div class="inventory">
-        <a class="inv-chip ai" href="./preview.html#/chatthread">ChatThread</a><a class="inv-chip ai" href="./preview.html#/promptbar">PromptBar</a><a class="inv-chip ai" href="./preview.html#/streamingtext">StreamingText</a><a class="inv-chip ai" href="./preview.html#/thinkingstate">ThinkingState</a><a class="inv-chip ai" href="./preview.html#/toolchips">ToolChips</a><a class="inv-chip ai" href="./preview.html#/toolcall">ToolCall</a><a class="inv-chip ai" href="./preview.html#/approvalcard">ApprovalCard</a><a class="inv-chip ai" href="./preview.html#/taskrows">TaskRows</a><a class="inv-chip ai" href="./preview.html#/markdown">Markdown</a><a class="inv-chip ai" href="./preview.html#/codeblock">CodeBlock</a><a class="inv-chip ai" href="./preview.html#/terminal">Terminal</a><a class="inv-chip ai" href="./preview.html#/imageresult">ImageResult</a><a class="inv-chip" href="./preview.html#/splitpane">SplitPane</a><a class="inv-chip" href="./preview.html#/filetree">FileTree</a><a class="inv-chip ai" href="./preview.html#/selectionactions">SelectionActions</a><a class="inv-chip ai" href="./preview.html#/sources">Sources</a><a class="inv-chip ai" href="./preview.html#/modelselector">ModelSelector</a><a class="inv-chip ai" href="./preview.html#/contextmeter">ContextMeter</a><a class="inv-chip ai" href="./preview.html#/chatcomposer">ChatComposer</a><a class="inv-chip ai" href="./preview.html#/approvalflow">ApprovalFlow</a><a class="inv-chip ai" href="./preview.html#/recommendationcard">RecommendationCard</a><a class="inv-chip ai" href="./preview.html#/contextcards">ContextCards</a><a class="inv-chip ai" href="./preview.html#/chatapp">ChatApp</a><a class="inv-chip" href="./preview.html#/button">Button</a><a class="inv-chip" href="./preview.html#/input">Input</a><a class="inv-chip" href="./preview.html#/select">Select</a><a class="inv-chip" href="./preview.html#/combobox">Combobox</a><a class="inv-chip" href="./preview.html#/taginput">TagInput</a><a class="inv-chip" href="./preview.html#/datepicker">Calendar</a><a class="inv-chip" href="./preview.html#/datepicker">DateRangePicker</a><a class="inv-chip" href="./preview.html#/modal">Modal</a><a class="inv-chip" href="./preview.html#/drawer">Drawer</a><a class="inv-chip" href="./preview.html#/toast">Toast</a><a class="inv-chip" href="./preview.html#/notificationlist">NotificationList</a><a class="inv-chip" href="./preview.html#/dropdownmenu">DropdownMenu</a><a class="inv-chip" href="./preview.html#/tabs">Tabs</a><a class="inv-chip" href="./preview.html#/steps">Steps</a><a class="inv-chip" href="./preview.html#/breadcrumbs">Breadcrumbs</a><a class="inv-chip" href="./preview.html#/commandpalette">CommandPalette</a><a class="inv-chip" href="./preview.html#/sidebar">SidebarNav</a><a class="inv-chip" href="./preview.html#/recordstable">RecordsTable</a><a class="inv-chip" href="./preview.html#/filtertable">FilterTable</a><a class="inv-chip" href="./preview.html#/timeline">Timeline</a><a class="inv-chip" href="./preview.html#/accordion">Accordion</a><a class="inv-chip" href="./preview.html#/skeleton">Skeleton</a><a class="inv-chip" href="./preview.html#/emptystate">EmptyState</a><a class="inv-chip" href="./preview.html#/avatar">Avatar</a><a class="inv-chip" href="./preview.html#/filedropzone">FileDropzone</a><a class="inv-chip ai" href="./preview.html#/askuserquestions">AskUserQuestions</a><a class="inv-chip ai" href="./preview.html#/insightcards">InsightCards</a><a class="inv-chip ai" href="./preview.html#/thinkingindicator">ThinkingIndicator</a><a class="inv-chip" href="./preview.html#/sidebar">AppSidebar</a><a class="inv-chip" href="./preview.html#/sidebar">ProjectSidebar</a><a class="inv-chip" href="./preview.html#/datatable">DataTable</a><a class="inv-chip" href="./preview.html#/panel">Panel</a><a class="inv-chip" href="./preview.html#/statcard">StatCard</a><a class="inv-chip" href="./preview.html#/statcard">StatStrip</a><a class="inv-chip" href="./preview.html#/charts">LineChart</a><a class="inv-chip" href="./preview.html#/charts">BarChart</a><a class="inv-chip" href="./preview.html#/charts">DonutChart</a><a class="inv-chip" href="./preview.html#/charts">RadarChart</a><a class="inv-chip" href="./preview.html#/charts">ScatterChart</a><a class="inv-chip" href="./preview.html#/charts">ShareBar</a><a class="inv-chip" href="./preview.html#/charts">ActivityCalendar</a><a class="inv-chip" href="./preview.html#/charts">BarList</a><a class="inv-chip" href="./preview.html#/card">CardGroup</a><a class="inv-chip" href="./preview.html#/slider-otp">Slider</a><a class="inv-chip" href="./preview.html#/inputgroup">InputGroup</a><a class="inv-chip" href="./preview.html#/inputcopy">InputCopy</a><a class="inv-chip" href="./preview.html#/primitives">Rating</a><a class="inv-chip" href="./preview.html#/sidebar">AppShell</a><a class="inv-chip" href="./preview.html#/sidebar">TopBar</a><a class="inv-chip" href="./preview.html#/loadingstate">LoadingState</a><a class="inv-chip" href="./preview.html#/alert">Alert</a><a class="inv-chip" href="./preview.html#/difftable">DiffTable</a><a class="inv-chip" href="./preview.html#/menubar">Menubar</a><a class="inv-chip" href="./preview.html#/pagination">Pagination</a><a class="inv-chip" href="./preview.html#/searchlist">SearchList</a><a class="inv-chip" href="./preview.html#/colorpicker">ColorPicker</a><a class="inv-chip" href="./preview.html#/switch">Switch</a><a class="inv-chip" href="./preview.html#/checkbox">Checkbox</a><a class="inv-chip" href="./preview.html#/filterbar">FilterBar</a><a class="inv-chip" href="./preview.html#/statcard">MetricRow</a><a class="inv-chip" href="./preview.html#/charts">Sparkline</a><a class="inv-chip" href="./preview.html#/charts">Gauge</a><a class="inv-chip" href="./preview.html#/primitives">Shortcut</a><a class="inv-chip" href="./preview.html">+ 10 more in the gallery</a>
+        <!-- Row 2: two equal cards -->
+        <div class="feat-midrow">
+          <div class="feat-card">
+            <h3>WCAG AA, everywhere</h3>
+            <p>Every text and UI pair is contrast-checked across light, dark, and all five palettes, automatically, on every change.</p>
+          </div>
+          <div class="feat-card">
+            <h3>One type ramp</h3>
+            <p>Twelve integer steps on a 14px base, set in Urbanist. Medium is the working weight; semibold is the ceiling; bold never appears.</p>
+          </div>
+        </div>
+
+        <!-- Row 3: three icon cards + one statement card -->
+        <div class="feat-icon-card">
+          <div class="feat-icon-circle"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor"><path d="M211.75,15.95a12,12,0,0,0-17,0l-70.55,70.55a20,20,0,0,0,0,28.28l28.28,28.28a20,20,0,0,0,28.28,0l70.55-70.55a12,12,0,0,0,0-17ZM119.5,41H80V1.5a8,8,0,0,0-16,0V41H24.5a8,8,0,0,0,0,16H64v39.5a8,8,0,0,0,16,0V57h39.5A8,8,0,0,0,119.5,41ZM64,215H45.5v18.5a8,8,0,0,1-16,0V215H11a8,8,0,0,1,0-16H29.5V180.5a8,8,0,0,1,16,0V199H64A8,8,0,0,1,64,215Z"/></svg></div>
+          <h4>AI-first surfaces</h4>
+          <p>Chat, agents, approvals</p>
+        </div>
+        <div class="feat-icon-card">
+          <div class="feat-icon-circle"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM39.8,136A88.16,88.16,0,0,1,120,40.18V215.82A88.16,88.16,0,0,1,39.8,136Z"/></svg></div>
+          <h4>Light &amp; dark</h4>
+          <p>Both themes, every palette</p>
+          
+        </div>
+        <div class="feat-icon-card">
+          <div class="feat-icon-circle"><svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"/></svg></div>
+          <h4>Two QA gates</h4>
+          <p>Refuse generic UI</p>
+          
+        </div>
+        <div class="feat-statement">
+          <script type="module" src="https://unpkg.com/@splinetool/viewer@2.0.53/build/spline-viewer.js" integrity="sha384-/YkdB3eqQAg6gms7YK36mKO/8cRGQUTQLhSXOQSAJ2aR3qZHjLkw49fpvY/BTKMY" crossorigin="anonymous"></script>
+          <spline-viewer url="https://prod.spline.design/fJ2ptJKzT-sDkpfO/scene.splinecode" background="transparent"></spline-viewer>
+                    <div class="spline-tint"></div>
+          <div class="statement-fade"></div>
+          
+          <h3>Nothing on a screen<br>without a reason.</h3>
+        </div>
+      </div>
       </div>
     </div>
   </section>
 
+
   <!-- ══ Quick start ══ -->
-  <section class="landing-section band" id="start">
-    <div class="wrap">
-      <div class="kicker">Quick start</div>
-      <h2>One command, then your first prompt</h2>
-      <p class="section-sub">The same command for a new project and an existing one; needs git and Node.</p>
-      <div class="ai-note" id="ai-tools">
+  <section class="live-section" id="start" style="padding-top: 0;">
+    <div class="live-wrap">
+      <div class="feat-container">
+      <div class="feat-header">
+        <h2>Quick start</h2>
+        <p class="section-sub">One command, then your first prompt. The same command for a new project and an existing one; needs git and Node.</p>
+      </div>
+      <div class="ai-note" id="ai-tools" style="background: transparent; border: none; padding: 0;">
         <div class="ai-note-head">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/></svg>
           Build with your AI tool
@@ -1634,9 +2206,13 @@ footer.site a:hover { color: var(--ink); }
         <ol class="ai-steps">
           <li>
             <div class="ai-step-title">Install and run</div>
-            <div class="qs-tabs" role="tablist" aria-label="Project">
-              <button type="button" class="qs-tab is-active" role="tab" aria-selected="true" aria-controls="qs-new" id="qs-tab-new">New project</button>
-              <button type="button" class="qs-tab" role="tab" aria-selected="false" aria-controls="qs-existing" id="qs-tab-existing">Existing project</button>
+            <div class="qs-tabs-row" style="position: relative; display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+              <div class="qs-tabs" role="tablist" aria-label="Project" style="margin-top: 0;">
+                <button type="button" class="qs-tab is-active" role="tab" aria-selected="true" aria-controls="qs-new" id="qs-tab-new">New project</button>
+                <button type="button" class="qs-tab" role="tab" aria-selected="false" aria-controls="qs-existing" id="qs-tab-existing">Existing project</button>
+              </div>
+              <button type="button" class="qs-example-btn" onclick="document.getElementById('example-modal').showModal()">show me an example</button>
+              
             </div>
             <p id="qs-new" role="tabpanel" aria-labelledby="qs-tab-new">Make an empty folder, go into it in the terminal, run this; it scaffolds the app and the browser opens a page that says Formic is working.</p>
             <div id="qs-existing" role="tabpanel" aria-labelledby="qs-tab-existing" hidden>
@@ -1665,7 +2241,10 @@ footer.site a:hover { color: var(--ink); }
             </div>
           </li>
           <li>
-            <div class="ai-step-title">Point your AI tool at that folder and paste the test prompt</div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div class="ai-step-title">Point your AI tool at that folder and paste the test prompt</div>
+              <button type="button" class="qs-example-btn" onclick="document.getElementById('example-modal-2').showModal()">show me an example</button>
+            </div>
             <p>In the same terminal type <code>claude</code>, or open that folder in Cursor or VS Code; the dashboard it builds is what Formic looks like.</p>
             <div class="lcode">
               <div class="lcode-head">Your AI tool</div>
@@ -1704,14 +2283,119 @@ footer.site a:hover { color: var(--ink); }
             Download the skill
           </a>
         </div>
-        <div class="ai-note-links">
-          <a href="https://github.com/eyosiyasketema1/formic-design-system/blob/main/install.sh">Read install.sh before you run it</a>
-          <a href="https://github.com/eyosiyasketema1/formic-design-system/blob/main/AGENTS.md">Read AGENTS.md</a>
-          <a href="https://github.com/eyosiyasketema1/formic-design-system/blob/main/skill/SKILL.md">Read SKILL.md</a>
-        </div>
       </div>
 
 
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Components ══ -->
+  <section class="landing-section" id="components">
+    <div class="comp-marquee">
+      <div class="comp-track">
+        <span class="comp-item ai">ChatThread</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">PromptBar</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">StreamingText</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">ThinkingState</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">ToolChips</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">ApprovalCard</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">TaskRows</span><span class="comp-dot">✦</span>
+        <span class="comp-item">DataTable</span><span class="comp-dot">✦</span>
+        <span class="comp-item">StatCard</span><span class="comp-dot">✦</span>
+        <span class="comp-item">LineChart</span><span class="comp-dot">✦</span>
+        <span class="comp-item">BarChart</span><span class="comp-dot">✦</span>
+        <span class="comp-item">DonutChart</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Panel</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">SelectionActions</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">AskUserQuestions</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Button</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Input</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Select</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Modal</span><span class="comp-dot">✦</span>
+        <span class="comp-item">AppSidebar</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Tabs</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">CodeBlock</span><span class="comp-dot">✦</span>
+        <span class="comp-item">RecordsTable</span><span class="comp-dot">✦</span>
+        <span class="comp-item">CommandPalette</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Avatar</span><span class="comp-dot">✦</span>
+        <span class="comp-item">AvatarGroup</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Badge</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Breadcrumbs</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Card</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Checkbox</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Switch</span><span class="comp-dot">✦</span>
+        <span class="comp-item">RadioGroup</span><span class="comp-dot">✦</span>
+        <span class="comp-item">DatePicker</span><span class="comp-dot">✦</span>
+        <span class="comp-item">DropdownMenu</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Tooltip</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Popover</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Toast</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Slider</span><span class="comp-dot">✦</span>
+        <span class="comp-item">ProgressBar</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Spinner</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Skeleton</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Accordion</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Textarea</span><span class="comp-dot">✦</span>
+        <span class="comp-item">FileUpload</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Pagination</span><span class="comp-dot">✦</span>
+        <span class="comp-item">MetricRow</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Steps</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Calendar</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Rating</span><span class="comp-dot">✦</span>
+        <span class="comp-item">+ 50 more</span><span class="comp-dot">✦</span>
+        <!-- duplicate for seamless loop -->
+        <span class="comp-item ai">ChatThread</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">PromptBar</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">StreamingText</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">ThinkingState</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">ToolChips</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">ApprovalCard</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">TaskRows</span><span class="comp-dot">✦</span>
+        <span class="comp-item">DataTable</span><span class="comp-dot">✦</span>
+        <span class="comp-item">StatCard</span><span class="comp-dot">✦</span>
+        <span class="comp-item">LineChart</span><span class="comp-dot">✦</span>
+        <span class="comp-item">BarChart</span><span class="comp-dot">✦</span>
+        <span class="comp-item">DonutChart</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Panel</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">SelectionActions</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">AskUserQuestions</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Button</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Input</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Select</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Modal</span><span class="comp-dot">✦</span>
+        <span class="comp-item">AppSidebar</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Tabs</span><span class="comp-dot">✦</span>
+        <span class="comp-item ai">CodeBlock</span><span class="comp-dot">✦</span>
+        <span class="comp-item">RecordsTable</span><span class="comp-dot">✦</span>
+        <span class="comp-item">CommandPalette</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Avatar</span><span class="comp-dot">✦</span>
+        <span class="comp-item">AvatarGroup</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Badge</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Breadcrumbs</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Card</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Checkbox</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Switch</span><span class="comp-dot">✦</span>
+        <span class="comp-item">RadioGroup</span><span class="comp-dot">✦</span>
+        <span class="comp-item">DatePicker</span><span class="comp-dot">✦</span>
+        <span class="comp-item">DropdownMenu</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Tooltip</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Popover</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Toast</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Slider</span><span class="comp-dot">✦</span>
+        <span class="comp-item">ProgressBar</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Spinner</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Skeleton</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Accordion</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Textarea</span><span class="comp-dot">✦</span>
+        <span class="comp-item">FileUpload</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Pagination</span><span class="comp-dot">✦</span>
+        <span class="comp-item">MetricRow</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Steps</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Calendar</span><span class="comp-dot">✦</span>
+        <span class="comp-item">Rating</span><span class="comp-dot">✦</span>
+        <span class="comp-item">+ 50 more</span><span class="comp-dot">✦</span>
+      </div>
     </div>
   </section>
 </main>
@@ -1727,10 +2411,8 @@ footer.site a:hover { color: var(--ink); }
       <div class="fat-links">
         <div class="fat-col">
           <h4>Navigation</h4>
-          <a href="https://github.com/eyosiyasketema1/formic-design-system#readme">Docs</a>
           <a href="./preview.html">Components</a>
           <a href="./customize">Customize</a>
-          <a href="https://github.com/eyosiyasketema1/formic-design-system">GitHub</a>
         </div>
         <div class="fat-col">
           <h4>Legal</h4>
@@ -1994,6 +2676,71 @@ footer.site a:hover { color: var(--ink); }
   };
 })();
 </script>
-<script type="text/babel" data-presets="react" src="./landing.jsx"></script>
+
+<!-- GSAP & ScrollToPlugin -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" integrity="sha384-d+vyQ0dYcymoP8ndq2hW7FGC50nqGdXUEgoOUGxbbkAJwZqL7h+jKN0GGgn9hFDS" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js" integrity="sha384-aO2rdje/BwxNeovaVnYCA1OUtEWaqumve5UCMUMEM9/kKJM/c9NyqDGmgPuJz8eQ" crossorigin="anonymous"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const targetId = this.getAttribute('href');
+        if (targetId === '#' || targetId === '') return;
+        const target = document.querySelector(targetId);
+        if (target) {
+          e.preventDefault();
+          gsap.to(window, {
+            duration: 1,
+            scrollTo: { y: target, offsetY: 80 },
+            ease: "power3.inOut"
+          });
+        }
+      });
+    });
+  });
+</script>
+<script type="text/babel" data-presets="react" src="./landing.jsx?v=37"></script>
+
+
+  
+
+  <!-- Example Image Modal -->
+  <dialog id="example-modal" class="image-modal">
+    <div class="modal-content">
+      <form method="dialog">
+        <button class="modal-close" aria-label="Close">&times;</button>
+      </form>
+      <img src="./assets/example.png" alt="Example image">
+    </div>
+  </dialog>
+
+  <script>
+    const dialog = document.getElementById('example-modal');
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) {
+        dialog.close();
+      }
+    });
+  </script>
+
+  <!-- Example Image Modal 2 -->
+  <dialog id="example-modal-2" class="image-modal">
+    <div class="modal-content">
+      <form method="dialog">
+        <button class="modal-close" aria-label="Close">&times;</button>
+      </form>
+      <img src="./assets/example2.png" alt="Example image 2">
+    </div>
+  </dialog>
+
+  <script>
+    const dialog2 = document.getElementById('example-modal-2');
+    dialog2.addEventListener('click', (e) => {
+      if (e.target === dialog2) {
+        dialog2.close();
+      }
+    });
+  </script>
 </body>
+
 </html>

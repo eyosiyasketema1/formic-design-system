@@ -485,7 +485,7 @@ function LoaderGrid({ delays, dur, round }) {
 }
 function LoadingState({ label, variant = "Drive" }) {
   const elapsed = useElapsed();
-  const resolvedLabel = label ?? "Churning";
+  const resolvedLabel = label ?? "Working";
   const { delays, dur, round } = PATTERNS[variant] ?? PATTERNS.Drive;
   return (
     <div role="status" className="flex w-fit items-center gap-2.5">
@@ -500,9 +500,9 @@ function LoadingState({ label, variant = "Drive" }) {
 
 /* ══ approval (mirrored from preview.html) ══ */
 const QUESTIONS = [
-  { q: "How many flavors should we launch?", type: "radio", options: ["Three (core line)", "Five (full case)", "Just one hero"] },
-  { q: "Which mix-ins should we stock?", type: "check", options: ["Chocolate chips", "Waffle bits", "Sprinkles"] },
-  { q: "Which market do we enter first?", type: "radio", options: ["Food trucks", "Grocery freezers", "Scoop shops"] },
+  { q: "How should we phase the Northwind refresh?", type: "radio", options: ["Two phases (brand, then site)", "One phase (all by December)", "Brand only for now"] },
+  { q: "What goes in phase one?", type: "check", options: ["Logo and mark", "Type and colour", "Stationery"] },
+  { q: "Who reviews the proposal first?", type: "radio", options: ["The design lead", "The client", "The whole team"] },
 ];
 function ApprovalCard({ resettable = true }) {
   const [qi, setQi] = useState(0);
@@ -656,12 +656,12 @@ function TaskRows({ variant = "Capsules", rows: rowsProp }) {
   const demo = rowsProp === undefined;
   const draftStatus = tick < 3 ? "pending" : tick === 3 ? "failed" : "completed";
   const rows = rowsProp ?? [
-    { key: "verify", label: "Verified vendor records", amount: "12 suppliers", status: "completed",
-      details: [{ label: "Matched tax and contact IDs", meta: "12/12" }, { label: "Flagged stale records", meta: "0" }] },
-    { key: "index", label: "Build reorder task list", amount: "7 SKUs", status: "active", step: 2,
-      details: [{ label: "Reading POS export", meta: "3 files" }, { label: "Scoring stockout risk", meta: "68%" }] },
-    { key: "draft", label: "Draft supplier emails", amount: "2 messages", status: draftStatus, step: 3,
-      details: [{ label: "Cone supplier follow-up", meta: "draft" }, { label: "Pistachio reorder note", meta: "draft" }] },
+    { key: "verify", label: "Verified client records", amount: "12 clients", status: "completed",
+      details: [{ label: "Matched contacts and tax IDs", meta: "12/12" }, { label: "Flagged stale records", meta: "0" }] },
+    { key: "index", label: "Build the invoice list", amount: "7 invoices", status: "active", step: 2,
+      details: [{ label: "Reading the timesheet export", meta: "3 files" }, { label: "Scoring overdue risk", meta: "68%" }] },
+    { key: "draft", label: "Draft client emails", amount: "2 messages", status: draftStatus, step: 3,
+      details: [{ label: "Northwind kickoff note", meta: "draft" }, { label: "Creamery invoice reminder", meta: "draft" }] },
   ];
   const badgeFor = (row) =>
     row.status === "completed" ? (
@@ -748,26 +748,26 @@ const PB_BRANDS = {
 };
 const PB_SOURCES = [
   { key: "attach", name: "Add photos & files", desc: "Upload from your computer", glyph: "clip", attach: true },
-  { key: "scoop", name: "Scoop Data", desc: "Sales & churn metrics", glyph: "chart" },
-  { key: "flavors", name: "Flavor records", desc: "26 makers, tags, links", glyph: "layers" },
-  { key: "web", name: "Web search", desc: "Real-time news and info", glyph: "globe" },
+  { key: "books", name: "Studio Books", desc: "Invoices and payments", glyph: "chart" },
+  { key: "clients", name: "Client records", desc: "24 clients, contacts, links", glyph: "layers" },
+  { key: "web", name: "Web search", desc: "Search the live web", glyph: "globe" },
   { key: "figma", name: "Figma", desc: "Design-to-code workflows", brand: "figma" },
   { key: "slack", name: "Slack", desc: "Read and manage Slack", brand: "slack" },
   { key: "gmail", name: "Gmail", desc: "Read and manage Gmail", brand: "gmail", connect: true }
 ];
 const PB_COMMANDS = [
-  { key: "compare", name: "/compare", desc: "Flavor vs. last summer" },
-  { key: "churn-plan", name: "/churn-plan", desc: "Draft a churn schedule" },
-  { key: "restock", name: "/restock", desc: "Build a reorder list" },
-  { key: "draft-email", name: "/draft-email", desc: "Write a supplier email" },
+  { key: "compare", name: "/compare", desc: "Client vs. last quarter" },
+  { key: "proposal", name: "/proposal", desc: "Draft a proposal" },
+  { key: "invoice", name: "/invoice", desc: "Build an invoice from the timesheet" },
+  { key: "draft-email", name: "/draft-email", desc: "Write a client email" },
   { key: "summarize", name: "/summarize", desc: "Digest the thread so far" }
 ];
 const PB_MODELS = [
-  { key: "sprinkles-5", name: "Sprinkles 5", tag: "Flagship" },
-  { key: "vanilla-1", name: "Vanilla 1", tag: "Basic" },
-  { key: "freezer-burn", name: "Freezer Burn 0.4", tag: "Stale" }
+  { key: "formic-pro", name: "Formic Pro", tag: "Flagship" },
+  { key: "formic-flash", name: "Formic Flash", tag: "Fast" },
+  { key: "formic-edge", name: "Formic Edge", tag: "Local" }
 ];
-const PB_FILES = ["flavor-chart.png", "summer-menu.pdf", "pos-export.csv"];
+const PB_FILES = ["site-traffic.csv", "onboarding.pdf", "northwind-logo.png"];
 const PB_DICTATION = "Compare pistachio weekends to last summer";
 const PB_AUTO_STEPS = [
   { draft: "", connect: false, model: "vanilla-1", hold: 1100 },
@@ -1222,9 +1222,9 @@ const rcCodeChip = (text, tone) => <code
   </code>;
 
 /* ══ selection (mirrored from preview.html) ══ */
-const SA_DEFAULT_LEAD = "Pistachio holds the top slot all weekend. ";
-const SA_DEFAULT_SELECTED = "Churn it first thing Saturday so the batch has time to firm up before the afternoon rush.";
-const SA_DEFAULT_REWRITE = "Churn pistachio first thing Saturday so the batch has time to fully firm before the afternoon rush.";
+const SA_DEFAULT_LEAD = "Northwind's refresh runs in two phases. ";
+const SA_DEFAULT_SELECTED = "Phase one covers the mark, the type and the colour system so the site can start before the print work.";
+const SA_DEFAULT_REWRITE = "Phase one covers the mark, the type and the colour system, so the site work can begin before the print collateral is ready.";
 const SA_QUICK_ACTIONS = [
   { label: "Shorten", icon: "scissors", busy: "Shortening" },
   { label: "Change tone", short: "Tone", icon: "mood-smile", busy: "Changing tone" },
@@ -1901,20 +1901,20 @@ function Calendar({
 const WORD_MS = 55;
 const HOLD_MS = 3400;
 const STREAM_TOKENS = [
-  ..."Pistachio is your fastest-growing flavor — sales are up 23% this month and margins beat vanilla by 8 points.".split(" ").map((text) => ({ text })),
+  ..."Formic ships 70+ components in 240+ variants, and every one passes AA contrast in light and dark.".split(" ").map((text) => ({ text })),
   { text: "", cite: true },
-  ..."Stone-fruit flavors are trending in the same range.".split(" ").map((text) => ({ text })),
+  ..."The install is one command; after that you only prompt.".split(" ").map((text) => ({ text })),
 ];
-const FOLLOW_UPS = ["Which flavors sell best in winter", "Compare gelato and soft serve margins"];
+const FOLLOW_UPS = ["Show me the layout rules", "How does the theme picker work"];
 const SOURCE_IMAGES = {
   scoop: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231f7a5f'/%3E%3Cpath d='M20 36c0 7 5.4 12 12 12s12-5 12-12H20Z' fill='%23fff'/%3E%3Ccircle cx='32' cy='25' r='11' fill='%23bff3dd'/%3E%3Cpath d='M24 24c4-7 13-7 17 0' fill='none' stroke='%231f7a5f' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E",
   trends: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232f6fec'/%3E%3Cpath d='M15 43 27 31l8 7 14-18' fill='none' stroke='%23fff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='49' cy='20' r='5' fill='%23bfe0ff'/%3E%3C/svg%3E",
   market: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23e56d24'/%3E%3Cpath d='M17 45V25h8v20h-8Zm11 0V16h8v29h-8Zm11 0V30h8v15h-8Z' fill='%23fff'/%3E%3Cpath d='M16 49h32' stroke='%23ffd6b8' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E",
 };
 const SOURCES = [
-  { name: "Scoop Data", domain: "scoopdata.io", href: "https://scoopdata.io/", image: SOURCE_IMAGES.scoop },
-  { name: "Trends Index", domain: "trends.google.com", href: "https://trends.google.com/trends/", image: SOURCE_IMAGES.trends },
-  { name: "Market Basket", domain: "marketbasket.io", href: "https://marketbasket.io/", image: SOURCE_IMAGES.market },
+  { name: "Formic", domain: "formicai.dev", href: "https://formicai.dev/", image: SOURCE_IMAGES.scoop },
+  { name: "Gallery", domain: "formicai.dev/preview", href: "https://formicai.dev/preview.html", image: SOURCE_IMAGES.trends },
+  { name: "Customize", domain: "formicai.dev/customize", href: "https://formicai.dev/customize", image: SOURCE_IMAGES.market },
 ];
 function SourceChip() {
   const source = SOURCES[0];
@@ -2084,14 +2084,14 @@ function Button({
 }
 
 /* ═══════════ ChatComposer ═══════════ */
-const CC_TABS = ["Flavors", "Suppliers"];
+const CC_TABS = ["Clients", "Invoices"];
 const CC_ACTIONS = [
   { name: "plus", label: "New chat" },
   { name: "clock", label: "History" },
   { name: "ellipsis", label: "More options" },
 ];
 const CC_REPLIES = [
-  { label: "Sales History", sub: "Flavor Data", time: "4s", body: "Pulled 3 summers of mint chip sales for comparison." },
+  { label: "Sales History", sub: "Client Data", time: "4s", body: "Pulled 3 years of Northwind traffic for comparison." },
   { label: "Comparison", sub: "Trend Detection", time: "2s", body: "Mint chip is up 12% with stronger weekend peaks." },
 ];
 function ReplySection({ label, sub, time, body, resolving }) {
@@ -2116,7 +2116,7 @@ function ReplySection({ label, sub, time, body, resolving }) {
     </div>
   );
 }
-function ChatComposer({ tabs = CC_TABS, placeholder = "Prompt or tag a flavor with @", initialMessage = "Compare mint chip to last summer", replies = CC_REPLIES, onSend }) {
+function ChatComposer({ tabs = CC_TABS, placeholder = "Prompt or tag a client with @", initialMessage = "Compare Northwind to last quarter", replies = CC_REPLIES, onSend }) {
   const [phase, setPhase] = useState(initialMessage ? "done" : "idle");
   const [draft, setDraft] = useState("");
   const [submitted, setSubmitted] = useState(initialMessage);
@@ -2929,7 +2929,7 @@ function AskUserQuestions({
   }
   const otherOn = picked.includes(AUQ_OTHER);
   return (
-    <Card className={`w-full max-w-130 ${className}`} onKeyDown={onKeyDown}>
+    <Card className={`w-full max-w-130 flex flex-col ${className}`} onKeyDown={onKeyDown}>
       {/* progress: one hairline segment per question */}
       {total > 1 && (
         <div className="flex gap-1 px-5 pt-4" aria-hidden>
@@ -2958,7 +2958,7 @@ function AskUserQuestions({
           <p className="mt-1.5 text-small text-ink-3">⌘ Enter to continue</p>
         </div>
       ) : (
-        <div role={q.multiSelect ? "group" : "radiogroup"} aria-labelledby={`${id}-title`} className="flex flex-col gap-1 px-3 pt-4">
+        <div role={q.multiSelect ? "group" : "radiogroup"} aria-labelledby={`${id}-title`} className="flex flex-col gap-1 px-3 pt-4 pb-4 overflow-y-auto flex-1 min-h-0">
           {rows.map((o, i) => {
             const on = picked.includes(o.id);
             const isOther = o.id === AUQ_OTHER;
@@ -2999,7 +2999,7 @@ function AskUserQuestions({
         </div>
       )}
 
-      <div className="mt-2 flex items-center gap-2 border-t border-line px-3 py-3">
+      <div className="mt-auto flex items-center gap-2 border-t border-line px-3 py-3">
         <Button variant="ghost" size="sm" icon={<Icon name="arrow-left" size={14} />} onClick={back} disabled={index === 0} aria-label="Previous question">Back</Button>
         <span className="min-w-0 flex-1 truncate text-small text-ink-3">
           {q.freeText ? "" : q.multiSelect ? "Pick any, then Next. 1 to 9 toggles." : otherOn ? "Type, then Enter." : "Press 1 to 9 to choose."}
@@ -3019,17 +3019,26 @@ function AskUserQuestions({
 function AskUserQuestionsDemo() {
   const [run, setRun] = useState(0);
   return (
-    <div className="flex flex-col h-full items-start gap-3 w-full">
-      <AskUserQuestions key={run} onComplete={() => {}} />
-      <Button variant="ghost" size="sm" icon={<Icon name="retry" size={14} />} onClick={() => setRun((r) => r + 1)}>Start over</Button>
+    <div className="flex flex-col h-full items-start gap-3 w-full p-4">
+      <AskUserQuestions key={run} onComplete={() => setTimeout(() => setRun((r) => r + 1), 1500)} className="flex-1 !max-w-none w-full" />
     </div>
   );
 }
 
 function BentoCard({ label, span = "sp3", body = "", children }) {
+  const parts = label.split(" · ");
   return (
     <div className={`bento-card ${span}${body ? ` ${body}` : ""}`}>
-      <div className="bento-label">{label}</div>
+      <div className="bento-label" style={{ color: 'var(--ink)' }}>
+        {parts.length > 1 ? (
+          <>
+            <span>{parts[0]}</span>
+            <span style={{ color: 'var(--ink-3)' }}> · {parts.slice(1).join(" · ")}</span>
+          </>
+        ) : (
+          <span>{label}</span>
+        )}
+      </div>
       <div className="bento-body">{children}</div>
     </div>
   );
@@ -3051,7 +3060,7 @@ function Bento() {
         </div>
       </BentoCard>
       <BentoCard label="SelectionActions · inline rewrite" span="sp3" body="body-center"><SelectionActions /></BentoCard>
-      <BentoCard label="Three questions · single-select with Other, multi-select with Skip, free text" span="sp3" body="body-center">
+      <BentoCard label="Three questions · single-select with Other, multi-select with Skip, free text" span="sp3" body="body-fill">
         <AskUserQuestionsDemo />
       </BentoCard>
       <BentoCard label="PromptBar · a working chat" span="sp3"><ChatDemo /></BentoCard>

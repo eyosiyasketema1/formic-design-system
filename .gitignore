@@ -4,13 +4,14 @@ dist/
 *.log
 __pycache__/
 
-# one-off edit scripts and backups left by AI sessions
-patch_*.py
-fix_*.py
-extract_*.py
-append_*.py
-revert.py
-test_*
-*.bak.html
-*.jsx
-!landing.jsx
+# one-off edit scripts, backups and scratch pages left in the root by AI sessions;
+# real scripts live in scripts/, the only root pages are index.html and preview.html
+/*.py
+/*.js
+/*.jsx
+!/landing.jsx
+/*.txt
+/*.html
+!/index.html
+!/preview.html
+/landing page/
