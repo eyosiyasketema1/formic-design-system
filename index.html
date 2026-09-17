@@ -58,7 +58,7 @@
       "name": "Formic",
       "url": "https://formicai.dev/",
       "logo": "https://formicai.dev/assets/formic-logomark-512.png",
-      "sameAs": ["https://github.com/eyosiyasketema1/formic-design-system"]
+      "sameAs": ["https://github.com/eyosiyasketema1/formic-design-system", "https://www.linkedin.com/in/eyosiyas-ketema/", "https://t.me/eyosiyasketema"]
     },
     {
       "@type": "SoftwareSourceCode",
@@ -911,9 +911,9 @@ spline-viewer::part(logo) {
         <div class="fat-col">
           <h4>Contact & Socials</h4>
           <a href="mailto:eyosiyasketema@gmail.com">Email</a>
-          <a href="#">Telegram</a>
-          <a href="#">WhatsApp</a>
-          <a href="#">LinkedIn</a>
+          <a href="https://t.me/eyosiyasketema" target="_blank" rel="noopener">Telegram</a>
+          <a href="https://wa.me/eyosiyas_ketema" target="_blank" rel="noopener">WhatsApp</a>
+          <a href="https://www.linkedin.com/in/eyosiyas-ketema/" target="_blank" rel="noopener">LinkedIn</a>
           <p class="fat-copy">&copy; 2026 Formic. All rights reserved.</p>
         </div>
       </div>
@@ -1218,6 +1218,8 @@ spline-viewer::part(logo) {
 
     if (!reduce && !coarse) {
       window.addEventListener("wheel", (event) => {
+        /* a modal owns the wheel while it is open: its panel scrolls, the page never does */
+        if (document.querySelector("dialog[open]")) { if (!innerScrolls(event)) event.preventDefault(); return; }
         if (event.ctrlKey || event.defaultPrevented || innerScrolls(event)) return;
         event.preventDefault();
         const step = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
