@@ -332,7 +332,7 @@ for _f in sorted(ROOT.glob("*.html")) + sorted(ROOT.glob("*.jsx")) + sorted(ROOT
         fails.append(f"{_f.relative_to(ROOT)}: merge-conflict markers left in the file")
 try:
     _index = (ROOT / "index.html").read_text()
-    for _i, _m in enumerate(re.finditer(r"<script(?![^>]*\bsrc=)(?![^>]*type=\"(?:text/babel|module|application/ld\+json)\")[^>]*>(.*?)</script>", _index, re.S)):
+    for _i, _m in enumerate(re.finditer(r"<script(?![^>]*\bsrc=)(?![^>]*type=\"(?:text/babel|module|application/ld\+json)\")[^>]*>(.*?)</script>", _index, re.S | re.IGNORECASE)):
         _tmp = Path(f"/tmp/ds-qa-index-{_i}.js")
         _tmp.write_text(_m.group(1))
         r = subprocess.run(["npx", "-y", "esbuild", "--log-level=error", "--outfile=/tmp/ds-qa-index.out.js", str(_tmp)], capture_output=True, text=True, timeout=120)

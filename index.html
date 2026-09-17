@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Formic AI Design System</title>
+<title>Formic AI Design System: React + Tailwind for AI apps</title>
 <script>
   /* Theme before first paint: the visitor's own choice if they made one
      (ds-theme, shared with the gallery), otherwise the system setting,
@@ -17,14 +17,75 @@
     if (mq && mq.addEventListener) mq.addEventListener("change", function () { try { stored = localStorage.getItem("ds-theme"); } catch (e) {} if (stored !== "light" && stored !== "dark") apply(); });
   })();
 </script>
-<meta name="description" content="A design system AI coding tools can actually follow. 70+ React + Tailwind v4 components for chat, agents, dashboards and forms, tokens for everything, AA contrast in every theme, and gates that refuse generic UI." />
-<meta property="og:title" content="Formic AI Design System" />
-<meta property="og:description" content="Your AI tool builds the app; Formic makes sure it looks like yours. 70+ token-driven React + Tailwind v4 components for chat, agents, dashboards and forms, with gates that refuse generic UI." />
+<meta name="description" content="Open-source React + Tailwind v4 design system for AI coding tools: 70+ components for chat, agents and dashboards, AA contrast everywhere, one command to install." />
+<meta property="og:site_name" content="Formic AI Design System" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:title" content="Formic AI Design System: React + Tailwind for AI apps" />
+<meta property="og:description" content="Your AI tool builds the app; Formic makes sure it looks like yours. 70+ token-driven React + Tailwind v4 components for chat, agents, dashboards and forms, AA contrast in every theme, one command to install." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://formicai.dev/" />
-<meta property="og:image" content="https://formicai.dev/assets/formic-logomark-512.png" />
+<meta property="og:image" content="https://formicai.dev/assets/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Formic: a design system agents can actually follow. 70+ React + Tailwind components for chat, agents and dashboards." />
 <meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Formic AI Design System: React + Tailwind for AI apps" />
+<meta name="twitter:description" content="70+ token-driven React + Tailwind v4 components for chat, agents, dashboards and forms. AA contrast in every theme, two gates that refuse generic UI, one command to install." />
+<meta name="twitter:image" content="https://formicai.dev/assets/og-image.png" />
+<meta name="robots" content="index, follow, max-image-preview:large" />
+<meta name="theme-color" content="#131312" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+<meta name="keywords" content="AI design system, React components, Tailwind v4, design tokens, chat UI, agent UI, dashboard components, Claude Code, Cursor, Copilot, Codex, WCAG AA" />
 <link rel="canonical" href="https://formicai.dev/" />
+<link rel="alternate" type="text/plain" href="https://formicai.dev/llms.txt" title="Formic for AI agents" />
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://formicai.dev/#website",
+      "url": "https://formicai.dev/",
+      "name": "Formic AI Design System",
+      "description": "An open-source React + Tailwind v4 design system built for AI coding tools.",
+      "inLanguage": "en",
+      "publisher": { "@id": "https://formicai.dev/#org" }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://formicai.dev/#org",
+      "name": "Formic",
+      "url": "https://formicai.dev/",
+      "logo": "https://formicai.dev/assets/formic-logomark-512.png",
+      "sameAs": ["https://github.com/eyosiyasketema1/formic-design-system"]
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://formicai.dev/#code",
+      "name": "Formic AI Design System",
+      "description": "70+ token-driven React + Tailwind v4 components for chat, agents, dashboards and forms, with WCAG AA contrast in light, dark and ten palettes, and two gates that refuse generic UI.",
+      "url": "https://formicai.dev/",
+      "codeRepository": "https://github.com/eyosiyasketema1/formic-design-system",
+      "programmingLanguage": ["TypeScript", "CSS"],
+      "runtimePlatform": "React 18",
+      "license": "https://github.com/eyosiyasketema1/formic-design-system/blob/main/LICENSE",
+      "keywords": "AI design system, React components, Tailwind v4, design tokens, chat UI, agent UI, dashboard, WCAG AA",
+      "author": { "@id": "https://formicai.dev/#org" },
+      "isAccessibleForFree": true
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://formicai.dev/#page",
+      "url": "https://formicai.dev/",
+      "name": "Formic AI Design System: React + Tailwind for AI apps",
+      "isPartOf": { "@id": "https://formicai.dev/#website" },
+      "about": { "@id": "https://formicai.dev/#code" },
+      "primaryImageOfPage": "https://formicai.dev/assets/og-image.png"
+    }
+  ]
+}
+</script>
 <link rel="icon" type="image/png" href="./assets/favicon.png" />
 <link rel="apple-touch-icon" href="./assets/formic-logomark-512.png" />
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" integrity="sha512-QVs8Lo43F9lSuBykadDb0oSXDL/BbZ588urWVCRwSIoewQv/Ewg1f84mK3U790bZ0FfhFa1YSQUmIhG+pIRKeg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
