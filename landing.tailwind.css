@@ -843,9 +843,12 @@ header.site .wrap {
 }
 
 header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
-.hero h1 {
-  animation: heroLift 1.2s var(--ease-out-quint) 0.15s backwards;
-}
+/* the headline rises line by line out of a clipped box; pure CSS, so it
+   plays before any script arrives */
+.hero h1 .mask { display: block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+.hero h1 .mask > span { display: block; transform: translateY(110%); animation: lineUp 1.1s var(--ease-out-quint) 0.15s forwards; }
+.hero h1 .mask:nth-child(2) > span { animation-delay: 0.27s; }
+@keyframes lineUp { to { transform: translateY(0); } }
 .hero-sub, .hero-ctas, .hero-theme-picker {
   animation: heroLift 1.2s var(--ease-out-quint) 0.3s backwards;
 }
@@ -1238,6 +1241,15 @@ header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
 @keyframes clipReveal {
   from { clip-path: inset(0 100% 0 0); }
   to { clip-path: inset(0 0 0 0); }
+}
+/* once-only rise for blocks below the hero; --i is the sibling index */
+.reveal { opacity: 0; transform: translateY(16px); }
+.reveal.is-visible { opacity: 1; transform: none; transition: opacity 0.8s var(--ease-out-quint), transform 0.8s var(--ease-out-quint); transition-delay: calc(var(--i, 0) * 70ms); }
+/* the scrubbed statement: GSAP drives each word's opacity from the scrollbar */
+.value-headline.scrub { opacity: 1; }
+.value-headline.scrub .w { display: inline-block; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .hero h1 .mask > span { opacity: 1; transform: none; animation: none; transition: none; }
 }
 .scroll-lift { opacity: 0; }
 .scroll-lift.is-visible { animation: scrollLiftUp 1s var(--ease-out-quint) forwards; }

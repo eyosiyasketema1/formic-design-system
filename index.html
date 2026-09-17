@@ -218,7 +218,7 @@ spline-viewer::part(logo) {
   <!-- ══ Hero ══ -->
   <div class="hero" style="position:relative;z-index:2;">
     <div class="hero-copy">
-      <h1>A design system agents<br>can actually follow</h1>
+      <h1><span class="mask"><span>A design system agents</span></span><span class="mask"><span>can actually follow</span></span></h1>
       <p class="hero-sub">70+ components. 235+ Variants for chat, agents, dashboards and forms, tokens for everything. AA contrast in every theme, and two gates that refuse generic UI before it reaches a commit.</p>
       <div class="hero-ctas">
         <a class="lbtn lbtn-lg lbtn-accent" href="#start">Get started<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14"/><path d="M18 13l-6 6"/><path d="M6 13l6 6"/></svg></a>
@@ -960,6 +960,50 @@ spline-viewer::part(logo) {
   })();
 </script>
 <script defer src="./landing.js?v=1"></script>
+<!-- GSAP + ScrollTrigger: one scrubbed statement under the hero; everything else moves in CSS -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/gsap.min.js" integrity="sha384-XmJ9SoHtVOHoQUcKvFAzVXwdkKo1Ie3bhmSoIAkcdsHGaIrVJIkmozyq0FJeb/Ly" crossorigin="anonymous"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/ScrollTrigger.min.js" integrity="sha384-wl5TeDVvOWt30Pbf8aSo2ZrzsOjddu3avOBvHe+p+OhJt9gP6w9YXmDkN5DK2/dF" crossorigin="anonymous"></script>
+<script>
+  /* Motion below the hero.
+     1. The statement scrubs with the scrollbar: word by word from faint to
+        ink as it climbs the viewport, back again on the way up. This is the
+        one thing tied to scroll position, so it is the one thing GSAP does.
+        power4.out is GSAP's name for the system's ease-out-quint.
+     2. Everything else rises once when it enters (CSS transition, sibling
+        delays), and never again. Reduced motion: no scrub, no rise. */
+  document.addEventListener("DOMContentLoaded", () => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const statement = document.querySelector(".value-headline");
+    if (statement && !reduce && window.gsap && window.ScrollTrigger) {
+      gsap.registerPlugin(ScrollTrigger);
+      gsap.defaults({ ease: "power4.out" });
+      statement.classList.remove("scroll-lift");
+      statement.classList.add("scrub");
+      statement.querySelectorAll(":scope > span").forEach((line) => {
+        const words = line.textContent.trim().split(/\s+/);
+        line.textContent = "";
+        words.forEach((w, i) => {
+          const span = document.createElement("span");
+          span.className = "w";
+          span.textContent = w;
+          line.appendChild(span);
+          if (i < words.length - 1) line.appendChild(document.createTextNode(" "));
+        });
+      });
+      gsap.fromTo(statement.querySelectorAll(".w"), { opacity: 0.16 }, {
+        opacity: 1, ease: "none", stagger: 0.06,
+        scrollTrigger: { trigger: statement, start: "top 85%", end: "top 30%", scrub: 0.5 },
+      });
+    }
+    const targets = document.querySelectorAll(".feat-card, .feat-icon-card, .feat-statement, .ai-way, .lstat, .lp-card, .live-section h2, .live-section .section-sub, .landing-section h2");
+    if (!targets.length || reduce || !("IntersectionObserver" in window)) return;
+    targets.forEach((el) => { if (el.closest(".hero, header.site")) return; el.classList.add("reveal"); el.style.setProperty("--i", [...el.parentElement.children].indexOf(el)); });
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => { if (entry.isIntersecting) { entry.target.classList.add("is-visible"); io.unobserve(entry.target); } });
+    }, { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
+    document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+  });
+</script>
 <script>
   /* The two 3D scenes weigh more than the rest of the page together, so they
      load only when their section comes within a screen of the viewport, and
