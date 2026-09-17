@@ -2,8 +2,10 @@
  * FORMIC LANDING — live hero runtime.
  * Component code mirrored from preview.html (same names,
  * same markup) + a small app layer: accent picker and the
- * hero/playground mounts. Loaded by index.html via
- * babel-standalone, exactly like the gallery.
+ * hero/playground mounts. Compiled to landing.js by
+ * scripts/build_landing.py; index.html loads landing.js, never this
+ * file. AFTER EDITING, RUN: python3 scripts/build_landing.py
+ * (the QA gate fails while landing.js is stale).
  * ───────────────────────────────────────────────────────── */
 const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useId, cloneElement, isValidElement, createContext, useContext, Fragment } = React;
 

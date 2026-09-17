@@ -2,7 +2,7 @@
   "name": "formic-design-system",
   "version": "0.2.0",
   "private": true,
-  "description": "Formic AI Design System — token-driven React design system for AI product interfaces",
+  "description": "Formic AI Design System \u2014 token-driven React design system for AI product interfaces",
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18",
@@ -18,9 +18,10 @@
       "optional": true
     }
   },
-  "main": "test_puppeteer.js",
+  "main": "index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:landing": "python3 scripts/build_landing.py",
+    "check": "python3 scripts/qa_check.py && python3 scripts/check_sri.py"
   },
   "repository": {
     "type": "git",
@@ -33,5 +34,10 @@
   "bugs": {
     "url": "https://github.com/eyosiyasketema1/formic-design-system/issues"
   },
-  "homepage": "https://github.com/eyosiyasketema1/formic-design-system#readme"
+  "homepage": "https://github.com/eyosiyasketema1/formic-design-system#readme",
+  "devDependencies": {
+    "@tailwindcss/cli": "4.1.11",
+    "esbuild": "0.24.2",
+    "tailwindcss": "4.1.11"
+  }
 }

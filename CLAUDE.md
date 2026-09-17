@@ -65,6 +65,7 @@ After every piece of work, look for extractable pieces and extract them:
 - `styles/tailwind-theme.css` — Tailwind v4 `@theme inline` bridge (generates `text-ink`, `bg-hover`, …)
 - `components/*.tsx` — React components; demo content as prop defaults
 - `preview.html` — standalone browser gallery (CDN React + Tailwind; duplicates styles inline)
+- `index.html`, `landing.jsx`, `landing.tailwind.css` — the landing page and its two sources; `scripts/build_landing.py` compiles them to `landing.css` and `landing.js` (committed, what the page loads). Run it after touching either source; the gate checks the build is current. The page ships no Babel and no Tailwind browser build, so it paints styled on first load; keep it that way
 - `CHANGELOG.md` — one entry per release; a breaking change (a peer dependency, a removed prop, a renamed name) bumps the minor while 0.x and goes under **Breaking**. `version` in `package.json` and `FORMIC_VERSION` in `preview.html` must agree; the gate checks
 - `AUDIT.md`, `QA-REPORT.md` — audit history; update when resolving findings
 - `scripts/qa_check.py` — the QA gate

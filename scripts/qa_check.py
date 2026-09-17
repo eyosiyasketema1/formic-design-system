@@ -323,9 +323,24 @@ _gal_ver = re.search(r'const FORMIC_VERSION = "([^"]+)"', (ROOT / "preview.html"
 if not _pkg_ver or not _gal_ver or _pkg_ver.group(1) != _gal_ver.group(1):
     fails.append(f"version: package.json says {_pkg_ver and _pkg_ver.group(1)} but preview.html FORMIC_VERSION is {_gal_ver and _gal_ver.group(1)}; bump both (and CHANGELOG.md) together")
 
+# ── 4c. the landing page's compiled assets are current ─────
+# index.html loads landing.css and landing.js, built from landing.tailwind.css
+# and landing.jsx by scripts/build_landing.py. A stale build ships the old
+# page with no signal, so the freshness check is part of the gate (it skips
+# with a note where Node is missing; CI has Node).
+try:
+    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_landing.py"), "--check"], capture_output=True, text=True, timeout=600)
+    _line = (r.stdout.strip().splitlines() or [""])[-1]
+    if r.returncode != 0:
+        fails.append(f"landing: {_line or r.stderr.strip()}")
+    elif "skipping" in _line:
+        print(f"note: {_line}")
+except Exception as e:
+    print(f"note: landing build check skipped ({e})")
+
 if fails:
     print(f"QA FAILED — {len(fails)} issue(s):")
     for f in fails:
         print("  ✗", f)
     sys.exit(1)
-print("QA PASSED — forbidden patterns, contrast (all modes × palettes), drift, compile, gallery script: all clean")
+print("QA PASSED — forbidden patterns, contrast (all modes × palettes), drift, compile, gallery script, landing build: all clean")
