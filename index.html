@@ -716,18 +716,18 @@ spline-viewer::part(logo) {
 </main>
 
 
-<!-- FAQ: opened from the footer; the answers stay in the HTML for crawlers and answer engines -->
-<dialog id="faq-modal" class="faq-modal" aria-labelledby="faq-title">
-  <div class="faq-panel">
-    <div class="faq-head">
-      <div>
+<!-- Modals opened from the footer: FAQ and the legal pages. Content stays in the HTML for crawlers and answer engines. -->
+<dialog id="faq-modal" class="site-modal" aria-labelledby="faq-title">
+  <div class="modal-panel">
+    <div class="modal-hero" aria-hidden="true"><img src="./assets/live-bg-1280.webp" alt="" loading="lazy" decoding="async" /></div>
+    <button type="button" class="modal-close" aria-label="Close" data-modal-close>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="modal-body">
+      <div class="modal-head">
         <h2 id="faq-title">Questions</h2>
         <p>Short answers to what people ask before they run the command.</p>
       </div>
-      <button type="button" class="faq-close" aria-label="Close" data-faq-close>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
-    </div>
     <div class="faq-list">
     <details class="faq-item">
       <summary>What is Formic?</summary>
@@ -758,23 +758,132 @@ spline-viewer::part(logo) {
       <p>Yes, the same command adds it to an existing Vite, Next.js or other React project without touching your pages; you then add three CSS imports and prompt as usual.</p>
     </details>
     </div>
+    </div>
+  </div>
+</dialog>
+<dialog id="privacy-modal" class="site-modal" aria-labelledby="privacy-title">
+  <div class="modal-panel">
+    <div class="modal-hero" aria-hidden="true"><img src="./assets/live-bg-1280.webp" alt="" loading="lazy" decoding="async" /></div>
+    <button type="button" class="modal-close" aria-label="Close" data-modal-close>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="modal-body">
+      <div class="modal-head">
+        <h2 id="privacy-title">Privacy</h2>
+        <p>What happens with your data on this site: nothing, mostly.</p>
+      </div>
+      <p>Formic is a static website and an open-source library. It has no accounts, no sign-up and no tracking of its own. This page says what does and does not happen with your data when you visit formicai.dev.</p>
+      <h3>What we do not collect</h3>
+      <p>We do not collect names, emails or any personal information on the site. There are no forms that send data to us, no analytics scripts and no advertising.</p>
+      <h3>What is stored in your browser</h3>
+      <p>A few preferences live in your browser&#x27;s local storage so the site remembers them: your light or dark choice and the choices you make in the customizer. They never leave your device and you can clear them at any time through your browser settings.</p>
+      <h3>Third parties that see your request</h3>
+      <p>Loading the site sends the usual requests to the services that serve it, each of which sees your IP address and browser details: Vercel (hosting), Cloudflare cdnjs, jsDelivr and unpkg (script files), Google Fonts (the Urbanist typeface), Spline (the 3D scenes, loaded only when they scroll into view) and Unsplash (demo photographs). Buy Me a Coffee and GitHub are separate sites with their own policies; we link to them, nothing loads from them here.</p>
+      <h3>The install script</h3>
+      <p>curl -fsSL https://formicai.dev/install.sh | bash runs on your own machine and only there. It clones the public repository from GitHub and writes files into the project folder you run it in. It sends nothing to us.</p>
+      <h3>Contact</h3>
+      <p>Questions about this policy go to eyosiyasketema@gmail.com.</p>
+      <p>Last updated 17 September 2026.</p>
+    </div>
+  </div>
+</dialog>
+<dialog id="terms-modal" class="site-modal" aria-labelledby="terms-title">
+  <div class="modal-panel">
+    <div class="modal-hero" aria-hidden="true"><img src="./assets/live-bg-1280.webp" alt="" loading="lazy" decoding="async" /></div>
+    <button type="button" class="modal-close" aria-label="Close" data-modal-close>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="modal-body">
+      <div class="modal-head">
+        <h2 id="terms-title">Terms</h2>
+        <p>The MIT License for the code, and a few plain terms for the site.</p>
+      </div>
+      <p>By using formicai.dev or the Formic library you agree to these terms. They are short because the project is simple.</p>
+      <h3>The code</h3>
+      <p>Formic is open source under the MIT License. You may use, copy, modify and redistribute it, including in commercial products, provided the license notice stays with the code. The full text is in the repository&#x27;s LICENSE file.</p>
+      <h3>The website</h3>
+      <p>The site, its content and the components it demonstrates are provided as they are, without warranty of any kind. We do not promise that the site is always available, error-free or that the library fits a particular purpose.</p>
+      <h3>The install script</h3>
+      <p>The command on this site runs on your computer and changes files in the folder you run it in. Read it before you run it; the source is public. You are responsible for what runs on your machine.</p>
+      <h3>Demo content</h3>
+      <p>Client names, figures and photographs on this site are fictional demo material for a made-up design studio. Photographs come from Unsplash under the Unsplash License. Any resemblance to real businesses is coincidental.</p>
+      <h3>Trademarks</h3>
+      <p>Claude, Cursor, GitHub Copilot, Codex, Gemini and other product names belong to their owners and are used only to say which tools Formic works with.</p>
+      <h3>Liability</h3>
+      <p>To the extent the law allows, we are not liable for any loss arising from use of the site or the library.</p>
+      <h3>Changes</h3>
+      <p>These terms may change; the date below tells you when they last did.</p>
+      <p>Last updated 17 September 2026.</p>
+    </div>
+  </div>
+</dialog>
+<dialog id="security-modal" class="site-modal" aria-labelledby="security-title">
+  <div class="modal-panel">
+    <div class="modal-hero" aria-hidden="true"><img src="./assets/live-bg-1280.webp" alt="" loading="lazy" decoding="async" /></div>
+    <button type="button" class="modal-close" aria-label="Close" data-modal-close>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="modal-body">
+      <div class="modal-head">
+        <h2 id="security-title">Security</h2>
+        <p>How the site and installer are kept safe, and how to report a problem.</p>
+      </div>
+      <p>The site is static and stores no user data, which keeps the surface small. What we do to keep it that way, and how to tell us if something is wrong:</p>
+      <h3>How the site is built</h3>
+      <p>Every third-party script carries a Subresource Integrity hash and a pinned version, so a changed or tampered file on a CDN is refused by the browser. The check runs on every commit before the site can deploy. The site is served over HTTPS by Vercel with nosniff and referrer headers set.</p>
+      <h3>The install script</h3>
+      <p>install.sh only ever clones the public repository and writes into your project folder. It requests no elevated permissions and never runs as root. Its source is on GitHub; read it before running it, as you should with any script.</p>
+      <h3>Dependencies</h3>
+      <p>The library depends on React, Tailwind and Phosphor icons. Dependabot watches the repository and security bumps are applied with the compiled files rebuilt in the same change.</p>
+      <h3>Reporting a problem</h3>
+      <p>If you find a vulnerability in the site, the installer or the library, email eyosiyasketema@gmail.com with the details and steps to reproduce. Please give us a reasonable time to fix it before publishing. We will reply and credit you if you want.</p>
+      <p>Last updated 17 September 2026.</p>
+    </div>
+  </div>
+</dialog>
+<dialog id="cookies-modal" class="site-modal" aria-labelledby="cookies-title">
+  <div class="modal-panel">
+    <div class="modal-hero" aria-hidden="true"><img src="./assets/live-bg-1280.webp" alt="" loading="lazy" decoding="async" /></div>
+    <button type="button" class="modal-close" aria-label="Close" data-modal-close>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="modal-body">
+      <div class="modal-head">
+        <h2 id="cookies-title">Cookies</h2>
+        <p>This site sets none.</p>
+      </div>
+      <p>formicai.dev sets no cookies. That is the whole policy, but here is the detail.</p>
+      <h3>Local storage instead of cookies</h3>
+      <p>The site keeps your light or dark choice and your customizer settings in your browser&#x27;s local storage. That data stays on your device, is never sent to a server and is not used to identify you. Clearing site data in your browser removes it.</p>
+      <h3>Third-party services</h3>
+      <p>The scripts, fonts and 3D scenes on the site are loaded from Cloudflare cdnjs, jsDelivr, unpkg, Google Fonts and Spline. These requests may be logged by those providers under their own policies; none of them sets a cookie through this site to our knowledge, and we run no tag managers or analytics that would.</p>
+      <h3>Consent</h3>
+      <p>Because nothing here tracks you, there is no cookie banner to accept. If that ever changes, this page will change first.</p>
+      <p>Last updated 17 September 2026.</p>
+    </div>
   </div>
 </dialog>
 <script>
   (function () {
-    const modal = document.getElementById("faq-modal");
-    if (!modal || typeof modal.showModal !== "function") return;
-    /* delegated and in the capture phase: the footer is parsed after this
-       script, and the page's smooth-scroll handler must not see the click */
+    const ids = ["faq", "privacy", "terms", "security", "cookies"];
+    if (typeof HTMLDialogElement === "undefined" || !HTMLDialogElement.prototype.showModal) return;
+    const open = (id) => { const m = document.getElementById(id + "-modal"); if (m && !m.open) { m.querySelector(".modal-panel").scrollTop = 0; m.showModal(); } };
+    /* delegated, capture phase: the footer is parsed after this script, and
+       the page's smooth-scroll handler must not see these clicks */
     document.addEventListener("click", (event) => {
-      const link = event.target.closest('a[href="#faq"]');
+      const link = event.target.closest("a[href^='#']");
       if (!link) return;
+      const id = link.getAttribute("href").slice(1);
+      if (!ids.includes(id)) return;
       event.preventDefault(); event.stopPropagation();
-      modal.showModal();
+      open(id);
     }, true);
-    modal.querySelector("[data-faq-close]").addEventListener("click", () => modal.close());
-    modal.addEventListener("click", (event) => { if (event.target === modal) modal.close(); });
-    if (location.hash === "#faq") modal.showModal();
+    document.querySelectorAll(".site-modal").forEach((m) => {
+      m.querySelector("[data-modal-close]").addEventListener("click", () => m.close());
+      m.addEventListener("click", (event) => { if (event.target === m) m.close(); });
+    });
+    const hash = location.hash.slice(1);
+    if (ids.includes(hash)) open(hash);
   })();
 </script>
 <footer class="site-fat">
@@ -794,10 +903,10 @@ spline-viewer::part(logo) {
         </div>
         <div class="fat-col">
           <h4>Legal</h4>
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
-          <a href="#">Security</a>
-          <a href="#">Cookies</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#terms">Terms</a>
+          <a href="#security">Security</a>
+          <a href="#cookies">Cookies</a>
         </div>
         <div class="fat-col">
           <h4>Contact & Socials</h4>
