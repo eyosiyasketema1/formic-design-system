@@ -32,8 +32,9 @@ jobs:
         with:
           python-version: "3.12"
 
-      # qa_check.py shells out to esbuild to prove every component compiles.
-      # Without Node that step degrades to a warning and stops being a gate.
+      # qa_check.py shells out to esbuild to prove every component compiles,
+      # and to scripts/build_landing.py to prove the landing page's compiled
+      # CSS and JS are current. Without Node both degrade to a note.
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
