@@ -965,9 +965,10 @@ spline-viewer::part(logo) {
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/ScrollTrigger.min.js" integrity="sha384-wl5TeDVvOWt30Pbf8aSo2ZrzsOjddu3avOBvHe+p+OhJt9gP6w9YXmDkN5DK2/dF" crossorigin="anonymous"></script>
 <script>
   /* Motion below the hero.
-     1. The statement scrubs with the scrollbar: word by word from faint to
-        ink as it climbs the viewport, back again on the way up. This is the
-        one thing tied to scroll position, so it is the one thing GSAP does.
+     1. The statement's three lines rise out of clipped boxes, the same mask
+        the hero uses, but driven by the scrollbar: they climb as the block
+        climbs the viewport and sink back on the way up. This is the one
+        thing tied to scroll position, so it is the one thing GSAP does.
         power4.out is GSAP's name for the system's ease-out-quint.
      2. Everything else rises once when it enters (CSS transition, sibling
         delays), and never again. Reduced motion: no scrub, no rise. */
@@ -980,6 +981,7 @@ spline-viewer::part(logo) {
       statement.classList.remove("scroll-lift");
       statement.classList.add("scrub");
       statement.querySelectorAll(":scope > span").forEach((line) => {
+<<<<<<< Updated upstream
         const words = line.textContent.trim().split(/\s+/);
         line.textContent = "";
         words.forEach((w, i) => {
@@ -989,10 +991,17 @@ spline-viewer::part(logo) {
           line.appendChild(span);
           if (i < words.length - 1) line.appendChild(document.createTextNode(" "));
         });
+=======
+        const inner = document.createElement("span");
+        inner.className = "l";
+        inner.textContent = line.textContent.trim();
+        line.textContent = "";
+        line.appendChild(inner);
+>>>>>>> Stashed changes
       });
-      gsap.fromTo(statement.querySelectorAll(".w"), { opacity: 0.16 }, {
-        opacity: 1, ease: "none", stagger: 0.06,
-        scrollTrigger: { trigger: statement, start: "top 85%", end: "top 30%", scrub: 0.5 },
+      gsap.fromTo(statement.querySelectorAll(".l"), { yPercent: 110 }, {
+        yPercent: 0, ease: "power4.out", stagger: 0.18,
+        scrollTrigger: { trigger: statement, start: "top 88%", end: "top 40%", scrub: 0.6 },
       });
     }
     const targets = document.querySelectorAll(".feat-card, .feat-icon-card, .feat-statement, .ai-way, .lstat, .lp-card, .live-section h2, .live-section .section-sub, .landing-section h2");

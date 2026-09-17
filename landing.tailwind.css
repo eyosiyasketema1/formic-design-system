@@ -1245,9 +1245,11 @@ header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
 /* once-only rise for blocks below the hero; --i is the sibling index */
 .reveal { opacity: 0; transform: translateY(16px); }
 .reveal.is-visible { opacity: 1; transform: none; transition: opacity 0.8s var(--ease-out-quint), transform 0.8s var(--ease-out-quint); transition-delay: calc(var(--i, 0) * 70ms); }
-/* the scrubbed statement: GSAP drives each word's opacity from the scrollbar */
+/* the scrubbed statement: each line in a clipped box, GSAP drives its rise from the scrollbar */
 .value-headline.scrub { opacity: 1; }
-.value-headline.scrub .w { display: inline-block; }
+.value-headline.scrub > span { display: block; overflow: hidden; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+.value-headline.scrub > span > .l { display: block; will-change: transform; }
+.value-headline.scrub br { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .reveal, .hero h1 .mask > span { opacity: 1; transform: none; animation: none; transition: none; }
 }
