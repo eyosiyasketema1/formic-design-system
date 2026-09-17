@@ -867,22 +867,97 @@ spline-viewer::part(logo) {
 })();
 </script>
 
-<!-- GSAP & ScrollToPlugin -->
+<!-- Scroll smoother: wheel and anchor scrolling glide instead of jumping -->
 <script>
-  /* in-page links scroll smoothly under the fixed header; no library needed */
-  document.addEventListener("click", (event) => {
-    const anchor = event.target.closest('a[href^="#"]');
-    if (!anchor) return;
-    const id = anchor.getAttribute("href");
-    if (id === "#" || id === "") return;
-    const target = document.querySelector(id);
-    if (!target) return;
-    event.preventDefault();
-    const top = target.getBoundingClientRect().top + window.scrollY - 80;
+  /* A small inertial scroller, no library. The wheel moves a target; each
+     frame the page eases toward it (exponential, frame-rate independent), so
+     a flick glides to rest instead of stepping. Anchors tween to their
+     section under the fixed header with the system's ease-out curve.
+     Off where it would fight the reader: touch devices (their own physics
+     are better), prefers-reduced-motion, and inside any element that
+     scrolls on its own (code blocks, tables, the gallery frames). */
+  (function () {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    window.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
-    history.replaceState(null, "", id);
-  });
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const HEADER = 80;
+    const quint = (t) => 1 - Math.pow(1 - t, 5);
+    const maxY = () => document.documentElement.scrollHeight - window.innerHeight;
+    const clamp = (y) => Math.max(0, Math.min(maxY(), y));
+
+    let target = window.scrollY, current = window.scrollY, raf = 0, last = 0;
+    let tween = null;  /* an anchor flight: { from, to, start, ms } */
+
+    function frame(now) {
+      const dt = Math.min(64, now - (last || now)); last = now;
+      if (tween) {
+        const t = Math.min(1, (now - tween.start) / tween.ms);
+        current = tween.from + (tween.to - tween.from) * quint(t);
+        target = current;
+        if (t >= 1) tween = null;
+      } else {
+        /* 1 - e^(-k·dt): the same feel at 60 and 120 Hz */
+        current += (target - current) * (1 - Math.exp(-dt * 0.012));
+        if (Math.abs(target - current) < 0.5) current = target;
+      }
+      window.scrollTo(0, current);
+      if (tween || current !== target) raf = requestAnimationFrame(frame);
+      else { raf = 0; last = 0; }
+    }
+    const run = () => { if (!raf) { last = 0; raf = requestAnimationFrame(frame); } };
+
+    /* an inner element that can still scroll the wheel's way keeps the event */
+    function innerScrolls(event) {
+      const down = event.deltaY > 0;
+      for (let el = event.target; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+        if (el.tagName === "IFRAME") return true;
+        const style = getComputedStyle(el);
+        const scrolls = /(auto|scroll)/.test(style.overflowY) && el.scrollHeight > el.clientHeight + 1;
+        if (!scrolls) continue;
+        const atEnd = down ? el.scrollTop + el.clientHeight >= el.scrollHeight - 1 : el.scrollTop <= 0;
+        if (!atEnd) return true;
+      }
+      return false;
+    }
+
+    if (!reduce && !coarse) {
+      window.addEventListener("wheel", (event) => {
+        if (event.ctrlKey || event.defaultPrevented || innerScrolls(event)) return;
+        event.preventDefault();
+        const step = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
+        tween = null;
+        target = clamp(target + event.deltaY * step);
+        run();
+      }, { passive: false });
+      /* the scrollbar, keys, find-in-page: when the page moves on its own, follow it */
+      window.addEventListener("scroll", () => { if (!raf) { current = target = window.scrollY; } }, { passive: true });
+      window.addEventListener("resize", () => { target = clamp(target); }, { passive: true });
+    }
+
+    function flyTo(y) {
+      const to = clamp(y);
+      if (reduce) { window.scrollTo(0, to); return; }
+      if (coarse) { window.scrollTo({ top: to, behavior: "smooth" }); return; }
+      const from = window.scrollY;
+      const ms = Math.min(1100, 500 + Math.abs(to - from) * 0.25);
+      tween = { from, to, start: performance.now(), ms };
+      current = from;
+      run();
+    }
+
+    /* in-page links scroll under the fixed header */
+    document.addEventListener("click", (event) => {
+      const anchor = event.target.closest('a[href^="#"]');
+      if (!anchor) return;
+      const id = anchor.getAttribute("href");
+      if (id === "#" || id === "") return;
+      const section = document.querySelector(id);
+      if (!section) return;
+      event.preventDefault();
+      flyTo(section.getBoundingClientRect().top + window.scrollY - HEADER);
+      history.replaceState(null, "", id);
+    });
+    window.formicScrollTo = flyTo;
+  })();
 </script>
 <script defer src="./landing.js?v=1"></script>
 <script>
