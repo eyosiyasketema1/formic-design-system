@@ -323,6 +323,26 @@ _gal_ver = re.search(r'const FORMIC_VERSION = "([^"]+)"', (ROOT / "preview.html"
 if not _pkg_ver or not _gal_ver or _pkg_ver.group(1) != _gal_ver.group(1):
     fails.append(f"version: package.json says {_pkg_ver and _pkg_ver.group(1)} but preview.html FORMIC_VERSION is {_gal_ver and _gal_ver.group(1)}; bump both (and CHANGELOG.md) together")
 
+# ── 4d. no merge-conflict markers, and every inline script on the landing
+# page parses. A conflict left in index.html once reached main: the gate
+# never read that file's scripts, so a syntax error shipped silently.
+for _f in sorted(ROOT.glob("*.html")) + sorted(ROOT.glob("*.jsx")) + sorted(ROOT.glob("*.css")) + sorted((ROOT / "components").glob("*.ts*")) + sorted((ROOT / "styles").glob("*.css")) + sorted((ROOT / "scripts").glob("*.py")):
+    _txt = _f.read_text(errors="ignore")
+    if re.search(r"^(<{7}|>{7}|={7})( |$)", _txt, re.M):
+        fails.append(f"{_f.relative_to(ROOT)}: merge-conflict markers left in the file")
+try:
+    _index = (ROOT / "index.html").read_text()
+    for _i, _m in enumerate(re.finditer(r"<script(?![^>]*\bsrc=)(?![^>]*type=\"(?:text/babel|module|application/ld\+json)\")[^>]*>(.*?)</script>", _index, re.S | re.IGNORECASE)):
+        _tmp = Path(f"/tmp/ds-qa-index-{_i}.js")
+        _tmp.write_text(_m.group(1))
+        r = subprocess.run(["npx", "-y", "esbuild", "--log-level=error", "--outfile=/tmp/ds-qa-index.out.js", str(_tmp)], capture_output=True, text=True, timeout=120)
+        if r.returncode != 0:
+            _e = re.search(r"ERROR: (.*)", r.stderr)
+            _line = _index[:_m.start(1)].count("\n") + 1
+            fails.append(f"index.html: inline script starting at line {_line} does not parse — {_e.group(1) if _e else r.stderr.strip()[-160:]}")
+except Exception as e:
+    print(f"note: index.html script check skipped ({e})")
+
 # ── 4c. the landing page's compiled assets are current ─────
 # index.html loads landing.css and landing.js, built from landing.tailwind.css
 # and landing.jsx by scripts/build_landing.py. A stale build ships the old

@@ -981,30 +981,18 @@ spline-viewer::part(logo) {
       statement.classList.remove("scroll-lift");
       statement.classList.add("scrub");
       statement.querySelectorAll(":scope > span").forEach((line) => {
-<<<<<<< Updated upstream
-        const words = line.textContent.trim().split(/\s+/);
-        line.textContent = "";
-        words.forEach((w, i) => {
-          const span = document.createElement("span");
-          span.className = "w";
-          span.textContent = w;
-          line.appendChild(span);
-          if (i < words.length - 1) line.appendChild(document.createTextNode(" "));
-        });
-=======
         const inner = document.createElement("span");
         inner.className = "l";
         inner.textContent = line.textContent.trim();
         line.textContent = "";
         line.appendChild(inner);
->>>>>>> Stashed changes
       });
       gsap.fromTo(statement.querySelectorAll(".l"), { yPercent: 110 }, {
         yPercent: 0, ease: "power4.out", stagger: 0.18,
         scrollTrigger: { trigger: statement, start: "top 88%", end: "top 40%", scrub: 0.6 },
       });
     }
-    const targets = document.querySelectorAll(".feat-card, .feat-icon-card, .feat-statement, .ai-way, .lstat, .lp-card, .live-section h2, .live-section .section-sub, .landing-section h2");
+    const targets = document.querySelectorAll(".live-header, .live-content, .feat-promo, .feat-card, .feat-icon-card, .feat-statement, .ai-steps > li, .ai-info, .ai-way, .lstat, .lp-card, .live-section h2, .live-section .section-sub, .landing-section h2");
     if (!targets.length || reduce || !("IntersectionObserver" in window)) return;
     targets.forEach((el) => { if (el.closest(".hero, header.site")) return; el.classList.add("reveal"); el.style.setProperty("--i", [...el.parentElement.children].indexOf(el)); });
     const io = new IntersectionObserver((entries) => {
