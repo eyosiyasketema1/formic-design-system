@@ -31,11 +31,14 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = "https://formicai.dev"
+# Cloudflare in front of Resend rejects Python's default User-Agent (its "error code: 1010")
+UA = "formic-announce/1.0 (+https://formicai.dev)"
 
 
 def load_env() -> None:
@@ -54,7 +57,7 @@ def kv(*parts: str):
     url, token = os.environ.get("KV_REST_API_URL"), os.environ.get("KV_REST_API_TOKEN")
     if not url or not token:
         sys.exit("announce: KV_REST_API_URL and KV_REST_API_TOKEN are not set (see the docstring)")
-    req = urllib.request.Request(url, data=json.dumps(list(parts)).encode(), headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+    req = urllib.request.Request(url, data=json.dumps(list(parts)).encode(), headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json", "User-Agent": UA})
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.load(r)["result"]
 
@@ -78,10 +81,19 @@ def send(to: str, subject: str, body: str) -> None:
     payload = {"from": sender, "to": [to], "subject": subject, "text": text, "headers": {"List-Unsubscribe": f"<{link}>"}}
     if os.environ.get("ANNOUNCE_REPLY_TO"):
         payload["reply_to"] = os.environ["ANNOUNCE_REPLY_TO"]  # replies reach a real inbox, not hello@
-    req = urllib.request.Request("https://api.resend.com/emails", data=json.dumps(payload).encode(), headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        if r.status >= 300:
-            raise RuntimeError(f"resend {r.status}")
+    req = urllib.request.Request("https://api.resend.com/emails", data=json.dumps(payload).encode(), headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json", "User-Agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            if r.status >= 300:
+                raise RuntimeError(f"resend {r.status}")
+    except urllib.error.HTTPError as exc:
+        # Resend says why (unverified domain, key scope, bad address); show it instead of a traceback
+        detail = exc.read().decode("utf-8", "replace")
+        try:
+            detail = json.loads(detail).get("message", detail)
+        except ValueError:
+            pass
+        raise RuntimeError(f"Resend refused ({exc.code}): {detail}") from None
 
 
 def recipients() -> list[str]:
@@ -116,7 +128,10 @@ def main() -> int:
         sys.exit("announce: the file needs a subject on line 1 and a body below it")
 
     if args.test:
-        send(args.test, subject, body)
+        try:
+            send(args.test, subject, body)
+        except RuntimeError as exc:
+            sys.exit(f"announce: {exc}")
         print(f"sent a test to {args.test}")
         return 0
     who = recipients()
