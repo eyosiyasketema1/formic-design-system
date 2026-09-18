@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import hmac
 import json
 import os
 import sys
@@ -59,8 +60,11 @@ def kv(*parts: str):
 
 
 def unsubscribe_link(email: str) -> str:
-    secret = os.environ.get("WAITLIST_SECRET") or os.environ.get("RESEND_API_KEY") or ""
-    token = hashlib.sha256((secret + email).encode()).hexdigest()[:16]
+    """the same HMAC api/unsubscribe.js checks; WAITLIST_SECRET must match Vercel's"""
+    secret = os.environ.get("WAITLIST_SECRET")
+    if not secret:
+        sys.exit("announce: WAITLIST_SECRET is not set (the unsubscribe links need it)")
+    token = hmac.new(secret.encode(), email.encode(), hashlib.sha256).hexdigest()[:32]
     return f"{SITE}/api/unsubscribe?e={urllib.request.quote(email)}&t={token}"
 
 
