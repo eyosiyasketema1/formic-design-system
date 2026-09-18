@@ -50,6 +50,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           from: process.env.WAITLIST_FROM || "Formic <onboarding@resend.dev>",
           to: [to],
+          reply_to: process.env.WAITLIST_REPLY_TO || to,
           subject: `Formic Pro waitlist: ${email}`,
           text: `${email} joined the Formic Pro waitlist on ${new Date().toISOString()}.`,
         }),
