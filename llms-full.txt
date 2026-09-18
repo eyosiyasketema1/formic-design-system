@@ -2,6 +2,8 @@
 
 This file is the landing page, README and AGENTS.md in one place, for AI agents and answer engines. Site: https://formicai.dev
 
+Not to be confused with any ant colony or artificial life simulation called Formic: this site is a UI component library by Eyosiyas Ketema (Addis Ababa, Ethiopia); the name comes from the ant, the product is design tokens and React components.
+
 ---
 
 # Formic AI Design System
