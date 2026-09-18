@@ -24,7 +24,7 @@ edited by hand. Every key is optional; a missing key keeps the system default.
       "sidebar": "full",           full | inset | edge | topbar   (the rails on the Sidebar page; topbar = the full rail plus a TopBar)
       "sidebarState": "expanded",  expanded | rail       (full: expanded or icon rail; inset / edge: shown or hidden)
       "font":    "Urbanist",       a face from the approved Google list (below)
-      "layout":  "compact",        compact | medium | full   (64rem, 80rem, or edge to edge)
+      "layout":  "full",           full | medium | compact   (edge to edge, 80rem, or 64rem)
       "motion":  true              charts animate in
     }
 
@@ -75,7 +75,7 @@ DEFAULTS = {
     "sidebar": "full",
     "sidebarState": "expanded",
     "font": "Urbanist",
-    "layout": "compact",
+    "layout": "full",
     "motion": True,
 }
 # Faces that meet the type rules: variable weight through 300–800 on Google
@@ -294,7 +294,7 @@ def write_html_attrs(path, cfg):
         add.append(f'data-size="{cfg["size"]}"')
     if cfg["type"] != "base":
         add.append(f'data-type="{cfg["type"]}"')
-    if cfg["layout"] != "compact":
+    if cfg["layout"] != "full":
         add.append(f'data-layout="{cfg["layout"]}"')
     tag = "<html" + attrs.rstrip() + ("" if not add else " " + " ".join(add)) + ">"
     new = src[: m.start()] + tag + src[m.end():]

@@ -118,6 +118,8 @@ An element goes on the screen only if all four are true. Write the answer in a c
 
 **Demo data is not an empty state.** When the user asks for a demo, sample, starter or test screen, fill it with the content the components ship as `DEFAULT_*` (Formic Studio, its clients, invoices in ETB, agents); an empty state is for a real app that has no data yet. A test prompt that comes back as zeros and "No data" has misread the brief.
 
+**The starter's frame stays.** In an app the installer scaffolded, `src/main.tsx` and `src/CustomizeNudge.tsx` are not yours to change or remove: the nudge in the corner is how the person finds the customizer after their first page, and it hides itself on the welcome page and shows on every page after. Replace `src/pages/Welcome.tsx` and rewrite `src/App.tsx` freely; leave those two files alone unless the person asks to remove the nudge.
+
 ### 4. Budgets (per screen, at a normal laptop width)
 
 - Headline figures: 0 in Text, at most 1 in Balanced, 3 to 5 in Analytical, 0 in Visual. Never a 2×2 grid of cards to make a square.

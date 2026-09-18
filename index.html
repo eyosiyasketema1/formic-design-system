@@ -558,13 +558,21 @@ spline-viewer::part(logo) {
           </li>
           <li>
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div class="ai-step-title">Point your AI tool at that folder and paste the test prompt</div>
+              <div class="ai-step-title">Point your AI tool at that folder and paste a test prompt</div>
               <button type="button" class="qs-example-btn" onclick="document.getElementById('example-modal-2').showModal()">show me an example</button>
             </div>
-            <p>In the same terminal type <code>claude</code>, or open that folder in Cursor or VS Code; the dashboard it builds is what Formic looks like.</p>
+            <p>In the same terminal type <code>claude</code>, or open that folder in Cursor or VS Code. The page it opened holds three test prompts, each a different screen; pick the one closest to your product. What it builds is what Formic looks like.</p>
             <div class="lcode">
-              <div class="lcode-head">Your AI tool</div>
-              <pre class="wrap">Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with Formic Studio's dashboard, composed the way AGENTS.md (Composition intelligence, Dashboard) says: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report; the label is the verb, the icon comes from iconFor and never enters the label); a filter row under the header with a status Select and a time-range choice (Tabs segmented: 7 days, 30 days, 90 days) that change the numbers and charts below; four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a LineChart of revenue by month (`guides`, two series where one has values below zero, a ChartLegend) beside a one-third Panel holding a DonutChart of revenue by client with a list legend beside the ring showing each count and share and the total in the middle (`segments`, `legend="list"`, `center`); then a recent invoices DataTable on its own, filling the full width (toolbar search, status filter, selectable rows, pagination). Everything must work: filters filter, rows select, the theme switch beside the profile flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev.</pre>
+              <div class="lcode-head">Test prompt 1: Studio dashboard · Figures, two charts and a table; the classic first screen</div>
+              <pre class="wrap">Use Formic (src/formic), read AGENTS.md, then replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with Formic Studio's dashboard, composed the way AGENTS.md (Composition intelligence, Dashboard) says: an AppShell with the rail from the config; a page header with a caption whose actions hold a segmented Tabs time range (7 days, 30 days, 90 days) that changes every figure and chart below, plus two buttons (Export, New report; the label is the verb, the icon comes from iconFor and never enters the label); no filter row under the header; four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a LineChart of revenue by month (`guides`, two series where one has values below zero, a ChartLegend) beside a one-third Panel holding a DonutChart of revenue by client with a list legend beside the ring showing each count and share and the total in the middle (`segments`, `legend="list"`, `center`); then a recent invoices DataTable on its own, filling the full width, whose toolbar holds the search, a status Select (all, paid, due, overdue) that filters the rows, and nothing else; selectable rows and pagination. The theme switch beside the profile flips and the rail collapses. Everything must work, not look like it works. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev.</pre>
+            </div>
+            <div class="lcode">
+              <div class="lcode-head">Test prompt 2: Agent workspace · A chat beside the agent&#x27;s trace; the AI-product shape</div>
+              <pre class="wrap">Use Formic (src/formic), read AGENTS.md, then replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with an agent workspace for Formic Studio, composed the way AGENTS.md (Composition intelligence) says: an AppShell with the rail from the config, a page header titled after the task (a proposal for a client) with a caption and one action (Share); under it a SplitPane: the first pane a ChatThread with the demo conversation and a PromptBar at the bottom that appends what is typed as a new message and shows `status="streaming"` with a Stop button for two seconds before the reply arrives; the second pane the agent's work: a ThinkingState trace that expands, TaskRows for the steps with one still running, an ApprovalCard for a step that needs a yes (Approve and Reject both resolve it and the next TaskRow starts), and a FileTree of the files the agent touched. The theme switch beside the profile flips, the pane divider drags, and the layout stacks on a narrow screen. Everything must work, not look like it works. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev.</pre>
+            </div>
+            <div class="lcode">
+              <div class="lcode-head">Test prompt 3: Client record · One record with sections, a table and an edit form</div>
+              <pre class="wrap">Use Formic (src/formic), read AGENTS.md, then replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with a client record page for Formic Studio, composed the way AGENTS.md (Composition intelligence) says: an AppShell with the rail from the config; a page header with the client's name, a caption (sector, city, client since) and two actions (Edit, New invoice); a StatStrip of four figures (billed this year, outstanding, open proposals, last payment); underline Tabs for Overview, Invoices, Proposals and Activity that switch the content below: Overview is a two-thirds Panel of MetricRows (revenue by service line with `progress`) beside a one-third Panel holding a Timeline of recent events; Invoices is a DataTable with toolbar search, a status Select and pagination; Proposals is a DataTable too; Activity is the Timeline on its own. Edit opens a Drawer from the right with a form (Input for name and email, Select for sector, TagInput for tags, a Save accent button and Cancel) that updates the header when saved. Everything must work, not look like it works. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev.</pre>
             </div>
             <p>Every prompt after that starts the same way, then says what you want:</p>
             <div class="lcode">
@@ -580,15 +588,15 @@ spline-viewer::part(logo) {
         <div class="ai-ways">
           <div class="ai-way">
             <div class="ai-way-title">Claude Code</div>
-            <p>In the project folder type <code>claude</code> and paste the test prompt. It finds the Formic rules on its own; nothing to set up.</p>
+            <p>In the project folder type <code>claude</code> and paste a test prompt. It finds the Formic rules on its own; nothing to set up.</p>
           </div>
           <div class="ai-way">
             <div class="ai-way-title">Cursor, VS Code with Copilot</div>
-            <p>Open the folder, switch the chat to Agent mode, paste the test prompt. The rules are already in the project.</p>
+            <p>Open the folder, switch the chat to Agent mode, paste a test prompt. The rules are already in the project.</p>
           </div>
           <div class="ai-way">
             <div class="ai-way-title">Codex, Antigravity, any other agent</div>
-            <p>Open the folder and paste the test prompt. Every tool that reads <code>AGENTS.md</code> is covered; if yours does not, paste that file into its rules once.</p>
+            <p>Open the folder and paste a test prompt. Every tool that reads <code>AGENTS.md</code> is covered; if yours does not, paste that file into its rules once.</p>
           </div>
         </div>
         <div class="ai-way ai-way-wide">

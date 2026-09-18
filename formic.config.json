@@ -12,6 +12,6 @@
   "sidebar": "full",
   "sidebarState": "expanded",
   "font": "Urbanist",
-  "layout": "compact",
+  "layout": "full",
   "motion": true
 }

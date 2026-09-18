@@ -501,13 +501,13 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 :root[data-size="comfortable"] { --spacing: 0.28rem; }
 :root[data-size="spacious"] { --spacing: 0.3125rem; }
 
-/* Content layout: compact keeps a page's content to a readable column,
- * full lets it run edge to edge. Wrap page content in .page-content;
+/* Content layout: full (the default) runs edge to edge; compact keeps a
+ * page's content to a readable column, medium a wider one. Wrap page content in .page-content;
  * rails and headers stay outside it. formic.config.json's `layout`
  * sets the attribute. */
-:root { --content-max: 64rem; }
+:root { --content-max: none; }
+:root[data-layout="compact"] { --content-max: 64rem; }
 :root[data-layout="medium"] { --content-max: 80rem; }
-:root[data-layout="full"] { --content-max: none; }
 
 /* Type size: the whole ramp one or two steps up, still integer pixels.
  * base is 14px; lg reads at 15, xl at 16. Controls do not move (rule 11);
@@ -17697,7 +17697,7 @@ function AppShellDemo() {
    the live stylesheet, so they cannot drift. State lives in the URL,
    so a designer can send the link to a developer. */
 const CZ_KEYS = ["accent", "palette", "paletteColor", "radius", "cardRadius", "corners", "controls", "size", "type", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"];
-const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", paletteColor: "#a5e12a", radius: "default", cardRadius: "auto", corners: "smooth", controls: "scale", size: "default", type: "base", theme: "light", avatar: "initials", sidebar: "full", sidebarState: "expanded", font: "Urbanist", layout: "compact", motion: true };
+const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", paletteColor: "#a5e12a", radius: "default", cardRadius: "auto", corners: "smooth", controls: "scale", size: "default", type: "base", theme: "light", avatar: "initials", sidebar: "full", sidebarState: "expanded", font: "Urbanist", layout: "full", motion: true };
 /* the approved faces (mirror of FONTS in scripts/apply_config.py): variable
    weight through 300–800 on Google Fonts, a full x-height range, tabular figures */
 const CZ_FONTS = [
@@ -17739,7 +17739,7 @@ const CZ_CHOICES = {
   sidebar: ["full", "inset", "edge", "topbar"],
   sidebarState: ["expanded", "rail"],
   font: CZ_FONTS.map((f) => f.id),
-  layout: ["compact", "medium", "full"],
+  layout: ["full", "medium", "compact"],
 };
 const CZ_HELP = {
   accent: "Bring the brand colour. Light and dark each get their own value, fitted to AA on their surfaces.",
@@ -17753,7 +17753,7 @@ const CZ_HELP = {
   sidebar: "Where the navigation sits; the pages in it stay the same on every rail. Full view: expanded with a sub-menu open, collapse in the header. Inset: the page is a surface card beside the rail; the trigger hides and shows it. Edge: hairline on the right, same page. Top bar: the full rail without its user row, and a strip above the page with search, theme, notifications and the account.",
   sidebarState: "How the rail first opens. Full view collapses to an icon rail; Inset and Edge hide behind their trigger.",
   font: "Every face on the list is variable through 300 to 800 on Google Fonts, so the weight ramp stays real. The type scale never changes.",
-  layout: "Compact keeps page content to a column of 64rem, Medium 80rem, both centred. Full lets it run edge to edge. Rails and headers are outside all three.",
+  layout: "Full, the default, lets page content run edge to edge. Medium keeps it to a centred column of 80rem, Compact 64rem. Rails and headers are outside all three.",
   motion: "Charts and sparklines animate in once. Reduced motion always wins.",
 };
 /* fonts load on demand, one <link> per face, so the page never pays for eight */
@@ -18035,7 +18035,7 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
       data-controls={cfg.controls !== "scale" ? cfg.controls : undefined}
       data-size={cfg.size !== "default" ? cfg.size : undefined}
       data-type={cfg.type !== "base" ? cfg.type : undefined}
-      data-layout={cfg.layout !== "compact" ? cfg.layout : undefined}
+      data-layout={cfg.layout !== "full" ? cfg.layout : undefined}
       style={{ "--accent": accent, "--font-sans": czStack(cfg.font), fontFamily: "var(--font-sans)", colorScheme: mode }}
     >
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-line bg-surface px-3 py-2">

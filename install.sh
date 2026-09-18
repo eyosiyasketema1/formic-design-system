@@ -106,7 +106,7 @@ EOF
 EOF
   cat > "$APP/index.html" <<EOF
 <!doctype html>
-<html lang="en" data-theme="dark" data-layout="medium">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -123,10 +123,15 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
+import CustomizeNudge from "./CustomizeNudge";
 
+/* main.tsx stays as it is. The nudge sits beside the app, not inside it, so
+   it survives whatever the AI tool makes of App.tsx; delete its two lines
+   here once the look is yours. */
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
+    <CustomizeNudge />
   </StrictMode>,
 );
 EOF
@@ -137,31 +142,26 @@ EOF
 EOF
   cat > "$APP/src/App.tsx" <<'EOF'
 import Welcome from "./pages/Welcome";
-import CustomizeNudge from "./CustomizeNudge";
 
-/* App.tsx stays as the shell; pages come and go. The nudge outlives the
-   welcome page; delete it when the look is yours. The theme switch is in
-   the rail beside the profile, so no floating one. */
+/* App.tsx is the app: pages come and go here. The first test prompt replaces
+   the welcome page. The theme switch is in the rail beside the profile, so
+   there is no floating one. */
 export default function App() {
-  return (
-    <>
-      <Welcome />
-      <CustomizeNudge />
-    </>
-  );
+  return <Welcome />;
 }
 EOF
   cat > "$APP/src/CustomizeNudge.tsx" <<'EOF'
 /* Brief
-   Reader:   the person who just watched their AI tool build the first page
+   Reader:   the person who just watched their AI tool build a page
    Question: this is the stock look; can I change it?
    Action:   open the customizer in a new tab
    Register: text
 */
-/* One card in the bottom-right corner, above the first page the AI tool
-   builds (not the welcome page), that says the look can be changed, with one
-   link; Close and Customize both dismiss it for good. Delete this file and its line in App.tsx once the
-   look is yours. */
+/* One card in the bottom-right corner, above every page the AI tool builds
+   (not the welcome page), that says the look can be changed, with one link;
+   Close and Customize both dismiss it for good. Mounted from main.tsx beside
+   the app so it survives whatever happens to App.tsx. Delete this file and its
+   two lines in main.tsx once the look is yours. */
 import { useEffect, useState } from "react";
 import Button from "./formic/components/Button";
 import { Card, Icon, IconButton } from "./formic/components/primitives";
@@ -171,12 +171,21 @@ const CUSTOMIZE_URL = "https://formicai.dev/customize";
    localhost port does not stay dismissed in this one */
 const STORAGE_KEY = "formic-nudge-__FORMIC_INSTALL__";
 const dismissed = () => { try { return localStorage.getItem(STORAGE_KEY) === "off"; } catch { return false; } };
+const onWelcome = () => Boolean(document.querySelector("[data-formic-welcome]"));
 
 export default function CustomizeNudge() {
-  /* waits for the first real page: on the welcome page the prompt is the one
-     thing to read, so the card appears once the AI tool has replaced it */
+  /* hidden on the welcome page, where the prompts are the one thing to read;
+     shows the moment the AI tool's page replaces it, and stays through every
+     page after that until dismissed */
   const [shown, setShown] = useState(false);
-  useEffect(() => { setShown(!dismissed() && !document.querySelector("[data-formic-welcome]")); }, []);
+  useEffect(() => {
+    if (dismissed()) return;
+    const check = () => setShown(!onWelcome());
+    check();
+    const watch = new MutationObserver(check);
+    watch.observe(document.body, { childList: true, subtree: true });
+    return () => watch.disconnect();
+  }, []);
   const close = () => { setShown(false); try { localStorage.setItem(STORAGE_KEY, "off"); } catch { /* private mode: the choice lasts the session */ } };
   if (!shown) return null;
   return (
@@ -199,31 +208,51 @@ EOF
 /* Brief
    Reader:   the person who just ran the installer, in the browser it opened
    Question: did it work, and what do I do next?
-   Action:   copy the test prompt and paste it into their AI tool, opened in this folder
+   Action:   copy a test prompt and paste it into their AI tool, opened in this folder
    Register: text
 */
-/* The first page. Your AI tool replaces it with the dashboard when you paste
-   the prompt below; nothing here is meant to stay. */
+/* The first page. Your AI tool replaces it with whichever test prompt you
+   paste; nothing here is meant to stay. */
 import { useEffect, useRef, useState } from "react";
 import Button from "../formic/components/Button";
 import Panel from "../formic/components/Panel";
 import { FormicMark } from "../formic/components/brand";
 import { Icon } from "../formic/components/primitives";
 
-const PROMPT = "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with Formic Studio's dashboard, composed the way AGENTS.md (Composition intelligence, Dashboard) says: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report; the label is the verb, the icon comes from iconFor and never enters the label); a filter row under the header with a status Select and a time-range choice (Tabs segmented: 7 days, 30 days, 90 days) that change the numbers and charts below; four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a LineChart of revenue by month (`guides`, two series where one has values below zero, a ChartLegend) beside a one-third Panel holding a DonutChart of revenue by client with a list legend beside the ring showing each count and share and the total in the middle (`segments`, `legend=\"list\"`, `center`); then a recent invoices DataTable on its own, filling the full width (toolbar search, status filter, selectable rows, pagination). Everything must work: filters filter, rows select, the theme switch beside the profile flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev.";
 const PREFIX = "Use Formic (src/formic), read AGENTS.md, then";
+const CLOSE = "Everything must work, not look like it works. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev.";
 
-export default function Welcome() {
+/* Three test prompts, three different screens, so the first page is not
+   always a dashboard. Each one replaces the welcome page; App.tsx is the
+   AI tool's to change, main.tsx and CustomizeNudge.tsx are not. */
+const PROMPTS: { label: string; title: string; caption: string; text: string }[] = [
+  {
+    label: "Test prompt 1",
+    title: "Studio dashboard",
+    caption: "Figures, two charts and a table; the classic first screen",
+    text: `${PREFIX} replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with Formic Studio's dashboard, composed the way AGENTS.md (Composition intelligence, Dashboard) says: an AppShell with the rail from the config; a page header with a caption whose actions hold a segmented Tabs time range (7 days, 30 days, 90 days) that changes every figure and chart below, plus two buttons (Export, New report; the label is the verb, the icon comes from iconFor and never enters the label); no filter row under the header; four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a LineChart of revenue by month (\`guides\`, two series where one has values below zero, a ChartLegend) beside a one-third Panel holding a DonutChart of revenue by client with a list legend beside the ring showing each count and share and the total in the middle (\`segments\`, \`legend="list"\`, \`center\`); then a recent invoices DataTable on its own, filling the full width, whose toolbar holds the search, a status Select (all, paid, due, overdue) that filters the rows, and nothing else; selectable rows and pagination. The theme switch beside the profile flips and the rail collapses. ${CLOSE}`,
+  },
+  {
+    label: "Test prompt 2",
+    title: "Agent workspace",
+    caption: "A chat beside the agent's trace; the AI-product shape",
+    text: `${PREFIX} replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with an agent workspace for Formic Studio, composed the way AGENTS.md (Composition intelligence) says: an AppShell with the rail from the config, a page header titled after the task (a proposal for a client) with a caption and one action (Share); under it a SplitPane: the first pane a ChatThread with the demo conversation and a PromptBar at the bottom that appends what is typed as a new message and shows \`status="streaming"\` with a Stop button for two seconds before the reply arrives; the second pane the agent's work: a ThinkingState trace that expands, TaskRows for the steps with one still running, an ApprovalCard for a step that needs a yes (Approve and Reject both resolve it and the next TaskRow starts), and a FileTree of the files the agent touched. The theme switch beside the profile flips, the pane divider drags, and the layout stacks on a narrow screen. ${CLOSE}`,
+  },
+  {
+    label: "Test prompt 3",
+    title: "Client record",
+    caption: "One record with sections, a table and an edit form",
+    text: `${PREFIX} replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with a client record page for Formic Studio, composed the way AGENTS.md (Composition intelligence) says: an AppShell with the rail from the config; a page header with the client's name, a caption (sector, city, client since) and two actions (Edit, New invoice); a StatStrip of four figures (billed this year, outstanding, open proposals, last payment); underline Tabs for Overview, Invoices, Proposals and Activity that switch the content below: Overview is a two-thirds Panel of MetricRows (revenue by service line with \`progress\`) beside a one-third Panel holding a Timeline of recent events; Invoices is a DataTable with toolbar search, a status Select and pagination; Proposals is a DataTable too; Activity is the Timeline on its own. Edit opens a Drawer from the right with a form (Input for name and email, Select for sector, TagInput for tags, a Save accent button and Cancel) that updates the header when saved. ${CLOSE}`,
+  },
+];
+
+function useCopy(): [boolean, (text: string) => Promise<void>] {
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | null>(null);
   useEffect(() => () => { if (timer.current) window.clearTimeout(timer.current); }, []);
-  const [copiedPrefix, setCopiedPrefix] = useState(false);
-  const copyPrefix = async () => {
-    try { await navigator.clipboard.writeText(PREFIX + " "); setCopiedPrefix(true); window.setTimeout(() => setCopiedPrefix(false), 1800); } catch { setCopiedPrefix(false); }
-  };
-  const copy = async () => {
+  const copy = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(PROMPT);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       if (timer.current) window.clearTimeout(timer.current);
       timer.current = window.setTimeout(() => setCopied(false), 1800);
@@ -231,6 +260,27 @@ export default function Welcome() {
       setCopied(false);
     }
   };
+  return [copied, copy];
+}
+
+function PromptPanel({ label, title, caption, text }: (typeof PROMPTS)[number]) {
+  const [copied, copy] = useCopy();
+  return (
+    <Panel title={`${label}: ${title}`} caption={caption}>
+      <div className="flex flex-col gap-3">
+        <p className="rounded-md bg-inset p-4 text-body leading-relaxed text-ink">{text}</p>
+        <div className="flex justify-end">
+          <Button variant="accent" size="md" onClick={() => copy(text)} icon={<Icon name={copied ? "check" : "copy"} />} aria-live="polite">
+            {copied ? "Copied" : "Copy prompt"}
+          </Button>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+export default function Welcome() {
+  const [copiedPrefix, copyPrefix] = useCopy();
   return (
     <main data-formic-welcome className="flex min-h-dvh items-center justify-center bg-canvas p-6 sm:p-8">
       <div className="flex w-full max-w-2xl flex-col gap-6">
@@ -242,22 +292,17 @@ export default function Welcome() {
           </div>
         </header>
 
-        <Panel title="Next: let your AI tool build the first page" caption="Open your AI tool (Claude Code, Cursor, Antigravity, Copilot, Codex, any of them) in this folder and paste this">
-          <div className="flex flex-col gap-3">
-            <p className="rounded-md bg-inset p-4 text-body leading-relaxed text-ink">{PROMPT}</p>
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-caption text-ink-2">The dashboard it builds is what Formic looks like. If it looks generic, say "That is not Formic, read AGENTS.md and redo it".</p>
-              <Button variant="accent" size="md" onClick={copy} icon={<Icon name={copied ? "check" : "copy"} />} aria-live="polite">
-                {copied ? "Copied" : "Copy prompt"}
-              </Button>
-            </div>
-          </div>
-        </Panel>
+        <div className="rounded-md bg-inset px-4 py-3 text-caption text-ink-2">
+          <p className="font-medium text-ink">Next: let your AI tool build the first page.</p>
+          <p className="mt-0.5">Open your AI tool (Claude Code, Cursor, Antigravity, Copilot, Codex, any of them) in this folder and paste one of the three test prompts. Each builds a different screen; pick the one closest to your product. If the result looks generic, say "That is not Formic, read AGENTS.md and redo it".</p>
+        </div>
+
+        {PROMPTS.map((p) => <PromptPanel key={p.label} {...p} />)}
 
         <Panel title="Every prompt after that" caption="Start it the same way, then say what you want">
           <div className="flex items-center justify-between gap-3">
             <p className="min-w-0 flex-1 rounded-md bg-inset px-4 py-3 font-mono text-caption text-ink">{PREFIX} <span className="text-ink-3">add a clients page with a DataTable…</span></p>
-            <Button variant="secondary" size="md" onClick={copyPrefix} icon={<Icon name={copiedPrefix ? "check" : "copy"} />} aria-live="polite" className="shrink-0">
+            <Button variant="secondary" size="md" onClick={() => copyPrefix(PREFIX + " ")} icon={<Icon name={copiedPrefix ? "check" : "copy"} />} aria-live="polite" className="shrink-0">
               {copiedPrefix ? "Copied" : "Copy"}
             </Button>
           </div>
@@ -457,8 +502,7 @@ if [ "$NEW" = 1 ]; then
   write_hook
   printf '\nDone. Run it:\n'
   if [ "$APP" = "." ]; then printf '  npm run dev        # the browser opens a page that says Formic is working\n\n'; else printf '  cd %s && npm run dev        # the browser opens a page that says Formic is working\n\n' "$APP"; fi
-  printf 'Then open your AI tool (Claude Code, Cursor, Antigravity, Copilot, any of them) in this folder and paste the test prompt:\n'
-  printf '  %s\n\n' "Use Formic (src/formic), read AGENTS.md, then replace the welcome page (keep App.tsx and CustomizeNudge) with Formic Studio's dashboard, composed the way AGENTS.md (Composition intelligence, Dashboard) says: an AppShell with the rail from the config; a page header with a caption and two actions (Export, New report; the label is the verb, the icon comes from iconFor and never enters the label); a filter row under the header with a status Select and a time-range choice (Tabs segmented: 7 days, 30 days, 90 days) that change the numbers and charts below; four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a LineChart of revenue by month with dashed guides and one series that goes below zero (the gallery's "LineChart · dashed guides, and a series that goes below zero" variant, with a legend) beside a one-third Panel holding a DonutChart of revenue by client with a list legend beside the ring showing each count and share and the total in the middle (the gallery's "DonutChart · a list legend beside the ring" variant); then a recent invoices DataTable on its own, filling the full width (toolbar search, status filter, selectable rows, pagination). Everything must work: filters filter, rows select, the theme switch beside the profile flips, the rail collapses. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev."
+  printf 'Then open your AI tool (Claude Code, Cursor, Antigravity, Copilot, any of them) in this folder and paste one of the three test prompts on that page (a dashboard, an agent workspace, a client record).\n\n'
   printf 'After that, start every prompt with:  %s  and say what you want.\n\n' "Use Formic (src/formic), read AGENTS.md, then"
   printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
   printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
