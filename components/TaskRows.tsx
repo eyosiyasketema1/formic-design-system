@@ -16,6 +16,8 @@ import { Badge, Disclosure, fadeUp, Icon } from "./primitives";
  * choreography is skipped; task details stay clickable.
  * ───────────────────────────────────────────────────────── */
 const TICKS = [600, 900, 2400, 1400, 2400, 600];
+/* no demo: nothing changes status on its own */
+const STILL = [0];
 function SpinnerRing({ active, children }: { active?: boolean; children?: ReactNode }) {
   const size = 24, stroke = 2;
   const r = (size - stroke) / 2;
@@ -66,14 +68,16 @@ export type TaskRowData = {
 export default function TaskRows({
   variant = "Capsules",
   rows: rowsProp,
+  demo = false,
 }: {
   variant?: "Capsules" | "List";
-  /** task rows; defaults to demo content with a scripted status run */
+  /** task rows; defaults to demo content */
   rows?: TaskRowData[];
+  /** the gallery's scripted run: a status that fails and recovers, a row that opens itself. Never in an app: a row's status is data, it changes when the data does */
+  demo?: boolean;
 }) {
-  const tick = useSequence(TICKS);
+  const tick = useSequence(demo ? TICKS : STILL);
   const [manualOpen, setManualOpen] = useState<Record<string, boolean>>({});
-  const demo = rowsProp === undefined;
   const draftStatus: TaskStatus = tick < 3 ? "pending" : tick === 3 ? "failed" : "completed";
   const rows: TaskRowData[] = rowsProp ?? [
     {

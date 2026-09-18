@@ -11,21 +11,21 @@ import DropdownMenu, { type MenuEntry } from "./DropdownMenu";
 export type MenubarMenu = { key: string; label: string; items: MenuEntry[] };
 const DEFAULT_MENUS: MenubarMenu[] = [
   {
-    key: "flavors",
-    label: "Flavors",
+    key: "clients",
+    label: "Clients",
     items: [
-      { key: "new", label: "New flavor", icon: "plus" },
+      { key: "new", label: "New client", icon: "plus" },
       { key: "edit", label: "Edit selected", icon: "edit" },
       { type: "divider" },
-      { key: "retire", label: "Retire selected", icon: "close", danger: true },
+      { key: "retire", label: "Archive selected", icon: "close", danger: true },
     ],
   },
   {
-    key: "batches",
-    label: "Batches",
+    key: "invoices",
+    label: "Invoices",
     items: [
-      { key: "queue", label: "Queue batch", icon: "plus" },
-      { key: "history", label: "Batch history", icon: "clock" },
+      { key: "queue", label: "New invoice", icon: "plus" },
+      { key: "history", label: "Sent invoices", icon: "clock" },
     ],
   },
   {

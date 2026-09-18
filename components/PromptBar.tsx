@@ -72,8 +72,8 @@ const DEFAULT_MODELS = [
   { key: "vanilla-1", name: "Vanilla 1", tag: "Basic" },
   { key: "freezer-burn", name: "Freezer Burn 0.4", tag: "Stale" },
 ];
-const FILES = ["flavor-chart.png", "summer-menu.pdf", "pos-export.csv"];
-const DICTATION = "Compare pistachio weekends to last summer";
+const FILES = ["brand-board.png", "proposal-v2.pdf", "timesheet-export.csv"];
+const DICTATION = "Compare this quarter's retainers to last year";
 /* self-running demo: walk the @ menu, then the / menu, and repeat.
  * Any pointer or key interaction hands control to the user. */
 const AUTO_STEPS: {
@@ -114,7 +114,7 @@ export type Command = { key: string; name: string; desc: string };
 export type Model = { key: string; name: string; tag: string };
 export default function PromptBar({
   variant = "Rounded",
-  demo = true,
+  demo = false,
   tall = false,
   placeholder,
   sources = DEFAULT_SOURCES,
@@ -130,7 +130,7 @@ export default function PromptBar({
   suggestions = [],
 }: {
   variant?: "Rounded" | "Pill";
-  /** the self-running walkthrough; turn off when embedding in a real surface */
+  /** the gallery's self-running walkthrough of the @ and / menus. Never in an app: nothing opens unless the person opens it */
   demo?: boolean;
   /** hero sizing: a multi-line input with controls on their own row */
   tall?: boolean;

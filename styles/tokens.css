@@ -187,13 +187,13 @@
 :root[data-size="comfortable"] { --spacing: 0.28rem; }
 :root[data-size="spacious"] { --spacing: 0.3125rem; }
 
-/* Content layout: compact keeps a page's content to a readable column,
- * full lets it run edge to edge. Wrap page content in .page-content;
+/* Content layout: full (the default) runs edge to edge; compact keeps a
+ * page's content to a readable column, medium a wider one. Wrap page content in .page-content;
  * rails and headers stay outside it. formic.config.json's `layout`
  * sets the attribute. */
-:root { --content-max: 64rem; }
+:root { --content-max: none; }
+:root[data-layout="compact"] { --content-max: 64rem; }
 :root[data-layout="medium"] { --content-max: 80rem; }
-:root[data-layout="full"] { --content-max: none; }
 
 /* Type size: the whole ramp one or two steps up, still integer pixels.
  * base is 14px; lg reads at 15, xl at 16. Controls do not move (rule 11);

@@ -91,7 +91,10 @@ export default function ToolChips({
   diffLines = DEFAULT_DIFF_LINES,
   summary,
   more,
+  demo = false,
 }: {
+  /** the gallery's scripted arrival, one row every 700ms. Never in an app: rows are data, they are all there */
+  demo?: boolean;
   /** tool call rows; defaults to demo content */
   rows?: ToolRow[];
   /** file-diff chips shown after the rows */
@@ -106,7 +109,8 @@ export default function ToolChips({
   const resolvedSummary =
     summary ?? (rows === DEFAULT_ROWS ? DEFAULT_SUMMARY : `${rows.length} tool calls`);
   const resolvedMore = more ?? (diffs === DEFAULT_DIFFS ? DEFAULT_MORE : undefined);
-  const [step, setStep] = useState(0);
+  const total = rows.length + 1; // rows, then diff chips
+  const [step, setStep] = useState(demo ? 0 : total);
   const [open, setOpen] = useState(true);
   const [openRows, setOpenRows] = useState<Set<number>>(new Set());
   /* Rendered in a body portal so animated/translated reply wrappers cannot
@@ -147,16 +151,15 @@ export default function ToolChips({
   };
   /* a new run resets the reveal and any expanded rows */
   useEffect(() => {
-    setStep(0);
+    setStep(demo ? 0 : total);
     setOpenRows(new Set());
     setPreview(null);
-  }, [rows]);
-  const total = rows.length + 1; // rows, then diff chips
+  }, [rows, demo, total]);
   useEffect(() => {
-    if (step >= total) return;
+    if (!demo || step >= total) return;
     const t = setTimeout(() => setStep((s) => s + 1), STEP_MS);
     return () => clearTimeout(t);
-  }, [step, total]);
+  }, [demo, step, total]);
   const toggleRow = (index: number) =>
     setOpenRows((current) => {
       const next = new Set(current);

@@ -13,10 +13,10 @@ import DropdownMenu from "./DropdownMenu";
 export type Crumb = { key: string; label: string; href?: string };
 const DEFAULT_CRUMBS: Crumb[] = [
   { key: "home", label: "Home" },
-  { key: "flavors", label: "Flavors" },
-  { key: "seasonal", label: "Seasonal" },
-  { key: "pistachio", label: "Roasted Pistachio" },
-  { key: "batch", label: "Batch 42" },
+  { key: "clients", label: "Clients" },
+  { key: "retainers", label: "Retainers" },
+  { key: "northwind", label: "Northwind Bank" },
+  { key: "invoice", label: "Invoice 1042" },
 ];
 const linkClass =
   "flex h-6 max-w-40 items-center rounded-sm px-1 text-caption text-ink-3 transition-colors duration-150 hover:bg-hover hover:text-ink";

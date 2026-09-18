@@ -5,6 +5,7 @@ wearing Formic's tokens?
 
     python3 src/formic/scripts/formic_check.py src/         # an app (the default)
     python3 src/formic/scripts/formic_check.py src/pages/Billing.tsx
+    python3 src/formic/scripts/formic_check.py --inventory src/   # one line per file: on Formic, or how far off
 
 Reads every .tsx / .jsx under the paths given, skipping the vendored src/formic
 folder itself, and reports the tells of an agent that invented UI instead of
@@ -31,6 +32,9 @@ What it catches:
   readable   text-nano in a muted ink, body copy in text-ink-3, text faded with
              opacity: the three ways copy stops being readable
 
+--inventory is for an existing app: it lists every UI file with its issue count
+and whether it imports Formic, worst first, so a migration can be planned and
+followed to the end instead of leaving the app half on the old UI.
 Legitimate exceptions are rare; when one is real, put the reason on the same
 line in a comment containing `formic-ok` and the line is skipped.
 """
@@ -106,7 +110,9 @@ def check(path):
 
 
 def main():
-    roots = [Path(p) for p in sys.argv[1:]] or [Path("src")]
+    args = sys.argv[1:]
+    inventory = "--inventory" in args
+    roots = [Path(p) for p in args if not p.startswith("--")] or [Path("src")]
     files = []
     for r in roots:
         if r.is_file():
@@ -117,8 +123,18 @@ def main():
     if not files:
         raise SystemExit(f"no .tsx/.jsx files under {', '.join(str(r) for r in roots)} (the vendored src/formic folder is skipped on purpose)")
     total = 0
-    for f in sorted(files):
-        hits = check(f)
+    results = {f: check(f) for f in sorted(files)}
+    if inventory:
+        rows = sorted(results.items(), key=lambda kv: (-len(kv[1]), str(kv[0])))
+        pending = [f for f, hits in rows if hits]
+        print(f"{'issues':>6}  {'formic':<7} file")
+        for f, hits in rows:
+            src = f.read_text(errors="replace")
+            on = "yes" if (FORMIC_IMPORT.search(src) or FORMIC_IMPORT_ALT.search(src)) else "no"
+            print(f"{len(hits):>6}  {on:<7} {f}")
+        print(f"\n{len(pending)} of {len(files)} file(s) still to migrate. Convert them one by one, worst first, and run this without --inventory until it prints clean; a file half on Formic is not done.")
+        sys.exit(1 if pending else 0)
+    for f, hits in results.items():
         if not hits:
             continue
         total += len(hits)
@@ -126,7 +142,8 @@ def main():
         for no, kind, found, msg in hits:
             print(f"  ✗ {no:>4}  {kind:<8} {found:<40} {msg}")
     if total:
-        print(f"\n{total} usage issue(s). Import the component, use the token, or put the reason on the line as `formic-ok`. See AGENTS.md → Build protocol.")
+        flagged = sum(1 for hits in results.values() if hits)
+        print(f"\n{total} usage issue(s) in {flagged} of {len(files)} file(s). Import the component, use the token, or put the reason on the line as `formic-ok`. See AGENTS.md → Build protocol." + (" This app is only partly on Formic: `--inventory` lists what is left, and AGENTS.md → Migrating an existing app says how to finish." if flagged > 1 else ""))
         sys.exit(1)
     print(f"formic: {len(files)} file(s) built on the system — tokens, ramp, radii, Formic components, no second kit")
 

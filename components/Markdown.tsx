@@ -207,27 +207,27 @@ const HEADING_CLASSES: Record<number, string> = {
   2: "text-lead font-semibold text-ink",
   3: "text-body font-semibold text-ink",
 };
-const DEFAULT_CONTENT = `### Weekend flavor plan
-Pistachio is **up 23%** this month with the *best margin* on the board — details in [the flavor doc](https://example.com/flavors).
+const DEFAULT_CONTENT = `### Northwind brand refresh
+Northwind Bank is **the largest open proposal** this quarter at *ETB 724,000*; the brief is in [the proposal](https://formicai.dev/).
 
-- Churn a double batch Friday night
-- Feature it on the A-board
-  - Pair it with the waffle special
-- Retire ~~Bubblegum~~ quietly
+- Confirm the two phases with the client
+- Book the brand team for October
+  - Web joins after the identity sign-off
+- Retire ~~the old rate card~~ quietly
 
-1. Prep the base Thursday
-2. Churn overnight
-3. Case by Saturday open
+1. Send the follow-up Monday
+2. Ask for the purchase order
+3. Invoice phase one on receipt
 
-> Cold-chain check passes before every weekend feature.
+> Legal signed off on Friday; nothing blocks the start.
 
-| Flavor | Margin | Trend |
+| Phase | Value | Status |
 | --- | --- | --- |
-| Pistachio | 38% | Rising |
-| Vanilla Bean | 30% | Flat |
+| Brand identity | ETB 310,000 | Signed |
+| Website | ETB 414,000 | Proposed |
 
 \`\`\`ts
-const plan = schedule("pistachio", { batches: 2 });
+const plan = schedule("northwind", { phases: 2 });
 \`\`\``;
 export default function Markdown({
   content = DEFAULT_CONTENT,

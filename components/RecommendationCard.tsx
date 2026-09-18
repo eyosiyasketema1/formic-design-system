@@ -90,7 +90,7 @@ function Meter({ signal, tone }: { signal: number; tone: string }) {
   );
 }
 export default function RecommendationCard({
-  title = "Want me to place this restock order?",
+  title = "Want me to move the Northwind launch?",
   options = DEFAULT_OPTIONS,
   onAccept,
 }: {

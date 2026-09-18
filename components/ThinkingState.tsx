@@ -13,6 +13,8 @@ import { DiffStat, Disclosure, fadeUp, Icon, ShimmerLabel, Spinner } from "./pri
  * The trace runs once, settles, and remains expandable.
  * ───────────────────────────────────────────────────────── */
 const STAGES = [800, 600, 1800, 2600, 1600];
+/* no demo: the sequence never advances; the props say what is shown */
+const STILL = [0];
 export type Row = {
   primary: string;
   secondary?: string;
@@ -83,9 +85,18 @@ export default function ThinkingState({
   done,
   query,
   more,
+  working: workingProp = false,
+  expanded: expandedProp,
+  demo = false,
   onSettled,
 }: {
   variant?: ThinkingVariant;
+  /** the agent is still working: the active label with its shimmer, the last Steps row spinning, the trace open. False (the default) is a finished trace: the done label, collapsed until clicked */
+  working?: boolean;
+  /** start open or closed; the reader can still toggle it */
+  expanded?: boolean;
+  /** the gallery's scripted run (working, rows arriving, settling, collapsing). Never in an app: there the props say what happened */
+  demo?: boolean;
   /** trace rows to display; defaults to demo content */
   rows?: Row[];
   /** label while working (e.g. "Searching the web") */
@@ -98,7 +109,7 @@ export default function ThinkingState({
   more?: string;
   onSettled?: () => void;
 }) {
-  const stage = useSequence(STAGES);
+  const stage = useSequence(demo ? STAGES : STILL);
   const [manualExpanded, setManualExpanded] = useState<boolean | null>(null);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const base = VARIANTS[variant] ?? VARIANTS.Steps;
@@ -109,10 +120,10 @@ export default function ThinkingState({
     query: query ?? base.query,
     more: more ?? (rows ? undefined : base.more),
   };
-  const autoExpanded = stage >= 1 && stage < 4;
+  const autoExpanded = demo ? stage >= 1 && stage < 4 : (expandedProp ?? workingProp);
   const expanded = manualExpanded ?? autoExpanded;
-  const working = stage < 3;
-  const visible = stage < 2 ? 0 : stage === 2 ? Math.min(2, v.rows.length) : v.rows.length;
+  const working = demo ? stage < 3 : workingProp;
+  const visible = !demo ? v.rows.length : stage < 2 ? 0 : stage === 2 ? Math.min(2, v.rows.length) : v.rows.length;
   const traceRef = useRef<HTMLDivElement>(null);
   const [lineHeight, setLineHeight] = useState(0);
   useLayoutEffect(() => {

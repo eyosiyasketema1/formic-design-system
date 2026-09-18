@@ -15,10 +15,10 @@ export type SelectOption = { value: string; label: string; /** a colour dot befo
 export type SelectSize = "sm" | "md";
 const SELECT_HEIGHTS: Record<SelectSize, string> = { sm: "h-8", md: "h-9" };
 const DEFAULT_OPTIONS: SelectOption[] = [
-  { value: "pistachio", label: "Pistachio" },
-  { value: "vanilla", label: "Vanilla Bean" },
-  { value: "rocky", label: "Rocky Road" },
-  { value: "mint", label: "Mint Chip" },
+  { value: "brand", label: "Brand identity" },
+  { value: "web", label: "Website" },
+  { value: "print", label: "Print" },
+  { value: "motion", label: "Motion" },
 ];
 export default function Select({
   options = DEFAULT_OPTIONS,

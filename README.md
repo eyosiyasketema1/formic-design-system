@@ -28,7 +28,7 @@ Formic is vendored, not published to npm: you copy the files into your project a
 curl -fsSL https://formicai.dev/install.sh | bash && npm run dev
 ```
 
-Then open your AI tool in that folder and paste the test prompt the installer prints. (`--new my-app` still works when you want the installer to create the folder.)
+Then open your AI tool in that folder and paste one of the three test prompts on the page it opens (a dashboard, a course registration form, a client record). (`--new my-app` still works when you want the installer to create the folder.)
 
 ### 2. By hand
 

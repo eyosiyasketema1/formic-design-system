@@ -501,13 +501,13 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 :root[data-size="comfortable"] { --spacing: 0.28rem; }
 :root[data-size="spacious"] { --spacing: 0.3125rem; }
 
-/* Content layout: compact keeps a page's content to a readable column,
- * full lets it run edge to edge. Wrap page content in .page-content;
+/* Content layout: full (the default) runs edge to edge; compact keeps a
+ * page's content to a readable column, medium a wider one. Wrap page content in .page-content;
  * rails and headers stay outside it. formic.config.json's `layout`
  * sets the attribute. */
-:root { --content-max: 64rem; }
+:root { --content-max: none; }
+:root[data-layout="compact"] { --content-max: 64rem; }
 :root[data-layout="medium"] { --content-max: 80rem; }
-:root[data-layout="full"] { --content-max: none; }
 
 /* Type size: the whole ramp one or two steps up, still integer pixels.
  * base is 14px; lg reads at 15, xl at 16. Controls do not move (rule 11);
@@ -2177,15 +2177,17 @@ function Dot({ tone }) {
   );
 }
 const TONES = ["bg-accent", "bg-orange", "bg-green"];
-function ThinkingState({ variant = "Steps" }) {
-  const stage = useSequence(STAGES);
+const TS_STILL = [0];
+function ThinkingState({ variant = "Steps", rows, working: workingProp = false, expanded: expandedProp, demo = false }) {
+  const stage = useSequence(demo ? STAGES : TS_STILL);
   const [manualExpanded, setManualExpanded] = useState(null);
   const [selectedTool, setSelectedTool] = useState(null);
-  const v = THINK_VARIANTS[variant] ?? THINK_VARIANTS.Steps;
-  const autoExpanded = stage >= 1 && stage < 4;
+  const base = THINK_VARIANTS[variant] ?? THINK_VARIANTS.Steps;
+  const v = rows ? { ...base, rows, more: undefined } : base;
+  const autoExpanded = demo ? stage >= 1 && stage < 4 : (expandedProp ?? workingProp);
   const expanded = manualExpanded ?? autoExpanded;
-  const working = stage < 3;
-  const visible = stage < 2 ? 0 : stage === 2 ? Math.min(2, v.rows.length) : v.rows.length;
+  const working = demo ? stage < 3 : workingProp;
+  const visible = !demo ? v.rows.length : stage < 2 ? 0 : stage === 2 ? Math.min(2, v.rows.length) : v.rows.length;
   const traceRef = useRef(null);
   const [lineHeight, setLineHeight] = useState(0);
   useLayoutEffect(() => {
@@ -2515,6 +2517,7 @@ const BTN_SIZES = {
   md: "h-9 gap-2 px-3.5 text-body [&_svg]:size-3.5",
   lg: "h-10 gap-2 px-4 text-lead [&_svg]:size-4"
 };
+const btnGlyph = (icon) => (typeof icon === "string" ? <Icon name={icon} /> : icon);
 function Button({
   children = "Button",
   variant = "primary",
@@ -2539,13 +2542,13 @@ function Button({
     enabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-45
     ${BTN_SIZES[size]} ${BTN_VARIANTS[variant]} ${className}`;
   const content = <>
-      {loading ? <Spinner /> : icon && <span aria-hidden className="shrink-0">{icon}</span>}
+      {loading ? <Spinner /> : icon && <span aria-hidden className="shrink-0">{btnGlyph(icon)}</span>}
       <span className="inline-flex items-center gap-[inherit] whitespace-nowrap">
         {Children.map(children, (child) =>
           typeof child === "string" || typeof child === "number" ? <span className="optical-text">{child}</span> : child,
         )}
       </span>
-      {!loading && iconEnd && <span aria-hidden className="shrink-0">{iconEnd}</span>}
+      {!loading && iconEnd && <span aria-hidden className="shrink-0">{btnGlyph(iconEnd)}</span>}
     </>;
   if (href !== void 0 && !disabled) {
     return <a
@@ -2665,7 +2668,7 @@ function ButtonExtrasDemo() {
     <div className="flex w-full flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         {sizes.map((size) => (
-          <Button key={size} size={size} variant="secondary" icon={<Icon name="plus" />}>New flavor</Button>
+          <Button key={size} size={size} variant="secondary" icon={<Icon name="plus" />}>New client</Button>
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -2714,8 +2717,9 @@ const TC_DIFF_LINES = {
   "nav.ts": [
     { text: "export const lead = \"work\";", tone: "del" }, { text: "export const lead = \"pricing\";", tone: "add" }],
 };
-function ToolChips({ rows = TC_ROWS, diffs = TC_DIFFS, diffLines = TC_DIFF_LINES, summary = "4 tool calls, 2 messages", more = "+2 more" }) {
-  const [step, setStep] = useState(0);
+function ToolChips({ rows = TC_ROWS, diffs = TC_DIFFS, diffLines = TC_DIFF_LINES, summary = "4 tool calls, 2 messages", more = "+2 more", demo = false }) {
+  const total = rows.length + 1;
+  const [step, setStep] = useState(demo ? 0 : total);
   const [open, setOpen] = useState(true);
   const [openRows, setOpenRows] = useState(new Set());
   const [preview, setPreview] = useState(null);
@@ -2741,11 +2745,10 @@ function ToolChips({ rows = TC_ROWS, diffs = TC_DIFFS, diffLines = TC_DIFF_LINES
     }, 120);
   };
   useEffect(() => {
-    setStep(0); setOpenRows(new Set()); setPreview(null);
+    setStep(demo ? 0 : total); setOpenRows(new Set()); setPreview(null);
   }, [rows]);
-  const total = rows.length + 1;
   useEffect(() => {
-    if (step >= total) return;
+    if (!demo || step >= total) return;
     const t = setTimeout(() => setStep((s) => s + 1), TC_STEP_MS);
     return () => clearTimeout(t);
   }, [step, total]);
@@ -2871,10 +2874,10 @@ function StatusDot({ tone, children }) {
   );
 }
 const pillEnter = { animation: "fade-in 200ms ease-out both" };
-function TaskRows({ variant = "Capsules", rows: rowsProp }) {
-  const tick = useSequence(TR_TICKS);
+const TR_STILL = [0];
+function TaskRows({ variant = "Capsules", rows: rowsProp, demo = false }) {
+  const tick = useSequence(demo ? TR_TICKS : TR_STILL);
   const [manualOpen, setManualOpen] = useState({});
-  const demo = rowsProp === undefined;
   const draftStatus = tick < 3 ? "pending" : tick === 3 ? "failed" : "completed";
   const rows = rowsProp ?? [
     { key: "verify", label: "Verified client records", amount: "12 clients", status: "completed",
@@ -3094,8 +3097,8 @@ const PB_MODELS = [
   { key: "vanilla-1", name: "Vanilla 1", tag: "Basic" },
   { key: "freezer-burn", name: "Freezer Burn 0.4", tag: "Stale" }
 ];
-const PB_FILES = ["flavor-chart.png", "summer-menu.pdf", "pos-export.csv"];
-const PB_DICTATION = "Compare pistachio weekends to last summer";
+const PB_FILES = ["brand-board.png", "proposal-v2.pdf", "timesheet-export.csv"];
+const PB_DICTATION = "Compare this quarter's retainers to last year";
 const PB_AUTO_STEPS = [
   { draft: "", connect: false, model: "vanilla-1", hold: 1100 },
   { draft: "@", active: 0, hold: 900 },
@@ -3124,7 +3127,7 @@ function pbParseToken(draft) {
 }
 function PromptBar({
   variant = "Rounded",
-  demo = true,
+  demo = false,
   tall = false,
   placeholder,
   sources = PB_SOURCES,
@@ -3687,7 +3690,7 @@ function RcMeter({ signal, tone }) {
     </span>;
 }
 function RecommendationCard({
-  title = "Want me to place this restock order?",
+  title = "Want me to move the Northwind launch?",
   options = RC_OPTIONS,
   onAccept
 } = {}) {
@@ -3781,11 +3784,11 @@ const SRC_DEFAULT_SOURCES = [
   },
   {
     id: 3,
-    title: "Supplier price list, Q3",
+    title: "Rate card, Q3",
     url: "https://formicai.dev/preview.html#/sources",
-    domain: "creamery.et",
-    quote: "Pistachio paste rises 12% from 1 October; cocoa holds until the December tender.",
-    meta: "Creamery · 28 Aug 2026",
+    domain: "northwindbank.et",
+    quote: "Print rates rise 12% from 1 October; web retainers hold until the December review.",
+    meta: "Northwind Bank · 28 Aug 2026",
   },
 ];
 
@@ -3923,8 +3926,8 @@ function Sources({
 const DEFAULT_TOOL_CALLS = [
   {
     name: "search_sites", label: "Searching the client sites for exit pages", state: "done", icon: "search", duration: 820,
-    input: { query: "exit rate by page", sites: ["selamcoffee.com", "creamery.et"], period: "30d" },
-    output: [{ site: "selamcoffee.com", page: "/menu", exits: 0.38 }, { site: "creamery.et", page: "/order", exits: 0.21 }],
+    input: { query: "exit rate by page", sites: ["selamcoffee.com", "northwindbank.et"], period: "30d" },
+    output: [{ site: "selamcoffee.com", page: "/menu", exits: 0.38 }, { site: "northwindbank.et", page: "/order", exits: 0.21 }],
   },
   {
     name: "read_file", label: "Reading the Northwind proposal", state: "done", icon: "file", duration: 140,
@@ -6794,6 +6797,8 @@ function SidebarNav({
   onNavigate,
   user = { name: "Eyosiyas Ketema" },
   onFooterClick,
+  theme,
+  onTheme,
   workspace = SN_WORKSPACE,
   navItems = SN_NAV_ITEMS,
   recents = SN_RECENTS,
@@ -7014,6 +7019,17 @@ function SidebarNav({
           </SnGlideGroup>
         </div>
         <div className="mx-2 mt-3 w-[208px] border-t border-line pt-2">
+          {onTheme && (
+            <button
+              type="button"
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              onClick={onTheme}
+              className="mb-0.5 flex h-8 w-full items-center gap-2 rounded-control px-2 text-left transition-colors duration-150 hover:bg-hover"
+            >
+              <span className="flex size-6 shrink-0 items-center justify-center text-ink-2"><Icon name={theme === "dark" ? "sun" : "moon"} size={15} strokeWidth={1.8} /></span>
+              <span className="sidebar-copy min-w-0 flex-1 truncate text-caption text-ink-2">{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+            </button>
+          )}
           <button
             type="button"
             aria-label="Open account menu"
@@ -7568,11 +7584,11 @@ function CB_highlightLine(line, language) {
   if (cursor < line.length) tokens.push({ text: line.slice(cursor), kind: "plain" });
   return tokens;
 }
-const CB_DEFAULT_CODE = `export function restock(flavor: string, batches = 2) {
-  // churn overnight so it sets by open
-  const start = Date.now();
-  return schedule({ flavor, batches, at: "05:30" })
-    .then((job) => log(\`queued \${flavor} x\${batches}\`, job.id));
+const CB_DEFAULT_CODE = `export function sendInvoice(client: string, amount: number) {
+  // draft from the timesheet, hold for approval
+  const draft = draftInvoice(client, amount);
+  return approve(draft)
+    .then((invoice) => log(\`sent \${client} ETB \${amount}\`, invoice.id));
 }`;
 function CodeBlock({
   code = CB_DEFAULT_CODE,
@@ -7736,10 +7752,10 @@ function Textarea({
 /* ═══════════ Select ═══════════ */
 const SEL_SELECT_HEIGHTS = { sm: "h-8", md: "h-9" };
 const SEL_DEFAULT_OPTIONS = [
-  { value: "pistachio", label: "Pistachio" },
-  { value: "vanilla", label: "Vanilla Bean" },
-  { value: "rocky", label: "Rocky Road" },
-  { value: "mint", label: "Mint Chip" }
+  { value: "brand", label: "Brand identity" },
+  { value: "web", label: "Website" },
+  { value: "print", label: "Print" },
+  { value: "motion", label: "Motion" }
 ];
 function Select({
   options = SEL_DEFAULT_OPTIONS,
@@ -8056,10 +8072,10 @@ function ToastProvider({ children }) {
 
 /* ═══════════ DropdownMenu ═══════════ */
 const DM_DEFAULT_ITEMS = [
-  { key: "edit", label: "Edit flavor", icon: "edit" },
+  { key: "edit", label: "Edit client", icon: "edit" },
   { key: "duplicate", label: "Duplicate", icon: "copy" },
   { type: "divider" },
-  { key: "retire", label: "Retire flavor", icon: "close", danger: true }
+  { key: "retire", label: "Archive client", icon: "close", danger: true }
 ];
 const DM_isAction = (entry) => entry.type !== "divider";
 function DropdownMenu({
@@ -8229,14 +8245,14 @@ const TB_DEFAULT_TABS = [
     content: "Pistachio leads the weekend menu \u2014 sales up 23% with the best margin on the board."
   },
   {
-    key: "batches",
-    label: "Batches",
+    key: "invoices",
+    label: "Invoices",
     content: "Two batches churned Friday night; the second finishes setting by Saturday open."
   },
   {
-    key: "suppliers",
-    label: "Suppliers",
-    content: "Maple Orbit covers the base; Aurora Scoops is on standby for the waffle special."
+    key: "team",
+    label: "Team",
+    content: "Two designers on the brand phase; the web team joins when the identity is signed off."
   }
 ];
 const TB_LIST = {
@@ -8423,10 +8439,10 @@ function Pagination({
 /* ═══════════ Breadcrumbs ═══════════ */
 const BC_DEFAULT_CRUMBS = [
   { key: "home", label: "Home" },
-  { key: "flavors", label: "Flavors" },
-  { key: "seasonal", label: "Seasonal" },
-  { key: "pistachio", label: "Roasted Pistachio" },
-  { key: "batch", label: "Batch 42" }
+  { key: "clients", label: "Clients" },
+  { key: "retainers", label: "Retainers" },
+  { key: "northwind", label: "Northwind Bank" },
+  { key: "invoice", label: "Invoice 1042" }
 ];
 const BC_linkClass = "flex h-6 max-w-40 items-center rounded-sm px-1 text-caption text-ink-3 transition-colors duration-150 hover:bg-hover hover:text-ink";
 function BC_CrumbLink({ crumb, onNavigate }) {
@@ -8644,27 +8660,27 @@ const MD_HEADING_CLASSES = {
   2: "text-lead font-semibold text-ink",
   3: "text-body font-semibold text-ink"
 };
-const MD_DEFAULT_CONTENT = `### Weekend flavor plan
-Pistachio is **up 23%** this month with the *best margin* on the board \u2014 details in [the flavor doc](https://example.com/flavors).
+const MD_DEFAULT_CONTENT = `### Northwind brand refresh
+Northwind Bank is **the largest open proposal** this quarter at *ETB 724,000*; the brief is in [the proposal](https://formicai.dev/).
 
-- Churn a double batch Friday night
-- Feature it on the A-board
-  - Pair it with the waffle special
-- Retire ~~Bubblegum~~ quietly
+- Confirm the two phases with the client
+- Book the brand team for October
+  - Web joins after the identity sign-off
+- Retire ~~the old rate card~~ quietly
 
-1. Prep the base Thursday
-2. Churn overnight
-3. Case by Saturday open
+1. Send the follow-up Monday
+2. Ask for the purchase order
+3. Invoice phase one on receipt
 
-> Cold-chain check passes before every weekend feature.
+> Legal signed off on Friday; nothing blocks the start.
 
-| Flavor | Margin | Trend |
+| Phase | Value | Status |
 | --- | --- | --- |
-| Pistachio | 38% | Rising |
-| Vanilla Bean | 30% | Flat |
+| Brand identity | ETB 310,000 | Signed |
+| Website | ETB 414,000 | Proposed |
 
 \`\`\`ts
-const plan = schedule("pistachio", { batches: 2 });
+const plan = schedule("northwind", { phases: 2 });
 \`\`\``;
 function Markdown({
   content = MD_DEFAULT_CONTENT,
@@ -8884,17 +8900,17 @@ function FileDropzone({
 const AC_DEFAULT_ITEMS = [
   {
     key: "restock",
-    title: "How does auto-restock work?",
-    content: "When a base ingredient dips below two days of cover, the system drafts a supplier order and holds it for approval. Nothing ships without a yes."
+    title: "How does an invoice get sent?",
+    content: "When a project milestone is marked done, the agent drafts the invoice from the timesheet and holds it for approval. Nothing goes to a client without a yes."
   },
   {
     key: "seasonal",
-    title: "When do seasonal flavors rotate?",
-    content: "Seasonal slots review every six weeks. Flavors trending under 4% of sales rotate out; the recommendation card proposes the replacement."
+    title: "When does a proposal expire?",
+    content: "Thirty days after it is sent. An expired proposal moves to the archive; the recommendation card proposes a follow-up if the client opened it."
   },
   {
     key: "suppliers",
-    title: "Can one flavor use two suppliers?",
+    title: "Can one client have two account owners?",
     content: "Yes \u2014 set a primary and a standby. The standby activates automatically when the primary misses a delivery window."
   }
 ];
@@ -9363,10 +9379,10 @@ function Drawer({
 
 /* ═══════════ Steps ═══════════ */
 const SP_DEFAULT_STEPS = [
-  { key: "recipe", label: "Recipe", description: "Base and mix-ins" },
-  { key: "churn", label: "Churn", description: "Overnight batch" },
-  { key: "case", label: "Case", description: "Set and display" },
-  { key: "launch", label: "Launch", description: "On the board" }
+  { key: "brief", label: "Brief", description: "Goals and scope" },
+  { key: "design", label: "Design", description: "Identity and pages" },
+  { key: "review", label: "Review", description: "Client sign-off" },
+  { key: "launch", label: "Launch", description: "Live and handed over" }
 ];
 function SP_StepCircle({
   state,
@@ -9485,21 +9501,21 @@ function Timeline({
 /* ═══════════ Menubar ═══════════ */
 const MB_DEFAULT_MENUS = [
   {
-    key: "flavors",
-    label: "Flavors",
+    key: "clients",
+    label: "Clients",
     items: [
-      { key: "new", label: "New flavor", icon: "plus" },
+      { key: "new", label: "New client", icon: "plus" },
       { key: "edit", label: "Edit selected", icon: "edit" },
       { type: "divider" },
-      { key: "retire", label: "Retire selected", icon: "close", danger: true }
+      { key: "retire", label: "Archive selected", icon: "close", danger: true }
     ]
   },
   {
-    key: "batches",
-    label: "Batches",
+    key: "invoices",
+    label: "Invoices",
     items: [
-      { key: "queue", label: "Queue batch", icon: "plus" },
-      { key: "history", label: "Batch history", icon: "clock" }
+      { key: "queue", label: "New invoice", icon: "plus" },
+      { key: "history", label: "Sent invoices", icon: "clock" }
     ]
   },
   {
@@ -9955,31 +9971,31 @@ const CA_DEFAULT_CONVERSATION = [
   {
     id: "u1",
     role: "user",
-    content: "What's selling best this month? Show me the numbers and the restock function."
+    content: "Which proposal should we chase this month? Show me the numbers and the invoice function."
   },
   {
     id: "a1",
     role: "assistant",
     content: <div className="flex flex-col gap-3">
         <Markdown
-      content={`Pistachio leads with **214 scoops** this week, up 9%. The top three:
+      content={`Northwind Bank leads with **ETB 724,000** open, up 9% on last quarter. The top three:
 
-| Flavor | Scoops | Trend |
+| Client | Open | Trend |
 | --- | --- | --- |
-| Pistachio | 214 | Rising |
-| Vanilla Bean | 167 | Flat |
-| Rocky Road | 121 | Falling |`}
+| Northwind Bank | ETB 724,000 | Rising |
+| Selam Coffee | ETB 310,000 | Flat |
+| Addis Legal | ETB 180,000 | Falling |`}
     />
-        <CodeBlock filename="restock.ts" />
+        <CodeBlock filename="sendInvoice.ts" />
       </div>
   }
 ];
-const CA_DEFAULT_REPLY = "Queued \u2014 a double pistachio batch churns Friday night and cases by Saturday open. I also nudged Maple Orbit for extra base; approve the order in Suppliers when it lands.";
+const CA_DEFAULT_REPLY = "Done: the follow-up thanks them for the sign-off, confirms the two phases starting 6 October, and asks for the purchase order so phase one can be invoiced. It is in Drafts; send it when you have read it.";
 function ChatApp({
   conversation = CA_DEFAULT_CONVERSATION,
   reply = CA_DEFAULT_REPLY,
-  activeTitle = "Weekend flavor plan",
-  userName = "Turumba Team",
+  activeTitle = "Northwind follow-up",
+  userName = "Eyosiyas Ketema",
   className = ""
 } = {}) {
   const [messages, setMessages] = useState(conversation);
@@ -12311,7 +12327,7 @@ function ToastDemo() {
   const toast = useToast();
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Button variant="primary" onClick={() => toast({ tone: "success", title: "Flavor saved", description: "Roasted Pistachio is live on the menu." })}>Success</Button>
+      <Button variant="primary" onClick={() => toast({ tone: "success", title: "Client saved", description: "Roasted Pistachio is live on the menu." })}>Success</Button>
       <Button variant="secondary" onClick={() => toast({ tone: "error", title: "Restock failed", description: "Supplier API timed out — try again." })}>Error</Button>
       <Button variant="secondary" onClick={() => toast({ title: "Batch queued for Friday", action: { label: "Undo", onClick: () => {} } })}>With action</Button>
     </div>
@@ -12361,13 +12377,13 @@ function DrawerDemo() {
     <div className="flex flex-wrap items-center gap-3">
       <Button variant="primary" onClick={() => setOpen(true)}>Flavor details</Button>
       <Button variant="secondary" onClick={() => setLeft(true)}>Left side</Button>
-      <Drawer open={open} onClose={() => setOpen(false)} title="Roasted Pistachio"
+      <Drawer open={open} onClose={() => setOpen(false)} title="Northwind Bank"
         footer={<>
           <Button variant="ghost" onClick={() => setOpen(false)}>Close</Button>
           <Button variant="primary" onClick={() => setOpen(false)}>Save changes</Button>
         </>}>
         <div className="flex flex-col gap-4">
-          <Field label="Display name"><Input defaultValue="Roasted Pistachio" /></Field>
+          <Field label="Display name"><Input defaultValue="Northwind Bank" /></Field>
           <Field label="Margin target" hint="Percent of sale price."><Slider defaultValue={38} showValue /></Field>
           <Timeline />
         </div>
@@ -12399,16 +12415,16 @@ function ModalDemo() {
   const [confirm, setConfirm] = useState(false);
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Button variant="primary" onClick={() => setOpen(true)}>Edit flavor</Button>
+      <Button variant="primary" onClick={() => setOpen(true)}>Edit client</Button>
       <Button variant="secondary" onClick={() => setConfirm(true)}>Retire flavor…</Button>
-      <Modal open={open} onClose={() => setOpen(false)} title="Edit flavor"
+      <Modal open={open} onClose={() => setOpen(false)} title="Edit client"
         footer={<>
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
           <Button variant="primary" onClick={() => setOpen(false)}>Save changes</Button>
         </>}>
         <div className="flex flex-col gap-4">
           <Field label="Flavor name" hint="Shown on the menu board.">
-            <Input defaultValue="Roasted Pistachio" />
+            <Input defaultValue="Northwind Bank" />
           </Field>
           <Field label="Category">
             <Select defaultValue="classic" options={[
@@ -13249,7 +13265,7 @@ function Page_combobox() {
         <Field label="Send to" hint="Anyone in the book, or an address you type.">
           <Combobox allowCustom placeholder="Name or email…" options={[
             { value: "abebe@northwindbank.et", label: "Abebe Worku", hint: "Northwind Bank" },
-            { value: "sara@creamery.et", label: "Sara Haile", hint: "Creamery" },
+            { value: "sara@northwindbank.et", label: "Sara Haile", hint: "Northwind Bank" },
             { value: "yonas@selamcoffee.com", label: "Yonas Tesfaye", hint: "Selam Coffee" },
           ]} />
         </Field>
@@ -13304,7 +13320,7 @@ function Page_taginput() {
       </GalleryCard>
       <GalleryCard label="validate · a reason keeps a bad tag out (emails only)" wide>
         <Field label="Recipients" hint="Press Enter after each address.">
-          <TagInput defaultValue={["abebe@northwindbank.et"]} suggestions={["sara@creamery.et", "yonas@selamcoffee.com", "meron@formic.studio"]} placeholder="Add an address…" validate={(t) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? undefined : `“${t}” is not an email address.`)} />
+          <TagInput defaultValue={["abebe@northwindbank.et"]} suggestions={["sara@northwindbank.et", "yonas@selamcoffee.com", "meron@formic.studio"]} placeholder="Add an address…" validate={(t) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? undefined : `“${t}” is not an email address.`)} />
         </Field>
       </GalleryCard>
       <GalleryCard label="Only the suggestions · allowCustom off · small" wide>
@@ -13567,10 +13583,10 @@ function Page_thinkingstate() {
           ↻ Replay all
         </button>
         <div className="grid gap-6 md:grid-cols-2">
-          <GalleryCard label="Steps"><ThinkingState key={`s${thinkKey}`} variant="Steps" /></GalleryCard>
-          <GalleryCard label="Reasoning"><ThinkingState key={`r${thinkKey}`} variant="Reasoning" /></GalleryCard>
-          <GalleryCard label="Search"><ThinkingState key={`w${thinkKey}`} variant="Search" /></GalleryCard>
-          <GalleryCard label="Coding"><ThinkingState key={`c${thinkKey}`} variant="Coding" /></GalleryCard>
+          <GalleryCard label="Steps"><ThinkingState key={`s${thinkKey}`} variant="Steps" demo /></GalleryCard>
+          <GalleryCard label="Reasoning"><ThinkingState key={`r${thinkKey}`} variant="Reasoning" demo /></GalleryCard>
+          <GalleryCard label="Search"><ThinkingState key={`w${thinkKey}`} variant="Search" demo /></GalleryCard>
+          <GalleryCard label="Coding"><ThinkingState key={`c${thinkKey}`} variant="Coding" demo /></GalleryCard>
         </div>
       </div>
     </>
@@ -13580,8 +13596,8 @@ function Page_thinkingstate() {
 function Page_taskrows() {
   return (
     <>
-      <GalleryCard label="Capsules" wide><TaskRows variant="Capsules" /></GalleryCard>
-      <GalleryCard label="List" wide><TaskRows variant="List" /></GalleryCard>
+      <GalleryCard label="Capsules" wide><TaskRows variant="Capsules" demo /></GalleryCard>
+      <GalleryCard label="List" wide><TaskRows variant="List" demo /></GalleryCard>
     </>
   );
 }
@@ -13592,7 +13608,7 @@ function ToolCallLive() {
   const stage = useSequence([900, 1600, 2400, 2600]);
   const states = ["pending", "running", "done"];
   const state = states[Math.min(stage, 2)];
-  const call = { name: "search_sites", label: "Searching the client sites for exit pages", icon: "search", state, input: stage >= 1 ? { query: "exit rate by page", sites: ["selamcoffee.com", "creamery.et"], period: "30d" } : undefined, output: state === "done" ? [{ site: "selamcoffee.com", page: "/menu", exits: 0.38 }, { site: "creamery.et", page: "/order", exits: 0.21 }] : undefined, duration: state === "done" ? 820 : undefined };
+  const call = { name: "search_sites", label: "Searching the client sites for exit pages", icon: "search", state, input: stage >= 1 ? { query: "exit rate by page", sites: ["selamcoffee.com", "northwindbank.et"], period: "30d" } : undefined, output: state === "done" ? [{ site: "selamcoffee.com", page: "/menu", exits: 0.38 }, { site: "northwindbank.et", page: "/order", exits: 0.21 }] : undefined, duration: state === "done" ? 820 : undefined };
   return <ToolCall key={tick} call={call} defaultOpen />;
 }
 function Page_toolcall() {
@@ -13625,7 +13641,7 @@ function Page_toolcall() {
 function Page_toolchips() {
   return (
     <>
-      <GalleryCard label="Default"><ToolChips /></GalleryCard>
+      <GalleryCard label="Default"><ToolChips demo /></GalleryCard>
     </>
   );
 }
@@ -13697,7 +13713,7 @@ function Page_splitpane() {
       <GalleryCard label="Chat and canvas · the reply on the left, the file it made on the right; drag the line, or focus it and use the arrows" full>
         <SplitPane className="h-96 overflow-hidden rounded-md shadow-hairline" defaultSize={0.42} paneClassName="p-4" onResize={setSize} label="Resize chat and canvas">
           <Markdown content={"**Restock is wired.** The job runs at 05:30 so the pistachio base sets before open, and it logs the batch id.\n\nNext I can add the Friday double batch, or leave it for now."} />
-          <CodeBlock filename="restock.ts" />
+          <CodeBlock filename="sendInvoice.ts" />
         </SplitPane>
         <p className="mt-2 text-small tabular-nums text-ink-3" aria-live="polite">{size === null ? "Chat pane at its default" : `Chat pane ${Math.round(size)}px`}</p>
       </GalleryCard>
@@ -13919,8 +13935,8 @@ function Page_modelselector() {
 function Page_promptbar() {
   return (
     <>
-      <GalleryCard label="Rounded" wide><PromptBar variant="Rounded" /></GalleryCard>
-      <GalleryCard label="Pill" wide><PromptBar variant="Pill" /></GalleryCard>
+      <GalleryCard label="Rounded" wide><PromptBar variant="Rounded" demo /></GalleryCard>
+      <GalleryCard label="Pill" wide><PromptBar variant="Pill" demo /></GalleryCard>
       <GalleryCard label="Streaming · Stop, a queue while the answer streams, history on ArrowUp, Tab suggestion, suggestion list" wide><PromptBarStreamingDemo /></GalleryCard>
     </>
   );
@@ -17582,6 +17598,7 @@ function AppShell({
   onTheme,
   notifications,
   onSearch,
+  chat,
   padding = true,
   fill = true,
   className = "",
@@ -17594,7 +17611,8 @@ function AppShell({
   const isProject = rail === "inset" || rail === "edge";
   const isTopBar = rail === "topbar";
   const isBare = rail === "none";
-  const header = (title || actions) && !isTopBar && !isBare && (
+  const isChat = rail === "chat";
+  const header = (title || actions) && !isTopBar && !isBare && !isChat && (
     <header className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
         <div className="min-w-0">
@@ -17620,25 +17638,55 @@ function AppShell({
       <ProjectSidebarTrigger open={project.open} toggle={project.toggle} />
     </div>
   );
+  /* the strip: what the TopBar is to a rail, for a page with none, and the
+     conversation's title bar beside the chat rail (the theme switch is in
+     that rail, so the strip carries it only when there is no rail) */
+  const strip = (withTheme) => (title || actions || withTheme) && (
+    <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-4">
+      <div className="flex min-w-0 items-baseline gap-2">
+        {title && <h1 className="truncate text-lead font-semibold tracking-tight text-ink">{title}</h1>}
+        {caption && <p className="hidden truncate text-caption text-ink-3 sm:block">{caption}</p>}
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        {actions}
+        {withTheme && (
+          <Tooltip label={themeNow === "dark" ? "Light mode" : "Dark mode"}>
+            <IconButton label={themeNow === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={onThemeNow} className="text-ink-3 hover:bg-hover hover:text-ink">
+              <Icon name={themeNow === "dark" ? "sun" : "moon"} size={15} strokeWidth={1.8} />
+            </IconButton>
+          </Tooltip>
+        )}
+      </div>
+    </header>
+  );
   if (isBare) {
     return (
       <div className={`flex ${height} min-w-0 flex-col ${className}`}>
-        {/* the strip: what the TopBar is to a rail, for a page with none */}
-        <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-4">
-          <div className="flex min-w-0 items-baseline gap-2">
-            {title && <h1 className="truncate text-lead font-semibold tracking-tight text-ink">{title}</h1>}
-            {caption && <p className="hidden truncate text-caption text-ink-3 sm:block">{caption}</p>}
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {actions}
-            <Tooltip label={themeNow === "dark" ? "Light mode" : "Dark mode"}>
-              <IconButton label={themeNow === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={onThemeNow} className="text-ink-3 hover:bg-hover hover:text-ink">
-                <Icon name={themeNow === "dark" ? "sun" : "moon"} size={15} strokeWidth={1.8} />
-              </IconButton>
-            </Tooltip>
-          </div>
-        </header>
+        {strip(true)}
         <main className="min-w-0 flex-1 overflow-y-auto">{content}</main>
+      </div>
+    );
+  }
+  if (isChat) {
+    return (
+      <div className={`flex ${height} min-w-0 ${className}`}>
+        <SidebarNav
+          activeTitle={chat?.activeTitle ?? (typeof title === "string" ? title : null)}
+          recents={chat?.recents}
+          navItems={chat?.navItems}
+          activeNav={chat?.activeNav}
+          onNavigate={chat?.onNavigate ?? onSelect}
+          onNewChat={chat?.onNewChat}
+          onPick={chat?.onPick}
+          workspace={workspace ? { name: workspace.name, monogram: workspace.monogram ?? workspace.name.slice(0, 1), logo: workspace.logo } : undefined}
+          user={user === null ? undefined : user ? { name: user.name, src: user.src, kind: user.kind } : undefined}
+          theme={themeNow}
+          onTheme={onThemeNow}
+        />
+        <div className="flex min-w-0 flex-1 flex-col">
+          {strip(false)}
+          <main className="min-w-0 flex-1 overflow-y-auto">{content}</main>
+        </div>
       </div>
     );
   }
@@ -17671,8 +17719,8 @@ function AppShellDemo() {
   return (
     <div className="flex w-full min-w-0 flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        <Tabs variant="segmented" value={rail} onChange={setRail} tabs={[{ key: "full", label: "Full view" }, { key: "inset", label: "Inset" }, { key: "edge", label: "Edge" }, { key: "topbar", label: "Top bar" }, { key: "none", label: "None" }]} />
-        <span className="text-small text-ink-3">The app reads this from formic.config.json; the switch stands in for it here. None is a prop for a page that stands alone (sign-in, onboarding, a public form): a header strip, the theme switch still in the corner.</span>
+        <Tabs variant="segmented" value={rail} onChange={setRail} tabs={[{ key: "full", label: "Full view" }, { key: "inset", label: "Inset" }, { key: "edge", label: "Edge" }, { key: "topbar", label: "Top bar" }, { key: "chat", label: "Chat" }, { key: "none", label: "None" }]} />
+        <span className="text-small text-ink-3">The app reads this from formic.config.json; the switch stands in for it here. Chat and None are props, chosen by the page's kind: Chat is the conversation rail for a chat or agent page, None is for a page that stands alone (sign-in, onboarding, a public form).</span>
       </div>
       <div className="h-[560px] overflow-hidden rounded-card border border-line">
         <AppShell key={rail} rail={rail} fill={false} active={page} onSelect={setPage} title="Overview" caption="Last 30 days" theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")} notifications={3}
@@ -17697,7 +17745,7 @@ function AppShellDemo() {
    the live stylesheet, so they cannot drift. State lives in the URL,
    so a designer can send the link to a developer. */
 const CZ_KEYS = ["accent", "palette", "paletteColor", "radius", "cardRadius", "corners", "controls", "size", "type", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"];
-const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", paletteColor: "#a5e12a", radius: "default", cardRadius: "auto", corners: "smooth", controls: "scale", size: "default", type: "base", theme: "light", avatar: "initials", sidebar: "full", sidebarState: "expanded", font: "Urbanist", layout: "compact", motion: true };
+const CZ_DEFAULTS = { accent: "#a5e12a", palette: "paper", paletteColor: "#a5e12a", radius: "default", cardRadius: "auto", corners: "smooth", controls: "scale", size: "default", type: "base", theme: "light", avatar: "initials", sidebar: "full", sidebarState: "expanded", font: "Urbanist", layout: "full", motion: true };
 /* the approved faces (mirror of FONTS in scripts/apply_config.py): variable
    weight through 300–800 on Google Fonts, a full x-height range, tabular figures */
 const CZ_FONTS = [
@@ -17739,7 +17787,7 @@ const CZ_CHOICES = {
   sidebar: ["full", "inset", "edge", "topbar"],
   sidebarState: ["expanded", "rail"],
   font: CZ_FONTS.map((f) => f.id),
-  layout: ["compact", "medium", "full"],
+  layout: ["full", "medium", "compact"],
 };
 const CZ_HELP = {
   accent: "Bring the brand colour. Light and dark each get their own value, fitted to AA on their surfaces.",
@@ -17753,7 +17801,7 @@ const CZ_HELP = {
   sidebar: "Where the navigation sits; the pages in it stay the same on every rail. Full view: expanded with a sub-menu open, collapse in the header. Inset: the page is a surface card beside the rail; the trigger hides and shows it. Edge: hairline on the right, same page. Top bar: the full rail without its user row, and a strip above the page with search, theme, notifications and the account.",
   sidebarState: "How the rail first opens. Full view collapses to an icon rail; Inset and Edge hide behind their trigger.",
   font: "Every face on the list is variable through 300 to 800 on Google Fonts, so the weight ramp stays real. The type scale never changes.",
-  layout: "Compact keeps page content to a column of 64rem, Medium 80rem, both centred. Full lets it run edge to edge. Rails and headers are outside all three.",
+  layout: "Full, the default, lets page content run edge to edge. Medium keeps it to a centred column of 80rem, Compact 64rem. Rails and headers are outside all three.",
   motion: "Charts and sparklines animate in once. Reduced motion always wins.",
 };
 /* fonts load on demand, one <link> per face, so the page never pays for eight */
@@ -18035,7 +18083,7 @@ function CzPane({ cfg, mode, accent, ratio, ready, onMode }) {
       data-controls={cfg.controls !== "scale" ? cfg.controls : undefined}
       data-size={cfg.size !== "default" ? cfg.size : undefined}
       data-type={cfg.type !== "base" ? cfg.type : undefined}
-      data-layout={cfg.layout !== "compact" ? cfg.layout : undefined}
+      data-layout={cfg.layout !== "full" ? cfg.layout : undefined}
       style={{ "--accent": accent, "--font-sans": czStack(cfg.font), fontFamily: "var(--font-sans)", colorScheme: mode }}
     >
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-line bg-surface px-3 py-2">

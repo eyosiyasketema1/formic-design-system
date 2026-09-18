@@ -59,11 +59,11 @@ function highlightLine(line: string, language: CodeLanguage): { text: string; ki
   if (cursor < line.length) tokens.push({ text: line.slice(cursor), kind: "plain" });
   return tokens;
 }
-const DEFAULT_CODE = `export function restock(flavor: string, batches = 2) {
-  // churn overnight so it sets by open
-  const start = Date.now();
-  return schedule({ flavor, batches, at: "05:30" })
-    .then((job) => log(\`queued \${flavor} x\${batches}\`, job.id));
+const DEFAULT_CODE = `export function sendInvoice(client: string, amount: number) {
+  // draft from the timesheet, hold for approval
+  const draft = draftInvoice(client, amount);
+  return approve(draft)
+    .then((invoice) => log(\`sent \${client} ETB \${amount}\`, invoice.id));
 }`;
 export default function CodeBlock({
   code = DEFAULT_CODE,

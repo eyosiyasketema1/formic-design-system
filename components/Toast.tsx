@@ -16,7 +16,7 @@ import { Icon, IconButton, type IconName } from "./primitives";
  * then fire from anywhere:
  *
  *   const toast = useToast();
- *   toast({ tone: "success", title: "Flavor saved" });
+ *   toast({ tone: "success", title: "Client saved" });
  *
  * Toasts stack bottom-right, auto-dismiss (hover pauses the
  * timer), announce politely — errors announce assertively.

@@ -9,10 +9,10 @@ import { Icon } from "./primitives";
  * ───────────────────────────────────────────────────────── */
 export type Step = { key: string; label: string; description?: string };
 const DEFAULT_STEPS: Step[] = [
-  { key: "recipe", label: "Recipe", description: "Base and mix-ins" },
-  { key: "churn", label: "Churn", description: "Overnight batch" },
-  { key: "case", label: "Case", description: "Set and display" },
-  { key: "launch", label: "Launch", description: "On the board" },
+  { key: "brief", label: "Brief", description: "Goals and scope" },
+  { key: "design", label: "Design", description: "Identity and pages" },
+  { key: "review", label: "Review", description: "Client sign-off" },
+  { key: "launch", label: "Launch", description: "Live and handed over" },
 ];
 function StepCircle({
   state,

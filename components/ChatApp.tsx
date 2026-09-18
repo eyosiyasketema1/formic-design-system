@@ -22,7 +22,7 @@ const DEFAULT_CONVERSATION: ChatAppMessage[] = [
   {
     id: "u1",
     role: "user",
-    content: "What's selling best this month? Show me the numbers and the restock function.",
+    content: "Which proposal should we chase this month? Show me the numbers and the invoice function.",
   },
   {
     id: "a1",
@@ -30,26 +30,26 @@ const DEFAULT_CONVERSATION: ChatAppMessage[] = [
     content: (
       <div className="flex flex-col gap-3">
         <Markdown
-          content={`Pistachio leads with **214 scoops** this week, up 9%. The top three:
+          content={`Northwind Bank leads with **ETB 724,000** open, up 9% on last quarter. The top three:
 
-| Flavor | Scoops | Trend |
+| Client | Open | Trend |
 | --- | --- | --- |
-| Pistachio | 214 | Rising |
-| Vanilla Bean | 167 | Flat |
-| Rocky Road | 121 | Falling |`}
+| Northwind Bank | ETB 724,000 | Rising |
+| Selam Coffee | ETB 310,000 | Flat |
+| Addis Legal | ETB 180,000 | Falling |`}
         />
-        <CodeBlock filename="restock.ts" />
+        <CodeBlock filename="sendInvoice.ts" />
       </div>
     ),
   },
 ];
 const DEFAULT_REPLY =
-  "Queued — a double pistachio batch churns Friday night and cases by Saturday open. I also nudged Maple Orbit for extra base; approve the order in Suppliers when it lands.";
+  "Done: the follow-up thanks them for the sign-off, confirms the two phases starting 6 October, and asks for the purchase order so phase one can be invoiced. It is in Drafts; send it when you have read it.";
 export default function ChatApp({
   conversation = DEFAULT_CONVERSATION,
   reply = DEFAULT_REPLY,
-  activeTitle = "Weekend flavor plan",
-  userName = "Turumba Team",
+  activeTitle = "Northwind follow-up",
+  userName = "Eyosiyas Ketema",
   className = "",
 }: {
   /** the thread; assistant content can be any composed node */

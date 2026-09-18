@@ -71,6 +71,12 @@ After every piece of work, look for extractable pieces and extract them:
 - `scripts/qa_check.py` — the QA gate
 - `scripts/formic_check.py`, `scripts/compose_check.py` — the two gates apps run on their own `src/` (the installer copies them with `apply_config.py` and `palette.py`); AGENTS.md → Build protocol tells agents to run both and to build a missing component rather than fake it inline
 
+## Roadmap (agreed with the maintainer; keep in order)
+
+1. **Formic Pro** (open core). This repo stays MIT and public. New components from late September 2026 go to a private `formic-pro` repo with the same layout; `install.sh` gains `--key` and pulls Pro into `src/formic/pro/`; AGENTS.md lists Pro components the same way; a Lemon Squeezy or Polar store issues keys, a small Vercel function checks them.
+2. **Studio: an internal admin page at `/studio`** (password-protected, Formic components, built on `AppShell`): the waitlist as a `DataTable` (address, joined, unsubscribed), a draft-and-send screen for announcements (subject, body, preview with the unsubscribe footer, "send to me" and "send to the list", the same Resend path as `scripts/announce.py`), and a history of what was sent and when. Replaces the terminal ritual once the list is bigger than a screen. Data stays in the Upstash store the waitlist already uses.
+3. Bing Webmaster Tools and Google Search Console submissions; Vercel Firewall checked for AI-bot blocking.
+
 ## Git
 
 **`main` is production and only ever receives `staging`.** Two protected branches:

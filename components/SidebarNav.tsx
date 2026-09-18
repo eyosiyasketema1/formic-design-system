@@ -52,6 +52,9 @@ type SidebarNavProps = {
   user?: { name: string; src?: string; kind?: AvatarKind };
   /** the account row was pressed */
   onFooterClick?: () => void;
+  /** the theme switch above the account row, shown when both are given (AppShell gives them) */
+  theme?: "light" | "dark";
+  onTheme?: () => void;
   workspace?: SidebarWorkspace;
   navItems?: SidebarNavItem[];
   recents?: SidebarRecent[];
@@ -199,6 +202,8 @@ export default function SidebarNav({
   onNavigate,
   user = DEFAULT_USER,
   onFooterClick,
+  theme,
+  onTheme,
   workspace = DEFAULT_WORKSPACE,
   navItems = DEFAULT_NAV_ITEMS,
   recents = DEFAULT_RECENTS,
@@ -428,6 +433,17 @@ export default function SidebarNav({
           </GlideGroup>
         </div>
         <div className="mx-2 mt-3 w-[208px] border-t border-line pt-2">
+          {onTheme && (
+            <button
+              type="button"
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              onClick={onTheme}
+              className="mb-0.5 flex h-8 w-full items-center gap-2 rounded-control px-2 text-left transition-colors duration-150 hover:bg-hover"
+            >
+              <span className="flex size-6 shrink-0 items-center justify-center text-ink-2"><Icon name={theme === "dark" ? "sun" : "moon"} size={15} strokeWidth={1.8} /></span>
+              <span className="sidebar-copy min-w-0 flex-1 truncate text-caption text-ink-2">{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+            </button>
+          )}
           <button
             type="button"
             aria-label="Open account menu"

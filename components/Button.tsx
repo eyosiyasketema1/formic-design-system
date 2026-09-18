@@ -1,6 +1,9 @@
 "use client";
 import { Children, type CSSProperties, type MouseEvent, type ReactNode } from "react";
-import { Spinner } from "./primitives";
+import { Icon, Spinner, type IconName } from "./primitives";
+
+/* an icon prop takes a name or an element; a name never reaches the label as text */
+const glyph = (icon: ReactNode | IconName) => (typeof icon === "string" ? <Icon name={icon as IconName} /> : icon);
 /* ─────────────────────────────────────────────────────────
  * BUTTON — the workhorse control
  *
@@ -93,9 +96,9 @@ export default function Button({
   /** leading icon — sized automatically to the button. An <Icon> passed as a
    *  child also works: the label row is a flex row, so Tailwind's block svg
    *  preflight cannot stack it above the text. Labels never wrap. */
-  icon?: ReactNode;
+  icon?: ReactNode | IconName;
   /** trailing icon — sized automatically to the button */
-  iconEnd?: ReactNode;
+  iconEnd?: ReactNode | IconName;
   /** render a real link with the button's look */
   href?: string;
   target?: string;
@@ -117,7 +120,7 @@ export default function Button({
       {loading ? (
         <Spinner />
       ) : (
-        icon && <span aria-hidden className="shrink-0">{icon}</span>
+        icon && <span aria-hidden className="shrink-0">{glyph(icon)}</span>
       )}
       <span className="inline-flex items-center gap-[inherit] whitespace-nowrap">
         {/* text-box trims block containers only, so each text run gets its own
@@ -127,7 +130,7 @@ export default function Button({
           typeof child === "string" || typeof child === "number" ? <span className="optical-text">{child}</span> : child,
         )}
       </span>
-      {!loading && iconEnd && <span aria-hidden className="shrink-0">{iconEnd}</span>}
+      {!loading && iconEnd && <span aria-hidden className="shrink-0">{glyph(iconEnd)}</span>}
     </>
   );
   if (href !== undefined && !disabled) {
