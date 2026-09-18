@@ -58,11 +58,11 @@ export const DEFAULT_SOURCES: Source[] = [
   },
   {
     id: 3,
-    title: "Supplier price list, Q3",
+    title: "Rate card, Q3",
     url: "https://formicai.dev/preview.html#/sources",
-    domain: "creamery.et",
-    quote: "Pistachio paste rises 12% from 1 October; cocoa holds until the December tender.",
-    meta: "Creamery · 28 Aug 2026",
+    domain: "northwindbank.et",
+    quote: "Print rates rise 12% from 1 October; web retainers hold until the December review.",
+    meta: "Northwind Bank · 28 Aug 2026",
   },
 ];
 

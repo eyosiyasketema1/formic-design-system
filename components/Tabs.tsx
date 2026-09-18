@@ -38,17 +38,17 @@ const DEFAULT_TABS: TabItem[] = [
   {
     key: "overview",
     label: "Overview",
-    content: "Pistachio leads the weekend menu — sales up 23% with the best margin on the board.",
+    content: "Northwind Bank leads the quarter: ETB 724,000 open, the largest proposal on the board.",
   },
   {
-    key: "batches",
-    label: "Batches",
+    key: "invoices",
+    label: "Invoices",
     content: "Two batches churned Friday night; the second finishes setting by Saturday open.",
   },
   {
-    key: "suppliers",
-    label: "Suppliers",
-    content: "Maple Orbit covers the base; Aurora Scoops is on standby for the waffle special.",
+    key: "team",
+    label: "Team",
+    content: "Two designers on the brand phase; the web team joins when the identity is signed off.",
   },
 ];
 export default function Tabs({

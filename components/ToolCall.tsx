@@ -41,8 +41,8 @@ export type ToolCallData = {
 export const DEFAULT_TOOL_CALLS: ToolCallData[] = [
   {
     name: "search_sites", label: "Searching the client sites for exit pages", state: "done", icon: "search", duration: 820,
-    input: { query: "exit rate by page", sites: ["selamcoffee.com", "creamery.et"], period: "30d" },
-    output: [{ site: "selamcoffee.com", page: "/menu", exits: 0.38 }, { site: "creamery.et", page: "/order", exits: 0.21 }],
+    input: { query: "exit rate by page", sites: ["selamcoffee.com", "northwindbank.et"], period: "30d" },
+    output: [{ site: "selamcoffee.com", page: "/menu", exits: 0.38 }, { site: "northwindbank.et", page: "/order", exits: 0.21 }],
   },
   {
     name: "read_file", label: "Reading the Northwind proposal", state: "done", icon: "file", duration: 140,

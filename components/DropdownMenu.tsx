@@ -29,10 +29,10 @@ export type MenuAction = {
 };
 export type MenuEntry = MenuAction | { type: "divider" };
 const DEFAULT_ITEMS: MenuEntry[] = [
-  { key: "edit", label: "Edit flavor", icon: "edit" },
+  { key: "edit", label: "Edit client", icon: "edit" },
   { key: "duplicate", label: "Duplicate", icon: "copy" },
   { type: "divider" },
-  { key: "retire", label: "Retire flavor", icon: "close", danger: true },
+  { key: "retire", label: "Archive client", icon: "close", danger: true },
 ];
 const isAction = (entry: MenuEntry): entry is MenuAction => entry.type !== "divider";
 export default function DropdownMenu({

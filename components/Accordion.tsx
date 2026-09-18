@@ -18,21 +18,21 @@ export type AccordionItem = { key: string; title: string; content: ReactNode };
 const DEFAULT_ITEMS: AccordionItem[] = [
   {
     key: "restock",
-    title: "How does auto-restock work?",
+    title: "How does an invoice get sent?",
     content:
-      "When a base ingredient dips below two days of cover, the system drafts a supplier order and holds it for approval. Nothing ships without a yes.",
+      "When a project milestone is marked done, the agent drafts the invoice from the timesheet and holds it for approval. Nothing goes to a client without a yes.",
   },
   {
     key: "seasonal",
-    title: "When do seasonal flavors rotate?",
+    title: "When does a proposal expire?",
     content:
-      "Seasonal slots review every six weeks. Flavors trending under 4% of sales rotate out; the recommendation card proposes the replacement.",
+      "Thirty days after it is sent. An expired proposal moves to the archive; the recommendation card proposes a follow-up if the client opened it.",
   },
   {
     key: "suppliers",
-    title: "Can one flavor use two suppliers?",
+    title: "Can one client have two account owners?",
     content:
-      "Yes — set a primary and a standby. The standby activates automatically when the primary misses a delivery window.",
+      "Yes: set a primary and a backup. The backup gets the client's messages when the primary is out of office.",
   },
 ];
 export default function Accordion({

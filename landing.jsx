@@ -3053,7 +3053,7 @@ function Bento() {
     <div className="bento">
       {/* three rows on the six column base */}
       <BentoCard label="ApprovalCard · answer it" span="sp2" body="body-fill"><ApprovalCard /></BentoCard>
-      <BentoCard label="TaskRows · agent progress" span="sp2"><TaskRows /></BentoCard>
+      <BentoCard label="TaskRows · agent progress" span="sp2"><TaskRows demo /></BentoCard>
       <BentoCard label="LoadingState · three variants" span="sp2" body="body-center">
         <div className="flex h-full flex-col justify-center gap-5 py-2">
           <LoadingState label="Indexing sources" variant="Orbit" />

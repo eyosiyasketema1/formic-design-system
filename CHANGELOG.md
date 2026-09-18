@@ -2,6 +2,23 @@
 
 Formic is vendored, so a version is the state of `main` you copied. `src/formic/VERSION` in an app records which one; re-running the installer moves it forward. Versions follow semver: while 0.x, a minor bump can change an API.
 
+## Unreleased
+
+### Breaking
+
+- **Nothing moves on its own.** `PromptBar`, `ThinkingState`, `TaskRows` and `ToolChips` no longer run their gallery walkthroughs by default: menus stay closed, traces show as finished, statuses stay what the row says, rows are all there. Pass `demo` to get the old self-running behaviour (the gallery does); an app never should. `ThinkingState` gains `working` and `expanded` so the real state is a prop.
+- Content layout defaults to `full`; `compact` and `medium` are the opt-ins.
+
+### Added
+
+- `AppShell rail="chat"`: the chat rail (`SidebarNav`) with the conversation's title strip beside it, for chat and agent pages; `chat={{ recents, onNewChat, onPick }}` fills it. `SidebarNav` takes `theme` / `onTheme` and shows the switch above the account row.
+- Installer: three labelled test prompts on the welcome page (a dashboard, an agent workspace, a client record); the customize nudge is mounted from `main.tsx` and appears on every page the AI tool builds.
+- AGENTS.md: which rail a page gets by its kind, how an agent screen is composed (the thread is the spine, a second pane only for a result), and the rule that nothing runs on its own.
+
+### Changed
+
+- Demo content: `ChatApp`, `Markdown`, `CodeBlock`, `Accordion`, `Tabs`, `Select`, `Breadcrumbs`, `Menubar`, `DropdownMenu`, `Sources`, `RecommendationCard` and `PromptBar` attachments now live in Formic Studio's world.
+
 ## 0.2.0 · 2026-09-10
 
 ### Breaking
