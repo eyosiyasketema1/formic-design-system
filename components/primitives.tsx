@@ -888,7 +888,7 @@ const AVATAR_SIZES: Record<AvatarSize, string> = {
 /* The four system tint tones (accent / green / orange / neutral) —
  * initials stay inside the token palette instead of a free hue,
  * so avatars read as part of the same family as badges and chips
- * (Turumba decision 2026-08-29; replaces the oklch hue hash). */
+ * (replaces the oklch hue hash). */
 const AVATAR_TONES = [
   "bg-accent-tint text-accent",
   "bg-green-tint text-green",

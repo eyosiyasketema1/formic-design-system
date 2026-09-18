@@ -48,7 +48,7 @@
   --red: #b91c1c;
 
   /* Backgrounds */
-  --canvas: #ffffff;       /* page background — clean white (Turumba decision 2026-08-29) */
+  --canvas: #ffffff;       /* page background — clean white */
   --surface: #ffffff;      /* card surface */
   --field: #f5f5f5;        /* input/disabled control background */
   --sidebar: #fafafa;      /* app rail background — whisper grey, one step off canvas */
@@ -110,7 +110,7 @@
 }
 
 /* ── Dark theme ────────────────────────────────────────── */
-/* Light is the default everywhere (Turumba decision 2026-08-29).
+/* Light is the default everywhere.
    Dark is opt-in only: the app sets <html data-theme="dark">. */
 :root[data-theme="dark"] {
   --ink: #f0efec;
@@ -122,7 +122,7 @@
   --hover: #232322;
   --hover-2: #292928;
   --inset: #232322;
-  --accent: #a5e12a;      /* lime — the dark-mode brand accent (Turumba decision 2026-09) */
+  --accent: #a5e12a;      /* lime — the dark-mode brand accent */
   --orange: #e08514;
   --green: #22c55e;
   --red: #f87171;

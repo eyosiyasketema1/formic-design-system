@@ -178,15 +178,18 @@ export default function CustomizeNudge() {
      shows the moment the AI tool's page replaces it, and stays through every
      page after that until dismissed */
   const [shown, setShown] = useState(false);
+  const [closed, setClosed] = useState(dismissed);
   useEffect(() => {
-    if (dismissed()) return;
+    if (closed) { setShown(false); return; }
     const check = () => setShown(!onWelcome());
     check();
     const watch = new MutationObserver(check);
     watch.observe(document.body, { childList: true, subtree: true });
     return () => watch.disconnect();
-  }, []);
-  const close = () => { setShown(false); try { localStorage.setItem(STORAGE_KEY, "off"); } catch { /* private mode: the choice lasts the session */ } };
+  }, [closed]);
+  /* Close is the only thing that dismisses it; Customize opens the customizer
+     in a new tab and the card stays, so the way back is still on screen */
+  const close = () => { setClosed(true); try { localStorage.setItem(STORAGE_KEY, "off"); } catch { /* private mode: the choice lasts the session */ } };
   if (!shown) return null;
   return (
     <Card role="region" aria-label="Make it yours" className="fixed right-4 bottom-4 z-40 flex w-full max-w-xs items-start gap-3 p-4">
@@ -194,7 +197,7 @@ export default function CustomizeNudge() {
       <div className="min-w-0 flex-1">
         <p className="text-body font-semibold text-ink">Make it yours</p>
         <p className="mt-0.5 text-caption text-ink-2">Accent, palette, font, radius and rail can be changed any time, and every page follows.</p>
-        <Button variant="accent" size="sm" href={CUSTOMIZE_URL} target="_blank" icon={<Icon name="external" />} onClick={close} className="mt-3">Customize</Button>
+        <Button variant="accent" size="sm" href={CUSTOMIZE_URL} target="_blank" icon={<Icon name="external" />} className="mt-3">Customize</Button>
       </div>
       <IconButton label="Close" onClick={close} className="-mt-1 -mr-1 shrink-0 text-ink-3 hover:bg-hover hover:text-ink">
         <Icon name="close" size={14} />
@@ -230,7 +233,7 @@ const PROMPTS: { label: string; title: string; caption: string; text: string }[]
     label: "Test prompt 1",
     title: "Studio dashboard",
     caption: "Figures, two charts and a table; the classic first screen",
-    text: `${PREFIX} replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with Formic Studio's dashboard, composed the way AGENTS.md (Composition intelligence, Dashboard) says: an AppShell with the rail from the config; a page header with a caption whose actions hold a segmented Tabs time range (7 days, 30 days, 90 days) that changes every figure and chart below, plus two buttons (Export, New report; the label is the verb only, the icon goes in the \`icon\` prop, \`icon="download"\` and \`icon="plus"\`, never as a word in the label); no filter row under the header; four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a LineChart of revenue by month (\`guides\`, two series where one has values below zero, a ChartLegend) beside a one-third Panel holding a DonutChart of revenue by client with a list legend beside the ring showing each count and share and the total in the middle (\`segments\`, \`legend="list"\`, \`center\`); then a recent invoices DataTable on its own, filling the full width, whose toolbar holds the search, a status Select (all, paid, due, overdue) that filters the rows, and nothing else; selectable rows and pagination. The theme switch beside the profile flips and the rail collapses. ${CLOSE}`,
+    text: `${PREFIX} replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with Formic Studio's dashboard, composed the way AGENTS.md (Composition intelligence, Dashboard) says: an AppShell with the rail from the config; a page header with a caption whose actions hold a segmented Tabs time range (7 days, 30 days, 90 days) that changes every figure and chart below, plus two buttons (Export, New report; the label is the verb only, the icon goes in the \`icon\` prop, \`icon="download"\` and \`icon="plus"\`, never as a word in the label); no filter row under the header; four StatCards in one row with deltas and sparklines; then three Panels in one row: a half-width Panel holding a LineChart of revenue by month (\`guides\`, two series where one has values below zero, a ChartLegend), a quarter-width Panel holding a DonutChart of revenue by client with \`segments\` and the leading client named in the centre, its legend rows under the ring (not \`legend="list"\`), and a quarter-width Panel holding a Gauge (\`percent\`, \`label\`) for the share of proposals that became clients; then a recent invoices DataTable on its own, filling the full width, built like the gallery's Invoices table: a toolbar with a page-size Select, the one accent action (New invoice), and at the right end the search Input and a status Select (all, paid, due, overdue) that filters the rows; columns with widths (id 120px muted, status 110px as a StatusCell, client as a PersonCell with the contact and the company, amount \`align: "end"\` tabular, date muted) so only the client column stretches and rows stay one line high; selectable rows with the mixed header box, RowActions per row, and the paged footer. The theme switch beside the profile flips and the rail collapses. ${CLOSE}`,
   },
   {
     label: "Test prompt 2",
