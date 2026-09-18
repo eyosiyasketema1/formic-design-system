@@ -511,7 +511,7 @@ spline-viewer::part(logo) {
       <div class="feat-container">
       <div class="feat-header">
         <h2>Quick start</h2>
-        <p class="section-sub">One command, then your first prompt. The same command for a new project and an existing one; needs git and Node.</p>
+        <p class="section-sub">One command, then your first prompt. The same command for a new project and an existing one; needs git and Node. The core is MIT and stays that way.</p>
       </div>
       <div class="ai-note" id="ai-tools" style="background: transparent; border: none; padding: 0;">
         <div class="ai-note-head">
@@ -717,6 +717,52 @@ spline-viewer::part(logo) {
 
 
 <!-- Modals opened from the footer: FAQ and the legal pages. Content stays in the HTML for crawlers and answer engines. -->
+<dialog id="pro-modal" class="site-modal" aria-labelledby="pro-title">
+  <div class="modal-panel">
+    <div class="modal-hero" aria-hidden="true"><img src="./assets/live-bg-1280.webp" alt="" loading="lazy" decoding="async" /></div>
+    <button type="button" class="modal-close" aria-label="Close" data-modal-close>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="modal-body">
+      <div class="modal-head">
+        <h2 id="pro-title">Formic Pro waitlist</h2>
+        <p>New components every week, for the people who asked first.</p>
+      </div>
+      <p>Everything on this site stays free and MIT. Pro is what ships next: the agent and dashboard components that take real design work, composed screens, and a customizer that goes further. Same one command, same gates, a key added. Leave your email and you hear when it opens, once, with the first price.</p>
+      <form class="pro-form" id="pro-form" action="/api/waitlist" method="post" novalidate>
+        <label class="sr-only" for="pro-email">Email address</label>
+        <div class="pro-row">
+          <input id="pro-email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="you@studio.com" required />
+          <button type="submit" class="lbtn lbtn-md lbtn-accent">Join the waitlist</button>
+        </div>
+        <!-- honeypot: hidden from people, filled by bots -->
+        <input type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" class="pro-hp" />
+        <p class="pro-note" id="pro-note" aria-live="polite">No spam, no sharing; one email when Pro opens. You can ask to be removed at any time.</p>
+      </form>
+    </div>
+  </div>
+</dialog>
+  <script>
+    (function () {
+      const form = document.getElementById("pro-form"), note = document.getElementById("pro-note"), input = document.getElementById("pro-email");
+      if (!form) return;
+      const say = (text, tone) => { note.textContent = text; note.dataset.tone = tone || ""; };
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const email = input.value.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { say("That does not look like an email address.", "error"); input.focus(); return; }
+        const button = form.querySelector("button"); button.disabled = true; say("Adding you…");
+        try {
+          const r = await fetch(form.action, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, company: form.company.value }) });
+          const data = await r.json().catch(() => ({}));
+          if (r.ok) { say(data.already ? "You are already on the list. We will write when Pro opens." : "You are on the list. One email when Pro opens.", "ok"); form.reset(); }
+          else if (r.status === 503) { say("The list is not open yet. Email eyosiyasketema@gmail.com with the subject \"Formic Pro\" and we will add you by hand.", "error"); }
+          else say(data.error || "Could not save that right now; please try again.", "error");
+        } catch { say("No connection right now; please try again.", "error"); }
+        button.disabled = false;
+      });
+    })();
+  </script>
 <dialog id="faq-modal" class="site-modal" aria-labelledby="faq-title">
   <div class="modal-panel">
     <div class="modal-hero" aria-hidden="true"><img src="./assets/live-bg-1280.webp" alt="" loading="lazy" decoding="async" /></div>
@@ -772,18 +818,18 @@ spline-viewer::part(logo) {
         <h2 id="privacy-title">Privacy</h2>
         <p>What happens with your data on this site: nothing, mostly.</p>
       </div>
-      <p>Formic is a static website and an open-source library. It has no accounts, no sign-up and no tracking of its own. This page says what does and does not happen with your data when you visit formicai.dev.</p>
+      <p>Formic is a static website and an open-source library. It has no accounts and no tracking of its own. This page says what does and does not happen with your data when you visit formicai.dev.</p>
       <h3>What we do not collect</h3>
-      <p>We do not collect names, emails or any personal information on the site. There are no forms that send data to us, no analytics scripts and no advertising.</p>
+      <p>The site has no analytics scripts and no advertising. The one form on it is the Formic Pro waitlist: if you use it, your email address is stored (with the time you joined) so we can tell you, once, when Pro opens and what it costs. It reaches us as an email sent through Resend and may also be kept in a Vercel-managed Upstash database. It is not shared with anyone and not used for anything else. Email us to be removed.</p>
       <h3>What is stored in your browser</h3>
       <p>A few preferences live in your browser&#x27;s local storage so the site remembers them: your light or dark choice and the choices you make in the customizer. They never leave your device and you can clear them at any time through your browser settings.</p>
       <h3>Third parties that see your request</h3>
-      <p>Loading the site sends the usual requests to the services that serve it, each of which sees your IP address and browser details: Vercel (hosting), Cloudflare cdnjs, jsDelivr and unpkg (script files), Google Fonts (the Urbanist typeface), Spline (the 3D scenes, loaded only when they scroll into view) and Unsplash (demo photographs). Buy Me a Coffee and GitHub are separate sites with their own policies; we link to them, nothing loads from them here.</p>
+      <p>Loading the site sends the usual requests to the services that serve it, each of which sees your IP address and browser details: Vercel (hosting; the waitlist is stored in a Vercel-managed Upstash database), Cloudflare cdnjs, jsDelivr and unpkg (script files), Google Fonts (the Urbanist typeface), Spline (the 3D scenes, loaded only when they scroll into view) and Unsplash (demo photographs). Buy Me a Coffee and GitHub are separate sites with their own policies; we link to them, nothing loads from them here.</p>
       <h3>The install script</h3>
       <p>curl -fsSL https://formicai.dev/install.sh | bash runs on your own machine and only there. It clones the public repository from GitHub and writes files into the project folder you run it in. It sends nothing to us.</p>
       <h3>Contact</h3>
       <p>Questions about this policy go to eyosiyasketema@gmail.com.</p>
-      <p>Last updated 17 September 2026.</p>
+      <p>Last updated 18 September 2026.</p>
     </div>
   </div>
 </dialog>
@@ -813,7 +859,7 @@ spline-viewer::part(logo) {
       <p>To the extent the law allows, we are not liable for any loss arising from use of the site or the library.</p>
       <h3>Changes</h3>
       <p>These terms may change; the date below tells you when they last did.</p>
-      <p>Last updated 17 September 2026.</p>
+      <p>Last updated 18 September 2026.</p>
     </div>
   </div>
 </dialog>
@@ -837,7 +883,7 @@ spline-viewer::part(logo) {
       <p>The library depends on React, Tailwind and Phosphor icons. Dependabot watches the repository and security bumps are applied with the compiled files rebuilt in the same change.</p>
       <h3>Reporting a problem</h3>
       <p>If you find a vulnerability in the site, the installer or the library, email eyosiyasketema@gmail.com with the details and steps to reproduce. Please give us a reasonable time to fix it before publishing. We will reply and credit you if you want.</p>
-      <p>Last updated 17 September 2026.</p>
+      <p>Last updated 18 September 2026.</p>
     </div>
   </div>
 </dialog>
@@ -859,13 +905,13 @@ spline-viewer::part(logo) {
       <p>The scripts, fonts and 3D scenes on the site are loaded from Cloudflare cdnjs, jsDelivr, unpkg, Google Fonts and Spline. These requests may be logged by those providers under their own policies; none of them sets a cookie through this site to our knowledge, and we run no tag managers or analytics that would.</p>
       <h3>Consent</h3>
       <p>Because nothing here tracks you, there is no cookie banner to accept. If that ever changes, this page will change first.</p>
-      <p>Last updated 17 September 2026.</p>
+      <p>Last updated 18 September 2026.</p>
     </div>
   </div>
 </dialog>
 <script>
   (function () {
-    const ids = ["faq", "privacy", "terms", "security", "cookies"];
+    const ids = ["faq", "privacy", "terms", "security", "cookies", "pro"];
     if (typeof HTMLDialogElement === "undefined" || !HTMLDialogElement.prototype.showModal) return;
     const open = (id) => { const m = document.getElementById(id + "-modal"); if (m && !m.open) { m.querySelector(".modal-panel").scrollTop = 0; m.showModal(); } };
     /* delegated, capture phase: the footer is parsed after this script, and
@@ -900,6 +946,7 @@ spline-viewer::part(logo) {
           <a href="./preview.html">Components</a>
           <a href="./customize">Customize</a>
           <a href="#faq">FAQ</a>
+          <a href="#pro">Formic Pro waitlist</a>
         </div>
         <div class="fat-col">
           <h4>Legal</h4>
