@@ -252,6 +252,6 @@ Read `CLAUDE.md` at the repo root for the full rules and `CONTRIBUTING.md` for s
 2. **Run the gate before you push:** `python3 scripts/qa_check.py`. CI runs the identical check and the PR cannot merge until it passes, so running it locally only saves a round trip.
 3. **Mirror into `preview.html`.** It duplicates the tokens and components inline so it can run standalone with no build. The gate fails on drift between `styles/` and `preview.html`.
 4. **Do not touch a CDN `<script>` tag casually.** Every external script carries an SRI `integrity` hash and an exactly pinned version, and `scripts/check_sri.py` verifies them against the live bytes in CI. A stale hash white-screens the production site while the HTML still looks correct in review.
-5. **`main` is production.** It deploys to https://formicai.dev on merge. Each PR gets its own Vercel preview URL — look at it before merging.
+5. **`main` is production and only takes `staging`.** Work goes topic branch → PR into `staging` (deploys to https://staging.formicai.dev) → PR `staging → main` (deploys to https://formicai.dev). Each PR also gets its own Vercel preview URL.
 
 Do not add dependencies, and do not reformat unrelated files alongside a real change.

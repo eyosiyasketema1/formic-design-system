@@ -18,6 +18,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # main is production and only ever receives what staging already runs:
+  # a PR into main must come from the staging branch. Feature work goes
+  # feature → staging (verified on the staging URL) → main.
+  promotion:
+    name: Only staging reaches main
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the source branch
+        env:
+          HEAD: ${{ github.head_ref }}
+        run: |
+          if [ "$HEAD" != "staging" ]; then
+            echo "::error::PRs into main must come from 'staging' (this one is from '$HEAD'). Open it against staging instead."
+            exit 1
+          fi
+          echo "staging → main: ok"
+
   qa:
     name: Design system gate
     runs-on: ubuntu-latest
