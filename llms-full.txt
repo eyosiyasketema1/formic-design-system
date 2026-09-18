@@ -369,6 +369,19 @@ A dashboard row, done right:
 </div>
 ```
 
+
+## Migrating an existing app
+
+Formic installed into an app that already has pages is a migration, and a migration is finished or it is not started: a page on Formic beside a page on the old UI is worse than either, because the reader sees two products. So:
+
+1. **Inventory first.** `python3 src/formic/scripts/formic_check.py --inventory src` lists every UI file, worst first, with whether it imports Formic. Show the person the list and the order you will take it in (shell and shared components first, then pages by how often they are seen), and get a yes before rewriting anything.
+2. **Shell before pages.** Wrap the app in one `AppShell` fed by `formic.config.json` and delete the old layout, sidebar and header components; then every page inherits the rail, the header and the theme switch and no page carries its own.
+3. **Convert a file whole.** Rebuild each page or component on Formic's components and tokens in one pass, keeping its routes, state, data calls and behaviour exactly; a file that mixes a Formic `DataTable` with an old `<button>` is not converted. Run `formic_check.py` on that file until it prints clean, then the next file.
+4. **Retire the old kit.** When nothing imports them, delete the old component folder (`components/ui`, the MUI theme, the Chakra provider), its CSS, its icon package and its chart library, and remove them from `package.json`; a second kit left installed is where the next generic screen comes from.
+5. **Finish.** `python3 src/formic/scripts/formic_check.py src` and `compose_check.py src` print clean for the whole app, not for the files you touched. Report what was converted, what was deleted, and anything you left with a `formic-ok` reason.
+
+When the person asks for one page in an app that is not yet on Formic, build that page on Formic, then tell them how many files the inventory still lists and offer to migrate them; never quietly leave the app mixed, and never build the new page on the old kit to match it.
+
 ## Brand colour: the one procedure
 
 When the user gives a colour ("make #29E0C2 the accent"), do not write it into `tokens.css`. One hex cannot serve both modes: a bright brand colour is unreadable on white, a deep one vanishes on dark. Run the script that derives both variants and rewrites the tokens:

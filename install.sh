@@ -518,6 +518,11 @@ else
   [ "$CSS_WIRED" = 1 ] || { printf '  • In your global CSS (Tailwind v4), in this order:\n'; printf '       @import "<path to>/%s/styles/fonts.css";\n       @import "tailwindcss";\n       @import "<path to>/%s/styles/formic.css";\n' "$DEST" "$DEST"; }
   printf 'Then open your AI tool in this folder and paste:\n'
 fi
-printf '  Use Formic (%s), read AGENTS.md, then build the studio dashboard: an AppShell (it mounts the rail from the config) with the page header, four StatCards, a revenue LineChart in a Panel and a recent invoices DataTable, filled with the demo data the components ship (Formic Studio, ETB), not empty states.\n\n' "$DEST"
+printf '  Use Formic (%s), read AGENTS.md, then migrate this whole app to Formic the way AGENTS.md (Migrating an existing app) says: run python3 %s/scripts/formic_check.py --inventory src for the list, show me the plan, then convert every page and component until both gates print clean. Keep every route, behaviour and data call; do not leave any page on the old UI.\n\n' "$DEST" "$DEST"
+if command -v python3 >/dev/null 2>&1 && [ -d src ]; then
+  # the inventory now, so the size of the job is known before the first prompt
+  INV="$(python3 "$DEST/scripts/formic_check.py" --inventory src 2>/dev/null | tail -1 || true)"
+  [ -n "$INV" ] && printf 'Inventory: %s\n\n' "$INV"
+fi
 printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
 printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
