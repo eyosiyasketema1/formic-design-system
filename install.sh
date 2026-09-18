@@ -78,11 +78,17 @@ if [ "$NEW" = 1 ]; then
 }
 EOF
   cat > "$APP/vite.config.ts" <<'EOF'
+import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
-export default defineConfig({ plugins: [react(), tailwindcss()] });
+/* "@/formic/components/Button" and "./formic/components/Button" both work:
+   tsconfig declares the alias, this resolves it */
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
+});
 EOF
   cat > "$APP/tsconfig.json" <<'EOF'
 {
@@ -238,8 +244,8 @@ const PROMPTS: { label: string; title: string; caption: string; text: string }[]
   {
     label: "Test prompt 2",
     title: "Course registration",
-    caption: "A stepper form with a header image, and the list it fills",
-    text: `${PREFIX} replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with a course registration page for a student, composed the way AGENTS.md (Composition intelligence, App shell) says: it stands alone, so an AppShell with \`rail="none"\`, the title Course registration and the caption for the term; the content one centred column (\`max-w-3xl\`); at the top a Card whose CardMedia is a header image (\`src="https://formicai.dev/assets/live-bg-1280.webp"\`) with a CardTitle for the programme and a CardDescription for the dates; under it a Panel holding a Steps stepper with four steps (Student, Courses, Schedule, Review) and the form of the current step: Student is Fields with Inputs for full name, email and phone and a Select for the programme, all required with real validation; Courses is a CardGroup of at least six course Cards (title, credits, seats left) each with a CardButton that toggles it chosen, at least one required; Schedule is a DatePicker for the start date and segmented Tabs for morning or evening; Review lists every answer and ends with a Register accent button; Back and Next move between steps and the completed steps in the stepper can be clicked to go back; Register adds the student to a Registered students DataTable under the panel (name, programme, courses, start date, a status Badge), shows a Toast, and resets the stepper. The DataTable starts with the demo data the components ship (six students) and has toolbar search and pagination. The theme switch at the right of the header strip flips. ${CLOSE}`,
+    caption: "A stepper form with a header image and a confirmation",
+    text: `${PREFIX} replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with a course registration page for a student, composed the way AGENTS.md (Composition intelligence, App shell) says: it stands alone, so an AppShell with \`rail="none"\`, the title Course registration and the caption for the term; the content one centred column (\`max-w-3xl\`); at the top a Card whose CardMedia is a header image (\`src="https://formicai.dev/assets/live-bg-1280.webp"\` with \`aspect="banner"\`, the short 4:1 band, not the tall video shape) with a CardTitle for the programme and a CardDescription for the dates; under it a Panel holding a Steps stepper with four steps (Student, Courses, Schedule, Review) and the form of the current step: Student is Fields with Inputs for full name, email and phone and a Select for the programme, all required with real validation; Courses is a CardGroup of at least six course Cards (title, credits, seats left) each with a CardButton that toggles it chosen, at least one required; Schedule is a DatePicker for the start date and segmented Tabs for morning or evening; Review lists every answer and ends with a Register accent button; Back and Next move between steps and the completed steps in the stepper can be clicked to go back; Register shows a Toast and turns the panel into a confirmation: a success Alert with the student's name and the chosen courses, and one secondary button (Register another) that resets the stepper. No table on this page. The theme switch at the right of the header strip flips. ${CLOSE}`,
   },
   {
     label: "Test prompt 3",

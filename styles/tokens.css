@@ -225,6 +225,15 @@ a:focus-visible { border-radius: var(--radius-sm); } /* text links have no corne
    the active step) carry tabindex="-1", so Tab can never reach them — a
    ring there is never a keyboard affordance, only noise on click. */
 [tabindex="-1"]:focus-visible { outline: none; }
+/* Browser autofill paints its own pale yellow or blue over a field; that
+   breaks dark mode and every palette. Repaint it with the field's tokens. */
+input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, textarea:-webkit-autofill, select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--field) inset;
+  -webkit-text-fill-color: var(--ink);
+  caret-color: var(--ink);
+  transition: background-color 9999s ease-out;
+}
+input:autofill, textarea:autofill, select:autofill { box-shadow: 0 0 0 1000px var(--field) inset; }
 /* Text inputs render inside a styled field wrapper that shows focus
    itself (focus-within border + soft ring) — the inner input must not
    double-ring with the hard outline above. */
