@@ -21,3 +21,5 @@ __pycache__/
 !/llms-full.txt
 !/abb25a763d901eb0c3774df385cead71.txt
 /.build/
+.env
+.env.*
