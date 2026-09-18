@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
   const resendKey = process.env.RESEND_API_KEY, to = process.env.WAITLIST_TO || "eyosiyasketema@gmail.com";
   if (!(url && token) && !resendKey) return res.status(503).json({ ok: false, error: "The waitlist is not set up yet." });
 
-  const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
+  const ip = req.headers["x-real-ip"] || (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
   let already = false;
   try {
     if (url && token) {
