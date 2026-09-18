@@ -73,20 +73,25 @@ After every piece of work, look for extractable pieces and extract them:
 
 ## Git
 
-**`main` is protected — direct pushes are rejected.** Every change goes through a pull request, including a one-line fix, including the maintainer's own work. Do not attempt `git push origin main`; it will fail.
+**`main` is production and only ever receives `staging`.** Two protected branches:
+
+- `staging` deploys to https://staging.formicai.dev (Vercel, branch deployment). Every unit of work is a topic branch merged into `staging` by PR, then looked at on the staging URL.
+- `main` deploys to https://formicai.dev. It is updated only by a PR from `staging`; CI ("Only staging reaches main") fails any other PR into main, and direct pushes are rejected.
 
 The loop, once per unit of work:
 
 ```bash
-git checkout main && git pull          # never branch off a stale main
+git checkout staging && git pull       # never branch off a stale staging
 git checkout -b <topic>                # e.g. fix/calendar-width
 # ...make the change...
 python3 scripts/qa_check.py            # must pass before you push
 git add -A && git commit -m "Scope: what changed"
 git push -u origin <topic>
-# open the PR, wait for "Design system gate" to go green, merge, delete branch
-git checkout main && git pull && git branch -d <topic>
+# open the PR against staging, wait for "Design system gate", merge, delete branch
+# check https://staging.formicai.dev
 ```
+
+To release what staging holds: open a PR `staging → main`, merge it. Hotfixes go through staging too; it takes minutes.
 
 ### Releases
 
@@ -103,4 +108,4 @@ If a stale `.git/*.lock` blocks a commit, delete the lock files and retry.
 1. `python3 scripts/qa_check.py` — forbidden patterns, WCAG contrast across all modes × palettes, token drift, component compile
 2. `python3 scripts/check_sri.py` — every external `<script>` on `index.html` and `preview.html` must carry a correct `integrity` hash, `crossorigin`, and an exactly pinned version. Change a CDN URL and you must update its hash, or the live site white-screens.
 
-Vercel also builds a preview deployment per PR. `main` deploys to https://formicai.dev on merge, so anything that lands is live immediately — review the preview before merging.
+Vercel builds a preview deployment per PR, the `staging` branch deploys to https://staging.formicai.dev, and `main` deploys to https://formicai.dev on merge, so anything that lands on main is live immediately — look at staging first.

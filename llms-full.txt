@@ -1,6 +1,6 @@
 # Formic AI Design System (full)
 
-This file is the landing page, README and AGENTS.md in one place, for AI agents and answer engines. Site: https://formicai.dev · Source: https://github.com/eyosiyasketema1/formic-design-system
+This file is the landing page, README and AGENTS.md in one place, for AI agents and answer engines. Site: https://formicai.dev
 
 ---
 
@@ -39,7 +39,7 @@ Then open your AI tool in that folder and paste the test prompt the installer pr
 ### 2. By hand
 
 ```bash
-git clone --depth 1 https://github.com/eyosiyasketema1/formic-design-system.git /tmp/formic
+curl -fsSL https://formicai.dev/install.sh | bash
 mkdir -p your-project/src/formic
 cp -r /tmp/formic/styles /tmp/formic/components your-project/src/formic/
 cp /tmp/formic/AGENTS.md your-project/AGENTS.md
@@ -160,7 +160,7 @@ Per tool: **Claude Code** reads `CLAUDE.md` and the project skill (add the skill
 
 Contributions are welcome. **[CONTRIBUTING.md](CONTRIBUTING.md)** covers what gets merged, what's a maintainer decision, and how to pass review on the first try. `CLAUDE.md` holds the design rules themselves; `AGENTS.md` is the condensed version for AI coding tools.
 
-Bugs, questions, and proposals all go through [issues](https://github.com/eyosiyasketema1/formic-design-system/issues).
+Bugs, questions, and proposals all go through email (eyosiyasketema@gmail.com).
 
 Before opening a PR:
 
@@ -199,7 +199,7 @@ AskUserQuestions is a port of [Ask User Questions](https://www.fluidfunctionalis
 
 This project uses the **Formic AI Design System**. Read this file before writing or changing any UI. It applies to Claude Code, Cursor, Copilot, Codex, and any other coding agent.
 
-Gallery: https://formicai.dev/preview.html (for people to browse; an agent needs nothing from it, every component, prop and demo is in `src/formic` and this file, so never fetch it) · Source: https://github.com/eyosiyasketema1/formic-design-system
+Gallery: https://formicai.dev/preview.html (for people to browse; an agent needs nothing from it, every component, prop and demo is in `src/formic` and this file, so never fetch it)
 
 ## Which situation are you in?
 

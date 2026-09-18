@@ -13,6 +13,6 @@
 
 ## For agents
 
-- [AGENTS.md](https://github.com/eyosiyasketema1/formic-design-system/blob/main/AGENTS.md): the build protocol and composition rules an agent follows inside a project that uses Formic.
-- [SKILL.md](https://github.com/eyosiyasketema1/formic-design-system/blob/main/skill/SKILL.md): the same, packaged as a Claude skill.
-- [Source](https://github.com/eyosiyasketema1/formic-design-system): components, tokens, scripts and the QA gate.
+- [AGENTS.md](https://formicai.dev/AGENTS.md): the build protocol and composition rules an agent follows inside a project that uses Formic.
+- [SKILL.md](https://formicai.dev/skill/SKILL.md): the same, packaged as a Claude skill.
+- [Everything, in one file](https://formicai.dev/llms-full.txt): the README and AGENTS.md together.
