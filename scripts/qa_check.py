@@ -343,6 +343,22 @@ try:
 except Exception as e:
     print(f"note: index.html script check skipped ({e})")
 
+# ── 4e. every file install.sh writes into a new app parses. The heredocs
+# hold TSX as plain text, so a stray backtick in a test prompt once broke
+# the scaffold's Welcome page with no signal here.
+try:
+    _inst = (ROOT / "install.sh").read_text()
+    for _m in re.finditer(r'cat > "\$APP/(src/[^"]+\.tsx?)" <<\'EOF\'\n(.*?)\nEOF\n', _inst, re.S):
+        _name = _m.group(1)
+        _tmp = Path("/tmp/ds-qa-scaffold-" + _name.replace("/", "-"))
+        _tmp.write_text(_m.group(2).replace("__FORMIC_INSTALL__", "0"))
+        r = subprocess.run(["npx", "-y", "esbuild", "--loader:.tsx=tsx", "--loader:.ts=ts", "--jsx=automatic", "--log-level=error", "--outfile=/tmp/ds-qa-scaffold.out.js", str(_tmp)], capture_output=True, text=True, timeout=120)
+        if r.returncode != 0:
+            _e = re.search(r"ERROR: (.*)", r.stderr)
+            fails.append(f"install.sh: the scaffold's {_name} does not parse — {_e.group(1) if _e else r.stderr.strip()[-160:]}")
+except Exception as e:
+    print(f"note: scaffold check skipped ({e})")
+
 # ── 4c. the landing page's compiled assets are current ─────
 # index.html loads landing.css and landing.js, built from landing.tailwind.css
 # and landing.jsx by scripts/build_landing.py. A stale build ships the old

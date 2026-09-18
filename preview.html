@@ -2517,6 +2517,7 @@ const BTN_SIZES = {
   md: "h-9 gap-2 px-3.5 text-body [&_svg]:size-3.5",
   lg: "h-10 gap-2 px-4 text-lead [&_svg]:size-4"
 };
+const btnGlyph = (icon) => (typeof icon === "string" ? <Icon name={icon} /> : icon);
 function Button({
   children = "Button",
   variant = "primary",
@@ -2541,13 +2542,13 @@ function Button({
     enabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-45
     ${BTN_SIZES[size]} ${BTN_VARIANTS[variant]} ${className}`;
   const content = <>
-      {loading ? <Spinner /> : icon && <span aria-hidden className="shrink-0">{icon}</span>}
+      {loading ? <Spinner /> : icon && <span aria-hidden className="shrink-0">{btnGlyph(icon)}</span>}
       <span className="inline-flex items-center gap-[inherit] whitespace-nowrap">
         {Children.map(children, (child) =>
           typeof child === "string" || typeof child === "number" ? <span className="optical-text">{child}</span> : child,
         )}
       </span>
-      {!loading && iconEnd && <span aria-hidden className="shrink-0">{iconEnd}</span>}
+      {!loading && iconEnd && <span aria-hidden className="shrink-0">{btnGlyph(iconEnd)}</span>}
     </>;
   if (href !== void 0 && !disabled) {
     return <a
@@ -9378,10 +9379,10 @@ function Drawer({
 
 /* ═══════════ Steps ═══════════ */
 const SP_DEFAULT_STEPS = [
-  { key: "recipe", label: "Recipe", description: "Base and mix-ins" },
-  { key: "churn", label: "Churn", description: "Overnight batch" },
-  { key: "case", label: "Case", description: "Set and display" },
-  { key: "launch", label: "Launch", description: "On the board" }
+  { key: "brief", label: "Brief", description: "Goals and scope" },
+  { key: "design", label: "Design", description: "Identity and pages" },
+  { key: "review", label: "Review", description: "Client sign-off" },
+  { key: "launch", label: "Launch", description: "Live and handed over" }
 ];
 function SP_StepCircle({
   state,

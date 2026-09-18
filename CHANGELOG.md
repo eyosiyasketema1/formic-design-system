@@ -11,8 +11,10 @@ Formic is vendored, so a version is the state of `main` you copied. `src/formic/
 
 ### Added
 
+- `Button` `icon` / `iconEnd` take an icon name as well as an element (`icon="plus"`), so a name can never land in the label as text.
+- Installer: `FORMIC_BRANCH=staging` installs the staging branch, to try what staging.formicai.dev shows before it is released.
 - `AppShell rail="chat"`: the chat rail (`SidebarNav`) with the conversation's title strip beside it, for chat and agent pages; `chat={{ recents, onNewChat, onPick }}` fills it. `SidebarNav` takes `theme` / `onTheme` and shows the switch above the account row.
-- Installer: three labelled test prompts on the welcome page (a dashboard, an agent workspace, a client record); the customize nudge is mounted from `main.tsx` and appears on every page the AI tool builds.
+- Installer: three labelled test prompts on the welcome page (a dashboard, a course registration form, a client record); the customize nudge is mounted from `main.tsx` and appears on every page the AI tool builds.
 - AGENTS.md: which rail a page gets by its kind, how an agent screen is composed (the thread is the spine, a second pane only for a result), and the rule that nothing runs on its own.
 
 ### Changed
