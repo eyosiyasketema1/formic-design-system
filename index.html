@@ -561,19 +561,19 @@ spline-viewer::part(logo) {
               <div class="ai-step-title">Point your AI tool at that folder and paste a test prompt</div>
               <button type="button" class="qs-example-btn" onclick="document.getElementById('example-modal-2').showModal()">show me an example</button>
             </div>
-            <p>In the same terminal type <code>claude</code>, or open that folder in Cursor or VS Code. The page it opened holds three test prompts, each a different screen; pick the one closest to your product. What it builds is what Formic looks like.</p>
-            <div class="lcode">
-              <div class="lcode-head">Test prompt 1: Studio dashboard · Figures, two charts and a table; the classic first screen</div>
+            <p>In the same terminal type <code>claude</code>, or open that folder in Cursor or VS Code. The page it opened holds three test prompts, each a different screen; open one here to read it, pick the one closest to your product. What it builds is what Formic looks like.</p>
+            <details class="lcode lprompt">
+              <summary class="lcode-head"><span class="lprompt-label">Test prompt 1: Studio dashboard</span><span class="lprompt-caption">Figures, two charts and a table; the classic first screen</span></summary>
               <pre class="wrap">Use Formic (src/formic), read AGENTS.md, then replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with Formic Studio's dashboard, composed the way AGENTS.md (Composition intelligence, Dashboard) says: an AppShell with the rail from the config; a page header with a caption whose actions hold a segmented Tabs time range (7 days, 30 days, 90 days) that changes every figure and chart below, plus two buttons (Export, New report; the label is the verb only, the icon goes in the `icon` prop, `icon="download"` and `icon="plus"`, never as a word in the label); no filter row under the header; four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a LineChart of revenue by month (`guides`, two series where one has values below zero, a ChartLegend) beside a one-third Panel holding a DonutChart of revenue by client with a list legend beside the ring showing each count and share and the total in the middle (`segments`, `legend="list"`, `center`); then a recent invoices DataTable on its own, filling the full width, whose toolbar holds the search, a status Select (all, paid, due, overdue) that filters the rows, and nothing else; selectable rows and pagination. The theme switch beside the profile flips and the rail collapses. Everything must work, not look like it works. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev.</pre>
-            </div>
-            <div class="lcode">
-              <div class="lcode-head">Test prompt 2: Course registration · A stepper form with a header image, and the list it fills</div>
+            </details>
+            <details class="lcode lprompt">
+              <summary class="lcode-head"><span class="lprompt-label">Test prompt 2: Course registration</span><span class="lprompt-caption">A stepper form with a header image, and the list it fills</span></summary>
               <pre class="wrap">Use Formic (src/formic), read AGENTS.md, then replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with a course registration page for a student, composed the way AGENTS.md (Composition intelligence, App shell) says: it stands alone, so an AppShell with `rail="none"`, the title Course registration and the caption for the term; the content one centred column (`max-w-3xl`); at the top a Card whose CardMedia is a header image (`src="https://formicai.dev/assets/live-bg-1280.webp"`) with a CardTitle for the programme and a CardDescription for the dates; under it a Panel holding a Steps stepper with four steps (Student, Courses, Schedule, Review) and the form of the current step: Student is Fields with Inputs for full name, email and phone and a Select for the programme, all required with real validation; Courses is a CardGroup of at least six course Cards (title, credits, seats left) each with a CardButton that toggles it chosen, at least one required; Schedule is a DatePicker for the start date and segmented Tabs for morning or evening; Review lists every answer and ends with a Register accent button; Back and Next move between steps and the completed steps in the stepper can be clicked to go back; Register adds the student to a Registered students DataTable under the panel (name, programme, courses, start date, a status Badge), shows a Toast, and resets the stepper. The DataTable starts with the demo data the components ship (six students) and has toolbar search and pagination. The theme switch at the right of the header strip flips. Everything must work, not look like it works. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev.</pre>
-            </div>
-            <div class="lcode">
-              <div class="lcode-head">Test prompt 3: Client record · One record under a top bar: a client dashboard, tables and an edit form</div>
+            </details>
+            <details class="lcode lprompt">
+              <summary class="lcode-head"><span class="lprompt-label">Test prompt 3: Client record</span><span class="lprompt-caption">One record under a top bar: a client dashboard, tables and an edit form</span></summary>
               <pre class="wrap">Use Formic (src/formic), read AGENTS.md, then replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with a client record page for Formic Studio, composed the way AGENTS.md (Composition intelligence, App shell) says: an AppShell with `rail="topbar"` (the rail plus the TopBar above the page: title, search, theme, notifications, the account menu); a page header with the client's name, a caption (sector, city, client since) and two actions (Edit, New invoice; the icon goes in the `icon` prop, never as a word in the label); a StatStrip of four figures (billed this year, outstanding, open proposals, last payment); underline Tabs for Overview, Invoices, Proposals and Activity that switch the content below. Overview is a small dashboard for this one client: four StatCards in one row with deltas and sparklines (billed, paid, outstanding, average days to pay); a two-thirds Panel holding a BarChart of billing by month (`axis`, values on the bars) beside a one-third Panel holding a DonutChart of billing by service line with a list legend (`segments`, `legend="list"`, `center`); under them a two-thirds Panel of MetricRows (revenue by service line with `progress`) beside a one-third Panel holding a Timeline of recent events. Invoices is a DataTable with toolbar search, a status Select and pagination; Proposals is a DataTable too; Activity is the Timeline on its own. Edit opens a Drawer from the right with a form (Input for name and email, Select for sector, TagInput for tags, a Save accent button and Cancel) that updates the header when saved. The theme switch in the TopBar flips. Everything must work, not look like it works. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev.</pre>
-            </div>
+            </details>
             <p>Every prompt after that starts the same way, then says what you want:</p>
             <div class="lcode">
               <div class="lcode-head">Every later prompt</div>
@@ -1150,9 +1150,11 @@ spline-viewer::part(logo) {
     button.className = "copy-btn";
     button.setAttribute("aria-label", "Copy to clipboard");
     button.innerHTML = COPY + "<span>Copy</span>";
-    button.addEventListener("click", function () {
+    button.addEventListener("click", function (event) {
+      event.preventDefault(); /* inside a <summary> a click would also toggle the block */
+      event.stopPropagation();
       /* a greyed example inside the block is a hint, not part of what is copied */
-      var text = pre.hasAttribute("data-copy") ? pre.getAttribute("data-copy") : pre.innerText;
+      var text = pre.hasAttribute("data-copy") ? pre.getAttribute("data-copy") : pre.textContent;
       var done = function () {
         button.innerHTML = DONE + "<span>Copied</span>";
         button.classList.add("is-done");
