@@ -106,7 +106,7 @@
     --scrim: rgba(0, 0, 0, 0.55); --ink-2: #b0aeaa; --ink-3: #8d8b86;
   --line: #2a2a29; --line-strong: #3f3e3c;
   --hover: #232322; --hover-2: #292928; --inset: #232322;
-  --accent: #a5e12a;      /* lime — the dark-mode brand accent (Turumba decision 2026-09) */ --orange: #e08514; --green: #22c55e; --red: #f87171;
+  --accent: #a5e12a;      /* lime — the dark-mode brand accent */ --orange: #e08514; --green: #22c55e; --red: #f87171;
   --canvas: #131312; --surface: #1c1c1b; --field: #232322; --sidebar: #181817;
   --green-tint: #16281c;
   --red-tint: #2e1a19;
@@ -461,6 +461,15 @@ a:hover .animated-underline, .animated-underline:hover { background-size: 100% 1
    the active step) carry tabindex="-1", so Tab can never reach them — a
    ring there is never a keyboard affordance, only noise on click. */
 [tabindex="-1"]:focus-visible { outline: none; }
+/* Browser autofill paints its own pale yellow or blue over a field; that
+   breaks dark mode and every palette. Repaint it with the field's tokens. */
+input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, textarea:-webkit-autofill, select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--field) inset;
+  -webkit-text-fill-color: var(--ink);
+  caret-color: var(--ink);
+  transition: background-color 9999s ease-out;
+}
+input:autofill, textarea:autofill, select:autofill { box-shadow: 0 0 0 1000px var(--field) inset; }
 input:focus-visible, textarea:focus-visible { outline: none; }
 :root { color-scheme: light dark; }
 :root[data-theme="light"] { color-scheme: light; }
@@ -17186,6 +17195,7 @@ function CardMedia({
   tone = "neutral",
   src,
   alt = "",
+  aspect = "video",
   className = "",
 }) {
   const inline = useInline();
@@ -17193,7 +17203,7 @@ function CardMedia({
     return inline ? (
       <img src={src} alt={alt} className={`size-9 shrink-0 rounded-control object-cover ${className}`} />
     ) : (
-      <img src={src} alt={alt} className={`-mx-5 -mt-5 mb-1 aspect-video w-[calc(100%+var(--spacing)*10)] max-w-none object-cover ${className}`} />
+      <img src={src} alt={alt} className={`-mx-5 -mt-5 mb-1 ${aspect === "banner" ? "aspect-[4/1]" : "aspect-video"} w-[calc(100%+var(--spacing)*10)] max-w-none object-cover ${className}`} />
     );
   }
   if (!icon) return null;

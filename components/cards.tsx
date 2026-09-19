@@ -86,12 +86,15 @@ export function CardMedia({
   tone = "neutral",
   src,
   alt = "",
+  aspect = "video",
   className = "",
 }: {
   icon?: IconName;
   tone?: IconTileTone;
   src?: string;
   alt?: string;
+  /** the image's shape on a surface card: `video` (16:9) for a gallery or product card, `banner` (4:1) for a header image above a form or a page */
+  aspect?: "video" | "banner";
   className?: string;
 }) {
   const inline = useInline();
@@ -99,7 +102,7 @@ export function CardMedia({
     return inline ? (
       <img src={src} alt={alt} className={`size-9 shrink-0 rounded-control object-cover ${className}`} />
     ) : (
-      <img src={src} alt={alt} className={`-mx-5 -mt-5 mb-1 aspect-video w-[calc(100%+var(--spacing)*10)] max-w-none object-cover ${className}`} />
+      <img src={src} alt={alt} className={`-mx-5 -mt-5 mb-1 ${aspect === "banner" ? "aspect-[4/1]" : "aspect-video"} w-[calc(100%+var(--spacing)*10)] max-w-none object-cover ${className}`} />
     );
   }
   if (!icon) return null;

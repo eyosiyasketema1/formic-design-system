@@ -78,11 +78,17 @@ if [ "$NEW" = 1 ]; then
 }
 EOF
   cat > "$APP/vite.config.ts" <<'EOF'
+import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
-export default defineConfig({ plugins: [react(), tailwindcss()] });
+/* "@/formic/components/Button" and "./formic/components/Button" both work:
+   tsconfig declares the alias, this resolves it */
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
+});
 EOF
   cat > "$APP/tsconfig.json" <<'EOF'
 {
@@ -178,15 +184,18 @@ export default function CustomizeNudge() {
      shows the moment the AI tool's page replaces it, and stays through every
      page after that until dismissed */
   const [shown, setShown] = useState(false);
+  const [closed, setClosed] = useState(dismissed);
   useEffect(() => {
-    if (dismissed()) return;
+    if (closed) { setShown(false); return; }
     const check = () => setShown(!onWelcome());
     check();
     const watch = new MutationObserver(check);
     watch.observe(document.body, { childList: true, subtree: true });
     return () => watch.disconnect();
-  }, []);
-  const close = () => { setShown(false); try { localStorage.setItem(STORAGE_KEY, "off"); } catch { /* private mode: the choice lasts the session */ } };
+  }, [closed]);
+  /* Close is the only thing that dismisses it; Customize opens the customizer
+     in a new tab and the card stays, so the way back is still on screen */
+  const close = () => { setClosed(true); try { localStorage.setItem(STORAGE_KEY, "off"); } catch { /* private mode: the choice lasts the session */ } };
   if (!shown) return null;
   return (
     <Card role="region" aria-label="Make it yours" className="fixed right-4 bottom-4 z-40 flex w-full max-w-xs items-start gap-3 p-4">
@@ -194,7 +203,7 @@ export default function CustomizeNudge() {
       <div className="min-w-0 flex-1">
         <p className="text-body font-semibold text-ink">Make it yours</p>
         <p className="mt-0.5 text-caption text-ink-2">Accent, palette, font, radius and rail can be changed any time, and every page follows.</p>
-        <Button variant="accent" size="sm" href={CUSTOMIZE_URL} target="_blank" icon={<Icon name="external" />} onClick={close} className="mt-3">Customize</Button>
+        <Button variant="accent" size="sm" href={CUSTOMIZE_URL} target="_blank" icon={<Icon name="external" />} className="mt-3">Customize</Button>
       </div>
       <IconButton label="Close" onClick={close} className="-mt-1 -mr-1 shrink-0 text-ink-3 hover:bg-hover hover:text-ink">
         <Icon name="close" size={14} />
@@ -230,19 +239,19 @@ const PROMPTS: { label: string; title: string; caption: string; text: string }[]
     label: "Test prompt 1",
     title: "Studio dashboard",
     caption: "Figures, two charts and a table; the classic first screen",
-    text: `${PREFIX} replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with Formic Studio's dashboard, composed the way AGENTS.md (Composition intelligence, Dashboard) says: an AppShell with the rail from the config; a page header with a caption whose actions hold a segmented Tabs time range (7 days, 30 days, 90 days) that changes every figure and chart below, plus two buttons (Export, New report; the label is the verb only, the icon goes in the \`icon\` prop, \`icon="download"\` and \`icon="plus"\`, never as a word in the label); no filter row under the header; four StatCards in one row with deltas and sparklines; a two-thirds Panel holding a LineChart of revenue by month (\`guides\`, two series where one has values below zero, a ChartLegend) beside a one-third Panel holding a DonutChart of revenue by client with a list legend beside the ring showing each count and share and the total in the middle (\`segments\`, \`legend="list"\`, \`center\`); then a recent invoices DataTable on its own, filling the full width, whose toolbar holds the search, a status Select (all, paid, due, overdue) that filters the rows, and nothing else; selectable rows and pagination. The theme switch beside the profile flips and the rail collapses. ${CLOSE}`,
+    text: `${PREFIX} replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with Formic Studio's dashboard, composed the way AGENTS.md (Composition intelligence, Dashboard) says: an AppShell with the rail from the config; a page header with a caption whose actions hold a segmented Tabs time range (7 days, 30 days, 90 days) that changes every figure and chart below, plus two buttons (Export, New report; the label is the verb only, the icon goes in the \`icon\` prop, \`icon="download"\` and \`icon="plus"\`, never as a word in the label); no filter row under the header; four StatCards in one row with deltas and sparklines; then three Panels in one row: a half-width Panel holding a LineChart of revenue by month (\`guides\`, two series where one has values below zero, a ChartLegend), a quarter-width Panel holding a DonutChart of revenue by client with \`segments\` and the leading client named in the centre, its legend rows under the ring (not \`legend="list"\`), and a quarter-width Panel holding a Gauge (\`percent\`, \`label\`) for the share of proposals that became clients; then a recent invoices DataTable on its own, filling the full width, built like the gallery's Invoices table: a toolbar with a page-size Select, the one accent action (New invoice), and at the right end the search Input and a status Select (all, paid, due, overdue) that filters the rows; columns with widths (id 120px muted, status 110px as a StatusCell, client as a PersonCell with the contact and the company, amount \`align: "end"\` tabular, date muted) so only the client column stretches and rows stay one line high; selectable rows with the mixed header box, RowActions per row, and the paged footer. The theme switch beside the profile flips and the rail collapses. ${CLOSE}`,
   },
   {
     label: "Test prompt 2",
     title: "Course registration",
-    caption: "A stepper form with a header image, and the list it fills",
-    text: `${PREFIX} replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with a course registration page for a student, composed the way AGENTS.md (Composition intelligence, App shell) says: it stands alone, so an AppShell with \`rail="none"\`, the title Course registration and the caption for the term; the content one centred column (\`max-w-3xl\`); at the top a Card whose CardMedia is a header image (\`src="https://formicai.dev/assets/live-bg-1280.webp"\`) with a CardTitle for the programme and a CardDescription for the dates; under it a Panel holding a Steps stepper with four steps (Student, Courses, Schedule, Review) and the form of the current step: Student is Fields with Inputs for full name, email and phone and a Select for the programme, all required with real validation; Courses is a CardGroup of at least six course Cards (title, credits, seats left) each with a CardButton that toggles it chosen, at least one required; Schedule is a DatePicker for the start date and segmented Tabs for morning or evening; Review lists every answer and ends with a Register accent button; Back and Next move between steps and the completed steps in the stepper can be clicked to go back; Register adds the student to a Registered students DataTable under the panel (name, programme, courses, start date, a status Badge), shows a Toast, and resets the stepper. The DataTable starts with the demo data the components ship (six students) and has toolbar search and pagination. The theme switch at the right of the header strip flips. ${CLOSE}`,
+    caption: "A stepper form with a header image and a confirmation",
+    text: `${PREFIX} replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with a course registration page for a student, composed the way AGENTS.md (Composition intelligence, App shell) says: it stands alone, so an AppShell with \`rail="none"\`, the title Course registration and the caption for the term; the content one centred column (\`max-w-3xl\`); at the top a Card whose CardMedia is a header image (\`src="https://formicai.dev/assets/live-bg-1280.webp"\` with \`aspect="banner"\`, the short 4:1 band, not the tall video shape) with a CardTitle for the programme and a CardDescription for the dates; under it a Panel holding a Steps stepper with four steps (Student, Courses, Schedule, Review) and the form of the current step: Student is Fields with Inputs for full name, email and phone and a Select for the programme, all required with real validation; Courses is a CardGroup of at least six course Cards (title, credits, seats left) each with a CardButton that toggles it chosen, at least one required; Schedule is a DatePicker for the start date and segmented Tabs for morning or evening; Review lists every answer and ends with a Register accent button; Back and Next move between steps and the completed steps in the stepper can be clicked to go back; Register shows a Toast and turns the panel into a confirmation: a success Alert with the student's name and the chosen courses, and one secondary button (Register another) that resets the stepper. No table on this page. The theme switch at the right of the header strip flips. ${CLOSE}`,
   },
   {
     label: "Test prompt 3",
-    title: "Client record",
-    caption: "One record under a top bar: a client dashboard, tables and an edit form",
-    text: `${PREFIX} replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with a client record page for Formic Studio, composed the way AGENTS.md (Composition intelligence, App shell) says: an AppShell with \`rail="topbar"\` (the rail plus the TopBar above the page: title, search, theme, notifications, the account menu); a page header with the client's name, a caption (sector, city, client since) and two actions (Edit, New invoice; the icon goes in the \`icon\` prop, never as a word in the label); a StatStrip of four figures (billed this year, outstanding, open proposals, last payment); underline Tabs for Overview, Invoices, Proposals and Activity that switch the content below. Overview is a small dashboard for this one client: four StatCards in one row with deltas and sparklines (billed, paid, outstanding, average days to pay); a two-thirds Panel holding a BarChart of billing by month (\`axis\`, values on the bars) beside a one-third Panel holding a DonutChart of billing by service line with a list legend (\`segments\`, \`legend="list"\`, \`center\`); under them a two-thirds Panel of MetricRows (revenue by service line with \`progress\`) beside a one-third Panel holding a Timeline of recent events. Invoices is a DataTable with toolbar search, a status Select and pagination; Proposals is a DataTable too; Activity is the Timeline on its own. Edit opens a Drawer from the right with a form (Input for name and email, Select for sector, TagInput for tags, a Save accent button and Cancel) that updates the header when saved. The theme switch in the TopBar flips. ${CLOSE}`,
+    title: "Workspace settings",
+    caption: "Settings under a top bar: forms, a team list, an integrations gallery and a danger zone",
+    text: `${PREFIX} replace the welcome page (App.tsx is yours to change; keep main.tsx and CustomizeNudge.tsx as they are) with Formic Studio's workspace settings, composed the way AGENTS.md (Composition intelligence, App shell) says, in the Text register (no figures, no charts): an AppShell with \`rail="topbar"\` (the rail plus the TopBar with search, theme, notifications and the account menu), the page title Settings, and underline Tabs for Profile, Team, Integrations and Billing that switch the content. Profile: a Panel with Fields (Input for studio name and email, Textarea for the address, Select for the timezone, an Avatar with a Change photo button) and one accent Save button that shows a Toast. Team: a CardGroup with \`orientation="inline"\` listing six people with Avatar, name, role Badge and a DropdownMenu of actions, plus an Invite button that opens a Drawer with an email TagInput and a role Select. Integrations: the Visual register, a CardGroup of eight services each with its real BrandLogo from brand-logos.tsx (Slack, Google Drive, Notion, Figma, GitHub, Stripe, Asana, Dropbox), a one-line description, and a Switch that connects or disconnects it, with a FilterBar above (search and a connected-only toggle). Billing: the current plan as a Card with a Progress bar of seats used, a payment method row, and a danger zone at the bottom where Delete workspace is a destructive Button that opens a confirm Modal (type the name to enable Delete). Wire useCommandPalette so ⌘K opens a CommandPalette that jumps between the four tabs. The theme switch in the TopBar flips. ${CLOSE}`,
   },
 ];
 
@@ -503,7 +512,7 @@ if [ "$NEW" = 1 ]; then
   write_hook
   printf '\nDone. Run it:\n'
   if [ "$APP" = "." ]; then printf '  npm run dev        # the browser opens a page that says Formic is working\n\n'; else printf '  cd %s && npm run dev        # the browser opens a page that says Formic is working\n\n' "$APP"; fi
-  printf 'Then open your AI tool (Claude Code, Cursor, Antigravity, Copilot, any of them) in this folder and paste one of the three test prompts on that page (a dashboard, a course registration form, a client record).\n\n'
+  printf 'Then open your AI tool (Claude Code, Cursor, Antigravity, Copilot, any of them) in this folder and paste one of the three test prompts on that page (a dashboard, a course registration form, a settings page).\n\n'
   printf 'After that, start every prompt with:  %s  and say what you want.\n\n' "Use Formic (src/formic), read AGENTS.md, then"
   printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
   printf '      The Formic gates run on every commit; `npm run formic` runs them any time.\n\n'
