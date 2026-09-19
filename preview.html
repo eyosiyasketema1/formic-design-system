@@ -17884,9 +17884,19 @@ function czWrite(cfg) {
   history.replaceState(null, "", location.pathname + (s ? "?" + s : "") + location.hash);
   try { s ? localStorage.setItem(CZ_STORE, JSON.stringify(cfg)) : localStorage.removeItem(CZ_STORE); } catch {}
 }
-/* the keys the user changed; a custom palette carries its colour with it */
-function czChanged(cfg) {
-  return CZ_KEYS.filter((k) => k !== "paletteColor" && cfg[k] !== CZ_DEFAULTS[k]);
+/* the keys the user changed, plus every key they touched this session even
+   if it is back on the default: an app that was moved to medium and now
+   goes back to full needs a line that says "layout": "full", the diff
+   alone would say nothing. Touched keys are remembered with the config. */
+const CZ_TOUCHED = CZ_STORE + ":touched";
+function czReadTouched() {
+  try { return new Set(JSON.parse(localStorage.getItem(CZ_TOUCHED) || "[]")); } catch { return new Set(); }
+}
+function czWriteTouched(touched) {
+  try { touched.size ? localStorage.setItem(CZ_TOUCHED, JSON.stringify([...touched])) : localStorage.removeItem(CZ_TOUCHED); } catch {}
+}
+function czChanged(cfg, touched = new Set()) {
+  return CZ_KEYS.filter((k) => k !== "paletteColor" && (cfg[k] !== CZ_DEFAULTS[k] || touched.has(k)));
 }
 function czJson(cfg, keys = CZ_KEYS) {
   const out = {};
@@ -17901,8 +17911,8 @@ function czJson(cfg, keys = CZ_KEYS) {
    reads as "set these" and never restates a default the agent might take
    for a request (a sidebar line on a sign-in page); `all` for moving every
    choice to another project */
-function czBlock(cfg, all = false) {
-  const keys = all ? CZ_KEYS : czChanged(cfg);
+function czBlock(cfg, all = false, touched = new Set()) {
+  const keys = all ? CZ_KEYS : czChanged(cfg, touched);
   if (keys.length === 0) return "";
   return [
     all
@@ -18155,8 +18165,10 @@ function CzChoice({ label, help, value, options, onChange }) {
 }
 function CustomizeApp() {
   const [cfg, setCfg] = useState(czRead);
-  const set = (k, v) => setCfg((c) => ({ ...c, [k]: v }));
+  const [touched, setTouched] = useState(czReadTouched);
+  const set = (k, v) => { setCfg((c) => ({ ...c, [k]: v })); setTouched((t) => (t.has(k) ? t : new Set([...t, k]))); };
   useEffect(() => { czWrite(cfg); }, [cfg]);
+  useEffect(() => { czWriteTouched(touched); }, [touched]);
   useEffect(() => {
     document.title = "Customize · Formic AI Design System";
     requestAnimationFrame(() => document.getElementById("page-title")?.focus({ preventScroll: true }));
@@ -18175,10 +18187,10 @@ function CustomizeApp() {
       dark: TH_contrast(d, TH_hexToRgb(TH_DARK_ANCHOR)),
     };
   }, [variants]);
-  const changed = czChanged(cfg).length;
+  const changed = czChanged(cfg, touched).length;
   const copy = async (all = false) => {
     try {
-      await navigator.clipboard.writeText(czBlock(cfg, all));
+      await navigator.clipboard.writeText(czBlock(cfg, all, touched));
       toast({ tone: "success", title: "Copied", description: all ? "Every choice. Paste it into your AI tool; it saves the file and runs the script." : "Only what you changed. Paste it into your AI tool; it updates the file and runs the script." });
     } catch {
       toast({ tone: "error", title: "Could not copy", description: "Select the block below and copy it by hand." });
@@ -18195,7 +18207,7 @@ function CustomizeApp() {
         </div>
         <div className="flex items-center gap-2">
           {changed > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => setCfg({ ...CZ_DEFAULTS })}>Reset</Button>
+            <Button variant="ghost" size="sm" onClick={() => { setCfg({ ...CZ_DEFAULTS }); setTouched(new Set()); }}>Reset</Button>
           )}
           <Button variant="accent" size="sm" icon={<Icon name="copy" size={14} />} disabled={changed === 0} onClick={() => copy(false)}>Copy for your AI tool</Button>
         </div>
@@ -18302,7 +18314,7 @@ function CustomizeApp() {
             {changed === 0 ? (
               <p className="mt-4 rounded-md bg-inset p-4 text-caption text-ink-3">Nothing changed yet. The defaults are already in your project; change a choice above and it appears here. Copy all hands over every choice, for moving them to another project.</p>
             ) : (
-              <pre className="mt-4 overflow-x-auto rounded-md bg-inset p-4 font-mono text-small leading-relaxed whitespace-pre text-ink-2" aria-label="Configuration block">{czBlock(cfg)}</pre>
+              <pre className="mt-4 overflow-x-auto rounded-md bg-inset p-4 font-mono text-small leading-relaxed whitespace-pre text-ink-2" aria-label="Configuration block">{czBlock(cfg, false, touched)}</pre>
             )}
             <p className="mt-3 text-small text-ink-3">The block carries only what you changed; the rest is already in the project. Not using an agent? Set the same keys in <code className="font-mono">src/formic/formic.config.json</code> and run the script yourself. This URL holds the same choices, so it can be sent to whoever does.</p>
           </section>
