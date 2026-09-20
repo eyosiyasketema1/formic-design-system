@@ -2,7 +2,7 @@
 
 Formic is vendored, so a version is the state of `main` you copied. `src/formic/VERSION` in an app records which one; re-running the installer moves it forward. Versions follow semver: while 0.x, a minor bump can change an API.
 
-## Unreleased
+## 0.3.0 · 2026-09-20
 
 ### Breaking
 
@@ -16,6 +16,14 @@ Formic is vendored, so a version is the state of `main` you copied. `src/formic/
 - `AppShell rail="chat"`: the chat rail (`SidebarNav`) with the conversation's title strip beside it, for chat and agent pages; `chat={{ recents, onNewChat, onPick }}` fills it. `SidebarNav` takes `theme` / `onTheme` and shows the switch above the account row.
 - Installer: three labelled test prompts on the welcome page (a dashboard, a course registration form, a settings page); the customize nudge is mounted from `main.tsx` and appears on every page the AI tool builds.
 - AGENTS.md: which rail a page gets by its kind, how an agent screen is composed (the thread is the spine, a second pane only for a result), and the rule that nothing runs on its own.
+- `CardMedia` `aspect="banner"`: a 4:1 header image above a form or a page, beside the 16:9 default.
+- `ThinkingState` `working` and `expanded` props; `SidebarNav` `theme` / `onTheme` above the account row.
+- Existing apps: AGENTS.md "Migrating an existing app", `formic_check.py --inventory` (every UI file, worst first), and the installer prints the migration prompt and the inventory instead of a dashboard prompt when the project already has pages.
+- Installer: the scaffold's `vite.config.ts` resolves the `@` alias `tsconfig.json` already declared, so `@/formic/...` imports build; the customize nudge is mounted from `main.tsx` and survives whatever the AI tool does to `App.tsx`; the gate parses every file the scaffold writes.
+- Customizer: the copy block keeps every key touched in the session even when it is back on its default, so "back to full" produces a line; Copy all still hands over everything.
+- Tokens: browser autofill is repainted with the field and ink tokens, so an autofilled input no longer turns white in dark mode.
+- Landing: precompiled CSS and JS (21 MB to 1.2 MB), WebP images, 3D on demand, GSAP hero and statement motion, FAQ and legal modals, Formic Pro waitlist (`/api/waitlist`, `/api/unsubscribe`, `scripts/announce.py`), SEO and AI-search files (`robots.txt`, `sitemap.xml`, `llms.txt`, `llms-full.txt`, IndexNow, JSON-LD), Vercel Web Analytics, security headers.
+- Repo: `staging` branch deploys to staging.formicai.dev and is the only branch that reaches `main` (CI enforces it); build tools install per platform under `.build/`.
 
 ### Changed
 
