@@ -484,8 +484,8 @@ if [ "$NEW" != 1 ]; then
     CSS_WIRED=1
   fi
   if [ -f package.json ] && command -v npm >/dev/null 2>&1; then
-    if grep -q '"@phosphor-icons/react"' package.json; then DEPS_WIRED=1
-    else npm install --silent --no-fund --no-audit @phosphor-icons/react && DEPS_WIRED=1 && say "@phosphor-icons/react installed"; fi
+    if grep -q '"@phosphor-icons/react"' package.json && grep -q '"@dicebear/core"' package.json; then DEPS_WIRED=1
+    else npm install --silent --no-fund --no-audit @phosphor-icons/react @dicebear/core @dicebear/notionists && DEPS_WIRED=1 && say "@phosphor-icons/react, @dicebear/core and @dicebear/notionists installed"; fi
   fi
 fi
 
@@ -493,11 +493,20 @@ fi
 write_hook() {
   [ -d .git ] || return 0
   mkdir -p .git/hooks
+  # the hook checks the files in the commit, not the whole app: in an
+  # existing project the old pages fail the gates until they are migrated,
+  # and a hook that blocks every commit from day one gets deleted.
+  # `npm run formic` still checks all of src.
+  HOOK="# Formic gates on the files being committed (npm run formic checks everything)
+FORMIC_FILES=\$(git diff --cached --name-only --diff-filter=ACMR -- '*.tsx' '*.jsx' | grep -v '^$DEST/' || true)
+if [ -n \"\$FORMIC_FILES\" ]; then
+  python3 $DEST/scripts/formic_check.py \$FORMIC_FILES && python3 $DEST/scripts/compose_check.py \$FORMIC_FILES || exit 1
+fi"
   if [ ! -f .git/hooks/pre-commit ]; then
-    printf '#!/bin/sh\n# Formic gates: how it was built, and what is on the screen\npython3 %s/scripts/formic_check.py src && python3 %s/scripts/compose_check.py src\n' "$DEST" "$DEST" > .git/hooks/pre-commit
-    chmod +x .git/hooks/pre-commit && say ".git/hooks/pre-commit (formic_check + compose_check run before every commit)"
+    printf '#!/bin/sh\n%s\n' "$HOOK" > .git/hooks/pre-commit
+    chmod +x .git/hooks/pre-commit && say ".git/hooks/pre-commit (formic_check + compose_check run on the files of every commit)"
   elif ! grep -q "formic_check" .git/hooks/pre-commit; then
-    printf '\n# Formic gates\npython3 %s/scripts/formic_check.py src && python3 %s/scripts/compose_check.py src || exit 1\n' "$DEST" "$DEST" >> .git/hooks/pre-commit
+    printf '\n%s\n' "$HOOK" >> .git/hooks/pre-commit
     say ".git/hooks/pre-commit (Formic gates appended)"
   fi
 }
@@ -519,11 +528,15 @@ if [ "$NEW" = 1 ]; then
   exit 0
 fi
 
+ESLINT_CFG="$(ls eslint.config.* .eslintrc* 2>/dev/null | head -1 || true)"
+if [ -n "$ESLINT_CFG" ] && ! grep -qs "$DEST" $ESLINT_CFG 2>/dev/null; then
+  printf '\nNote: your ESLint config does not ignore %s. Formic keeps its own conventions (it uses useEffect and a few patterns\n      a strict project config may ban); add "%s/**" to its ignores so the vendored files do not fail your lint.\n' "$DEST" "$DEST"
+fi
 if [ "$CSS_WIRED" = 1 ] && [ "$DEPS_WIRED" = 1 ]; then
   printf '\nDone. Open your AI tool in this folder and paste:\n'
 else
   printf '\nDone, with one thing left by hand:\n'
-  [ "$DEPS_WIRED" = 1 ] || printf '  • npm install @phosphor-icons/react\n'
+  [ "$DEPS_WIRED" = 1 ] || printf '  • npm install @phosphor-icons/react @dicebear/core @dicebear/notionists\n'
   [ "$CSS_WIRED" = 1 ] || { printf '  • In your global CSS (Tailwind v4), in this order:\n'; printf '       @import "<path to>/%s/styles/fonts.css";\n       @import "tailwindcss";\n       @import "<path to>/%s/styles/formic.css";\n' "$DEST" "$DEST"; }
   printf 'Then open your AI tool in this folder and paste:\n'
 fi
