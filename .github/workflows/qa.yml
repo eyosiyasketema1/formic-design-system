@@ -91,8 +91,10 @@ jobs:
             baseline: true
           - fixture: old-app
             baseline: true
-    # An unset `baseline` (vite-fresh) reads as '' here, which is not 'true'.
-    continue-on-error: ${{ matrix.baseline == true }}
+    # (continue-on-error sits on the install step, not the job: at job level
+    # GitHub keeps the workflow green but still paints the check red, which
+    # reads as a failure on every PR for months. An unset `baseline`
+    # (vite-fresh) reads as '' there, which is not 'true'.)
 
     steps:
       - name: Check out
@@ -128,6 +130,7 @@ jobs:
       - name: Run the install test
         id: install
         shell: bash
+        continue-on-error: ${{ matrix.baseline == true }}
         run: |
           set -o pipefail
           bash scripts/test_install.sh "${{ matrix.fixture }}" 2>&1 | tee install-test.log
