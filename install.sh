@@ -15,7 +15,8 @@
 # refresh styles/ and components/ and leave your own files alone.
 set -euo pipefail
 
-REPO="https://github.com/eyosiyasketema1/formic-design-system.git"
+# FORMIC_REPO=/path/to/checkout installs from a local clone (the install tests use it)
+REPO="${FORMIC_REPO:-https://github.com/eyosiyasketema1/formic-design-system.git}"
 NEW=0; APP=""; DEST="src/formic"
 while [ $# -gt 0 ]; do
   case "$1" in

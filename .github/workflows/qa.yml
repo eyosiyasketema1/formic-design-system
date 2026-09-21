@@ -66,3 +66,98 @@ jobs:
       # review because the HTML still looks correct.
       - name: Verify Subresource Integrity hashes
         run: python3 scripts/check_sri.py
+
+  # Phase 0 of PLAN-adoption.md: the installer is only proven by installing.
+  # scripts/test_install.sh puts this checkout into each fixture under
+  # fixtures/ (via FORMIC_REPO) and reports PASS/FAIL per step. Runs on both
+  # runner families because the installer is a bash script that shells out
+  # to sed, mktemp and friends, and BSD and GNU disagree.
+  install-matrix:
+    name: Install ${{ matrix.fixture }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        fixture: [vite-fresh, next-app, old-app]
+        # Phase 0 baseline: next-app and old-app are KNOWN to fail the gates /
+        # eslint steps today. They run and their failures are recorded in the
+        # step summary, but they do not fail the workflow. vite-fresh is
+        # strict. Remove `baseline: true` (flip both to strict) when Phase 3
+        # of PLAN-adoption.md closes.
+        include:
+          - fixture: next-app
+            baseline: true
+          - fixture: old-app
+            baseline: true
+    # An unset `baseline` (vite-fresh) reads as '' here, which is not 'true'.
+    continue-on-error: ${{ matrix.baseline == true }}
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # test_install.sh derives FORMIC_BRANCH from `git branch --show-current`
+      # and exits 2 on a detached HEAD, and install.sh then clones that branch
+      # from the local checkout (`git clone --branch "$FORMIC_BRANCH" "$FORMIC_REPO"`).
+      # A pull_request checkout IS a detached HEAD (the merge commit), so put
+      # the tested commit on a local branch first. The script exports
+      # FORMIC_BRANCH itself from this name; it needs no other input.
+      - name: Put HEAD on a local branch for the installer to clone
+        run: |
+          git checkout -B ci-install
+          echo "FORMIC_BRANCH=ci-install ($(git rev-parse --short HEAD))"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      # Both runner images ship python3; the installer and the gates need
+      # nothing beyond the standard library.
+      - name: Check Python
+        run: python3 --version
+
+      # The script prints PASS/FAIL per step and a per-fixture summary. Tee it
+      # to a file so the summary step below can publish it even when the
+      # script exits 1, and preserve that exit status through the pipe.
+      - name: Run the install test
+        id: install
+        shell: bash
+        run: |
+          set -o pipefail
+          bash scripts/test_install.sh "${{ matrix.fixture }}" 2>&1 | tee install-test.log
+
+      - name: Publish the PASS/FAIL lines to the step summary
+        if: always()
+        shell: bash
+        env:
+          FIXTURE: ${{ matrix.fixture }}
+          OS: ${{ matrix.os }}
+          BASELINE: ${{ matrix.baseline == true }}
+          OUTCOME: ${{ steps.install.outcome }}
+        run: |
+          {
+            echo "## Install test: $FIXTURE on $OS"
+            echo
+            if [ "$BASELINE" = "true" ]; then
+              echo "_Phase 0 baseline: failures below are recorded, not blocking (flips to strict when Phase 3 closes)._"
+              echo
+            fi
+            echo "Result: **$OUTCOME**"
+            echo
+            echo '```'
+            grep -E '^(PASS|FAIL) ' install-test.log || echo "(no PASS/FAIL lines: the script did not reach its steps; see the job log)"
+            echo '```'
+            echo
+            echo "<details><summary>Full output</summary>"
+            echo
+            echo '```'
+            cat install-test.log 2>/dev/null || echo "(no output captured)"
+            echo '```'
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
