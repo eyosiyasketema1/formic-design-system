@@ -1,0 +1,5 @@
+node_modules
+dist
+# written by generate.py at test time
+src/pages/
+src/components/generated/
