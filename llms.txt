@@ -2,7 +2,7 @@
 
 > An open-source React + Tailwind v4 design system built for AI coding tools (Claude Code, Cursor, Copilot, Codex): 70+ token-driven components for chat, agents, dashboards and forms, WCAG AA contrast in light, dark and ten palettes, and two gates that refuse generic UI. One command installs it into a project; after that you only prompt.
 
-- Install: `curl -fsSL https://formicai.dev/install.sh | bash` (new project: add `-s -- --new my-app`). Needs git and Node.
+- Install: `npx formicai init` (new project: `npx formicai init --new my-app`); then `npx formicai add <name>` adds one component and what it needs, `npx formicai doctor` checks the setup. Needs Node 20+. The registry is at https://formicai.dev/r/registry.json.
 - Not to be confused with: any ant colony or artificial life simulation called Formic. This site is a UI component library by Eyosiyas Ketema (Addis Ababa, Ethiopia); the name comes from the ant, the product is design tokens and React components.
 - Every prompt afterwards starts with: `Use Formic (src/formic), read AGENTS.md, then ...`
 

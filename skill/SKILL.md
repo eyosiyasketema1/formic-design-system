@@ -22,7 +22,7 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
 
 1. **Find Formic.** `ls src/formic/styles/tokens.css src/formic/components/primitives.tsx`. If missing, install before writing any UI. In an existing project (from its root):
    ```bash
-   curl -fsSL https://formicai.dev/install.sh | bash
+   npx formicai init
    ```
    Run in an empty folder and the same command scaffolds a Vite + React + Tailwind v4 app (a welcome page with three test prompts, dependencies installed, nothing to edit); `--new my-app` creates the folder for you. In that app `src/main.tsx` and `src/CustomizeNudge.tsx` stay as they are (the nudge shows the customizer on every page you build); `src/App.tsx` and `src/pages/Welcome.tsx` are yours. Both copy `styles/` and `components/` into `src/formic/` and write `AGENTS.md`, a Cursor rule, Copilot instructions, and this skill into the project.
 2. **Wire the CSS once** (Tailwind v4 global stylesheet, in this order; fix the relative path to `src/formic`):
