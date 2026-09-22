@@ -3,3 +3,5 @@ dist
 # written by generate.py at test time
 src/pages/
 src/components/generated/
+# written by scripts/visual_check.sh at test time
+.formic-visual/

@@ -7,6 +7,7 @@ wearing Formic's tokens?
     python3 src/formic/scripts/formic_check.py src/pages/Billing.tsx
     python3 src/formic/scripts/formic_check.py --inventory src/   # one line per file: on Formic, or how far off
     python3 src/formic/scripts/formic_check.py src --legacy src/old,src/legacy   # folders not yet on Formic are skipped
+    python3 src/formic/scripts/formic_check.py src --config=package.json   # scope and legacy from package.json's formic section
 
 Reads every .tsx / .jsx under the paths given, skipping the vendored src/formic
 folder itself, and reports the tells of an agent that invented UI instead of
@@ -37,11 +38,19 @@ What it catches:
 and whether it imports Formic, worst first, so a migration can be planned and
 followed to the end instead of leaving the app half on the old UI.
 --legacy <folder>[,<folder>…] (repeatable) skips the folders an app has not
-migrated yet, the `legacy` list in components.json's formic section, so a
-team adopts one route at a time and the gate never shouts about the rest.
+migrated yet; --scope <folder>[,…] names the folders that are on Formic, and
+scope wins over legacy for its subtree (legacy src plus scope src/pages checks
+src/pages and nothing else). --config=package.json reads both lists from the
+`formic` section that `formicai init` writes there (`formicai scope add
+<folder>` moves a folder into scope), so a team adopts one route at a time and
+the gate never shouts about the rest: a file given by name that sits in a
+legacy folder is skipped with a note, not refused, and when nothing is in
+scope the gate prints one line and exits 0. --inventory lists the legacy files
+too (they are the plan), marked as such.
 Legitimate exceptions are rare; when one is real, put the reason on the same
 line in a comment containing `formic-ok` and the line is skipped.
 """
+import json
 import re
 import sys
 from pathlib import Path
@@ -114,8 +123,8 @@ def check(path):
 
 
 def parse_args(argv):
-    """(paths, inventory, legacy folders) from the command line"""
-    paths, legacy, inventory = [], [], False
+    """(paths, inventory, legacy folders, scope folders) from the command line"""
+    paths, legacy, scope, inventory = [], [], [], False
     it = iter(argv)
     for a in it:
         if a == "--inventory":
@@ -124,18 +133,59 @@ def parse_args(argv):
             legacy += [x for x in next(it, "").split(",") if x]
         elif a.startswith("--legacy="):
             legacy += [x for x in a.split("=", 1)[1].split(",") if x]
+        elif a == "--scope":
+            scope += [x for x in next(it, "").split(",") if x]
+        elif a.startswith("--scope="):
+            scope += [x for x in a.split("=", 1)[1].split(",") if x]
+        elif a.startswith("--config="):
+            s, l = read_config(a.split("=", 1)[1])
+            scope += s
+            legacy += l
         elif not a.startswith("--"):
             paths.append(a)
-    return paths, inventory, legacy
+    return paths, inventory, legacy, scope
 
 
-def in_legacy(path, legacy):
+def read_config(path):
+    """(scope, legacy) from package.json's `formic` section, relative to the file"""
+    p = Path(path)
+    try:
+        formic = json.loads(p.read_text()).get("formic") or {}
+    except (OSError, ValueError):
+        return [], []
+    base = p.parent
+    return [str(base / x) for x in formic.get("scope") or []], [str(base / x) for x in formic.get("legacy") or []]
+
+
+def under(path, folders):
     p = path.resolve()
-    return any(p == l or l in p.parents for l in (Path(x).resolve() for x in legacy))
+    return any(p == f or f in p.parents for f in (Path(x).resolve() for x in folders))
+
+
+def in_legacy(path, legacy, scope=()):
+    """legacy unless a scope folder claims the file (scope wins for its subtree)"""
+    return under(path, legacy) and not under(path, scope)
+
+
+def legacy_folder(path, legacy):
+    p = path.resolve()
+    for x in legacy:
+        f = Path(x).resolve()
+        if p == f or f in p.parents:
+            return x
+    return legacy[0] if legacy else ""
+
+
+def scope_hint(path):
+    """the folder to add to scope for this file: its parent, shown relative to the working directory"""
+    try:
+        return str(path.resolve().parent.relative_to(Path.cwd()))
+    except ValueError:
+        return str(path.parent)
 
 
 def main():
-    paths, inventory, legacy = parse_args(sys.argv[1:])
+    paths, inventory, legacy, scope = parse_args(sys.argv[1:])
     roots = [Path(p) for p in paths] or [Path("src")]
     files = []
     for r in roots:
@@ -144,8 +194,16 @@ def main():
         elif r.is_dir():
             for ext in ("*.tsx", "*.jsx"):
                 files += [p for p in r.rglob(ext) if not any(s in str(p) for s in SKIP_DIRS)]
-    if legacy:
-        files = [f for f in files if not in_legacy(f, legacy)]
+    skipped = []
+    if legacy and not inventory:
+        skipped = [f for f in files if in_legacy(f, legacy, scope)]
+        files = [f for f in files if f not in skipped]
+        for f in skipped:
+            if any(f == r for r in roots):  # named on the command line (the pre-commit hook does this): say why it is not checked
+                print(f"– {f}: in a legacy folder ({legacy_folder(f, legacy)}), not checked until `formicai scope add {scope_hint(f)}` brings it in")
+    if not files and skipped:
+        print(f"formic: nothing in scope yet; {len(skipped)} file(s) under the legacy folder(s) {', '.join(legacy)} are not checked until `formicai scope add <folder>` brings them in")
+        return
     if not files:
         raise SystemExit(f"no .tsx/.jsx files under {', '.join(str(r) for r in roots)} (the vendored src/formic folder is skipped on purpose{', and so are the legacy folders ' + ', '.join(legacy) if legacy else ''})")
     total = 0
@@ -153,12 +211,20 @@ def main():
     if inventory:
         rows = sorted(results.items(), key=lambda kv: (-len(kv[1]), str(kv[0])))
         pending = [f for f, hits in rows if hits]
-        print(f"{'issues':>6}  {'formic':<7} file")
+        gated = bool(legacy)
+        print(f"{'issues':>6}  {'formic':<7} {'gated':<7} file" if gated else f"{'issues':>6}  {'formic':<7} file")
+        in_legacy_count = 0
         for f, hits in rows:
             src = f.read_text(errors="replace")
             on = "yes" if (FORMIC_IMPORT.search(src) or FORMIC_IMPORT_ALT.search(src)) else "no"
-            print(f"{len(hits):>6}  {on:<7} {f}")
-        print(f"\n{len(pending)} of {len(files)} file(s) still to migrate. Convert them one by one, worst first, and run this without --inventory until it prints clean; a file half on Formic is not done.")
+            if gated:
+                is_legacy = in_legacy(f, legacy, scope)
+                in_legacy_count += is_legacy and bool(hits)
+                print(f"{len(hits):>6}  {on:<7} {'legacy' if is_legacy else 'yes':<7} {f}")
+            else:
+                print(f"{len(hits):>6}  {on:<7} {f}")
+        tail = f" {in_legacy_count} of them in legacy folders, listed because they are the plan, not gated until `formicai scope add <folder>` brings them in." if gated and in_legacy_count else ""
+        print(f"\n{len(pending)} of {len(files)} file(s) still to migrate.{tail} Convert them one by one, worst first, and run this without --inventory until it prints clean; a file half on Formic is not done.")
         sys.exit(1 if pending else 0)
     for f, hits in results.items():
         if not hits:
@@ -171,7 +237,7 @@ def main():
         flagged = sum(1 for hits in results.values() if hits)
         print(f"\n{total} usage issue(s) in {flagged} of {len(files)} file(s). Import the component, use the token, or put the reason on the line as `formic-ok`. See AGENTS.md → Build protocol." + (" This app is only partly on Formic: `--inventory` lists what is left, and AGENTS.md → Migrating an existing app says how to finish." if flagged > 1 else ""))
         sys.exit(1)
-    print(f"formic: {len(files)} file(s) built on the system — tokens, ramp, radii, Formic components, no second kit")
+    print(f"formic: {len(files)} file(s) built on the system — tokens, ramp, radii, Formic components, no second kit" + (f" ({len(skipped)} file(s) in legacy folders not checked)" if skipped else ""))
 
 
 if __name__ == "__main__":

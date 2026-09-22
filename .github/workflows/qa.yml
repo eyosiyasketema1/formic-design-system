@@ -76,6 +76,11 @@ jobs:
   # Phase 2: every fixture is installed twice, once by install.sh (`installer`)
   # and once by `npx formicai init` against a registry built from this
   # checkout (`cli`, the script's --cli flag). 3 fixtures × 2 OSes × 2 modes.
+  #
+  # Phase 3: the cli mode is strict on all three fixtures, including the
+  # `legacy`, `migrate` and `visual` steps the script runs on an existing
+  # project. The (old-app, cli) cell installs Playwright's browser first so
+  # `visual` really screenshots and compares instead of passing as skipped.
   install-matrix:
     name: Install ${{ matrix.fixture }} on ${{ matrix.os }} (${{ matrix.mode }})
     runs-on: ${{ matrix.os }}
@@ -86,17 +91,20 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         fixture: [vite-fresh, next-app, old-app]
         mode: [installer, cli]
-        # Phase 0 baseline: next-app and old-app are KNOWN to fail the gates /
-        # eslint steps today. They run and their failures are recorded in the
-        # step summary, but they do not fail the workflow. vite-fresh is
-        # strict. Remove `baseline: true` (flip both to strict) when Phase 3
-        # of PLAN-adoption.md closes. An include that names only `fixture`
-        # applies to every os × mode combination of it, so both modes share
-        # the baseline.
+        # Installer baseline: install.sh is the legacy path kept for the old
+        # link. It has no scope / legacy marking, so on an existing project
+        # (next-app, old-app) its gates / eslint steps fail by design. Those
+        # two cells run, their failures are recorded in the step summary, and
+        # they do not fail the workflow. Every cli cell and vite-fresh in both
+        # modes are strict. An include naming `fixture` AND `mode` applies to
+        # both OSes of that one cell and nothing else. Remove these two
+        # entries when install.sh becomes a wrapper for `formicai init`.
         include:
           - fixture: next-app
+            mode: installer
             baseline: true
           - fixture: old-app
+            mode: installer
             baseline: true
           # The script's flag for the mode: '' for the installer, --cli for
           # the CLI. Set per mode here so the run step needs no branching.
@@ -137,6 +145,37 @@ jobs:
       - name: Check Python
         run: python3 --version
 
+      # The `visual` step (scripts/visual_check.sh) screenshots old-app's
+      # routes before and after `formicai migrate` and compares them. It
+      # needs Playwright's chromium-headless-shell; without one it passes as
+      # "skipped: no browser", which proves nothing. Only the (old-app, cli)
+      # cell runs it, so only that cell pays for the browser. The npm install
+      # of playwright lives in FORMIC_VISUAL_HOME (the script's default) and
+      # the browser in PLAYWRIGHT_BROWSERS_PATH, pinned under ~/.cache on both
+      # OSes so one cache entry per OS × Playwright version covers both.
+      # `--with-deps` (the system libraries) is Linux only.
+      - name: Cache the browser for the visual check
+        if: matrix.fixture == 'old-app' && matrix.mode == 'cli'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/formic-visual
+          key: formic-visual-${{ runner.os }}-playwright-1.63.0
+
+      - name: Install the browser for the visual check
+        if: matrix.fixture == 'old-app' && matrix.mode == 'cli'
+        shell: bash
+        run: |
+          echo "FORMIC_VISUAL_HOME=$HOME/.cache/formic-visual" >> "$GITHUB_ENV"
+          echo "PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright" >> "$GITHUB_ENV"
+          export PLAYWRIGHT_BROWSERS_PATH="$HOME/.cache/ms-playwright"
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            npx --yes playwright@1.63.0 install --with-deps chromium-headless-shell
+          else
+            npx --yes playwright@1.63.0 install chromium-headless-shell
+          fi
+
       # The script prints PASS/FAIL per step and a per-fixture summary. Tee it
       # to a file so the summary step below can publish it even when the
       # script exits 1, and preserve that exit status through the pipe.
@@ -150,6 +189,10 @@ jobs:
           set -o pipefail
           # $FLAG unquoted on purpose: '' must vanish, not become an empty argument.
           bash scripts/test_install.sh "${{ matrix.fixture }}" $FLAG 2>&1 | tee install-test.log
+          # the browser was installed for this cell, so a skipped visual step is a broken runner, not a pass
+          if [ "${{ matrix.fixture }}" = old-app ] && [ "${{ matrix.mode }}" = cli ] && grep -q "visual (skipped" install-test.log; then
+            echo "::error::the visual step was skipped: the browser did not launch on this runner"; exit 1
+          fi
 
       - name: Publish the PASS/FAIL lines to the step summary
         if: always()
@@ -171,13 +214,16 @@ jobs:
             fi
             echo
             if [ "$BASELINE" = "true" ]; then
-              echo "_Phase 0 baseline: failures below are recorded, not blocking (flips to strict when Phase 3 closes)._"
+              echo "_Installer baseline: install.sh is the legacy path with no scope/legacy marking, so its gates/eslint failures on an existing project are recorded, not blocking (goes away when install.sh wraps \`formicai init\`)._"
               echo
             fi
             echo "Result: **$OUTCOME**"
             echo
             echo '```'
-            grep -E '^(PASS|FAIL) ' install-test.log || echo "(no PASS/FAIL lines: the script did not reach its steps; see the job log)"
+            # PASS/FAIL per step, plus the visual table (header ending in
+            # diff%, rows starting with the route, indented two spaces by
+            # the script) and the migrate / visual timing lines.
+            grep -E '^(PASS|FAIL) |^  (PASS|FAIL|route|/)|diff%|^(migrate|visual): ' install-test.log || echo "(no PASS/FAIL lines: the script did not reach its steps; see the job log)"
             echo '```'
             echo
             echo "<details><summary>Full output</summary>"

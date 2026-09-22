@@ -48,9 +48,11 @@ expect help-update "force" "${CLI[@]}" update --help
 expect help-doctor "Exits 1" "${CLI[@]}" doctor --help
 expect help-gates "compose_check" "${CLI[@]}" gates --help
 expect help-inventory "worst first" "${CLI[@]}" inventory --help
+expect help-scope "under the gates" "${CLI[@]}" scope --help
+expect help-migrate "formic-todo" "${CLI[@]}" migrate --help
 expect_fail unknown-command "${CLI[@]}" frobnicate
 # the word a person never reads: the registry client's name stays internal
-if { "${CLI[@]}" --help; for c in init add update doctor gates inventory; do "${CLI[@]}" "$c" --help; done; cat "$REPO/cli/README.md"; } 2>&1 | grep -qi shadcn; then fail no-shadcn-in-user-text; else pass no-shadcn-in-user-text; fi
+if { "${CLI[@]}" --help; for c in init add update doctor gates inventory scope migrate; do "${CLI[@]}" "$c" --help; done; cat "$REPO/cli/README.md"; } 2>&1 | grep -qi shadcn; then fail no-shadcn-in-user-text; else pass no-shadcn-in-user-text; fi
 
 # ── init --new: dry run writes nothing, the real one scaffolds ──
 cd "$TMP"
@@ -67,9 +69,18 @@ grep -q '"formic": {' package.json && grep -q '"legacy"' package.json && pass pa
 grep -q "formic_check" .git/hooks/pre-commit && pass hook || fail hook
 grep -q "^  --accent: #" src/formic/styles/tokens.css && pass apply-config || fail apply-config "accent not applied"
 
-# ── doctor: green on the scaffold ────────────────────────────
+# ── doctor: green on the scaffold; a second kit beside Formic is a ! note with its next step (a warning, never a failure) ──
 run doctor "${CLI[@]}" doctor
 expect doctor-all-good "All good" "${CLI[@]}" doctor
+node -e 'const fs=require("fs");const p=JSON.parse(fs.readFileSync("package.json","utf8"));p.dependencies["lucide-react"]="1.0.0";fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\n")'
+expect doctor-second-kit "a second UI kit: lucide-react in dependencies" "${CLI[@]}" doctor
+expect doctor-second-kit-fix "npm uninstall lucide-react" "${CLI[@]}" doctor
+expect doctor-second-kit-warns "note(s) for the migration" "${CLI[@]}" doctor
+run doctor-second-kit-exits-0 "${CLI[@]}" doctor
+node -e 'const fs=require("fs");const p=JSON.parse(fs.readFileSync("package.json","utf8"));delete p.dependencies["lucide-react"];fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\n")'
+printf 'module.exports = { theme: { extend: { colors: { brand: "#123456" } } } };\n' > tailwind.config.js
+expect doctor-tailwind-config "defines its own colours" "${CLI[@]}" doctor
+rm -f tailwind.config.js
 
 # ── add: dry run, typo, real, idempotent, lock ───────────────
 expect add-dry-run "components/DataTable.tsx.*create" "${CLI[@]}" add data-table --dry-run
@@ -85,12 +96,56 @@ expect add-list "data-table" "${CLI[@]}" add --list
 # ── gates and inventory on the scaffold ──────────────────────
 run gates "${CLI[@]}" gates
 expect inventory "0 of .* still to migrate" "${CLI[@]}" inventory
-# legacy folders are skipped by both gates (the --legacy flag Phase 3 builds on)
-mkdir -p src/legacy && printf 'export default function Old() {\n  return <button className="rounded-lg bg-blue-600 px-4 text-white shadow-md">Old</button>;\n}\n' > src/legacy/Old.tsx
+# a new app has nothing legacy: the whole source folder is in scope
+expect scope-list-whole "whole source folder" "${CLI[@]}" scope
+# legacy folders are skipped by both gates; scope wins over legacy for its subtree
+mkdir -p src/legacy/keep && printf 'export default function Old() {\n  return <button className="rounded-lg bg-blue-600 px-4 text-white shadow-md">Old</button>;\n}\n' > src/legacy/Old.tsx
+cp src/legacy/Old.tsx src/legacy/keep/Kept.tsx
 expect_fail gates-see-legacy "${CLI[@]}" gates
 node -e 'const fs=require("fs");const p=JSON.parse(fs.readFileSync("package.json","utf8"));p.formic.legacy=["src/legacy"];fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\n")'
 run gates-skip-legacy "${CLI[@]}" gates
-node -e 'const fs=require("fs");const p=JSON.parse(fs.readFileSync("package.json","utf8"));p.formic.legacy=[];fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\n")'
+expect inventory-marks-legacy "legacy  src/legacy/Old.tsx" "${CLI[@]}" inventory
+expect scope-add "src/legacy/keep is in scope" "${CLI[@]}" scope add src/legacy/keep
+expect_fail gates-scope-wins "${CLI[@]}" gates
+expect scope-list "keep" "${CLI[@]}" scope
+expect scope-remove "out of scope" "${CLI[@]}" scope remove src/legacy/keep
+run gates-legacy-again "${CLI[@]}" gates
+expect scope-add-legacy-folder "no longer legacy" "${CLI[@]}" scope add src/legacy
+grep -q '"legacy": \[\]' package.json && pass scope-add-drops-legacy || fail scope-add-drops-legacy "src/legacy still listed as legacy after scope add"
+expect_fail gates-scope-checks "${CLI[@]}" gates
+"${CLI[@]}" scope remove src/legacy >> "$LOG" 2>&1
+# migrate: a legacy page through the codemods, as a diff first, then written
+cat > src/legacy/Old.tsx <<'TSX'
+import { Bell } from "lucide-react";
+
+export default function Old({ onSave }: { onSave: () => void }) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
+      <h2 className="text-2xl font-bold text-gray-900">Invoices</h2>
+      <label className="text-sm text-gray-700">
+        Client
+        <input className="mt-1 w-full rounded-md border border-gray-300 px-3 text-sm" placeholder="Search" />
+      </label>
+      <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-md hover:bg-blue-700" onClick={onSave}>
+        <Bell className="mr-2 inline h-4 w-4" /> Save
+      </button>
+      <p className="text-xs text-gray-400">Sent 3 days ago</p>
+    </div>
+  );
+}
+TSX
+rm -f src/legacy/keep/Kept.tsx
+expect migrate-dry-run "would change" "${CLI[@]}" migrate src/legacy/Old.tsx
+grep -q "lucide-react" src/legacy/Old.tsx && pass migrate-dry-run-writes-nothing || fail migrate-dry-run-writes-nothing
+run migrate-write "${CLI[@]}" migrate src/legacy/Old.tsx --write
+grep -q '<Button variant="accent" icon="bell" onClick={onSave}>' src/legacy/Old.tsx && pass migrate-button || fail migrate-button "$(grep -n 'utton' src/legacy/Old.tsx | tr '\n' ' | ')"
+grep -q '<Field label="Client">' src/legacy/Old.tsx && grep -q '<Input className="mt-1" placeholder="Search" />' src/legacy/Old.tsx && pass migrate-field-input || fail migrate-field-input "$(grep -n 'nput\|Field' src/legacy/Old.tsx | tr '\n' ' | ')"
+grep -q 'rounded-card border border-line bg-surface p-6 shadow-card' src/legacy/Old.tsx && grep -q 'text-heading font-semibold text-ink' src/legacy/Old.tsx && grep -q 'text-small text-ink-3' src/legacy/Old.tsx && pass migrate-classes || fail migrate-classes "$(grep -n 'className' src/legacy/Old.tsx | tr '\n' ' | ')"
+grep -q 'lucide-react' src/legacy/Old.tsx && fail migrate-icons "lucide import left" || pass migrate-icons
+grep -q 'import { Icon } from "../formic/components/primitives";' src/legacy/Old.tsx && grep -q 'import Button from "../formic/components/Button";' src/legacy/Old.tsx && grep -q 'import Input, { Field } from "../formic/components/Input";' src/legacy/Old.tsx && pass migrate-imports || fail migrate-imports "$(grep -n '^import' src/legacy/Old.tsx | tr '\n' ' | ')"
+run migrate-passes-gate python3 src/formic/scripts/formic_check.py src/legacy/Old.tsx
+run migrate-compiles npx -y esbuild --loader:.tsx=tsx --jsx=automatic --log-level=error --outfile=/dev/null src/legacy/Old.tsx
+node -e 'const fs=require("fs");const p=JSON.parse(fs.readFileSync("package.json","utf8"));p.formic.legacy=[];p.formic.scope=[];fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\n")'
 rm -rf src/legacy
 
 # ── update: current, then an upstream change, a local edit, a conflict ──
@@ -127,6 +182,10 @@ expect init-existing-dry-run "would change app/globals.css" "${CLI[@]}" init --d
 [ -d src/formic ] && fail init-existing-dry-run-writes-nothing || pass init-existing-dry-run-writes-nothing
 git diff --quiet && pass init-existing-dry-run-clean-tree || fail init-existing-dry-run-clean-tree "the dry run changed tracked files"
 run init-existing "${CLI[@]}" init --yes
+grep -q "marked legacy" "$LOG" && pass init-existing-says-legacy || fail init-existing-says-legacy "init did not say the existing pages are marked legacy"
+node -e 'const p=require("./package.json").formic;process.exit(p.legacy.length===1&&p.legacy[0]==="app"&&p.scope.length===0?0:1)' && pass init-existing-legacy || fail init-existing-legacy "$(node -p 'JSON.stringify(require("./package.json").formic)')"
+run init-existing-gates-clean "${CLI[@]}" gates
+expect init-existing-gates-note "nothing in scope yet" "${CLI[@]}" gates
 grep -n '@import' app/globals.css | grep -o 'fonts\.css\|"tailwindcss"\|formic\.css' | tr '\n' ' ' | grep -q 'fonts.css "tailwindcss" formic.css ' && pass init-existing-css || fail init-existing-css "$(grep '@import' app/globals.css | tr '\n' ' ')"
 grep -q '"@phosphor-icons/react"' package.json && grep -q '"@dicebear/core"' package.json && grep -q '"formic": "python3' package.json && pass init-existing-package || fail init-existing-package
 grep -q "formic_check" .git/hooks/pre-commit && pass init-existing-hook || fail init-existing-hook

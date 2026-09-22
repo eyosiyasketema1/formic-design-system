@@ -130,7 +130,7 @@ A rules file alone is not enough: if the components are not in the project, ever
 npx formicai init
 ```
 
-It puts the system into `src/formic/` (every component by default, only the base with `--minimal`; `npx formicai add <name>` adds one component and what it needs), wires the CSS and installs the icon and avatar packages when it can see where, adds a pre-commit hook that runs the two gates, and writes `AGENTS.md`, `.cursor/rules/formic-design-system.mdc`, `.github/copilot-instructions.md`, `.claude/skills/formic-design-system/SKILL.md`, and a Formic section in `CLAUDE.md`. Re-run it to update (`src/formic/VERSION` says which release you have); it never overwrites your own files. Read [`install.sh`](install.sh) first if you like to know what you are piping into bash.
+It puts the system into `src/formic/` (every component by default, only the base with `--minimal`; `npx formicai add <name>` adds one component and what it needs), wires the CSS and installs the icon and avatar packages when it can see where, adds a pre-commit hook that runs the two gates, and writes `AGENTS.md`, `.cursor/rules/formic-design-system.mdc`, `.github/copilot-instructions.md`, `.claude/skills/formic-design-system/SKILL.md`, and a Formic section in `CLAUDE.md`. Re-run it to update (`src/formic/VERSION` says which release you have); it never overwrites your own files. In an app that already has pages it marks the source folder `legacy` in `package.json`, so the gates and the hook leave the old files alone until `npx formicai scope add <folder>` brings a folder in; `npx formicai migrate <file> --write` does the mechanical part of each page (palette classes to tokens, the scales, a plain button, an input under a label, lucide icons) and leaves a `formic-todo` at every spot it could not decide (AGENTS.md → Migrating an existing app). Read [`install.sh`](install.sh) first if you like to know what you are piping into bash.
 
 **2. Wire the CSS** (Tailwind v4, three lines in this order), only if `init` said it could not find your global stylesheet; a scaffolded app already has it. `npx formicai doctor` confirms the setup.
 
@@ -177,7 +177,7 @@ index.html       the landing page
 CONTRIBUTING.md  how to contribute
 CLAUDE.md        the design rules and QA workflow
 AGENTS.md        instructions for AI tools consuming the system
-cli/             the formicai command (npx formicai init | add | update | doctor | gates | inventory)
+cli/             the formicai command (npx formicai init | add | update | doctor | gates | inventory | scope | migrate)
 registry/        one JSON per component, built from the sources, served at formicai.dev/r/
 install.sh       the older one-command install script, kept working (also at formicai.dev/install.sh)
 ```

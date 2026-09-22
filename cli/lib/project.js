@@ -1,12 +1,14 @@
 /* The files init writes around the Formic folder: the instruction files every
    AI coding tool reads, the pre-commit hook, the `formic` script, the CSS
-   imports, components.json and the ESLint ignore. Same words and same
-   content as install.sh, so the two paths leave the same project behind. */
+   imports, components.json and the ESLint ignore. Same words as install.sh,
+   so the two paths leave the same project behind; the CLI's hook, script and
+   instruction files pass --config=package.json to the gates, so scope and
+   legacy (formicai scope) apply everywhere. */
 import fs from "node:fs";
 import path from "node:path";
 import { say, skip, warn, note, stringify, relFrom, cssImportOrder, grey, cyan } from "./util.js";
 
-const gatesLine = (dir, src) => `\`python3 ${dir}/scripts/formic_check.py ${src}\` and \`python3 ${dir}/scripts/compose_check.py ${src}\``;
+const gatesLine = (dir, src) => `\`python3 ${dir}/scripts/formic_check.py ${src} --config=package.json\` and \`python3 ${dir}/scripts/compose_check.py ${src} --config=package.json\` (what \`npm run formic\` runs; the config names the folders in scope and the legacy ones)`;
 
 export function claudeSection(dir, src) {
   return `
@@ -41,17 +43,19 @@ All UI in this project is built with the Formic AI Design System, vendored at \`
 /* the hook checks the files in the commit, not the whole app: in an existing
    project the old pages fail the gates until they are migrated, and a hook
    that blocks every commit from day one gets deleted. `npm run formic` still
-   checks all of the source folder. */
+   checks all of the source folder. Both read package.json's formic section
+   (--config=package.json): a staged file in a legacy folder that no scope
+   folder claims is skipped with a note, never refused. */
 export function hookBody(dir) {
-  return `# Formic gates on the files being committed (npm run formic checks everything)
+  return `# Formic gates on the files being committed (npm run formic checks everything; package.json → formic.scope / formic.legacy decide what is gated)
 FORMIC_FILES=$(git diff --cached --name-only --diff-filter=ACMR -- '*.tsx' '*.jsx' | grep -v '^${dir}/' || true)
 if [ -n "$FORMIC_FILES" ]; then
-  python3 ${dir}/scripts/formic_check.py $FORMIC_FILES && python3 ${dir}/scripts/compose_check.py $FORMIC_FILES || exit 1
+  python3 ${dir}/scripts/formic_check.py --config=package.json $FORMIC_FILES && python3 ${dir}/scripts/compose_check.py --config=package.json $FORMIC_FILES || exit 1
 fi`;
 }
 
 export function formicScript(dir, src) {
-  return `python3 ${dir}/scripts/formic_check.py ${src} && python3 ${dir}/scripts/compose_check.py ${src}`;
+  return `python3 ${dir}/scripts/formic_check.py ${src} --config=package.json && python3 ${dir}/scripts/compose_check.py ${src} --config=package.json`;
 }
 
 export function writeAgentFiles(plan, dir, src) {
@@ -76,17 +80,24 @@ export function writeHook(plan, dir, { soon = false } = {}) {
     plan.chmodx(p);
   } else if (!cur.includes("formic_check")) {
     plan.append(p, `\n${hookBody(dir)}\n`, ".git/hooks/pre-commit (Formic gates appended)");
+  } else if (!cur.includes("--config=package.json") && /# Formic gates on the files being committed[\s\S]*?\nfi/.test(cur)) {
+    /* a hook from an earlier release: same block, now reading scope and legacy */
+    plan.write(p, cur.replace(/# Formic gates on the files being committed[\s\S]*?\nfi/, hookBody(dir)), ".git/hooks/pre-commit (the Formic gates now read package.json → formic.scope / legacy)");
   } else if (!plan.dryRun) skip(".git/hooks/pre-commit already runs the Formic gates");
   return true;
 }
 
-export function writePackageJson(plan, pkg, dir, src) {
+export function writePackageJson(plan, pkg, dir, src, { legacy = [] } = {}) {
   if (!pkg) return;
   const next = { ...pkg };
   const parts = [];
   if (!pkg.scripts?.formic) { next.scripts = { ...(pkg.scripts ?? {}), formic: formicScript(dir, src) }; parts.push("npm run formic (formic_check + compose_check)"); }
-  const section = formicSection(pkg, dir, src);
-  if (JSON.stringify(pkg.formic ?? null) !== JSON.stringify(section)) { next.formic = section; parts.push(`the formic section (dir, srcDir, scope, legacy)`); }
+  else if (!pkg.scripts.formic.includes("--config=") && /^python3 \S+formic_check\.py \S+ && python3 \S+compose_check\.py \S+$/.test(pkg.scripts.formic)) {
+    /* the script from an earlier release: the same two gates, now reading scope and legacy */
+    next.scripts = { ...pkg.scripts, formic: formicScript(dir, src) }; parts.push("npm run formic now reads package.json → formic.scope / legacy");
+  }
+  const section = formicSection(pkg, dir, src, legacy);
+  if (JSON.stringify(pkg.formic ?? null) !== JSON.stringify(section)) { next.formic = section; parts.push(`the formic section (dir, srcDir, scope, legacy${legacy.length ? `: ${legacy.join(", ")} marked legacy` : ""})`); }
   if (!parts.length) { if (!plan.dryRun) skip("package.json already has the formic script and section"); return; }
   plan.write("package.json", stringify(next), `package.json: ${parts.join(" and ")}`);
 }
@@ -144,11 +155,35 @@ export function writeComponentsJson(plan, existing, opts) {
   if (r === "same" && !plan.dryRun) skip("components.json already names the @formic registry");
 }
 
-/* package.json → "formic": where Formic is, where the app's code is, and
-   (for Phase 3) which folders are on Formic (`scope`) and which the gates
-   skip until migrated (`legacy`). Read by formicai gates and inventory. */
-export function formicSection(pkg, dir, srcDir) {
-  return { dir, srcDir, scope: [], legacy: [], ...(pkg?.formic ?? {}) };
+/* package.json → "formic": where Formic is, where the app's code is, which
+   folders are on Formic (`scope`) and which the gates skip until migrated
+   (`legacy`; scope wins for its subtree). Read by the gates through
+   --config=package.json, so formicai gates, npm run formic and the hook agree.
+   A section the project already has is kept as it is; `legacy` only seeds a
+   new one (init in a project with pages of its own). */
+export function formicSection(pkg, dir, srcDir, legacy = []) {
+  return { dir, srcDir, scope: [], legacy, ...(pkg?.formic ?? {}) };
+}
+
+/* .tsx / .jsx files under the source folder that are not Formic's: the pages
+   an existing project already has. init marks their folder legacy so the
+   gates and the hook leave them alone until they are moved into scope. */
+export function uiFiles(cwd, srcDir, dir, limit = Infinity) {
+  const out = [];
+  const root = path.join(cwd, srcDir);
+  if (!fs.existsSync(root)) return out;
+  const walk = (d) => {
+    if (out.length >= limit) return;
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, e.name);
+      const rel = path.relative(cwd, p).split(path.sep).join("/");
+      if (e.name === "node_modules" || e.name.startsWith(".") || rel === dir || rel.startsWith(dir + "/")) continue;
+      if (e.isDirectory()) walk(p);
+      else if (/\.(tsx|jsx)$/.test(e.name)) { out.push(rel); if (out.length >= limit) return; }
+    }
+  };
+  walk(root);
+  return out;
 }
 
 /* ESLint: a standalone `ignores` entry is a global ignore in flat config.
@@ -197,4 +232,4 @@ export function seedConfig(cwd, content) {
 }
 
 export const migrationPrompt = (dir, src) =>
-  `Use Formic (${dir}), read AGENTS.md, then migrate this whole app to Formic the way AGENTS.md (Migrating an existing app) says: run python3 ${dir}/scripts/formic_check.py --inventory ${src} for the list, show me the plan, then convert every page and component until both gates print clean. Keep every route, behaviour and data call; do not leave any page on the old UI.`;
+  `Use Formic (${dir}), read AGENTS.md, then migrate this whole app to Formic the way AGENTS.md (Migrating an existing app) says: run npx formicai inventory for the list, show me the plan, then folder by folder run npx formicai scope add <folder>, npx formicai migrate <file> --write on each file, finish each file by hand until both gates print clean. Keep every route, behaviour and data call; do not leave any page on the old UI.`;
