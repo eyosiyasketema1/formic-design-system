@@ -86,14 +86,13 @@ export default function Tabs({
     const el = activeKey === undefined ? null : document.getElementById(tabId(activeKey));
     if (el) setBar({ left: el.offsetLeft, width: el.offsetWidth });
   };
-  useLayoutEffect(measure, [activeKey, tabs]); // eslint-disable-line react-hooks/exhaustive-deps
+  useLayoutEffect(measure, [activeKey, tabs]);
   useEffect(() => {
     const list = listRef.current;
     if (!list) return;
     const observer = new ResizeObserver(measure);
     observer.observe(list);
     return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-measure callback reads fresh state
   }, [activeKey]);
   const onKeyDown = (event: React.KeyboardEvent) => {
     const index = tabs.findIndex((tab) => tab.key === activeKey);

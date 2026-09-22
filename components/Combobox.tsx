@@ -104,7 +104,7 @@ export default function Combobox({
   const { open, setOpen, position, anchorRef, openAt } = useAnchoredLayer<HTMLSpanElement>(listboxId);
 
   /* a controlled value changing from outside updates the text */
-  useEffect(() => { if (!typed) setQuery(labelOf(current)); }, [current]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!typed) setQuery(labelOf(current)); }, [current]);
 
   const q = query.trim().toLowerCase();
   const shown = useMemo(() => {

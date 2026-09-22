@@ -51,7 +51,6 @@ export function useStream(
       done ? holdMs : intervalMs,
     );
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- callbacks stay out so re-created handlers don't restart the stream
   }, [count, done, loop, length]);
   return { count, done };
 }
@@ -190,7 +189,6 @@ export function useModalLayer(
       unlockScroll();
       restore?.focus();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-arm only on open/close
   }, [open, closeOnEscape]);
 }
 

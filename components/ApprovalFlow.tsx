@@ -160,12 +160,10 @@ export default function ApprovalFlow({
     measured.current = true;
     sync(withAnim);
     setReady(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qi, answers, custom, open, sent]);
   useEffect(() => {
     const id = requestAnimationFrame(() => sync(measured.current));
     return () => cancelAnimationFrame(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qi]);
   useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); }, []);
   /* When the step changes, focus follows it. Without this the user's focus is
@@ -178,7 +176,6 @@ export default function ApprovalFlow({
     if (!item || !item.contains(document.activeElement)) {
       item?.focus({ preventScroll: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qi]);
 
   const goTo = (next: number) => {

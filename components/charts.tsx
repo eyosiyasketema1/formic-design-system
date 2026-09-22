@@ -1405,7 +1405,6 @@ export function CountUp({
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- animate from wherever we are toward the new value
   }, [value, reduced, duration]);
   return <span className="tabular-nums">{format(reduced ? value : shown)}</span>;
 }

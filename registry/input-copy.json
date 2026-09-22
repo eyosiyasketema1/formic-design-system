@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "A value to take away.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { useEffect, useId, useRef, useState } from \"react\";\nimport Button from \"./Button\";\nimport { Icon, IconButton, Tooltip } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * INPUT COPY — a value to take away\n * A read-only field with the one action it needs: copy. The\n * button turns into a check for a moment and says so to screen\n * readers; a failed clipboard says that too. `variant=\"button\"`\n * puts a labelled Copy button on the trailing edge instead of\n * the icon, for values people copy often (an API key, a share\n * link, an install command).\n * ───────────────────────────────────────────────────────── */\nexport default function InputCopy({\n  value = \"npx formic add project-sidebar\",\n  label,\n  variant = \"icon\",\n  mono = true,\n  onCopy,\n  className = \"\",\n}: {\n  value?: string;\n  /** shown above the field, and read as part of the button's name */\n  label?: string;\n  /** icon: a quiet copy button inside the field. button: a labelled Copy button */\n  variant?: \"icon\" | \"button\";\n  /** monospace value (commands, keys, urls) */\n  mono?: boolean;\n  onCopy?: (value: string) => void;\n  className?: string;\n}) {\n  const id = useId();\n  const [status, setStatus] = useState<\"idle\" | \"copied\" | \"error\">(\"idle\");\n  const timer = useRef<number | null>(null);\n  useEffect(() => () => { if (timer.current) window.clearTimeout(timer.current); }, []);\n  const copy = async () => {\n    try {\n      await navigator.clipboard.writeText(value);\n      setStatus(\"copied\");\n      onCopy?.(value);\n    } catch {\n      setStatus(\"error\");\n    }\n    if (timer.current) window.clearTimeout(timer.current);\n    timer.current = window.setTimeout(() => setStatus(\"idle\"), 1600);\n  };\n  const name = status === \"copied\" ? \"Copied\" : status === \"error\" ? \"Could not copy\" : `Copy${label ? ` ${label}` : \"\"}`;\n  const glyph = status === \"copied\" ? \"check\" : status === \"error\" ? \"alert\" : \"copy\";\n  const tone = status === \"copied\" ? \"text-green\" : status === \"error\" ? \"text-red\" : \"text-ink-3 hover:text-ink\";\n  return (\n    <div className={`flex w-full flex-col gap-1.5 ${className}`}>\n      {label && <label htmlFor={id} className=\"text-caption font-medium text-ink\">{label}</label>}\n      <div className=\"flex items-center gap-2\">\n        <span className=\"primitive-field corner-smooth flex h-9 min-w-0 flex-1 items-center gap-1 rounded-control border border-line bg-field pr-1 pl-3\">\n          <input\n            id={id}\n            readOnly\n            value={value}\n            onFocus={(event) => event.currentTarget.select()}\n            aria-label={label ? undefined : \"Value to copy\"}\n            className={`min-w-0 flex-1 bg-transparent text-caption text-ink outline-none ${mono ? \"font-mono\" : \"\"}`}\n          />\n          {variant === \"icon\" && (\n            <Tooltip label={name}>\n              <IconButton label={name} onClick={copy} className={`size-7 rounded-sm transition-colors duration-150 hover:bg-hover ${tone}`}>\n                <span key={status} className=\"flex\" style={{ animation: \"pop-in 200ms var(--ease-out-quint) both\" }}>\n                  <Icon name={glyph} size={15} strokeWidth={2} />\n                </span>\n              </IconButton>\n            </Tooltip>\n          )}\n        </span>\n        {variant === \"button\" && (\n          <Button variant=\"secondary\" size=\"md\" icon={<Icon name={glyph} size={14} />} onClick={copy} aria-label={name} className={status === \"copied\" ? \"text-green\" : status === \"error\" ? \"text-red\" : \"\"}>\n            {status === \"copied\" ? \"Copied\" : \"Copy\"}\n          </Button>\n        )}\n      </div>\n      <span className=\"sr-only\" role=\"status\" aria-live=\"polite\">{status === \"idle\" ? \"\" : name}</span>\n    </div>\n  );\n}\n",
+      "path": "components/InputCopy.tsx",
+      "target": "~/src/formic/components/InputCopy.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/InputCopy.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "input-copy",
+  "registryDependencies": [
+    "https://formicai.dev/r/button.json",
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Input Copy",
+  "type": "registry:item"
+}

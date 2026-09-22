@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "Inline callout on the system tints.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { type ReactNode } from \"react\";\nimport { Icon, IconButton, type IconName } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * ALERT\n * Inline callout on the system tints. Icon and background\n * carry the tone; the copy stays ink so every palette keeps\n * AA contrast (tone-on-own-tint verified ≥4.5 system-wide).\n * ───────────────────────────────────────────────────────── */\nexport type AlertTone = \"neutral\" | \"info\" | \"success\" | \"warning\" | \"error\";\nconst TONES: Record<AlertTone, { background: string; icon: IconName | null; color: string }> = {\n  neutral: { background: \"var(--inset)\", icon: null, color: \"var(--ink-2)\" },\n  info: { background: \"var(--accent-tint)\", icon: \"info\", color: \"var(--accent)\" },\n  success: { background: \"var(--green-tint)\", icon: \"circle-check\", color: \"var(--green)\" },\n  warning: { background: \"var(--orange-tint)\", icon: \"alert\", color: \"var(--orange)\" },\n  error: { background: \"var(--red-tint)\", icon: \"alert\", color: \"var(--red)\" },\n};\nexport default function Alert({\n  tone = \"neutral\",\n  title,\n  onDismiss,\n  className = \"\",\n  children,\n}: {\n  tone?: AlertTone;\n  title: string;\n  /** renders a dismiss control that calls this */\n  onDismiss?: () => void;\n  className?: string;\n  /** optional description below the title */\n  children?: ReactNode;\n}) {\n  const spec = TONES[tone];\n  return (\n    <div\n      className={`flex w-full items-start gap-2.5 rounded-md p-3 shadow-hairline ${className}`}\n      style={{ background: spec.background }}\n    >\n      {spec.icon && (\n        <Icon\n          name={spec.icon}\n          size={16}\n          strokeWidth={2}\n          className=\"mt-px shrink-0\"\n          style={{ color: spec.color }}\n        />\n      )}\n      <div className=\"min-w-0 flex-1\">\n        <p className=\"text-caption font-medium text-ink\">{title}</p>\n        {children && <div className=\"mt-0.5 text-small leading-relaxed text-ink-2\">{children}</div>}\n      </div>\n      {onDismiss && (\n        <IconButton\n          label=\"Dismiss\"\n          onClick={onDismiss}\n          className=\"-mt-1 -mr-1 text-ink-3 hover:bg-hover hover:text-ink\"\n        >\n          <Icon name=\"close\" size={12} strokeWidth={2.2} />\n        </IconButton>\n      )}\n    </div>\n  );\n}\n",
+      "path": "components/Alert.tsx",
+      "target": "~/src/formic/components/Alert.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/Alert.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "alert",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Alert",
+  "type": "registry:item"
+}

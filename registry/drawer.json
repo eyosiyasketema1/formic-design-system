@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "Side panel on the system scrim — same machinery as Modal (useModalLayer: focus trap + restore, layered Escape, scroll lock) but sliding from an edge and full height.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { useId, useRef, type ReactNode } from \"react\";\nimport { createPortal } from \"react-dom\";\nimport { useModalLayer } from \"./hooks\";\nimport { Icon, IconButton } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * DRAWER\n * Side panel on the system scrim — same machinery as Modal\n * (useModalLayer: focus trap + restore, layered Escape,\n * scroll lock) but sliding from an edge and full height.\n * ───────────────────────────────────────────────────────── */\nexport default function Drawer({\n  open,\n  onClose,\n  title,\n  side = \"right\",\n  dismissible = true,\n  footer,\n  children,\n}: {\n  open: boolean;\n  onClose: () => void;\n  title: string;\n  side?: \"right\" | \"left\";\n  /** allow Escape / backdrop / × to close */\n  dismissible?: boolean;\n  /** action row pinned below the body (usually Buttons) */\n  footer?: ReactNode;\n  children: ReactNode;\n}) {\n  const titleId = useId();\n  const panelRef = useRef<HTMLDivElement>(null);\n  useModalLayer(panelRef, open, { onClose, closeOnEscape: dismissible });\n  if (!open || typeof document === \"undefined\") return null;\n  return createPortal(\n    <div\n      className=\"fixed inset-0 z-50\"\n      style={{ background: \"var(--scrim)\", animation: \"fade-in 150ms ease-out both\" }}\n      onMouseDown={(event) => {\n        if (dismissible && event.target === event.currentTarget) onClose();\n      }}\n    >\n      <div\n        ref={panelRef}\n        role=\"dialog\"\n        aria-modal=\"true\"\n        aria-labelledby={titleId}\n        tabIndex={-1}\n        className={`fixed inset-y-0 flex w-full max-w-95 flex-col overflow-hidden bg-surface shadow-overlay outline-none ${\n          side === \"right\" ? \"right-0\" : \"left-0\"\n        }`}\n        style={{\n          animation: `${side === \"right\" ? \"drawer-in-right\" : \"drawer-in-left\"} 280ms var(--ease-out-quint) both`,\n        }}\n      >\n        <div className=\"flex items-center justify-between gap-3 border-b border-line py-3 pr-3 pl-4\">\n          <h2 id={titleId} className=\"min-w-0 truncate text-title font-semibold text-ink\">\n            {title}\n          </h2>\n          {dismissible && (\n            <IconButton\n              label=\"Close panel\"\n              onClick={onClose}\n              className=\"text-ink-3 hover:bg-hover hover:text-ink\"\n            >\n              <Icon name=\"close\" size={14} strokeWidth={2.2} />\n            </IconButton>\n          )}\n        </div>\n        <div className=\"min-h-0 flex-1 overflow-y-auto px-4 py-3.5 text-body leading-relaxed text-ink-2\">\n          {children}\n        </div>\n        {footer && (\n          <div className=\"flex items-center justify-end gap-2 border-t border-line px-4 py-3\">\n            {footer}\n          </div>\n        )}\n      </div>\n    </div>,\n    document.body,\n  );\n}\n",
+      "path": "components/Drawer.tsx",
+      "target": "~/src/formic/components/Drawer.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/Drawer.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "drawer",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/hooks.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Drawer",
+  "type": "registry:item"
+}

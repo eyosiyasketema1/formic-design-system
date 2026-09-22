@@ -262,7 +262,6 @@ export default function PromptBar({
     }
     const t = setTimeout(() => setAutoStep((s) => s + 1), step.hold);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auto, autoStep]);
   /* dictation resolves after a beat, like a real transcript landing */
   useEffect(() => {
@@ -349,7 +348,6 @@ export default function PromptBar({
       onSend?.(next);
     }
     wasStreaming.current = streaming;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- fires on the status edge only
   }, [streaming]);
   const recall = (dir: 1 | -1) => {
     if (history.length === 0) return false;

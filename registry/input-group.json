@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "Several fields as one block.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { useId, useState, type InputHTMLAttributes, type ReactNode } from \"react\";\nimport { Icon, type IconName } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * INPUT GROUP — several fields as one block\n * Rows on a single surface divided by hairlines, the way a\n * settings sheet or a sign-up card lays out its fields. The\n * label sits inside the row above the value, so nothing needs\n * a column of labels beside it. The row under the pointer tints\n * (hover), the row being typed in lifts to the surface with a\n * hairline (focus), and an error row carries its message below\n * the value in red. Use Field + Input for a single field or a\n * conventional form; this is for a short, related set: name,\n * email, company; street, city, postcode.\n *\n *   <InputGroup>\n *     <InputField label=\"Name\" icon=\"user\" />\n *     <InputField label=\"Email\" type=\"email\" error=\"Enter a valid address\" />\n *   </InputGroup>\n * ───────────────────────────────────────────────────────── */\nexport function InputGroup({ children, className = \"\" }: { children: ReactNode; className?: string }) {\n  return (\n    <div role=\"group\" className={`corner-smooth flex w-full flex-col divide-y divide-line overflow-hidden rounded-md border border-line bg-field ${className}`}>\n      {children}\n    </div>\n  );\n}\n\nexport function InputField({\n  label,\n  labelHidden = false,\n  icon,\n  error,\n  disabled = false,\n  trailing,\n  className = \"\",\n  ...rest\n}: {\n  label: string;\n  /** keep the label for assistive tech only */\n  labelHidden?: boolean;\n  icon?: IconName;\n  error?: string;\n  disabled?: boolean;\n  /** a small control on the trailing edge: a unit, a button */\n  trailing?: ReactNode;\n  className?: string;\n} & Omit<InputHTMLAttributes<HTMLInputElement>, \"className\" | \"disabled\">) {\n  const id = useId();\n  const [focused, setFocused] = useState(false);\n  const errorId = error ? `${id}-error` : undefined;\n  return (\n    <div\n      className={`group/field relative flex items-center gap-3 px-3 transition-colors duration-150 ${labelHidden ? \"h-10\" : \"min-h-14 py-2\"} ${\n        disabled ? \"opacity-50\" : focused ? \"bg-surface\" : \"hover:bg-hover\"\n      } ${error ? \"text-red\" : \"\"} ${className}`}\n      onClick={() => document.getElementById(id)?.focus()}\n    >\n      {icon && <Icon name={icon} size={16} strokeWidth={focused ? 2 : 1.6} className={`shrink-0 transition-colors duration-150 ${error ? \"text-red\" : focused ? \"text-ink\" : \"text-ink-3\"}`} />}\n      <div className=\"flex min-w-0 flex-1 flex-col\">\n        <label\n          htmlFor={id}\n          className={labelHidden ? \"sr-only\" : `text-small transition-colors duration-150 ${error ? \"text-red\" : focused ? \"font-medium text-ink\" : \"text-ink-3\"}`}\n        >\n          {label}\n        </label>\n        <input\n          id={id}\n          disabled={disabled}\n          aria-invalid={error ? true : undefined}\n          aria-describedby={errorId}\n          onFocus={() => setFocused(true)}\n          onBlur={() => setFocused(false)}\n          placeholder={labelHidden ? label : rest.placeholder}\n          className=\"min-w-0 w-full bg-transparent text-body text-ink outline-none placeholder:text-ink-3\"\n          {...rest}\n        />\n        {error && <span id={errorId} className=\"mt-0.5 text-small text-red\">{error}</span>}\n      </div>\n      {trailing && <span className=\"shrink-0 text-caption text-ink-3\">{trailing}</span>}\n      {/* the focused row's hairline, drawn inside so the group's dividers stay put */}\n      <span aria-hidden className={`pointer-events-none absolute inset-0 border transition-colors duration-150 ${focused ? (error ? \"border-red\" : \"border-line-strong\") : \"border-transparent\"}`} />\n    </div>\n  );\n}\n\nexport default InputGroup;\n",
+      "path": "components/InputGroup.tsx",
+      "target": "~/src/formic/components/InputGroup.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/InputGroup.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "input-group",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Input Group",
+  "type": "registry:item"
+}

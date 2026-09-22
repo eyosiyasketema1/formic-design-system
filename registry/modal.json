@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "Portal dialog on the system scrim: focus is trapped while open and restored on close, the page behind stops scrolling, and Escape / backdrop click dismiss (unless dismissible is off — e.g.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { useId, useRef, type ReactNode } from \"react\";\nimport { createPortal } from \"react-dom\";\nimport { useModalLayer } from \"./hooks\";\nimport { Icon, IconButton } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * MODAL\n * Portal dialog on the system scrim: focus is trapped while\n * open and restored on close, the page behind stops\n * scrolling, and Escape / backdrop click dismiss (unless\n * dismissible is off — e.g. a required decision).\n * ───────────────────────────────────────────────────────── */\nexport type ModalSize = \"sm\" | \"md\" | \"lg\" | \"xl\";\nconst MODAL_WIDTHS: Record<ModalSize, string> = {\n  sm: \"max-w-80\",\n  md: \"max-w-105\",\n  lg: \"max-w-130\",\n  xl: \"max-w-170\",\n};\nexport default function Modal({\n  open,\n  onClose,\n  title,\n  size = \"md\",\n  dismissible = true,\n  footer,\n  children,\n}: {\n  open: boolean;\n  onClose: () => void;\n  title: string;\n  size?: ModalSize;\n  /** allow Escape / backdrop / × to close */\n  dismissible?: boolean;\n  /** action row rendered below the body (usually Buttons) */\n  footer?: ReactNode;\n  children: ReactNode;\n}) {\n  const titleId = useId();\n  const dialogRef = useRef<HTMLDivElement>(null);\n  /* focus trap + restore, layered Escape, scroll lock — shared with Drawer */\n  useModalLayer(dialogRef, open, { onClose, closeOnEscape: dismissible });\n  if (!open || typeof document === \"undefined\") return null;\n  return createPortal(\n    <div\n      className=\"fixed inset-0 z-50 flex items-center justify-center p-4\"\n      style={{ background: \"var(--scrim)\", animation: \"fade-in 150ms ease-out both\" }}\n      onMouseDown={(event) => {\n        if (dismissible && event.target === event.currentTarget) onClose();\n      }}\n    >\n      <div\n        ref={dialogRef}\n        role=\"dialog\"\n        aria-modal=\"true\"\n        aria-labelledby={titleId}\n        tabIndex={-1}\n        className={`flex max-h-full w-full flex-col overflow-hidden rounded-card bg-surface shadow-overlay outline-none ${MODAL_WIDTHS[size]}`}\n        style={{ animation: \"pop-in 220ms var(--ease-out-quint) both\" }}\n      >\n        <div className=\"flex items-center justify-between gap-3 border-b border-line py-3 pr-3 pl-4\">\n          <h2 id={titleId} className=\"min-w-0 truncate text-title font-semibold text-ink\">\n            {title}\n          </h2>\n          {dismissible && (\n            <IconButton\n              label=\"Close dialog\"\n              onClick={onClose}\n              className=\"text-ink-3 hover:bg-hover hover:text-ink\"\n            >\n              <Icon name=\"close\" size={14} strokeWidth={2.2} />\n            </IconButton>\n          )}\n        </div>\n        <div className=\"min-h-0 flex-1 overflow-y-auto px-4 py-3.5 text-body leading-relaxed text-ink-2\">\n          {children}\n        </div>\n        {footer && (\n          <div className=\"flex items-center justify-end gap-2 border-t border-line px-4 py-3\">\n            {footer}\n          </div>\n        )}\n      </div>\n    </div>,\n    document.body,\n  );\n}\n",
+      "path": "components/Modal.tsx",
+      "target": "~/src/formic/components/Modal.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/Modal.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "modal",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/hooks.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Modal",
+  "type": "registry:item"
+}

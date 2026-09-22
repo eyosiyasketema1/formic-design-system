@@ -1,0 +1,25 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "One quiet field box per digit.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { useRef, useState } from \"react\";\n/* ─────────────────────────────────────────────────────────\n * OTP INPUT\n * One quiet field box per digit. Typing advances, backspace\n * walks back, paste and one-time-code autofill distribute\n * across the cells. Works inside Field — the injected id\n * lands on the first cell so the label focuses it.\n * ───────────────────────────────────────────────────────── */\nexport default function OTPInput({\n  length = 6,\n  value,\n  defaultValue = \"\",\n  onChange,\n  onComplete,\n  invalid = false,\n  disabled = false,\n  className = \"\",\n  id,\n  label,\n  \"aria-describedby\": describedBy,\n  \"aria-labelledby\": labelledBy,\n}: {\n  length?: number;\n  /** controlled code — omit and use defaultValue for uncontrolled */\n  value?: string;\n  defaultValue?: string;\n  onChange?: (code: string) => void;\n  /** fires once the code reaches full length */\n  onComplete?: (code: string) => void;\n  /** error styling — set automatically by Field when it has an error */\n  invalid?: boolean;\n  disabled?: boolean;\n  className?: string;\n  id?: string;\n  /** group name for standalone use — Field provides aria-labelledby instead */\n  label?: string;\n  \"aria-describedby\"?: string;\n  \"aria-labelledby\"?: string;\n} = {}) {\n  const [internal, setInternal] = useState(defaultValue.slice(0, length));\n  const code = (value !== undefined ? value : internal).slice(0, length);\n  const refs = useRef<(HTMLInputElement | null)[]>([]);\n  const commit = (next: string) => {\n    if (value === undefined) setInternal(next);\n    onChange?.(next);\n    if (next.length === length) onComplete?.(next);\n  };\n  const insertAt = (index: number, raw: string) => {\n    const digits = raw.replace(/\\D/g, \"\");\n    if (!digits) return;\n    const next = (code.slice(0, index) + digits + code.slice(index + digits.length)).slice(0, length);\n    if (next === code) return; /* dead keystroke on a full code — no re-fire */\n    commit(next);\n    refs.current[Math.min(index + digits.length, length - 1)]?.focus();\n  };\n  const onKeyDown = (index: number, event: React.KeyboardEvent) => {\n    if (event.key === \"Backspace\") {\n      event.preventDefault();\n      if (code[index]) {\n        commit(code.slice(0, index) + code.slice(index + 1));\n      } else if (index > 0) {\n        commit(code.slice(0, index - 1) + code.slice(index));\n        refs.current[index - 1]?.focus();\n      }\n    } else if (event.key === \"ArrowLeft\" && index > 0) {\n      event.preventDefault();\n      refs.current[index - 1]?.focus();\n    } else if (event.key === \"ArrowRight\" && index < length - 1) {\n      event.preventDefault();\n      refs.current[index + 1]?.focus();\n    }\n  };\n  return (\n    <div\n      role=\"group\"\n      aria-label={labelledBy ? undefined : label}\n      aria-labelledby={labelledBy}\n      aria-describedby={describedBy}\n      className={`flex gap-2 ${className}`}\n    >\n      {Array.from({ length }).map((_, index) => (\n        <input\n          key={index}\n          ref={(el) => {\n            refs.current[index] = el;\n          }}\n          id={index === 0 ? id : undefined}\n          value={code[index] ?? \"\"}\n          inputMode=\"numeric\"\n          /* platform OTP autofill lands on the first cell and distributes */\n          autoComplete={index === 0 ? \"one-time-code\" : \"off\"}\n          aria-label={`Digit ${index + 1} of ${length}`}\n          aria-invalid={invalid || undefined}\n          data-invalid={invalid || undefined}\n          disabled={disabled}\n          onChange={(event) => insertAt(index, event.target.value)}\n          onKeyDown={(event) => onKeyDown(index, event)}\n          onFocus={(event) => event.target.select()}\n          onPaste={(event) => {\n            event.preventDefault();\n            insertAt(index, event.clipboardData.getData(\"text\"));\n          }}\n          className=\"primitive-field size-10 min-w-0 rounded-control border border-line bg-field text-center text-title text-ink outline-none disabled:opacity-60\"\n        />\n      ))}\n    </div>\n  );\n}\n",
+      "path": "components/OTPInput.tsx",
+      "target": "~/src/formic/components/OTPInput.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/OTPInput.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "otp-input",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json"
+  ],
+  "title": "OTP Input",
+  "type": "registry:item"
+}

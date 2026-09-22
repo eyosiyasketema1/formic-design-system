@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "A horizontal bar of action menus, each a DropdownMenu.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport DropdownMenu, { type MenuEntry } from \"./DropdownMenu\";\n/* ─────────────────────────────────────────────────────────\n * MENUBAR\n * A horizontal bar of action menus, each a DropdownMenu.\n * Deliberately simpler than the APG menubar pattern: triggers\n * are plain tab-reachable buttons and each open menu is fully\n * keyboard-driven; arrow keys do not move between closed\n * menus (accepted trade-off, documented).\n * ───────────────────────────────────────────────────────── */\nexport type MenubarMenu = { key: string; label: string; items: MenuEntry[] };\nconst DEFAULT_MENUS: MenubarMenu[] = [\n  {\n    key: \"clients\",\n    label: \"Clients\",\n    items: [\n      { key: \"new\", label: \"New client\", icon: \"plus\" },\n      { key: \"edit\", label: \"Edit selected\", icon: \"edit\" },\n      { type: \"divider\" },\n      { key: \"retire\", label: \"Archive selected\", icon: \"close\", danger: true },\n    ],\n  },\n  {\n    key: \"invoices\",\n    label: \"Invoices\",\n    items: [\n      { key: \"queue\", label: \"New invoice\", icon: \"plus\" },\n      { key: \"history\", label: \"Sent invoices\", icon: \"clock\" },\n    ],\n  },\n  {\n    key: \"suppliers\",\n    label: \"Suppliers\",\n    items: [\n      { key: \"invite\", label: \"Invite supplier\", icon: \"user-add\" },\n      { key: \"prices\", label: \"Price sync\", icon: \"retry\" },\n      { key: \"export\", label: \"Export list\", icon: \"upload\", disabled: true },\n    ],\n  },\n];\nexport default function Menubar({\n  menus = DEFAULT_MENUS,\n  onSelect,\n  className = \"\",\n}: {\n  /** the menus, left to right; defaults to demo content */\n  menus?: MenubarMenu[];\n  /** called with (menuKey, itemKey) on any selection */\n  onSelect?: (menuKey: string, itemKey: string) => void;\n  className?: string;\n} = {}) {\n  return (\n    <nav\n      aria-label=\"Application menus\"\n      className={`flex w-fit max-w-full items-center gap-0.5 overflow-x-auto rounded-control bg-surface p-1 shadow-btn [scrollbar-width:none] ${className}`}\n    >\n      {menus.map((menu) => (\n        <DropdownMenu\n          key={menu.key}\n          items={menu.items}\n          onSelect={(itemKey) => onSelect?.(menu.key, itemKey)}\n        >\n          <button\n            type=\"button\"\n            className=\"flex h-7 shrink-0 items-center rounded-sm px-2.5 text-caption font-medium text-ink-2 transition-colors duration-150 hover:bg-hover hover:text-ink aria-expanded:bg-hover aria-expanded:text-ink\"\n          >\n            {menu.label}\n          </button>\n        </DropdownMenu>\n      ))}\n    </nav>\n  );\n}\n",
+      "path": "components/Menubar.tsx",
+      "target": "~/src/formic/components/Menubar.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/Menubar.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "menubar",
+  "registryDependencies": [
+    "https://formicai.dev/r/dropdown-menu.json",
+    "https://formicai.dev/r/formic.json"
+  ],
+  "title": "Menubar",
+  "type": "registry:item"
+}

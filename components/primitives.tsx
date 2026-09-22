@@ -341,7 +341,6 @@ export function StreamText({
   const { count } = useStream(words.length, { intervalMs, onDone });
   useLayoutEffect(() => {
     onProgress?.();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire per revealed word, not per handler identity
   }, [count]);
   return (
     <>

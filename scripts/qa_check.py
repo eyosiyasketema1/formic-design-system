@@ -359,6 +359,26 @@ try:
 except Exception as e:
     print(f"note: scaffold check skipped ({e})")
 
+# ── 4f. registry is current ────────────────────────────────
+# registry/*.json is what `npx shadcn add https://formicai.dev/r/<name>.json`
+# serves: every component as an item whose Formic dependencies are derived
+# from its relative imports, plus the base item. A stale registry ships an
+# old component under a current version number, and a relative import that
+# no item covers installs a component that cannot compile, so both fail here.
+try:
+    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_registry.py"), "--check"], capture_output=True, text=True, timeout=60)
+    if r.returncode != 0:
+        fails.append("registry: " + ((r.stdout.strip() or r.stderr.strip()).splitlines() or ["build_registry.py --check failed"])[-1])
+    _items = {p.stem for p in (ROOT / "registry").glob("*.json")} - {"registry"}
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from build_registry import imports_of as _imports_of, kebab as _kebab
+    for _p in sorted((ROOT / "components").glob("*.ts*")):
+        for _stem in sorted(_imports_of(_p.read_text())[0]):
+            if _kebab(_stem) not in _items:
+                fails.append(f"registry: {_p.name} imports ./{_stem} but no registry item covers it; run python3 scripts/build_registry.py")
+except Exception as e:
+    fails.append(f"registry: check could not run ({e})")
+
 # ── 4c. the landing page's compiled assets are current ─────
 # index.html loads landing.css and landing.js, built from landing.tailwind.css
 # and landing.jsx by scripts/build_landing.py. A stale build ships the old
@@ -379,4 +399,4 @@ if fails:
     for f in fails:
         print("  ✗", f)
     sys.exit(1)
-print("QA PASSED — forbidden patterns, contrast (all modes × palettes), drift, compile, gallery script, landing build: all clean")
+print("QA PASSED — forbidden patterns, contrast (all modes × palettes), drift, compile, gallery script, landing build, registry: all clean")
