@@ -1,6 +1,6 @@
 {
   "name": "formicai",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "The Formic AI Design System command line: init, add, update, doctor, gates, inventory",
   "type": "module",
   "bin": { "formicai": "bin/formicai.js" },
