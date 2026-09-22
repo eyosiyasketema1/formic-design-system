@@ -134,7 +134,7 @@
       "name": "How do I install Formic?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Run one command in your project folder: curl -fsSL https://formicai.dev/install.sh | bash. Add -s -- --new my-app to scaffold a new Vite project. It vendors the system into src/formic, writes the config and the agent rules, and prints your first prompt. It needs git and Node."
+        "text": "Run one command in your project folder: npx formicai init. Use npx formicai init --new my-app to start a new Vite project. It puts the system into src/formic, writes the config and the agent rules, and prints your first prompt; after that npx formicai add <name> adds one component and only what it needs, and npx formicai doctor checks the setup. It needs Node 20 or newer."
       }
     },
     {
@@ -537,7 +537,7 @@ spline-viewer::part(logo) {
       <div class="feat-container">
       <div class="feat-header">
         <h2>Quick start</h2>
-        <p class="section-sub">One command, then your first prompt. The same command for a new project and an existing one; needs git and Node. The core is MIT and stays that way.</p>
+        <p class="section-sub">One command, then your first prompt. The same command for a new project and an existing one; needs Node 20 or newer. The core is MIT and stays that way.</p>
       </div>
       <div class="ai-note" id="ai-tools" style="background: transparent; border: none; padding: 0;">
         <div class="ai-note-head">
@@ -555,21 +555,20 @@ spline-viewer::part(logo) {
               <button type="button" class="qs-example-btn" onclick="document.getElementById('example-modal').showModal()">show me an example</button>
               
             </div>
-            <p id="qs-new" role="tabpanel" aria-labelledby="qs-tab-new">Make an empty folder, go into it in the terminal, run this; it scaffolds the app and the browser opens a page that says Formic is working.</p>
+            <p id="qs-new" role="tabpanel" aria-labelledby="qs-tab-new">In the terminal, run <code>npx formicai init --new my-app</code>, then <code>cd my-app &amp;&amp; npm run dev</code>; it scaffolds the app and the browser opens a page that says Formic is working.</p>
             <div id="qs-existing" role="tabpanel" aria-labelledby="qs-tab-existing" hidden>
-              <p>From the root of your Tailwind v4 app, run the command below. The installer does all of this for you; it never overwrites your own files, and you can re-run it to update:</p>
+              <p>From the root of your Tailwind v4 app, run the command below. It does all of this for you and never overwrites your own files; <code>npx formicai add &lt;name&gt;</code> then adds one component and only what it needs, <code>npx formicai doctor</code> checks the setup, and <code>npx formicai update</code> refreshes Formic while keeping your edits:</p>
               <ul class="qs-list">
-                <li>copies the system into <code>src/formic/</code>: styles, components, and the scripts behind the config and the two gates</li>
+                <li>puts the system into <code>src/formic/</code>: styles, the scripts behind the config and the two gates, and the components (all of them by default, or only the base with <code>--minimal</code>)</li>
                 <li>writes <code>src/formic/formic.config.json</code> and applies it: accent, palette, radius, rail</li>
-                <li>adds the three CSS imports to your global stylesheet and installs <code>@phosphor-icons/react</code></li>
+                <li>adds the three CSS imports to your global stylesheet and installs the icon and avatar packages</li>
                 <li>writes the rules your AI tool reads: <code>AGENTS.md</code>, <code>CLAUDE.md</code>, <code>.cursor/rules/</code>, <code>.github/copilot-instructions.md</code>, <code>.claude/skills/</code></li>
                 <li>adds <code>npm run formic</code> and a pre-commit hook so the gates run before every commit</li>
-                <li>starts the dev server</li>
               </ul>
             </div>
             <div class="lcode">
               <div class="lcode-head">Terminal · inside your project folder</div>
-              <pre>curl -fsSL https://formicai.dev/install.sh | bash &amp;&amp; npm run dev</pre>
+              <pre>npx formicai init &amp;&amp; npm run dev</pre>
             </div>
             <div id="qs-existing-css" hidden>
               <p>The one thing it may ask of you: if it cannot find your global stylesheet, it says so, and you add these three lines yourself, in this order.</p>
@@ -824,7 +823,7 @@ spline-viewer::part(logo) {
     </details>
     <details class="faq-item">
       <summary>How do I install Formic?</summary>
-      <p>Run one command in your project folder: curl -fsSL https://formicai.dev/install.sh | bash. Add -s -- --new my-app to scaffold a new Vite project. It vendors the system into src/formic, writes the config and the agent rules, and prints your first prompt. It needs git and Node.</p>
+      <p>Run one command in your project folder: npx formicai init. Use npx formicai init --new my-app to start a new Vite project. It puts the system into src/formic, writes the config and the agent rules, and prints your first prompt; after that npx formicai add &lt;name&gt; adds one component and only what it needs, and npx formicai doctor checks the setup. It needs Node 20 or newer.</p>
     </details>
     <details class="faq-item">
       <summary>How do I use Formic after installing it?</summary>
@@ -865,7 +864,7 @@ spline-viewer::part(logo) {
       <h3>Third parties that see your request</h3>
       <p>Loading the site sends the usual requests to the services that serve it, each of which sees your IP address and browser details: Vercel (hosting; the waitlist is stored in a Vercel-managed Upstash database), Cloudflare cdnjs, jsDelivr and unpkg (script files), Google Fonts (the Urbanist typeface), Spline (the 3D scenes, loaded only when they scroll into view) and Unsplash (demo photographs). Buy Me a Coffee and GitHub are separate sites with their own policies; we link to them, nothing loads from them here.</p>
       <h3>The install script</h3>
-      <p>curl -fsSL https://formicai.dev/install.sh | bash runs on your own machine and only there. It clones the public repository from GitHub and writes files into the project folder you run it in. It sends nothing to us.</p>
+      <p>npx formicai init runs on your own machine and only there. It downloads the component files from formicai.dev/r (a public, static registry) and writes them into the project folder you run it in. It sends nothing to us beyond the ordinary web requests for those files.</p>
       <h3>Contact</h3>
       <p>Questions about this policy go to eyosiyasketema@gmail.com.</p>
       <p>Last updated 18 September 2026.</p>
@@ -917,7 +916,7 @@ spline-viewer::part(logo) {
       <h3>How the site is built</h3>
       <p>Every third-party script carries a Subresource Integrity hash and a pinned version, so a changed or tampered file on a CDN is refused by the browser. The check runs on every commit before the site can deploy. The site is served over HTTPS by Vercel with nosniff and referrer headers set.</p>
       <h3>The install script</h3>
-      <p>install.sh only ever clones the public repository and writes into your project folder. It requests no elevated permissions and never runs as root. Its source is on GitHub; read it before running it, as you should with any script.</p>
+      <p>The formicai command only ever reads the public registry and writes into your project folder. It requests no elevated permissions and never runs as root. It has no dependencies of its own, its source is published with the package, and npx formicai init --dry-run shows every file it would write before it writes anything.</p>
       <h3>Dependencies</h3>
       <p>The library depends on React, Tailwind and Phosphor icons. Dependabot watches the repository and security bumps are applied with the compiled files rebuilt in the same change.</p>
       <h3>Reporting a problem</h3>

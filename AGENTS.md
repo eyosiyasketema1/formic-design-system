@@ -22,7 +22,7 @@ ls src/formic/styles/tokens.css src/formic/components/primitives.tsx
 If they are missing, stop and install before writing any UI:
 
 ```bash
-curl -fsSL https://formicai.dev/install.sh | bash
+npx formicai init
 ```
 
 Then make sure the global CSS imports the token stack (Tailwind v4) and `@phosphor-icons/react` is a dependency:
