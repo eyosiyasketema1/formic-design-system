@@ -2,6 +2,24 @@
 
 Formic is vendored, so a version is the state of `main` you copied. `src/formic/VERSION` in an app records which one; re-running the installer moves it forward. Versions follow semver: while 0.x, a minor bump can change an API.
 
+## 0.4.0 · 2026-09-22
+
+### Added
+
+- **`npx formicai`, the command line** (npm package `formicai`, no dependencies, Node 20+): `init` (an existing project, or `--new <dir>` for a Vite + React + Tailwind v4 app; `--minimal` for the base only; `--eslint-ignore`; `--dry-run`), `add <name…>` (one component and only what it needs, typo suggestions, `--dry-run`, `--overwrite`), `update` (a sha256 lock tells your edits from upstream changes; diffs shown, edited files kept unless `--force`), `doctor` (one line per check and the exact fix for every ✗), `gates`, `inventory`, `scope add | remove | list`, `migrate <file…>`. It writes `components.json` with the `@formic` registry and a `formic` section in `package.json` (`dir`, `srcDir`, `scope`, `legacy`).
+- **The registry**: one JSON per component, built from the sources by `scripts/build_registry.py` (imports become dependencies) and served at `https://formicai.dev/r/<name>.json` with `registry.json` as the index; the gate refuses a stale registry or an undeclared import.
+- **Existing projects**: `init` marks the app's source as legacy; the gates, the pre-commit hook and the inventory leave legacy folders alone until `formicai scope add <folder>` moves them into scope. `formicai migrate` runs the mechanical codemods (Tailwind palette classes to tokens, off-scale type, radii and shadows to the scale, raw buttons and inputs to `Button`, `Field` and `Input`, lucide icons to `Icon`) and leaves a `formic-todo` wherever it cannot decide. `doctor` notes a second UI kit (icon set, component or chart library, `components/ui`, colours in `tailwind.config`) with its next step.
+- **Proof for migrations**: `scripts/visual_check.sh <app> before | after | compare` screenshots every route at two viewports in light and dark and compares pixels, with an HTML report.
+- **CI**: an install matrix (three fixture projects on Ubuntu and macOS, through the CLI and the older install script), a CLI smoke test, and a publish workflow that pushes the CLI to npm on every GitHub release.
+- Gates: `formic_check.py --inventory`, `--scope`, `--legacy`, `--config=package.json`; the hook checks only the files being committed.
+
+### Changed
+
+- The install command on the site, in the README, AGENTS.md and the skill is `npx formicai init`; `install.sh` keeps working for the old link.
+- The installer (both paths) installs the DiceBear packages, detects `src/` or `app/` instead of assuming `src`, and prints the ESLint ignore to add; the scaffold's `vite.config.ts` resolves the `@` alias its `tsconfig.json` declares.
+- AGENTS.md: "Migrating an existing app" rewritten around the commands, with the order (shell first, app kept in light mode until then) and why.
+- Removed the dangling `eslint-disable react-hooks/*` comments in components (they error on a host without that plugin).
+
 ## 0.3.0 · 2026-09-20
 
 ### Breaking
