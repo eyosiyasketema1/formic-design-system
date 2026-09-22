@@ -770,6 +770,11 @@
           "type": "registry:file"
         },
         {
+          "path": "skill/SKILL.md",
+          "target": "~/.claude/skills/formic-design-system/SKILL.md",
+          "type": "registry:file"
+        },
+        {
           "path": "VERSION",
           "target": "~/src/formic/VERSION",
           "type": "registry:file"
@@ -1712,5 +1717,6 @@
       "type": "registry:item"
     }
   ],
-  "name": "formic"
+  "name": "formic",
+  "version": "0.3.0"
 }

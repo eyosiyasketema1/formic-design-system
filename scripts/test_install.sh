@@ -7,28 +7,52 @@
 #   scripts/test_install.sh vite-fresh            # scaffold with install.sh --new
 #   scripts/test_install.sh next-app [--keep]     # existing Next.js 15 project
 #   scripts/test_install.sh old-app  [--keep]     # existing legacy Vite project
+#   scripts/test_install.sh old-app --cli         # the same, installed with `formicai init`
 #
 # --keep leaves the temp dir behind and prints its path.
+# --cli installs with node cli/bin/formicai.js (init --new for vite-fresh,
+#   init for the others, --eslint-ignore for old-app) from a registry built
+#   out of the working tree and served on a free local port, instead of
+#   install.sh; it adds a `doctor` step. Same PASS/FAIL lines otherwise.
 set -uo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-FIXTURE="${1:-}"; KEEP=0
-[ "${2:-}" = "--keep" ] && KEEP=1
+FIXTURE="${1:-}"; KEEP=0; CLI=0
+for a in "${@:2}"; do
+  case "$a" in
+    --keep) KEEP=1 ;;
+    --cli) CLI=1 ;;
+    *) printf 'unknown option %s\n' "$a" >&2; exit 2 ;;
+  esac
+done
 case "$FIXTURE" in
   vite-fresh|next-app|old-app) ;;
-  *) printf 'usage: %s <vite-fresh|next-app|old-app> [--keep]\n' "$0" >&2; exit 2 ;;
+  *) printf 'usage: %s <vite-fresh|next-app|old-app> [--keep] [--cli]\n' "$0" >&2; exit 2 ;;
 esac
 
 BRANCH="$(git -C "$REPO" branch --show-current)"
 [ -n "$BRANCH" ] || { echo "the repo is on a detached HEAD; check out a branch first" >&2; exit 2; }
-if [ -n "$(git -C "$REPO" status --porcelain -- styles components scripts AGENTS.md skill formic.config.json package.json 2>/dev/null)" ]; then
-  printf 'warning: uncommitted changes in the repo; the installer clones, so the test installs the LAST COMMIT on %s (install.sh itself runs from the working tree)\n' "$BRANCH"
+if [ "$CLI" = 0 ] && [ -n "$(git -C "$REPO" status --porcelain -- styles components scripts AGENTS.md skill formic.config.json package.json 2>/dev/null)" ]; then
+  printf 'warning: uncommitted changes in the repo; the installer clones, so the test installs the LAST COMMIT on %s (install.sh itself runs from the working tree; --cli installs the working tree)\n' "$BRANCH"
 fi
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/formic-install-$FIXTURE.XXXXXX")"
 LOG="$TMP/test.log"
-[ "$KEEP" = 1 ] || trap 'rm -rf "$TMP"' EXIT
+SERVER=""
+cleanup() { [ -n "$SERVER" ] && kill "$SERVER" 2>/dev/null; [ "$KEEP" = 1 ] || rm -rf "$TMP"; }
+trap cleanup EXIT
 FAILED=0; RESULTS=()
+
+# --cli: a registry built from the working tree, served locally, and the CLI pointed at it
+FORMICAI=(node "$REPO/cli/bin/formicai.js")
+if [ "$CLI" = 1 ]; then
+  PORT="$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1])')"
+  python3 "$REPO/scripts/build_registry.py" --base-url "http://127.0.0.1:$PORT" --out "$TMP/registry" >> "$LOG" 2>&1 || { echo "build_registry.py failed; see $LOG" >&2; exit 2; }
+  (cd "$TMP/registry" && python3 -m http.server "$PORT" --bind 127.0.0.1 >> "$LOG" 2>&1) &
+  SERVER=$!
+  for _ in 1 2 3 4 5 6 7 8 9 10; do curl -fs "http://127.0.0.1:$PORT/registry.json" >/dev/null 2>&1 && break; sleep 0.5; done
+  export FORMIC_REGISTRY="http://127.0.0.1:$PORT"
+fi
 
 pass() { RESULTS+=("PASS $1"); printf 'PASS %s\n' "$1"; }
 fail() { RESULTS+=("FAIL $1${2:+ — $2}"); printf 'FAIL %s%s\n' "$1" "${2:+ — $2}"; FAILED=1; }
@@ -43,12 +67,13 @@ run() {
 
 export FORMIC_REPO="$REPO" FORMIC_BRANCH="$BRANCH"
 export GIT_AUTHOR_NAME=formic-test GIT_AUTHOR_EMAIL=test@formicai.dev GIT_COMMITTER_NAME=formic-test GIT_COMMITTER_EMAIL=test@formicai.dev
-printf 'fixture %s in %s (Formic from %s @ %s)\n' "$FIXTURE" "$TMP" "$REPO" "$BRANCH"
+printf 'fixture %s in %s (Formic from %s @ %s%s)\n' "$FIXTURE" "$TMP" "$REPO" "$BRANCH" "$([ "$CLI" = 1 ] && printf ', via formicai init against %s' "$FORMIC_REGISTRY")"
 
 # ── set up the project and install ──────────────────────────
 if [ "$FIXTURE" = vite-fresh ]; then
   APP="$TMP/app"; CSS="src/index.css"; BUILDER=vite; SRC=src
-  cd "$TMP" && run install bash "$REPO/install.sh" --new app
+  if [ "$CLI" = 1 ]; then cd "$TMP" && run install "${FORMICAI[@]}" init --new app --yes
+  else cd "$TMP" && run install bash "$REPO/install.sh" --new app; fi
   cd "$APP" 2>/dev/null || { fail deps "no app dir"; fail css; fail typecheck; fail build; fail gates; fail hook; }
 else
   APP="$TMP/app"
@@ -67,9 +92,14 @@ else
   git init -q && git add -A && git commit -qm "fixture seed" >> "$LOG" 2>&1
   printf 'npm install (project deps)…\n'
   npm install --no-audit --no-fund --silent >> "$LOG" 2>&1 || { echo "npm install of the fixture failed; see $LOG" >&2; exit 2; }
-  run install bash "$REPO/install.sh"
+  if [ "$CLI" = 1 ]; then
+    if [ "$FIXTURE" = old-app ]; then run install "${FORMICAI[@]}" init --yes --eslint-ignore; else run install "${FORMICAI[@]}" init --yes; fi
+  else run install bash "$REPO/install.sh"; fi
 fi
 cd "$APP" || exit 1
+
+# ── doctor (--cli): every check green ─────────────────────────
+[ "$CLI" = 1 ] && run doctor "${FORMICAI[@]}" doctor
 
 # ── deps ────────────────────────────────────────────────────
 if [ -d node_modules/@phosphor-icons/react ] && [ -d node_modules/@dicebear/core ]; then pass deps
@@ -147,10 +177,12 @@ else
 fi
 
 # ── eslint: the project's own config over the vendored folder (old-app) ──
+# clean, or ignored by the config (what `formicai init --eslint-ignore` writes), both pass
 if [ "$FIXTURE" = old-app ]; then
   out="$(npx eslint src/formic 2>&1)"; rc=$?
   printf '\n### eslint (exit %s)\n%s\n' "$rc" "$out" >> "$LOG"
   if [ $rc -eq 0 ]; then pass eslint
+  elif printf '%s' "$out" | grep -q 'are ignored'; then pass eslint
   else fail eslint "$(printf '%s' "$out" | grep -E '[0-9]+ problems?' | tail -1)"; fi
 fi
 

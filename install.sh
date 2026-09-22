@@ -13,6 +13,15 @@
 # instruction files every AI coding tool reads. Without --new it adds
 # Formic to the project you are standing in. Both are safe to re-run: they
 # refresh styles/ and components/ and leave your own files alone.
+#
+# From Phase 2 of PLAN-adoption.md the primary path is the CLI in cli/:
+#   npx formicai init [--new my-app]
+# It does the same work from the registry (https://formicai.dev/r), adds
+# --dry-run, doctor, add and update, and keeps its scaffold files in
+# cli/templates/ (the QA gate checks they equal the heredocs below). This
+# script stays whole and behaviourally equal until the package is published
+# on npm, after which it becomes a thin wrapper around `npx formicai init`.
+# It must not depend on the package before then.
 set -euo pipefail
 
 # FORMIC_REPO=/path/to/checkout installs from a local clone (the install tests use it)

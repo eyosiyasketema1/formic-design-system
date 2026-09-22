@@ -4,6 +4,7 @@ Composition lint — the mechanical half of "nothing on a screen without a reaso
 
     python3 src/formic/scripts/compose_check.py src/          # an app
     python3 scripts/compose_check.py components/Foo.tsx       # one file
+    python3 src/formic/scripts/compose_check.py src --legacy src/old   # folders not yet on Formic are skipped
 
 Reads every .tsx / .jsx under the paths given (the vendored src/formic folder
 is skipped) and reports the tells that an element was placed by habit rather
@@ -121,8 +122,28 @@ def check(path):
     return out
 
 
+def parse_args(argv):
+    """(paths, legacy folders): --legacy <a,b> (repeatable) names folders not yet on Formic, which are skipped"""
+    paths, legacy = [], []
+    it = iter(argv)
+    for a in it:
+        if a == "--legacy":
+            legacy += [x for x in next(it, "").split(",") if x]
+        elif a.startswith("--legacy="):
+            legacy += [x for x in a.split("=", 1)[1].split(",") if x]
+        elif not a.startswith("--"):
+            paths.append(a)
+    return paths, legacy
+
+
+def in_legacy(path, legacy):
+    p = path.resolve()
+    return any(p == l or l in p.parents for l in (Path(x).resolve() for x in legacy))
+
+
 def main():
-    roots = [Path(p) for p in sys.argv[1:]] or [Path("src")]
+    paths, legacy = parse_args(sys.argv[1:])
+    roots = [Path(p) for p in paths] or [Path("src")]
     files = []
     for r in roots:
         if r.is_file():
@@ -130,6 +151,8 @@ def main():
         else:
             files += [p for p in r.rglob("*.tsx") if "/formic/" not in str(p) and "node_modules" not in str(p)]
             files += [p for p in r.rglob("*.jsx") if "/formic/" not in str(p) and "node_modules" not in str(p)]
+    if legacy:
+        files = [f for f in files if not in_legacy(f, legacy)]
     if not files:
         raise SystemExit(f"no .tsx/.jsx files under {', '.join(str(r) for r in roots)}")
     total = 0

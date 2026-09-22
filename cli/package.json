@@ -1,0 +1,16 @@
+{
+  "name": "formicai",
+  "version": "0.3.0",
+  "description": "The Formic AI Design System command line: init, add, update, doctor, gates, inventory",
+  "type": "module",
+  "bin": { "formicai": "bin/formicai.js" },
+  "files": ["bin/", "lib/", "templates/", "README.md"],
+  "engines": { "node": ">=20" },
+  "scripts": { "test": "bash test/run.sh" },
+  "keywords": ["formic", "design-system", "react", "tailwind", "registry", "cli"],
+  "author": "Eyosiyas Ketema",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/eyosiyasketema1/formic-design-system.git", "directory": "cli" },
+  "homepage": "https://formicai.dev",
+  "bugs": { "url": "https://github.com/eyosiyasketema1/formic-design-system/issues" }
+}

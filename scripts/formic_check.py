@@ -6,6 +6,7 @@ wearing Formic's tokens?
     python3 src/formic/scripts/formic_check.py src/         # an app (the default)
     python3 src/formic/scripts/formic_check.py src/pages/Billing.tsx
     python3 src/formic/scripts/formic_check.py --inventory src/   # one line per file: on Formic, or how far off
+    python3 src/formic/scripts/formic_check.py src --legacy src/old,src/legacy   # folders not yet on Formic are skipped
 
 Reads every .tsx / .jsx under the paths given, skipping the vendored src/formic
 folder itself, and reports the tells of an agent that invented UI instead of
@@ -35,6 +36,9 @@ What it catches:
 --inventory is for an existing app: it lists every UI file with its issue count
 and whether it imports Formic, worst first, so a migration can be planned and
 followed to the end instead of leaving the app half on the old UI.
+--legacy <folder>[,<folder>…] (repeatable) skips the folders an app has not
+migrated yet, the `legacy` list in components.json's formic section, so a
+team adopts one route at a time and the gate never shouts about the rest.
 Legitimate exceptions are rare; when one is real, put the reason on the same
 line in a comment containing `formic-ok` and the line is skipped.
 """
@@ -109,10 +113,30 @@ def check(path):
     return out
 
 
+def parse_args(argv):
+    """(paths, inventory, legacy folders) from the command line"""
+    paths, legacy, inventory = [], [], False
+    it = iter(argv)
+    for a in it:
+        if a == "--inventory":
+            inventory = True
+        elif a == "--legacy":
+            legacy += [x for x in next(it, "").split(",") if x]
+        elif a.startswith("--legacy="):
+            legacy += [x for x in a.split("=", 1)[1].split(",") if x]
+        elif not a.startswith("--"):
+            paths.append(a)
+    return paths, inventory, legacy
+
+
+def in_legacy(path, legacy):
+    p = path.resolve()
+    return any(p == l or l in p.parents for l in (Path(x).resolve() for x in legacy))
+
+
 def main():
-    args = sys.argv[1:]
-    inventory = "--inventory" in args
-    roots = [Path(p) for p in args if not p.startswith("--")] or [Path("src")]
+    paths, inventory, legacy = parse_args(sys.argv[1:])
+    roots = [Path(p) for p in paths] or [Path("src")]
     files = []
     for r in roots:
         if r.is_file():
@@ -120,8 +144,10 @@ def main():
         elif r.is_dir():
             for ext in ("*.tsx", "*.jsx"):
                 files += [p for p in r.rglob(ext) if not any(s in str(p) for s in SKIP_DIRS)]
+    if legacy:
+        files = [f for f in files if not in_legacy(f, legacy)]
     if not files:
-        raise SystemExit(f"no .tsx/.jsx files under {', '.join(str(r) for r in roots)} (the vendored src/formic folder is skipped on purpose)")
+        raise SystemExit(f"no .tsx/.jsx files under {', '.join(str(r) for r in roots)} (the vendored src/formic folder is skipped on purpose{', and so are the legacy folders ' + ', '.join(legacy) if legacy else ''})")
     total = 0
     results = {f: check(f) for f in sorted(files)}
     if inventory:

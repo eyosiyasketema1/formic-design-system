@@ -21,7 +21,8 @@
   "main": "index.html",
   "scripts": {
     "build:landing": "python3 scripts/build_landing.py",
-    "check": "python3 scripts/qa_check.py && python3 scripts/check_sri.py"
+    "check": "python3 scripts/qa_check.py && python3 scripts/check_sri.py",
+    "test:cli": "bash cli/test/run.sh"
   },
   "repository": {
     "type": "git",

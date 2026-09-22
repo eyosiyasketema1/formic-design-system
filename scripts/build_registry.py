@@ -163,9 +163,11 @@ def build(base_url: str) -> dict[str, dict]:
     base_files += [file_entry(ROOT / "scripts" / s, f"~/{INSTALL_DIR}/scripts/{s}") for s in SCRIPTS]
     base_files.append(file_entry(ROOT / "formic.config.json", f"~/{INSTALL_DIR}/formic.config.json"))
     base_files.append(file_entry(ROOT / "AGENTS.md", "~/AGENTS.md"))
+    # the Claude Code skill install.sh writes; one source, so `formicai init` and the registry agree
+    base_files.append(file_entry(ROOT / "skill" / "SKILL.md", "~/.claude/skills/formic-design-system/SKILL.md"))
     base_files.append({
         "path": "VERSION", "type": "registry:file", "target": f"~/{INSTALL_DIR}/VERSION",
-        "content": f"formic-design-system {version} (registry)\nhttps://github.com/eyosiyasketema1/formic-design-system\nnpx shadcn@latest add {ref(BASE_NAME)} to update\n",
+        "content": f"formic-design-system {version} (registry)\nhttps://github.com/eyosiyasketema1/formic-design-system\nnpx formicai update to refresh\n",
     })
     base_pkgs: set[str] = set()
     for stem in SHARED:
@@ -185,7 +187,7 @@ def build(base_url: str) -> dict[str, dict]:
             f"Formic {version} is in {INSTALL_DIR}/. Wire the stylesheet stack in your CSS entry, in this order:\n"
             f'  @import "./formic/styles/fonts.css";\n  @import "tailwindcss";\n  @import "./formic/styles/formic.css";\n'
             f"Then run python3 {INSTALL_DIR}/scripts/apply_config.py once (it applies {INSTALL_DIR}/formic.config.json: accent, html attributes, component defaults). "
-            f"Add every component with npx shadcn@latest add {ref('<name>')} — the list is at {base_url.rstrip('/')}/registry.json; "
+            f"Add components with npx formicai add <name> (or add {ref('<name>')} with the registry client) — the list is at {base_url.rstrip('/')}/registry.json; "
             f"{ref(ALL_NAME)} installs all of them. Read AGENTS.md before building UI."
         ),
         "meta": {"formic": {"version": version, "install": INSTALL_DIR}},
@@ -206,12 +208,13 @@ def build(base_url: str) -> dict[str, dict]:
     return items
 
 
-def index_of(items: dict[str, dict]) -> dict:
+def index_of(items: dict[str, dict], version: str) -> dict:
     keep = ("name", "type", "title", "description", "dependencies", "registryDependencies")
     return {
         "$schema": "https://ui.shadcn.com/schema/registry.json",
         "name": "formic",
         "homepage": HOMEPAGE,
+        "version": version,  # not in the shadcn schema (the CLI ignores it); `formicai doctor` compares it with src/formic/VERSION
         "items": [{k: it[k] for k in keep} | {"files": [{k: f[k] for k in ("path", "type", "target")} for f in it["files"]]}
                   for _, it in sorted(items.items())],
     }
@@ -219,7 +222,7 @@ def index_of(items: dict[str, dict]) -> dict:
 
 def render(items: dict[str, dict]) -> dict[str, str]:
     out = {f"{n}.json": json.dumps(it, indent=2, ensure_ascii=False, sort_keys=True) + "\n" for n, it in items.items()}
-    out["registry.json"] = json.dumps(index_of(items), indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    out["registry.json"] = json.dumps(index_of(items, items[BASE_NAME]["meta"]["formic"]["version"]), indent=2, ensure_ascii=False, sort_keys=True) + "\n"
     return out
 
 
