@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "What a surface says when there is nothing to show.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport type { ReactNode } from \"react\";\nimport { Icon, type IconName } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * EMPTY STATE — what a surface says when there is nothing to show\n * The doctrine says real empty states, never fake numbers; this\n * is the one component that says it. Four situations, each with\n * its own default icon and wording so the reader knows why the\n * surface is empty and what to do next:\n *\n *   first    nothing has been made yet: the lead action creates it\n *   search   a query matched nothing: say what was searched, clear it\n *   filter   filters hid everything: clear them\n *   error    the data could not load: retry\n *\n * One title, one line of description, one action; a secondary link\n * at most. Centered, fluid, capped so the copy stays a readable\n * measure. `size=\"sm\"` for inside a panel, list or table cell;\n * `md` for a page. The icon tile is ink on inset (rule 16); the one\n * action carries the accent only for `first`, where creating the\n * thing is the page's purpose.\n * ───────────────────────────────────────────────────────── */\nexport type EmptyStateKind = \"first\" | \"search\" | \"filter\" | \"error\";\nexport type EmptyStateSize = \"sm\" | \"md\";\n\nconst KINDS: Record<EmptyStateKind, { icon: IconName; title: string; description: string }> = {\n  first: { icon: \"sparkles\", title: \"Nothing here yet\", description: \"When you add the first one it shows up here.\" },\n  search: { icon: \"search\", title: \"No matches\", description: \"Nothing matches that search. Try another word or clear it.\" },\n  filter: { icon: \"filter-off\", title: \"Nothing matches these filters\", description: \"Every item is hidden by the current filters. Clear them to see the list again.\" },\n  error: { icon: \"refresh-alert\", title: \"Could not load\", description: \"Something went wrong on the way here. Try again in a moment.\" },\n};\n\nexport default function EmptyState({\n  kind = \"first\",\n  icon,\n  title,\n  description,\n  query,\n  action,\n  secondary,\n  size = \"md\",\n  className = \"\",\n}: {\n  /** why the surface is empty; picks the default icon and words */\n  kind?: EmptyStateKind;\n  /** overrides the kind's icon */\n  icon?: IconName;\n  title?: ReactNode;\n  description?: ReactNode;\n  /** for `search`: the words that matched nothing, quoted in the title */\n  query?: string;\n  /** the one action: a Button (accent for `first`, secondary otherwise) */\n  action?: ReactNode;\n  /** an optional quieter second action: a ghost Button or a link */\n  secondary?: ReactNode;\n  /** md for a page or a large panel, sm inside a list, table or small panel */\n  size?: EmptyStateSize;\n  className?: string;\n}) {\n  const spec = KINDS[kind];\n  const heading = title ?? (kind === \"search\" && query ? <>No matches for &ldquo;{query}&rdquo;</> : spec.title);\n  const sm = size === \"sm\";\n  return (\n    <div role=\"status\" className={`flex w-full flex-col items-center justify-center text-center ${sm ? \"gap-2 px-4 py-6\" : \"gap-3 px-6 py-12\"} ${className}`}>\n      <span aria-hidden className={`corner-smooth flex shrink-0 items-center justify-center rounded-md bg-inset text-ink-2 ${sm ? \"size-9\" : \"size-12\"}`}>\n        <Icon name={icon ?? spec.icon} size={sm ? 17 : 22} strokeWidth={1.8} />\n      </span>\n      <div className=\"flex max-w-sm flex-col gap-1\">\n        <p className={`font-semibold text-ink ${sm ? \"text-body\" : \"text-title\"}`}>{heading}</p>\n        <p className={`text-ink-2 ${sm ? \"text-caption\" : \"text-body\"}`}>{description ?? spec.description}</p>\n      </div>\n      {(action || secondary) && (\n        <div className={`flex flex-wrap items-center justify-center gap-2 ${sm ? \"\" : \"mt-1\"}`}>\n          {action}\n          {secondary}\n        </div>\n      )}\n    </div>\n  );\n}\n",
+      "path": "components/EmptyState.tsx",
+      "target": "~/src/formic/components/EmptyState.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/EmptyState.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "empty-state",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Empty State",
+  "type": "registry:item"
+}

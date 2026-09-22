@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "A conversation column: user messages as right-aligned bubbles, assistant replies flat on the canvas.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { useState, type CSSProperties, type ReactNode } from \"react\";\nimport { fadeUp, StreamCaret, StreamText } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * CHAT THREAD\n * A conversation column: user messages as right-aligned\n * bubbles, assistant replies flat on the canvas. The final\n * assistant message streams in word by word — embed richer\n * replies (StreamingText, ToolChips, ApprovalCard) as\n * MessageBubble children in a real app.\n * ───────────────────────────────────────────────────────── */\nexport type ChatRole = \"user\" | \"assistant\";\nexport type ChatMessage = { id: string; role: ChatRole; text: string };\nconst DEFAULT_MESSAGES: ChatMessage[] = [\n  { id: \"m1\", role: \"user\", text: \"Which proposal should we chase this week?\" },\n  {\n    id: \"m2\",\n    role: \"assistant\",\n    text: \"Northwind Bank. Their brand refresh is the largest open proposal at ETB 724,000, and their legal team signed off on Friday.\",\n  },\n  { id: \"m3\", role: \"user\", text: \"Draft the follow-up.\" },\n  {\n    id: \"m4\",\n    role: \"assistant\",\n    text: \"Here it is: thank them for the sign-off, confirm the two phases starting 6 October, and ask for the purchase order so phase one can be invoiced.\",\n  },\n];\nexport function MessageBubble({\n  role,\n  className = \"\",\n  style,\n  children,\n}: {\n  role: ChatRole;\n  className?: string;\n  style?: CSSProperties;\n  children: ReactNode;\n}) {\n  if (role === \"user\") {\n    return (\n      <div className={`flex justify-end ${className}`} style={style}>\n        <div className=\"max-w-[85%] rounded-card rounded-br-sm bg-inset px-3.5 py-2 text-body leading-relaxed text-ink shadow-hairline\">\n          {children}\n        </div>\n      </div>\n    );\n  }\n  return (\n    <div className={`text-body leading-relaxed text-ink ${className}`} style={style}>\n      {children}\n    </div>\n  );\n}\nexport default function ChatThread({\n  messages = DEFAULT_MESSAGES,\n  streamLast = true,\n  onDone,\n}: {\n  /** the conversation; defaults to demo content */\n  messages?: ChatMessage[];\n  /** stream the final assistant message in word by word */\n  streamLast?: boolean;\n  /** called once the streamed message settles */\n  onDone?: () => void;\n} = {}) {\n  const last = messages[messages.length - 1];\n  const streamed = streamLast && last?.role === \"assistant\";\n  const [done, setDone] = useState(!streamed);\n  return (\n    <div className=\"flex w-full max-w-105 flex-col gap-4\">\n      {messages.map((message, index) => {\n        const isStreaming = streamed && index === messages.length - 1;\n        return (\n          <MessageBubble\n            key={message.id}\n            role={message.role}\n            style={fadeUp(index, { duration: 350, stagger: 120 })}\n          >\n            {isStreaming ? (\n              <span aria-live=\"polite\" aria-busy={!done}>\n                <StreamText\n                  text={message.text}\n                  onDone={() => {\n                    setDone(true);\n                    onDone?.();\n                  }}\n                />\n                {!done && <StreamCaret />}\n              </span>\n            ) : (\n              message.text\n            )}\n          </MessageBubble>\n        );\n      })}\n    </div>\n  );\n}\n",
+      "path": "components/ChatThread.tsx",
+      "target": "~/src/formic/components/ChatThread.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/ChatThread.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "chat-thread",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Chat Thread",
+  "type": "registry:item"
+}

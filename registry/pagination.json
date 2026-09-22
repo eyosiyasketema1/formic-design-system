@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "Numbered pages with sibling windows and gap ellipses; first and last pages always stay reachable.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { useState } from \"react\";\nimport { Icon } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * PAGINATION\n * Numbered pages with sibling windows and gap ellipses;\n * first and last pages always stay reachable. Active page\n * carries aria-current; prev / next disable at the edges.\n * ───────────────────────────────────────────────────────── */\ntype PageEntry = number | \"gap\";\n/** 1 … [sibling window] … count. The window expands at the edges so\n *  the item count stays constant while paging (no buttons shifting\n *  under the cursor), and a gap never hides a single page. */\nfunction pageRange(page: number, count: number, siblings: number): PageEntry[] {\n  const visible = siblings * 2 + 5; /* first + last + window + both gaps */\n  if (count <= visible) return Array.from({ length: count }, (_, i) => i + 1);\n  const start = Math.max(2, Math.min(page - siblings, count - (visible - 3)));\n  const end = Math.min(count - 1, Math.max(page + siblings, visible - 2));\n  const range: PageEntry[] = [1];\n  if (start > 3) range.push(\"gap\");\n  else if (start === 3) range.push(2);\n  for (let i = start; i <= end; i += 1) range.push(i);\n  if (end < count - 2) range.push(\"gap\");\n  else if (end === count - 2) range.push(count - 1);\n  range.push(count);\n  return range;\n}\nexport default function Pagination({\n  pageCount = 12,\n  page,\n  defaultPage = 1,\n  onChange,\n  siblingCount = 1,\n  className = \"\",\n}: {\n  pageCount?: number;\n  /** controlled current page — omit and use defaultPage for uncontrolled */\n  page?: number;\n  defaultPage?: number;\n  onChange?: (page: number) => void;\n  /** pages shown on each side of the current page */\n  siblingCount?: number;\n  className?: string;\n} = {}) {\n  const [internal, setInternal] = useState(defaultPage);\n  const current = Math.min(Math.max(page !== undefined ? page : internal, 1), pageCount);\n  const go = (next: number) => {\n    const clamped = Math.min(Math.max(next, 1), pageCount);\n    if (clamped === current) return;\n    if (page === undefined) setInternal(clamped);\n    onChange?.(clamped);\n  };\n  const arrow =\n    \"flex size-8 shrink-0 items-center justify-center rounded-control text-ink-2 transition-colors duration-150 enabled:hover:bg-hover enabled:hover:text-ink disabled:opacity-40\";\n  return (\n    <nav aria-label=\"Pagination\" className={`w-full ${className}`}>\n      <ul className=\"flex flex-wrap items-center gap-1\">\n        <li>\n          <button\n            type=\"button\"\n            aria-label=\"Previous page\"\n            disabled={current <= 1}\n            onClick={() => go(current - 1)}\n            className={arrow}\n          >\n            <Icon name=\"chevron-left\" size={15} strokeWidth={2} />\n          </button>\n        </li>\n        {pageRange(current, pageCount, siblingCount).map((entry, index) =>\n          entry === \"gap\" ? (\n            <li key={`gap-${index}`} aria-hidden>\n              <span className=\"flex size-8 items-end justify-center pb-2 text-ink-3\">\n                <Icon name=\"ellipsis\" size={13} strokeWidth={2} />\n              </span>\n            </li>\n          ) : (\n            <li key={entry}>\n              <button\n                type=\"button\"\n                aria-label={`Page ${entry}`}\n                aria-current={entry === current ? \"page\" : undefined}\n                onClick={() => go(entry)}\n                className={`flex h-8 min-w-8 shrink-0 items-center justify-center rounded-control px-1 text-caption font-medium tabular-nums transition-colors duration-150 ${\n                  entry === current\n                    ? \"bg-ink text-canvas\"\n                    : \"text-ink-2 hover:bg-hover hover:text-ink\"\n                }`}\n              >\n                {entry}\n              </button>\n            </li>\n          ),\n        )}\n        <li>\n          <button\n            type=\"button\"\n            aria-label=\"Next page\"\n            disabled={current >= pageCount}\n            onClick={() => go(current + 1)}\n            className={arrow}\n          >\n            <Icon name=\"chevron-right\" size={15} strokeWidth={2} />\n          </button>\n        </li>\n      </ul>\n    </nav>\n  );\n}\n",
+      "path": "components/Pagination.tsx",
+      "target": "~/src/formic/components/Pagination.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/Pagination.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "pagination",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Pagination",
+  "type": "registry:item"
+}

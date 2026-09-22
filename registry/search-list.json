@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "Command search with live filtering.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { useState } from \"react\";\nimport { GlideMenu, Icon } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * SEARCH — command search with live filtering.\n * The field, clear action, and results are directly usable.\n * ───────────────────────────────────────────────────────── */\nconst DEFAULT_ITEMS = [\n  \"Forecast next quarter's billings\",\n  \"Find overdue invoices\",\n  \"Compare client traffic\",\n  \"Draft a launch plan\",\n  \"Check hosting status\",\n  \"Audit subscription costs\",\n  \"Retire unused pages\",\n];\nexport default function SearchList({\n  items = DEFAULT_ITEMS,\n  placeholder = \"Search tasks…\",\n  onPick,\n}: {\n  /** searchable entries; defaults to demo content */\n  items?: string[];\n  placeholder?: string;\n  /** called with the picked result */\n  onPick?: (item: string) => void;\n} = {}) {\n  const [query, setQuery] = useState(\"\");\n  const results = query\n    ? items.filter((i) => i.toLowerCase().includes(query.toLowerCase()))\n    : items.slice(0, 5);\n  const empty = query.length > 2 && results.length === 0;\n  return (\n    <div className=\"flex min-h-[248px] w-full max-w-95 flex-col items-stretch\">\n      <div className=\"w-full self-start overflow-hidden rounded-card bg-surface shadow-overlay\">\n        {/* input row */}\n        <div className=\"flex h-10 items-center gap-2 border-b border-line px-3 transition-colors duration-150 focus-within:bg-hover hover:bg-hover\">\n          <Icon name=\"search\" size={14} strokeWidth={2} className=\"shrink-0 text-ink-3\" />\n          <input\n            value={query}\n            onChange={(event) => setQuery(event.target.value)}\n            placeholder={placeholder}\n            aria-label={placeholder.replace(\"…\", \"\")}\n            className=\"min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-3\"\n          />\n          {query && (\n            <button\n              aria-label=\"Clear search\"\n              type=\"button\"\n              onClick={() => setQuery(\"\")}\n              className=\"flex size-6 items-center justify-center rounded-full text-ink-3\n                transition-colors duration-150 hover:bg-line/70 hover:text-ink\"\n              style={{ animation: \"fade-in 150ms ease-out both\" }}\n            >\n              <Icon name=\"close\" size={11} />\n            </button>\n          )}\n        </div>\n        {/* results / empty state */}\n        {empty ? (\n          <div className=\"flex flex-col items-center justify-center gap-1 px-4 py-8\" style={{ animation: \"fade-in 250ms ease-out both\" }}>\n            <span className=\"mb-1.5 flex size-8 items-center justify-center rounded-control bg-inset text-ink-3 shadow-hairline\">\n              <Icon name=\"search\" size={15} strokeWidth={1.8} />\n            </span>\n            <span className=\"text-body font-medium text-ink\">No results found</span>\n            <span className=\"text-small text-ink-3\">Adjust your search to try again</span>\n          </div>\n        ) : (\n          <div className=\"p-1\">\n            <GlideMenu className=\"flex flex-col gap-px\" highlightClassName=\"inset-x-0 rounded-sm bg-hover\">\n              {results.map((item) => (\n                <button\n                  key={item}\n                  data-menu-row\n                  type=\"button\"\n                  onClick={() => {\n                    setQuery(item);\n                    onPick?.(item);\n                  }}\n                  className=\"relative z-10 flex h-8 w-full items-center rounded-sm px-2 text-left text-body text-ink\"\n                  style={{ animation: \"fade-in 200ms ease-out both\" }}\n                >\n                  {item}\n                </button>\n              ))}\n            </GlideMenu>\n          </div>\n        )}\n      </div>\n    </div>\n  );\n}\n",
+      "path": "components/SearchList.tsx",
+      "target": "~/src/formic/components/SearchList.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/SearchList.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "search-list",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Search List",
+  "type": "registry:item"
+}

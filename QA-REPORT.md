@@ -120,3 +120,33 @@ Evidence gathered this pass: `install.sh` (551 lines), `scripts/formic_check.py`
 - B7, B8, B9, B11 → out of Phase 1's scope (Phase 3, Tester and Frontend); recorded so the re-score after Phase 3 counts them.
 
 Re-score rule: same 25 lines, same checks, PASS ÷ lines per category; Part 5 of the plan needs both ≥ 8/10 after Phase 3.
+
+## 2026-09-22 — Phase 1 review (registry)
+
+Independent check of `scripts/build_registry.py`, `registry/`, `qa_check.py` 4f, `vercel.json` and `registry/README.md`, on `staging` (working tree, uncommitted). Every claim re-run here; the Frontend summary was not trusted. Tools: python 3.10 + jsonschema 3.2.0, node 22.23, shadcn CLI 4.21.0, a fresh `npm create vite@latest qa-app -- --template react-ts` in `/tmp` with tailwindcss + @tailwindcss/vite, a local build `--base-url http://127.0.0.1:8765 --out /tmp/regl` served by `python3 -m http.server`.
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | `build_registry.py --check` exits 0 | **PASS** | `registry/ is current (81 items)`, exit 0. Count is 79 component items + `formic` + `formic-all` = 81 items (the summary's "81 component items + base + all" overcounts by two) |
+| 2 | Schema | **PASS** | button, data-table, app-shell, charts, formic, formic-all, brand-logos validate against the fetched `registry-item.json`; all 81 items validate (0 invalid); `registry.json` validates against `registry.json` schema, 81 entries |
+| 3 | Dependencies | **PASS** | 8 sampled items (ask-user-questions, modal, context-meter, primitives, chat-thread, project-sidebar, brand, image-result): relative imports ↔ `registryDependencies` exact, plus `formic.json` on each. All 81 re-derived independently: 0 mismatches. `doodle` = `@dicebear/core@^9.2.2`, `@dicebear/notionists@^9.2.2`; `primitives` and `brand` = `@phosphor-icons/react` (unversioned, peer range `>=2.1.0`); no item lists react / react-dom |
+| 4 | Content fidelity | **PASS** | All 101 file entries across all items decoded and compared to the source: 0 byte mismatches (VERSION is generated, excluded) |
+| 5 | Determinism | **PASS** | Two `--out` builds 1 s apart: `diff -rq` identical; both identical to the committed `registry/` (README excluded). No CR bytes |
+| 6 | `qa_check.py` | **PASS** | `QA PASSED … registry: all clean`, 9.1 s wall |
+| 7 | vercel.json | **PASS** | Valid JSON. Rewrites: `/customize` kept, `/r/registry.json` and `/r/:name.json` added; `/gallery` redirect kept. Header source `/(registry|r)/(.*).json` matches `/r/button.json`, `/registry/button.json`, `/r/registry.json` and not `/registry/README.md` (simulated with `re`). Cache 300 s + SWR 86400, `Access-Control-Allow-Origin: *` |
+| 8 | Size / ignore | **PASS** | `du -sh registry` = 1.7 MB; largest: `formic.json` 255,693 B, `brand-logos.json` 231,456 B, `charts.json` 82,163 B — fine for CDN JSON (gzip on Vercel). `git check-ignore registry/button.json` exit 1 (not ignored); no `.vercelignore` |
+| 9 | Real CLI e2e | **PASS** | No `components.json` in the app. `add data-table.json -y`: 25 files created, 4 skipped (shared modules present in both `formic` and their own item), peers installed (`@phosphor-icons/react ^2.1.10`, `@dicebear/core ^9.4.3`, `@dicebear/notionists ^9.4.2`), `docs` printed; every installed file `cmp`-identical to the repo (9 components, 8 styles, 5 scripts, config, AGENTS.md). CSS wired by hand as documented; `vite build` OK (552 KB js), `tsc --noEmit` OK. `add app-shell.json -y` on top: 7 created, 22 skipped, **no prompt**; re-running without `-y` and with stdin closed: 29 skipped, exit 0, no prompt. After a local edit to `tokens.css`, `add formic.json` prompts `tokens.css already exists. Would you like to overwrite? (y/N)` exactly as the README says. `vite build` + `tsc` still OK with AppShell (default export) |
+| 10 | README accuracy | **PASS with notes** | Every statement checked holds (`data-table` pulls pagination, empty-state, primitives, formic; skip-identical; overwrite prompt; CLI 4.21.0 verified). Two things it does not say: (a) `add --dry-run` and `add --diff` **prompt to create `components.json`** when the project has none, so they are not "free" for the universal item on day one; with a minimal `components.json` both work (`+1 new, ~1 overwrite, =21 skip`; per-file "No changes"/diff). (b) `build_registry.py` ignores unknown flags: `--help` rewrites `registry/` (harmless because deterministic, but surprising) |
+
+Also confirmed: the 14 dangling `eslint-disable react-hooks/*` comments the baseline asked Phase 1 to remove are gone (`grep -rc 'eslint-disable.*react-hooks' components/` = 0). `install.sh` now derives `SRC_DIR` (`src` or `app`) for the gate script; `test_install.sh next-app` was not re-run here, so B6 is not re-scored.
+
+**Re-score (same rule: PASS ÷ lines, PARTIAL = 0):**
+
+- A2 manifest per component → **PASS** (81 items, deps derived from imports, gate 4f fails when stale).
+- A3 dry run → **PARTIAL** (`npx shadcn add <url> --dry-run` works only once a `components.json` exists; Phase 2 `init` should write one or the CLI must be told).
+- A4 diff against upstream → **PARTIAL** (same condition; with `components.json` the per-file diff is exact).
+- B4 per-component add → **PASS** (`npx shadcn@latest add https://formicai.dev/r/<name>.json`, verified locally with the CLI).
+- B5 update by diff → **PARTIAL** (identical files skipped, changed files prompted per file, `--overwrite` opt-in; no merge).
+- "Registry served" is not a scorecard line; `/r/*.json` is wired in `vercel.json` and verified by regex here, live on staging once merged.
+
+**Score A: 6 PASS / 13 = 0.46 → 4.6 / 10** (was 3.8). **Score B: 3 PASS / 12 = 0.25 → 2.5 / 10** (was 1.7). Unchanged lines keep their baseline verdicts.

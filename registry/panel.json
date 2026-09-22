@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "The dashboard card, with its anatomy built in.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport type { ReactNode } from \"react\";\nimport { Card } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * PANEL — the dashboard card, with its anatomy built in\n * Title and caption on the left, actions on the right, on one\n * baseline; the body below. The panel stretches to its grid\n * cell (`h-full`) and the body is a flex column that fills it,\n * so a chart with `fill`, a BarList with `fill`, or a table\n * reaches the bottom edge. Two panels in one row therefore end\n * up the same height with no empty lower half in the shorter\n * one — the failure the agent reviews kept finding.\n *\n * Use Card directly only for things that are not a titled\n * section: a stat tile, a message, a composer.\n * ───────────────────────────────────────────────────────── */\nexport default function Panel({\n  title,\n  caption,\n  actions,\n  children,\n  padding = \"md\",\n  className = \"\",\n  bodyClassName = \"\",\n}: {\n  title?: ReactNode;\n  /** one line under the title, muted */\n  caption?: ReactNode;\n  /** controls that act on this panel — a select, a segmented toggle, a button */\n  actions?: ReactNode;\n  children: ReactNode;\n  /** `md` for a section, `lg` for a hero panel */\n  padding?: \"md\" | \"lg\";\n  className?: string;\n  /** extra classes on the body — e.g. `justify-between` to spread rows */\n  bodyClassName?: string;\n}) {\n  const hasHeader = title || caption || actions;\n  return (\n    <Card className={`flex h-full min-w-0 flex-col ${padding === \"lg\" ? \"p-5\" : \"p-4\"} ${className}`}>\n      {hasHeader && (\n        <div className=\"flex shrink-0 items-start justify-between gap-3\">\n          <div className=\"min-w-0\">\n            {title && <h3 className=\"truncate text-body font-medium text-ink\">{title}</h3>}\n            {caption && <p className=\"mt-0.5 text-caption text-ink-3\">{caption}</p>}\n          </div>\n          {actions && <div className=\"flex shrink-0 items-center gap-2\">{actions}</div>}\n        </div>\n      )}\n      <div className={`flex min-h-0 flex-1 flex-col ${hasHeader ? \"mt-3\" : \"\"} ${bodyClassName}`}>{children}</div>\n    </Card>\n  );\n}\n",
+      "path": "components/Panel.tsx",
+      "target": "~/src/formic/components/Panel.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/Panel.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "panel",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Panel",
+  "type": "registry:item"
+}

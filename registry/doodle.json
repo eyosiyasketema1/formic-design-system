@@ -1,0 +1,28 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [
+    "@dicebear/core@^9.2.2",
+    "@dicebear/notionists@^9.2.2"
+  ],
+  "description": "DiceBear \"notionists\" (CC0), generated locally.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { useEffect, useState } from \"react\";\n/* ─────────────────────────────────────────────────────────\n * DOODLE AVATARS — DiceBear \"notionists\" (CC0), generated locally\n * A doodle is derived from the person's name, so the same name always\n * gets the same face, on every device, with no network and no stored\n * image. The two DiceBear packages are loaded on demand the first time\n * a doodle renders, so an app that never shows one never pays for them.\n *\n * Peer deps: @dicebear/core ^9, @dicebear/notionists ^9 (both MIT; the\n * notionists art is CC0). Install: npm i @dicebear/core @dicebear/notionists\n * ───────────────────────────────────────────────────────── */\nconst cache = new Map<string, Promise<string>>();\n\nexport function doodleSvg(seed: string): Promise<string> {\n  let p = cache.get(seed);\n  if (!p) {\n    p = Promise.all([import(\"@dicebear/core\"), import(\"@dicebear/notionists\")]).then(([{ createAvatar }, notionists]) =>\n      createAvatar(notionists, { seed, size: 128 }).toString(),\n    );\n    cache.set(seed, p);\n  }\n  return p;\n}\n\n/* A missing package must not fail silently into initials: say so once. */\nlet warned = false;\nfunction warnOnce(error: unknown) {\n  if (warned) return;\n  warned = true;\n  console.warn(\"[formic] doodle avatars need @dicebear/core and @dicebear/notionists: npm i @dicebear/core @dicebear/notionists\", error);\n}\n\n/** placeholder photo for a name (pravatar.cc, free), used by avatar kind \"photo\" until real photos exist */\nexport function photoFor(name: string): string {\n  let hash = 0;\n  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) % 9973;\n  return `https://i.pravatar.cc/128?img=${(hash % 70) + 1}`;\n}\n\n/** the doodle for a seed, or null until it has loaded (render initials meanwhile) */\nexport function useDoodle(seed: string, enabled = true): string | null {\n  const [svg, setSvg] = useState<string | null>(null);\n  useEffect(() => {\n    if (!enabled) return;\n    let live = true;\n    doodleSvg(seed).then((s) => { if (live) setSvg(s); }).catch(warnOnce);\n    return () => { live = false; };\n  }, [seed, enabled]);\n  return enabled ? svg : null;\n}\n",
+      "path": "components/doodle.ts",
+      "target": "~/src/formic/components/doodle.ts",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/doodle.ts",
+      "version": "0.3.0"
+    }
+  },
+  "name": "doodle",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json"
+  ],
+  "title": "Doodle",
+  "type": "registry:item"
+}

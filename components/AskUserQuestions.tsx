@@ -110,7 +110,6 @@ export default function AskUserQuestions({
     /* keep focus inside the flow so the shortcuts keep working: the
        textarea for free text, otherwise the question title (rule 6) */
     requestAnimationFrame(() => (q?.freeText ? textRef.current : titleRef.current)?.focus({ preventScroll: true }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- answers is read once per step
   }, [index]);
 
   const commit = (answer: AskAnswer) => {

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "Vertical event history: toned dots on a rail, title and time on one line, description beneath.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { fadeUp } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * TIMELINE\n * Vertical event history: toned dots on a rail, title and\n * time on one line, description beneath. Events stagger in\n * with the house entrance.\n * ───────────────────────────────────────────────────────── */\nexport type TimelineTone = \"neutral\" | \"accent\" | \"green\" | \"red\";\nexport type TimelineItem = {\n  key: string;\n  title: string;\n  description?: string;\n  time?: string;\n  tone?: TimelineTone;\n};\nconst TONE_DOTS: Record<TimelineTone, string> = {\n  neutral: \"bg-line-strong\",\n  accent: \"bg-accent\",\n  green: \"bg-green\",\n  red: \"bg-red\",\n};\nconst DEFAULT_ITEMS: TimelineItem[] = [\n  { key: \"sent\", title: \"Proposal sent\", time: \"09:12\", tone: \"neutral\", description: \"Northwind Bank brand refresh, two phases.\" },\n  { key: \"opened\", title: \"Opened by the client\", time: \"09:40\", tone: \"accent\" },\n  { key: \"question\", title: \"Pricing questioned\", time: \"11:02\", tone: \"red\", description: \"Phase two came in 15% above their budget; flagged for a revised quote.\" },\n  { key: \"signed\", title: \"Signed\", time: \"14:45\", tone: \"green\", description: \"Revised quote accepted; kickoff booked for Monday.\" },\n];\nexport default function Timeline({\n  items = DEFAULT_ITEMS,\n  className = \"\",\n}: {\n  /** events, oldest first; defaults to demo content */\n  items?: TimelineItem[];\n  className?: string;\n} = {}) {\n  return (\n    <ol className={`flex w-full flex-col ${className}`}>\n      {items.map((item, index) => {\n        const last = index === items.length - 1;\n        return (\n          <li key={item.key} className=\"flex gap-3\" style={fadeUp(index, { duration: 300, stagger: 90 })}>\n            <div className=\"flex w-2.5 flex-col items-center\">\n              <span\n                aria-hidden\n                className={`mt-1.5 size-2.5 shrink-0 rounded-full ${TONE_DOTS[item.tone ?? \"neutral\"]}`}\n              />\n              {!last && <div className=\"my-1 w-px flex-1 bg-line\" style={{ minHeight: 12 }} />}\n            </div>\n            <div className={`min-w-0 flex-1 ${last ? \"\" : \"pb-4\"}`}>\n              <div className=\"flex items-baseline justify-between gap-3\">\n                <p className=\"min-w-0 truncate text-body font-medium text-ink\">{item.title}</p>\n                {item.time && (\n                  <span className=\"shrink-0 font-mono text-micro text-ink-3\">{item.time}</span>\n                )}\n              </div>\n              {item.description && (\n                <p className=\"mt-0.5 text-caption leading-relaxed text-ink-2\">{item.description}</p>\n              )}\n            </div>\n          </li>\n        );\n      })}\n    </ol>\n  );\n}\n",
+      "path": "components/Timeline.tsx",
+      "target": "~/src/formic/components/Timeline.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/Timeline.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "timeline",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Timeline",
+  "type": "registry:item"
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "The form trio.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport {\n  cloneElement,\n  isValidElement,\n  useId,\n  useRef,\n  type InputHTMLAttributes,\n  type ReactElement,\n  type TextareaHTMLAttributes,\n} from \"react\";\nimport { Icon, type IconName } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * FIELD · INPUT · TEXTAREA\n * The form trio. Field owns the label / hint / error row and\n * wires aria onto its control automatically. Input and\n * Textarea style on .primitive-field — the deliberately\n * quiet focus (border shift, no ring; see CLAUDE.md rule 6).\n * ───────────────────────────────────────────────────────── */\nexport function Field({\n  label,\n  hint,\n  error,\n  required = false,\n  className = \"\",\n  children,\n}: {\n  label: string;\n  /** helper text below the control (replaced by error when set) */\n  hint?: string;\n  /** error message — also flips the control's invalid border */\n  error?: string;\n  required?: boolean;\n  className?: string;\n  /** one of the system's form controls (Input, Textarea, …) —\n   *  Field injects id, aria-describedby, and invalid into it */\n  children: ReactElement;\n}) {\n  const id = useId();\n  const controlId = `${id}-control`;\n  const labelId = `${id}-label`;\n  const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;\n  const control = isValidElement(children)\n    ? cloneElement(children as ReactElement<Record<string, unknown>>, {\n        id: controlId,\n        /* names grouped controls (OTP cells) and comboboxes, not just inputs */\n        \"aria-labelledby\": labelId,\n        ...(describedBy ? { \"aria-describedby\": describedBy } : {}),\n        ...(error ? { invalid: true } : {}),\n      })\n    : children;\n  return (\n    <div className={`flex w-full flex-col gap-1.5 ${className}`}>\n      <label id={labelId} htmlFor={controlId} className=\"text-caption font-medium text-ink\">\n        {label}\n        {required && (\n          <span aria-hidden className=\"text-red\">\n            {\" \"}\n            *\n          </span>\n        )}\n      </label>\n      {control}\n      {error ? (\n        <p id={`${id}-error`} role=\"alert\" className=\"text-small text-red\">\n          {error}\n        </p>\n      ) : hint ? (\n        <p id={`${id}-hint`} className=\"text-small text-ink-3\">\n          {hint}\n        </p>\n      ) : null}\n    </div>\n  );\n}\nexport type InputSize = \"sm\" | \"md\";\nconst INPUT_HEIGHTS: Record<InputSize, string> = { sm: \"h-8\", md: \"h-9\" };\nexport default function Input({\n  size = \"md\",\n  width = \"w-full\",\n  leadingIcon,\n  invalid = false,\n  className = \"\",\n  ...rest\n}: {\n  size?: InputSize;\n  /** icon rendered inside the field's leading edge */\n  leadingIcon?: IconName;\n  /** error styling — set automatically by Field when it has an error */\n  invalid?: boolean;\n  /** a Tailwind width class; `w-full` for forms, `w-56` and the like as a toolbar search */\n  width?: string;\n  className?: string;\n} & Omit<InputHTMLAttributes<HTMLInputElement>, \"size\">) {\n  const innerRef = useRef<HTMLInputElement>(null);\n  return (\n    /* clicking anywhere on the field focuses the input — same\n       affordance as ChatComposer's wrapper */\n    <span\n      data-invalid={invalid || undefined}\n      onClick={() => innerRef.current?.focus()}\n      className={`primitive-field flex ${width} cursor-text items-center gap-2 rounded-control border border-line bg-field px-3 ${INPUT_HEIGHTS[size]} ${className}`}\n    >\n      {leadingIcon && <Icon name={leadingIcon} size={14} strokeWidth={2} className=\"shrink-0 text-ink-3\" />}\n      <input\n        ref={innerRef}\n        aria-invalid={invalid || undefined}\n        className=\"min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-3\"\n        {...rest}\n      />\n    </span>\n  );\n}\nexport function Textarea({\n  rows = 3,\n  invalid = false,\n  className = \"\",\n  ...rest\n}: {\n  rows?: number;\n  invalid?: boolean;\n  className?: string;\n} & TextareaHTMLAttributes<HTMLTextAreaElement>) {\n  const innerRef = useRef<HTMLTextAreaElement>(null);\n  return (\n    <span\n      data-invalid={invalid || undefined}\n      onClick={() => innerRef.current?.focus()}\n      className={`primitive-field flex w-full cursor-text rounded-control border border-line bg-field px-3 py-2 ${className}`}\n    >\n      <textarea\n        ref={innerRef}\n        rows={rows}\n        aria-invalid={invalid || undefined}\n        className=\"min-w-0 flex-1 resize-none bg-transparent text-body leading-relaxed text-ink outline-none placeholder:text-ink-3\"\n        {...rest}\n      />\n    </span>\n  );\n}\n",
+      "path": "components/Input.tsx",
+      "target": "~/src/formic/components/Input.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/Input.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "input",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Input",
+  "type": "registry:item"
+}

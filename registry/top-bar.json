@@ -1,0 +1,29 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "The strip above a page when the rail carries no user.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport type { ReactNode } from \"react\";\nimport Input from \"./Input\";\nimport DropdownMenu, { type MenuEntry } from \"./DropdownMenu\";\nimport { Avatar, Icon, IconButton, Tooltip, type AvatarKind } from \"./primitives\";\nimport { FORMIC_CONFIG } from \"./config\";\n/* ─────────────────────────────────────────────────────────\n * TOP BAR — the strip above a page when the rail carries no user\n * The page's title on the left (with an optional trigger before it),\n * and on the right the things a person reaches for from anywhere:\n * search, the theme, notifications, and their account. Pairs with\n * AppSidebar (which then keeps its user row off) for the \"rail plus\n * bar\" shell; the inset and edge rails do not need it, their user\n * sits at the foot of the rail.\n *\n * One line, 56px, hairline below, on --canvas so the page reads as\n * one surface with it. Fluid: the search field gives way first.\n * ───────────────────────────────────────────────────────── */\nexport type TopBarUser = { name: string; src?: string; kind?: AvatarKind };\nconst DEFAULT_USER_MENU: MenuEntry[] = [\n  { key: \"profile\", label: \"Profile\", icon: \"user\" },\n  { key: \"settings\", label: \"Settings\", icon: \"gear\" },\n  { type: \"divider\" },\n  { key: \"signout\", label: \"Sign out\", icon: \"sign-out\" },\n];\n\nexport default function TopBar({\n  title = \"Overview\",\n  leading,\n  search = true,\n  searchPlaceholder = \"Search…\",\n  onSearch,\n  theme,\n  onTheme,\n  notifications = 0,\n  onNotifications,\n  user = { name: \"Eyosiyas Ketema\" },\n  userMenu = DEFAULT_USER_MENU,\n  onUserAction,\n  actions,\n  className = \"\",\n}: {\n  title?: ReactNode;\n  /** a trigger before the title: a ProjectSidebarTrigger, a back button */\n  leading?: ReactNode;\n  /** the search field; false to drop it */\n  search?: boolean;\n  searchPlaceholder?: string;\n  onSearch?: (query: string) => void;\n  /** the current theme; with onTheme the bar shows the switch */\n  theme?: \"light\" | \"dark\";\n  onTheme?: () => void;\n  /** unread count; 0 shows a quiet bell, none hides it */\n  notifications?: number | null;\n  onNotifications?: () => void;\n  /** the account avatar and its menu; null hides it */\n  user?: TopBarUser | null;\n  userMenu?: MenuEntry[];\n  onUserAction?: (key: string) => void;\n  /** anything else on the right, before the account */\n  actions?: ReactNode;\n  className?: string;\n}) {\n  const ctl = \"size-9 rounded-control bg-surface text-ink-2 shadow-btn transition-colors duration-150 hover:bg-hover hover:text-ink\";\n  return (\n    <header className={`flex h-14 w-full shrink-0 items-center gap-3 border-b border-line bg-canvas px-4 sm:px-6 ${className}`}>\n      {leading}\n      <h1 className=\"min-w-0 shrink-0 truncate text-heading font-semibold tracking-tight text-ink\">{title}</h1>\n      <div className=\"flex min-w-0 flex-1 items-center justify-end gap-2\">\n        {search && (\n          <Input\n            size=\"md\"\n            leadingIcon=\"search\"\n            placeholder={searchPlaceholder}\n            aria-label=\"Search\"\n            onChange={(event) => onSearch?.(event.target.value)}\n            width=\"hidden min-w-24 max-w-72 flex-1 md:flex\"\n          />\n        )}\n        {actions}\n        {onTheme && (\n          <Tooltip label={theme === \"dark\" ? \"Light mode\" : \"Dark mode\"}>\n            <IconButton label={theme === \"dark\" ? \"Switch to light mode\" : \"Switch to dark mode\"} onClick={onTheme} className={ctl}>\n              <Icon name={theme === \"dark\" ? \"sun\" : \"moon\"} size={16} strokeWidth={1.8} />\n            </IconButton>\n          </Tooltip>\n        )}\n        {notifications !== null && (\n          <Tooltip label={notifications ? `${notifications} unread` : \"Notifications\"}>\n            <span className=\"relative inline-flex\">\n              <IconButton label={notifications ? `Notifications, ${notifications} unread` : \"Notifications\"} onClick={onNotifications} className={ctl}>\n                <Icon name=\"bell\" size={16} strokeWidth={1.8} />\n              </IconButton>\n              {notifications > 0 && <span aria-hidden className=\"pointer-events-none absolute top-2 right-2 size-2 rounded-full bg-accent ring-2 ring-canvas\" />}\n            </span>\n          </Tooltip>\n        )}\n        {user && (\n          <DropdownMenu align=\"end\" menuWidth={220} items={userMenu} onSelect={(key) => onUserAction?.(key)}>\n            <button type=\"button\" aria-label=\"Open account menu\" className=\"corner-smooth flex size-9 items-center justify-center rounded-control bg-surface shadow-btn transition-colors duration-150 hover:bg-hover\">\n              <Avatar name={user.name} src={user.src} kind={user.kind ?? FORMIC_CONFIG.avatar} size=\"md\" />\n            </button>\n          </DropdownMenu>\n        )}\n      </div>\n    </header>\n  );\n}\n",
+      "path": "components/TopBar.tsx",
+      "target": "~/src/formic/components/TopBar.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/TopBar.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "top-bar",
+  "registryDependencies": [
+    "https://formicai.dev/r/config.json",
+    "https://formicai.dev/r/dropdown-menu.json",
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/input.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Top Bar",
+  "type": "registry:item"
+}

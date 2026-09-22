@@ -70,7 +70,6 @@ export default function Calendar({
   useEffect(() => {
     if (!shouldFocus.current) return;
     document.getElementById(dayId(focusDate))?.focus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusDate]);
   const isDisabled = (date: Date) =>
     (min !== undefined && date < atMidnight(min)) || (max !== undefined && date > atMidnight(max));

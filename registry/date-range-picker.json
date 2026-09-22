@@ -1,0 +1,28 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "DatePicker's sibling for spans: pick a start, preview the band, pick the end — the popover closes when the range completes.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { useId, useState } from \"react\";\nimport Calendar, { type DateRange } from \"./Calendar\";\nimport { PickerField, type DatePickerSize } from \"./DatePicker\";\nimport { useAnchoredLayer } from \"./hooks\";\n/* ─────────────────────────────────────────────────────────\n * DATE RANGE PICKER\n * DatePicker's sibling for spans: pick a start, preview the\n * band, pick the end — the popover closes when the range\n * completes. Label renders through Intl.formatRange. Shares\n * the PickerField shell; works inside Field.\n * ───────────────────────────────────────────────────────── */\nconst EMPTY: DateRange = { from: null, to: null };\nexport default function DateRangePicker({\n  value,\n  defaultValue,\n  onChange,\n  placeholder = \"Pick a date range…\",\n  min,\n  max,\n  size = \"md\",\n  weekStartsOn = 1,\n  invalid = false,\n  disabled = false,\n  clearable = false,\n  className = \"\",\n  id,\n  \"aria-describedby\": describedBy,\n  \"aria-labelledby\": labelledBy,\n}: {\n  /** controlled range — omit and use defaultValue for uncontrolled */\n  value?: DateRange;\n  defaultValue?: DateRange;\n  /** fires on each pick; `to` is null until the range completes */\n  onChange?: (range: DateRange) => void;\n  placeholder?: string;\n  min?: Date;\n  max?: Date;\n  size?: DatePickerSize;\n  /** 0 = Sunday, 1 = Monday */\n  weekStartsOn?: 0 | 1;\n  /** error styling — set automatically by Field when it has an error */\n  invalid?: boolean;\n  disabled?: boolean;\n  /** show a clear control when a range is set */\n  clearable?: boolean;\n  className?: string;\n  id?: string;\n  \"aria-describedby\"?: string;\n  \"aria-labelledby\"?: string;\n} = {}) {\n  const autoId = useId();\n  const triggerId = id ?? `${autoId}-trigger`;\n  const layerId = `${autoId}-calendar`;\n  const [internal, setInternal] = useState<DateRange>(defaultValue ?? EMPTY);\n  const range = value !== undefined ? value : internal;\n  const { open, setOpen, position, anchorRef, openAt } =\n    useAnchoredLayer<HTMLButtonElement>(layerId);\n  const close = (refocus: boolean) => {\n    setOpen(false);\n    if (refocus) anchorRef.current?.focus();\n  };\n  const handleRange = (next: DateRange) => {\n    if (value === undefined) setInternal(next);\n    onChange?.(next);\n    if (next.from && next.to) close(true);\n  };\n  const clear = () => {\n    if (value === undefined) setInternal(EMPTY);\n    onChange?.(EMPTY);\n    anchorRef.current?.focus();\n  };\n  const format = new Intl.DateTimeFormat(undefined, { dateStyle: \"medium\" });\n  const label =\n    range.from && range.to\n      ? typeof format.formatRange === \"function\"\n        ? format.formatRange(range.from, range.to)\n        : `${format.format(range.from)} – ${format.format(range.to)}`\n      : range.from\n        ? `${format.format(range.from)} – …`\n        : null;\n  return (\n    <PickerField\n      triggerId={triggerId}\n      layerId={layerId}\n      size={size}\n      invalid={invalid}\n      disabled={disabled}\n      clearable={clearable}\n      clearLabel=\"Clear date range\"\n      label={label}\n      placeholder={placeholder}\n      describedBy={describedBy}\n      labelledBy={labelledBy}\n      open={open}\n      position={position}\n      anchorRef={anchorRef}\n      onOpen={() => openAt({ estimatedHeight: 316, width: 248 })}\n      onClose={close}\n      onClear={clear}\n      className={className}\n    >\n      <Calendar\n        autoFocus\n        mode=\"range\"\n        rangeValue={range}\n        onRangeChange={handleRange}\n        min={min}\n        max={max}\n        weekStartsOn={weekStartsOn}\n      />\n    </PickerField>\n  );\n}\n",
+      "path": "components/DateRangePicker.tsx",
+      "target": "~/src/formic/components/DateRangePicker.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/DateRangePicker.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "date-range-picker",
+  "registryDependencies": [
+    "https://formicai.dev/r/calendar.json",
+    "https://formicai.dev/r/date-picker.json",
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/hooks.json"
+  ],
+  "title": "Date Range Picker",
+  "type": "registry:item"
+}

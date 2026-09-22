@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "The smallest \"working on it\".",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { useEffect, useState } from \"react\";\nimport { useReducedMotion } from \"./hooks\";\nimport { ShimmerLabel } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * THINKING INDICATOR — the smallest \"working on it\"\n * A glyph that breathes between a circle and an infinity loop,\n * and one word that shimmers and rotates every few seconds\n * (Thinking, Planning, Refining…). For the gap before a reply\n * starts, inline in a thread. ThinkingState is the bigger\n * sibling with steps, reasoning and sources; this is a single\n * line. Screen readers hear one \"Thinking…\", not every word.\n * Reduced motion: still glyph, first word, no rotation.\n *\n * The morphing path is a component-specific illustration (an\n * SVG animate on `d`, no library); the glyph is not an icon.\n * ───────────────────────────────────────────────────────── */\nconst CIRCLE_A = \"M 12 8 C 14.21 8 16 9.79 16 12 C 16 14.21 14.21 16 12 16 C 9.79 16 8 14.21 8 12 C 8 9.79 9.79 8 12 8 Z\";\nconst INFINITY = \"M 12 12 C 14 8.5 19 8.5 19 12 C 19 15.5 14 15.5 12 12 C 10 8.5 5 8.5 5 12 C 5 15.5 10 15.5 12 12 Z\";\nconst CIRCLE_B = \"M 12 16 C 14.21 16 16 14.21 16 12 C 16 9.79 14.21 8 12 8 C 9.79 8 8 9.79 8 12 C 8 14.21 9.79 16 12 16 Z\";\nconst DEFAULT_WORDS = [\"Thinking\", \"Planning\", \"Refining\", \"Checking\"];\n\nexport default function ThinkingIndicator({\n  words = DEFAULT_WORDS,\n  interval = 3200,\n  glyph = true,\n  className = \"\",\n}: {\n  /** the status words, rotated in order */\n  words?: string[];\n  /** ms between words */\n  interval?: number;\n  /** the morphing glyph before the word; off for a text-only line */\n  glyph?: boolean;\n  className?: string;\n}) {\n  const reduced = useReducedMotion();\n  const [index, setIndex] = useState(0);\n  useEffect(() => {\n    if (reduced || words.length < 2) return;\n    const t = window.setInterval(() => setIndex((i) => (i + 1) % words.length), interval);\n    return () => window.clearInterval(t);\n  }, [reduced, words.length, interval]);\n  const longest = words.reduce((a, b) => (a.length >= b.length ? a : b), \"\");\n  const word = reduced ? words[0] : words[index];\n  return (\n    <div role=\"status\" className={`inline-flex items-center gap-2 ${className}`}>\n      <span className=\"sr-only\">Thinking…</span>\n      {glyph && (\n        <svg aria-hidden width={18} height={18} viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" strokeWidth={1.6} strokeLinecap=\"round\" strokeLinejoin=\"round\" className=\"shrink-0 text-ink-3\">\n          {reduced ? (\n            <path d={INFINITY} />\n          ) : (\n            <path d={CIRCLE_A}>\n              <animate attributeName=\"d\" dur=\"6s\" repeatCount=\"indefinite\" calcMode=\"spline\" keyTimes=\"0;0.25;0.5;0.75;1\" keySplines=\"0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1\" values={`${CIRCLE_A};${INFINITY};${CIRCLE_B};${INFINITY};${CIRCLE_A}`} />\n            </path>\n          )}\n        </svg>\n      )}\n      {/* the longest word reserves the width, so the line never shifts */}\n      <span aria-hidden className=\"inline-grid overflow-hidden text-caption\">\n        <span className=\"invisible col-start-1 row-start-1 font-medium\">{longest}</span>\n        <ShimmerLabel key={word} className=\"col-start-1 row-start-1 text-caption\" style={reduced ? undefined : { animation: \"shimmer-text 1.4s linear infinite, fade-up 240ms var(--ease-out-quint) both\" }}>\n          {word}\n        </ShimmerLabel>\n      </span>\n    </div>\n  );\n}\n",
+      "path": "components/ThinkingIndicator.tsx",
+      "target": "~/src/formic/components/ThinkingIndicator.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/ThinkingIndicator.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "thinking-indicator",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/hooks.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Thinking Indicator",
+  "type": "registry:item"
+}

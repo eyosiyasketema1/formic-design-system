@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "dependencies": [],
+  "description": "Mask sensitive values until the eye is opened.",
+  "files": [
+    {
+      "content": "\"use client\";\nimport { createContext, useContext, useState, type ReactNode } from \"react\";\nimport { Icon, IconButton } from \"./primitives\";\n/* ─────────────────────────────────────────────────────────\n * PRIVACY — mask sensitive values until the eye is opened\n * A dashboard is often open on a screen someone else can see.\n * Wrap a card in <PrivacyScope>, drop <PrivacyToggle/> where the\n * header wants the eye, and wrap each figure in <Masked>. Hidden\n * is the default on every visit, on purpose — that is the point,\n * so it is deliberately NOT remembered.\n *\n * Shape matters: the scope takes ordinary children, never a render\n * function, so it composes from a server component without the\n * props crossing the serialisation boundary.\n * ───────────────────────────────────────────────────────── */\n\nconst Ctx = createContext<{ shown: boolean; flip: () => void }>({ shown: false, flip: () => {} });\n\nexport function PrivacyScope({ children, defaultShown = false }: { children: ReactNode; defaultShown?: boolean }) {\n  const [shown, setShown] = useState(defaultShown);\n  return <Ctx.Provider value={{ shown, flip: () => setShown((s) => !s) }}>{children}</Ctx.Provider>;\n}\n\n/** The eye — place it wherever the card's header wants it. */\nexport function PrivacyToggle({ className = \"\" }: { className?: string }) {\n  const { shown, flip } = useContext(Ctx);\n  return (\n    <IconButton\n      label={shown ? \"Hide amounts\" : \"Show amounts\"}\n      onClick={flip}\n      aria-pressed={shown}\n      className={`text-ink-3 hover:bg-hover hover:text-ink ${className}`}\n    >\n      <Icon name={shown ? \"eye-off\" : \"eye\"} size={15} strokeWidth={2} />\n    </IconButton>\n  );\n}\n\n/** The value itself — masked until the scope's eye is opened. */\nexport function Masked({ children, placeholder = \"•••••\" }: { children: ReactNode; placeholder?: string }) {\n  const { shown } = useContext(Ctx);\n  if (shown) return <>{children}</>;\n  /* aria-label is ignored on a plain span, so the dots are hidden from\n     assistive tech and a visually-hidden sentence speaks in their place. */\n  return (\n    <>\n      <span aria-hidden=\"true\" className=\"tracking-wide\">{placeholder}</span>\n      <span className=\"sr-only\">Hidden. Use the eye to reveal.</span>\n    </>\n  );\n}\n",
+      "path": "components/Privacy.tsx",
+      "target": "~/src/formic/components/Privacy.tsx",
+      "type": "registry:file"
+    }
+  ],
+  "meta": {
+    "formic": {
+      "file": "components/Privacy.tsx",
+      "version": "0.3.0"
+    }
+  },
+  "name": "privacy",
+  "registryDependencies": [
+    "https://formicai.dev/r/formic.json",
+    "https://formicai.dev/r/primitives.json"
+  ],
+  "title": "Privacy",
+  "type": "registry:item"
+}

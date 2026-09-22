@@ -1,0 +1,1716 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "homepage": "https://formicai.dev",
+  "items": [
+    {
+      "dependencies": [],
+      "description": "Stacked disclosure rows on a card — single-open by default, multiple with a prop.",
+      "files": [
+        {
+          "path": "components/Accordion.tsx",
+          "target": "~/src/formic/components/Accordion.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "accordion",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Accordion",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Inline callout on the system tints.",
+      "files": [
+        {
+          "path": "components/Alert.tsx",
+          "target": "~/src/formic/components/Alert.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "alert",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Alert",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The rail the config chose, with the page beside it.",
+      "files": [
+        {
+          "path": "components/AppShell.tsx",
+          "target": "~/src/formic/components/AppShell.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "app-shell",
+      "registryDependencies": [
+        "https://formicai.dev/r/app-sidebar.json",
+        "https://formicai.dev/r/config.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json",
+        "https://formicai.dev/r/project-sidebar.json",
+        "https://formicai.dev/r/sidebar-nav.json",
+        "https://formicai.dev/r/top-bar.json"
+      ],
+      "title": "App Shell",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The menu rail for dashboards and admin apps.",
+      "files": [
+        {
+          "path": "components/AppSidebar.tsx",
+          "target": "~/src/formic/components/AppSidebar.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "app-sidebar",
+      "registryDependencies": [
+        "https://formicai.dev/r/brand.json",
+        "https://formicai.dev/r/config.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "App Sidebar",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "One question at a time; elongated pills show progress; the circular arrow up top advances (↑ sends on the last).",
+      "files": [
+        {
+          "path": "components/ApprovalCard.tsx",
+          "target": "~/src/formic/components/ApprovalCard.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "approval-card",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Approval Card",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The stepper sibling of ApprovalCard.",
+      "files": [
+        {
+          "path": "components/ApprovalFlow.tsx",
+          "target": "~/src/formic/components/ApprovalFlow.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "approval-flow",
+      "registryDependencies": [
+        "https://formicai.dev/r/approval-card.json",
+        "https://formicai.dev/r/button.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Approval Flow",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "An agent asks, the person answers.",
+      "files": [
+        {
+          "path": "components/AskUserQuestions.tsx",
+          "target": "~/src/formic/components/AskUserQuestions.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "ask-user-questions",
+      "registryDependencies": [
+        "https://formicai.dev/r/button.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Ask User Questions",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [
+        "@phosphor-icons/react"
+      ],
+      "description": "The Formic logomark as an inline SVG.",
+      "files": [
+        {
+          "path": "components/brand.tsx",
+          "target": "~/src/formic/components/brand.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "brand",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json"
+      ],
+      "title": "Brand",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The real, full-colour marks.",
+      "files": [
+        {
+          "path": "components/brand-logos.tsx",
+          "target": "~/src/formic/components/brand-logos.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "brand-logos",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json"
+      ],
+      "title": "Brand logos",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Path trail with chevron separators.",
+      "files": [
+        {
+          "path": "components/Breadcrumbs.tsx",
+          "target": "~/src/formic/components/Breadcrumbs.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "breadcrumbs",
+      "registryDependencies": [
+        "https://formicai.dev/r/dropdown-menu.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Breadcrumbs",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The workhorse control.",
+      "files": [
+        {
+          "path": "components/Button.tsx",
+          "target": "~/src/formic/components/Button.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "button",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Button",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Dependency-free month grid on the APG date-grid pattern: roving focus, arrows move by day, PageUp / PageDown by month, Home / End to the week's bounds, Enter / Space selects.",
+      "files": [
+        {
+          "path": "components/Calendar.tsx",
+          "target": "~/src/formic/components/Calendar.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "calendar",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Calendar",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Compose a card from parts, lay cards out as a group.",
+      "files": [
+        {
+          "path": "components/cards.tsx",
+          "target": "~/src/formic/components/cards.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "cards",
+      "registryDependencies": [
+        "https://formicai.dev/r/button.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Cards",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Bars, lines and rings for dashboards.",
+      "files": [
+        {
+          "path": "components/charts.tsx",
+          "target": "~/src/formic/components/charts.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "charts",
+      "registryDependencies": [
+        "https://formicai.dev/r/config.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Charts",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The full AI chat interface, composed exactly as the system intends: SidebarNav rail · a thread of MessageBubbles that embed Markdown / CodeBlock (or any component) as assistant content · PromptBar pinned below.",
+      "files": [
+        {
+          "path": "components/ChatApp.tsx",
+          "target": "~/src/formic/components/ChatApp.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "chat-app",
+      "registryDependencies": [
+        "https://formicai.dev/r/chat-thread.json",
+        "https://formicai.dev/r/code-block.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/markdown.json",
+        "https://formicai.dev/r/primitives.json",
+        "https://formicai.dev/r/prompt-bar.json",
+        "https://formicai.dev/r/sidebar-nav.json"
+      ],
+      "title": "Chat App",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Interactive panel with tabs, replies, and composer.",
+      "files": [
+        {
+          "path": "components/ChatComposer.tsx",
+          "target": "~/src/formic/components/ChatComposer.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "chat-composer",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Chat Composer",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "A conversation column: user messages as right-aligned bubbles, assistant replies flat on the canvas.",
+      "files": [
+        {
+          "path": "components/ChatThread.tsx",
+          "target": "~/src/formic/components/ChatThread.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "chat-thread",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Chat Thread",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "AI code output: header with language / filename and a copy action, lightly highlighted body.",
+      "files": [
+        {
+          "path": "components/CodeBlock.tsx",
+          "target": "~/src/formic/components/CodeBlock.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "code-block",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Code Block",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "A Figma-style picker with no dependencies: a saturation / brightness square, a hue slider, a hex field, an eyedropper where the browser has one, and a swatch row.",
+      "files": [
+        {
+          "path": "components/ColorPicker.tsx",
+          "target": "~/src/formic/components/ColorPicker.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "color-picker",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Color Picker",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "A field that types to find.",
+      "files": [
+        {
+          "path": "components/Combobox.tsx",
+          "target": "~/src/formic/components/Combobox.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "combobox",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Combobox",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Everything in the app, one keystroke away.",
+      "files": [
+        {
+          "path": "components/CommandPalette.tsx",
+          "target": "~/src/formic/components/CommandPalette.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "command-palette",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Command Palette",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The defaults an app chose, read by components.",
+      "files": [
+        {
+          "path": "components/config.ts",
+          "target": "~/src/formic/components/config.ts",
+          "type": "registry:file"
+        }
+      ],
+      "name": "config",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json"
+      ],
+      "title": "Config",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Retrieved chunks enter once, then remain available.",
+      "files": [
+        {
+          "path": "components/ContextCards.tsx",
+          "target": "~/src/formic/components/ContextCards.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "context-cards",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Context Cards",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "How much of the model's window a thread has used.",
+      "files": [
+        {
+          "path": "components/ContextMeter.tsx",
+          "target": "~/src/formic/components/ContextMeter.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "context-meter",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Context Meter",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The records list every admin screen has.",
+      "files": [
+        {
+          "path": "components/DataTable.tsx",
+          "target": "~/src/formic/components/DataTable.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "data-table",
+      "registryDependencies": [
+        "https://formicai.dev/r/empty-state.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/pagination.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Data Table",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Calendar in a Popover behind a quiet field trigger.",
+      "files": [
+        {
+          "path": "components/DatePicker.tsx",
+          "target": "~/src/formic/components/DatePicker.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "date-picker",
+      "registryDependencies": [
+        "https://formicai.dev/r/calendar.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Date Picker",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "DatePicker's sibling for spans: pick a start, preview the band, pick the end — the popover closes when the range completes.",
+      "files": [
+        {
+          "path": "components/DateRangePicker.tsx",
+          "target": "~/src/formic/components/DateRangePicker.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "date-range-picker",
+      "registryDependencies": [
+        "https://formicai.dev/r/calendar.json",
+        "https://formicai.dev/r/date-picker.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json"
+      ],
+      "title": "Date Range Picker",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The proposed edit plays once and rests on the completed diff.",
+      "files": [
+        {
+          "path": "components/DiffTable.tsx",
+          "target": "~/src/formic/components/DiffTable.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "diff-table",
+      "registryDependencies": [
+        "https://formicai.dev/r/button.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Diff Table",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [
+        "@dicebear/core@^9.2.2",
+        "@dicebear/notionists@^9.2.2"
+      ],
+      "description": "DiceBear \"notionists\" (CC0), generated locally.",
+      "files": [
+        {
+          "path": "components/doodle.ts",
+          "target": "~/src/formic/components/doodle.ts",
+          "type": "registry:file"
+        }
+      ],
+      "name": "doodle",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json"
+      ],
+      "title": "Doodle",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Side panel on the system scrim — same machinery as Modal (useModalLayer: focus trap + restore, layered Escape, scroll lock) but sliding from an edge and full height.",
+      "files": [
+        {
+          "path": "components/Drawer.tsx",
+          "target": "~/src/formic/components/Drawer.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "drawer",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Drawer",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The standard action menu.",
+      "files": [
+        {
+          "path": "components/DropdownMenu.tsx",
+          "target": "~/src/formic/components/DropdownMenu.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "dropdown-menu",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Dropdown Menu",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "What a surface says when there is nothing to show.",
+      "files": [
+        {
+          "path": "components/EmptyState.tsx",
+          "target": "~/src/formic/components/EmptyState.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "empty-state",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Empty State",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Drag-and-drop upload with a browse fallback (the zone is a real button, so keyboard works for free).",
+      "files": [
+        {
+          "path": "components/FileDropzone.tsx",
+          "target": "~/src/formic/components/FileDropzone.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "file-dropzone",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "File Dropzone",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The files an agent touched, where they live.",
+      "files": [
+        {
+          "path": "components/FileTree.tsx",
+          "target": "~/src/formic/components/FileTree.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "file-tree",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "File Tree",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The row above a list, done once.",
+      "files": [
+        {
+          "path": "components/FilterBar.tsx",
+          "target": "~/src/formic/components/FilterBar.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "filter-bar",
+      "registryDependencies": [
+        "https://formicai.dev/r/button.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Filter Bar",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Status chips directly filter the task table.",
+      "files": [
+        {
+          "path": "components/FilterTable.tsx",
+          "target": "~/src/formic/components/FilterTable.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "filter-table",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Filter Table",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [
+        "@dicebear/core@^9.2.2",
+        "@dicebear/notionists@^9.2.2",
+        "@phosphor-icons/react"
+      ],
+      "description": "The Formic AI Design System base: tokens, palettes, the Tailwind v4 bridge, fonts, component sheets, the shared modules every component imports, the config scripts, the gates and AGENTS.md.",
+      "files": [
+        {
+          "path": "styles/brands.css",
+          "target": "~/src/formic/styles/brands.css",
+          "type": "registry:file"
+        },
+        {
+          "path": "styles/fonts.css",
+          "target": "~/src/formic/styles/fonts.css",
+          "type": "registry:file"
+        },
+        {
+          "path": "styles/formic.css",
+          "target": "~/src/formic/styles/formic.css",
+          "type": "registry:file"
+        },
+        {
+          "path": "styles/records.css",
+          "target": "~/src/formic/styles/records.css",
+          "type": "registry:file"
+        },
+        {
+          "path": "styles/sidebar.css",
+          "target": "~/src/formic/styles/sidebar.css",
+          "type": "registry:file"
+        },
+        {
+          "path": "styles/tailwind-theme.css",
+          "target": "~/src/formic/styles/tailwind-theme.css",
+          "type": "registry:file"
+        },
+        {
+          "path": "styles/themes.css",
+          "target": "~/src/formic/styles/themes.css",
+          "type": "registry:file"
+        },
+        {
+          "path": "styles/tokens.css",
+          "target": "~/src/formic/styles/tokens.css",
+          "type": "registry:file"
+        },
+        {
+          "path": "scripts/set_accent.py",
+          "target": "~/src/formic/scripts/set_accent.py",
+          "type": "registry:file"
+        },
+        {
+          "path": "scripts/apply_config.py",
+          "target": "~/src/formic/scripts/apply_config.py",
+          "type": "registry:file"
+        },
+        {
+          "path": "scripts/palette.py",
+          "target": "~/src/formic/scripts/palette.py",
+          "type": "registry:file"
+        },
+        {
+          "path": "scripts/compose_check.py",
+          "target": "~/src/formic/scripts/compose_check.py",
+          "type": "registry:file"
+        },
+        {
+          "path": "scripts/formic_check.py",
+          "target": "~/src/formic/scripts/formic_check.py",
+          "type": "registry:file"
+        },
+        {
+          "path": "formic.config.json",
+          "target": "~/src/formic/formic.config.json",
+          "type": "registry:file"
+        },
+        {
+          "path": "AGENTS.md",
+          "target": "~/AGENTS.md",
+          "type": "registry:file"
+        },
+        {
+          "path": "VERSION",
+          "target": "~/src/formic/VERSION",
+          "type": "registry:file"
+        },
+        {
+          "path": "components/primitives.tsx",
+          "target": "~/src/formic/components/primitives.tsx",
+          "type": "registry:file"
+        },
+        {
+          "path": "components/hooks.ts",
+          "target": "~/src/formic/components/hooks.ts",
+          "type": "registry:file"
+        },
+        {
+          "path": "components/config.ts",
+          "target": "~/src/formic/components/config.ts",
+          "type": "registry:file"
+        },
+        {
+          "path": "components/brand.tsx",
+          "target": "~/src/formic/components/brand.tsx",
+          "type": "registry:file"
+        },
+        {
+          "path": "components/theme.ts",
+          "target": "~/src/formic/components/theme.ts",
+          "type": "registry:file"
+        },
+        {
+          "path": "components/doodle.ts",
+          "target": "~/src/formic/components/doodle.ts",
+          "type": "registry:file"
+        }
+      ],
+      "name": "formic",
+      "registryDependencies": [],
+      "title": "Formic",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Every Formic component plus the base, in one add: the same set install.sh vendors into src/formic.",
+      "files": [],
+      "name": "formic-all",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/accordion.json",
+        "https://formicai.dev/r/alert.json",
+        "https://formicai.dev/r/app-shell.json",
+        "https://formicai.dev/r/app-sidebar.json",
+        "https://formicai.dev/r/approval-card.json",
+        "https://formicai.dev/r/approval-flow.json",
+        "https://formicai.dev/r/ask-user-questions.json",
+        "https://formicai.dev/r/brand.json",
+        "https://formicai.dev/r/brand-logos.json",
+        "https://formicai.dev/r/breadcrumbs.json",
+        "https://formicai.dev/r/button.json",
+        "https://formicai.dev/r/calendar.json",
+        "https://formicai.dev/r/cards.json",
+        "https://formicai.dev/r/charts.json",
+        "https://formicai.dev/r/chat-app.json",
+        "https://formicai.dev/r/chat-composer.json",
+        "https://formicai.dev/r/chat-thread.json",
+        "https://formicai.dev/r/code-block.json",
+        "https://formicai.dev/r/color-picker.json",
+        "https://formicai.dev/r/combobox.json",
+        "https://formicai.dev/r/command-palette.json",
+        "https://formicai.dev/r/config.json",
+        "https://formicai.dev/r/context-cards.json",
+        "https://formicai.dev/r/context-meter.json",
+        "https://formicai.dev/r/data-table.json",
+        "https://formicai.dev/r/date-picker.json",
+        "https://formicai.dev/r/date-range-picker.json",
+        "https://formicai.dev/r/diff-table.json",
+        "https://formicai.dev/r/doodle.json",
+        "https://formicai.dev/r/drawer.json",
+        "https://formicai.dev/r/dropdown-menu.json",
+        "https://formicai.dev/r/empty-state.json",
+        "https://formicai.dev/r/file-dropzone.json",
+        "https://formicai.dev/r/file-tree.json",
+        "https://formicai.dev/r/filter-bar.json",
+        "https://formicai.dev/r/filter-table.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/image-result.json",
+        "https://formicai.dev/r/input.json",
+        "https://formicai.dev/r/input-copy.json",
+        "https://formicai.dev/r/input-group.json",
+        "https://formicai.dev/r/insight-cards.json",
+        "https://formicai.dev/r/loading-state.json",
+        "https://formicai.dev/r/markdown.json",
+        "https://formicai.dev/r/menubar.json",
+        "https://formicai.dev/r/modal.json",
+        "https://formicai.dev/r/model-selector.json",
+        "https://formicai.dev/r/notification-list.json",
+        "https://formicai.dev/r/otp-input.json",
+        "https://formicai.dev/r/pagination.json",
+        "https://formicai.dev/r/panel.json",
+        "https://formicai.dev/r/primitives.json",
+        "https://formicai.dev/r/privacy.json",
+        "https://formicai.dev/r/project-sidebar.json",
+        "https://formicai.dev/r/prompt-bar.json",
+        "https://formicai.dev/r/recommendation-card.json",
+        "https://formicai.dev/r/records-table.json",
+        "https://formicai.dev/r/search-list.json",
+        "https://formicai.dev/r/select.json",
+        "https://formicai.dev/r/selection-actions.json",
+        "https://formicai.dev/r/sidebar-nav.json",
+        "https://formicai.dev/r/slider.json",
+        "https://formicai.dev/r/sources.json",
+        "https://formicai.dev/r/split-pane.json",
+        "https://formicai.dev/r/stat-card.json",
+        "https://formicai.dev/r/steps.json",
+        "https://formicai.dev/r/streaming-text.json",
+        "https://formicai.dev/r/tabs.json",
+        "https://formicai.dev/r/tag-input.json",
+        "https://formicai.dev/r/task-rows.json",
+        "https://formicai.dev/r/terminal.json",
+        "https://formicai.dev/r/theme.json",
+        "https://formicai.dev/r/thinking-indicator.json",
+        "https://formicai.dev/r/thinking-state.json",
+        "https://formicai.dev/r/timeline.json",
+        "https://formicai.dev/r/toast.json",
+        "https://formicai.dev/r/tool-call.json",
+        "https://formicai.dev/r/tool-chips.json",
+        "https://formicai.dev/r/top-bar.json"
+      ],
+      "title": "Formic, every component",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Shared timing utilities.",
+      "files": [
+        {
+          "path": "components/hooks.ts",
+          "target": "~/src/formic/components/hooks.ts",
+          "type": "registry:file"
+        }
+      ],
+      "name": "hooks",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json"
+      ],
+      "title": "Hooks",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "A picture the model made, from ask to keep.",
+      "files": [
+        {
+          "path": "components/ImageResult.tsx",
+          "target": "~/src/formic/components/ImageResult.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "image-result",
+      "registryDependencies": [
+        "https://formicai.dev/r/button.json",
+        "https://formicai.dev/r/empty-state.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Image Result",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The form trio.",
+      "files": [
+        {
+          "path": "components/Input.tsx",
+          "target": "~/src/formic/components/Input.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "input",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Input",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "A value to take away.",
+      "files": [
+        {
+          "path": "components/InputCopy.tsx",
+          "target": "~/src/formic/components/InputCopy.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "input-copy",
+      "registryDependencies": [
+        "https://formicai.dev/r/button.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Input Copy",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Several fields as one block.",
+      "files": [
+        {
+          "path": "components/InputGroup.tsx",
+          "target": "~/src/formic/components/InputGroup.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "input-group",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Input Group",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "What the assistant noticed, one page at a time.",
+      "files": [
+        {
+          "path": "components/InsightCards.tsx",
+          "target": "~/src/formic/components/InsightCards.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "insight-cards",
+      "registryDependencies": [
+        "https://formicai.dev/r/button.json",
+        "https://formicai.dev/r/charts.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json",
+        "https://formicai.dev/r/tabs.json"
+      ],
+      "title": "Insight Cards",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Pixel-grid loader for long-running work.",
+      "files": [
+        {
+          "path": "components/LoadingState.tsx",
+          "target": "~/src/formic/components/LoadingState.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "loading-state",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Loading State",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Dependency-free renderer for AI output — the practical subset: headings, paragraphs, bold / italic / strike, inline code, safe links, nested bullet + ordered lists, blockquotes, tables (scroll in place), rules, and fenced code rendered through CodeBlock.",
+      "files": [
+        {
+          "path": "components/Markdown.tsx",
+          "target": "~/src/formic/components/Markdown.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "markdown",
+      "registryDependencies": [
+        "https://formicai.dev/r/code-block.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/sources.json"
+      ],
+      "title": "Markdown",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "A horizontal bar of action menus, each a DropdownMenu.",
+      "files": [
+        {
+          "path": "components/Menubar.tsx",
+          "target": "~/src/formic/components/Menubar.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "menubar",
+      "registryDependencies": [
+        "https://formicai.dev/r/dropdown-menu.json",
+        "https://formicai.dev/r/formic.json"
+      ],
+      "title": "Menubar",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Portal dialog on the system scrim: focus is trapped while open and restored on close, the page behind stops scrolling, and Escape / backdrop click dismiss (unless dismissible is off — e.g.",
+      "files": [
+        {
+          "path": "components/Modal.tsx",
+          "target": "~/src/formic/components/Modal.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "modal",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Modal",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Which model answers, chosen in one control.",
+      "files": [
+        {
+          "path": "components/ModelSelector.tsx",
+          "target": "~/src/formic/components/ModelSelector.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "model-selector",
+      "registryDependencies": [
+        "https://formicai.dev/r/brand.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Model Selector",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "What happened while the reader was away.",
+      "files": [
+        {
+          "path": "components/NotificationList.tsx",
+          "target": "~/src/formic/components/NotificationList.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "notification-list",
+      "registryDependencies": [
+        "https://formicai.dev/r/button.json",
+        "https://formicai.dev/r/empty-state.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json",
+        "https://formicai.dev/r/tabs.json"
+      ],
+      "title": "Notification List",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "One quiet field box per digit.",
+      "files": [
+        {
+          "path": "components/OTPInput.tsx",
+          "target": "~/src/formic/components/OTPInput.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "otp-input",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json"
+      ],
+      "title": "OTP Input",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Numbered pages with sibling windows and gap ellipses; first and last pages always stay reachable.",
+      "files": [
+        {
+          "path": "components/Pagination.tsx",
+          "target": "~/src/formic/components/Pagination.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "pagination",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Pagination",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The dashboard card, with its anatomy built in.",
+      "files": [
+        {
+          "path": "components/Panel.tsx",
+          "target": "~/src/formic/components/Panel.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "panel",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Panel",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [
+        "@phosphor-icons/react"
+      ],
+      "description": "The atoms every component composes.",
+      "files": [
+        {
+          "path": "components/primitives.tsx",
+          "target": "~/src/formic/components/primitives.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "primitives",
+      "registryDependencies": [
+        "https://formicai.dev/r/config.json",
+        "https://formicai.dev/r/doodle.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json"
+      ],
+      "title": "Primitives",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Mask sensitive values until the eye is opened.",
+      "files": [
+        {
+          "path": "components/Privacy.tsx",
+          "target": "~/src/formic/components/Privacy.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "privacy",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Privacy",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The third rail.",
+      "files": [
+        {
+          "path": "components/ProjectSidebar.tsx",
+          "target": "~/src/formic/components/ProjectSidebar.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "project-sidebar",
+      "registryDependencies": [
+        "https://formicai.dev/r/brand.json",
+        "https://formicai.dev/r/config.json",
+        "https://formicai.dev/r/dropdown-menu.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Project Sidebar",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "A composer with real controls: attach, @ data sources, / commands, a model picker, dictation, and send.",
+      "files": [
+        {
+          "path": "components/PromptBar.tsx",
+          "target": "~/src/formic/components/PromptBar.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "prompt-bar",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Prompt Bar",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The card holds its shape.",
+      "files": [
+        {
+          "path": "components/RecommendationCard.tsx",
+          "target": "~/src/formic/components/RecommendationCard.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "recommendation-card",
+      "registryDependencies": [
+        "https://formicai.dev/r/button.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Recommendation Card",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "An AI spreadsheet grid.",
+      "files": [
+        {
+          "path": "components/RecordsTable.tsx",
+          "target": "~/src/formic/components/RecordsTable.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "records-table",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Records Table",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Command search with live filtering.",
+      "files": [
+        {
+          "path": "components/SearchList.tsx",
+          "target": "~/src/formic/components/SearchList.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "search-list",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Search List",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "A combobox on the quiet field style.",
+      "files": [
+        {
+          "path": "components/Select.tsx",
+          "target": "~/src/formic/components/Select.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "select",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Select",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "A contextual AI bar attached beneath selected text: quick actions, a free-text instruction field, and a keep/discard review once the rewrite streams in.",
+      "files": [
+        {
+          "path": "components/SelectionActions.tsx",
+          "target": "~/src/formic/components/SelectionActions.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "selection-actions",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Selection Actions",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Shared by the design-system preview and the harness shell: compact workspace switcher, primary navigation, searchable chat history, and a collapse that preserves icon alignment.",
+      "files": [
+        {
+          "path": "components/SidebarNav.tsx",
+          "target": "~/src/formic/components/SidebarNav.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "sidebar-nav",
+      "registryDependencies": [
+        "https://formicai.dev/r/brand.json",
+        "https://formicai.dev/r/config.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Sidebar Nav",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "A native range input drawn with tokens (.primitive-slider): keyboard, ARIA and touch come from the platform.",
+      "files": [
+        {
+          "path": "components/Slider.tsx",
+          "target": "~/src/formic/components/Slider.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "slider",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json"
+      ],
+      "title": "Slider",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Where an answer came from.",
+      "files": [
+        {
+          "path": "components/Sources.tsx",
+          "target": "~/src/formic/components/Sources.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "sources",
+      "registryDependencies": [
+        "https://formicai.dev/r/brand.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Sources",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Two things side by side, the line between them movable.",
+      "files": [
+        {
+          "path": "components/SplitPane.tsx",
+          "target": "~/src/formic/components/SplitPane.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "split-pane",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Split Pane",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The small tiles a dashboard is mostly made of: a label, one number that matters, and how it moved.",
+      "files": [
+        {
+          "path": "components/StatCard.tsx",
+          "target": "~/src/formic/components/StatCard.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "stat-card",
+      "registryDependencies": [
+        "https://formicai.dev/r/charts.json",
+        "https://formicai.dev/r/config.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Stat Card",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Wizard progress: completed circles fill ink with a check, the current step rings accent and carries aria-current, upcoming steps stay recessive.",
+      "files": [
+        {
+          "path": "components/Steps.tsx",
+          "target": "~/src/formic/components/Steps.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "steps",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Steps",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Words resolve out of blur, inline citations appear in context, then actions and follow-up prompts become usable.",
+      "files": [
+        {
+          "path": "components/StreamingText.tsx",
+          "target": "~/src/formic/components/StreamingText.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "streaming-text",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Streaming Text",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "APG tablist: roving tabindex, arrow keys with automatic activation, Home/End.",
+      "files": [
+        {
+          "path": "components/Tabs.tsx",
+          "target": "~/src/formic/components/Tabs.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "tabs",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Tabs",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Several values in one field.",
+      "files": [
+        {
+          "path": "components/TagInput.tsx",
+          "target": "~/src/formic/components/TagInput.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "tag-input",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Tag Input",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Agent tasks as expandable rows — capsule or list flavor.",
+      "files": [
+        {
+          "path": "components/TaskRows.tsx",
+          "target": "~/src/formic/components/TaskRows.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "task-rows",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Task Rows",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "What a command printed, as it printed it.",
+      "files": [
+        {
+          "path": "components/Terminal.tsx",
+          "target": "~/src/formic/components/Terminal.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "terminal",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Terminal",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Runtime accent override.",
+      "files": [
+        {
+          "path": "components/theme.ts",
+          "target": "~/src/formic/components/theme.ts",
+          "type": "registry:file"
+        }
+      ],
+      "name": "theme",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json"
+      ],
+      "title": "Theme",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The smallest \"working on it\".",
+      "files": [
+        {
+          "path": "components/ThinkingIndicator.tsx",
+          "target": "~/src/formic/components/ThinkingIndicator.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "thinking-indicator",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Thinking Indicator",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Expandable agent trace, four variants.",
+      "files": [
+        {
+          "path": "components/ThinkingState.tsx",
+          "target": "~/src/formic/components/ThinkingState.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "thinking-state",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/hooks.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Thinking State",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "Vertical event history: toned dots on a rail, title and time on one line, description beneath.",
+      "files": [
+        {
+          "path": "components/Timeline.tsx",
+          "target": "~/src/formic/components/Timeline.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "timeline",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Timeline",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "App-level notifications.",
+      "files": [
+        {
+          "path": "components/Toast.tsx",
+          "target": "~/src/formic/components/Toast.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "toast",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Toast",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "One thing an agent did, and what came back.",
+      "files": [
+        {
+          "path": "components/ToolCall.tsx",
+          "target": "~/src/formic/components/ToolCall.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "tool-call",
+      "registryDependencies": [
+        "https://formicai.dev/r/button.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Tool Call",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "An agent run as compact rows: tool calls with inline chips, then file-diff chips summarizing the edits.",
+      "files": [
+        {
+          "path": "components/ToolChips.tsx",
+          "target": "~/src/formic/components/ToolChips.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "tool-chips",
+      "registryDependencies": [
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Tool Chips",
+      "type": "registry:item"
+    },
+    {
+      "dependencies": [],
+      "description": "The strip above a page when the rail carries no user.",
+      "files": [
+        {
+          "path": "components/TopBar.tsx",
+          "target": "~/src/formic/components/TopBar.tsx",
+          "type": "registry:file"
+        }
+      ],
+      "name": "top-bar",
+      "registryDependencies": [
+        "https://formicai.dev/r/config.json",
+        "https://formicai.dev/r/dropdown-menu.json",
+        "https://formicai.dev/r/formic.json",
+        "https://formicai.dev/r/input.json",
+        "https://formicai.dev/r/primitives.json"
+      ],
+      "title": "Top Bar",
+      "type": "registry:item"
+    }
+  ],
+  "name": "formic"
+}

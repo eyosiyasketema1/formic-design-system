@@ -329,6 +329,10 @@ fi
 
 [ -f package.json ] || die "no package.json here; run the installer in the root of your app, or in an empty folder to start one"
 
+# Where the app's own code lives: src/ for Vite and most apps, app/ for a Next.js
+# App Router project without src/; the gates, the hook and the prompts use it.
+if [ -d src ]; then SRC_DIR="src"; elif [ -d app ]; then SRC_DIR="app"; else SRC_DIR="src"; fi
+
 case "$DEST" in
   ""|.|..|/*|*..*) die "install folder must be a relative path inside the project, e.g. src/formic (got '$DEST')" ;;
 esac
@@ -409,7 +413,7 @@ if [ -f package.json ] && ! grep -q '"formic"' package.json && command -v node >
   node -e '
     const fs = require("fs"); const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
     p.scripts = p.scripts || {};
-    p.scripts.formic = "python3 '"$DEST"'/scripts/formic_check.py src && python3 '"$DEST"'/scripts/compose_check.py src";
+    p.scripts.formic = "python3 '"$DEST"'/scripts/formic_check.py '"$SRC_DIR"' && python3 '"$DEST"'/scripts/compose_check.py '"$SRC_DIR"'";
     fs.writeFileSync("package.json", JSON.stringify(p, null, 2) + "\n");
   ' && say "package.json: npm run formic (formic_check + compose_check)" || warn "could not add the formic script to package.json; run the two scripts in $DEST/scripts directly"
 fi
@@ -436,7 +440,7 @@ if [ ! -f CLAUDE.md ] || ! grep -q "Formic" CLAUDE.md; then
 
 ## UI: Formic AI Design System
 
-All UI in this project is built with Formic, vendored at \`$DEST/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`$DEST/components\` (never a raw <button>, <input>, <table> or <svg>; when no component fits, build one in \`$DEST/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running \`python3 $DEST/scripts/formic_check.py src\` and \`python3 $DEST/scripts/compose_check.py src\` until both pass.
+All UI in this project is built with Formic, vendored at \`$DEST/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`$DEST/components\` (never a raw <button>, <input>, <table> or <svg>; when no component fits, build one in \`$DEST/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running \`python3 $DEST/scripts/formic_check.py $SRC_DIR\` and \`python3 $DEST/scripts/compose_check.py $SRC_DIR\` until both pass.
 EOF
   say "CLAUDE.md (Formic section)"
 else
@@ -453,7 +457,7 @@ alwaysApply: true
 
 All UI in this project is built with the Formic AI Design System, vendored at \`$DEST/\`.
 
-Before writing or changing any UI, read @AGENTS.md and follow its procedure in order: confirm \`$DEST/styles/tokens.css\` exists, read it, list \`$DEST/components/\`, import existing components instead of re-creating them, compose new patterns from \`$DEST/components/primitives.tsx\`, build only from its components (a raw <button>, <input>, <table> or <svg> in a page is a defect; when no component fits, build one in \`$DEST/components\` from primitives and say so), and finish by running \`python3 $DEST/scripts/formic_check.py src\` and \`python3 $DEST/scripts/compose_check.py src\` until both pass.
+Before writing or changing any UI, read @AGENTS.md and follow its procedure in order: confirm \`$DEST/styles/tokens.css\` exists, read it, list \`$DEST/components/\`, import existing components instead of re-creating them, compose new patterns from \`$DEST/components/primitives.tsx\`, build only from its components (a raw <button>, <input>, <table> or <svg> in a page is a defect; when no component fits, build one in \`$DEST/components\` from primitives and say so), and finish by running \`python3 $DEST/scripts/formic_check.py $SRC_DIR\` and \`python3 $DEST/scripts/compose_check.py $SRC_DIR\` until both pass.
 EOF
 say ".cursor/rules/formic-design-system.mdc"
 
@@ -464,7 +468,7 @@ if [ ! -f .github/copilot-instructions.md ] || ! grep -q "Formic" .github/copilo
 
 ## UI: Formic AI Design System
 
-All UI in this project is built with the Formic AI Design System, vendored at \`$DEST/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`$DEST/components\` (never a raw <button>, <input>, <table> or <svg>; when no component fits, build one in \`$DEST/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running \`python3 $DEST/scripts/formic_check.py src\` and \`python3 $DEST/scripts/compose_check.py src\` until both pass.
+All UI in this project is built with the Formic AI Design System, vendored at \`$DEST/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`$DEST/components\` (never a raw <button>, <input>, <table> or <svg>; when no component fits, build one in \`$DEST/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running \`python3 $DEST/scripts/formic_check.py $SRC_DIR\` and \`python3 $DEST/scripts/compose_check.py $SRC_DIR\` until both pass.
 EOF
   say ".github/copilot-instructions.md (Formic section)"
 else
@@ -541,10 +545,10 @@ else
   [ "$CSS_WIRED" = 1 ] || { printf '  • In your global CSS (Tailwind v4), in this order:\n'; printf '       @import "<path to>/%s/styles/fonts.css";\n       @import "tailwindcss";\n       @import "<path to>/%s/styles/formic.css";\n' "$DEST" "$DEST"; }
   printf 'Then open your AI tool in this folder and paste:\n'
 fi
-printf '  Use Formic (%s), read AGENTS.md, then migrate this whole app to Formic the way AGENTS.md (Migrating an existing app) says: run python3 %s/scripts/formic_check.py --inventory src for the list, show me the plan, then convert every page and component until both gates print clean. Keep every route, behaviour and data call; do not leave any page on the old UI.\n\n' "$DEST" "$DEST"
-if command -v python3 >/dev/null 2>&1 && [ -d src ]; then
+printf '  Use Formic (%s), read AGENTS.md, then migrate this whole app to Formic the way AGENTS.md (Migrating an existing app) says: run python3 %s/scripts/formic_check.py --inventory %s for the list, show me the plan, then convert every page and component until both gates print clean. Keep every route, behaviour and data call; do not leave any page on the old UI.\n\n' "$DEST" "$DEST" "$SRC_DIR"
+if command -v python3 >/dev/null 2>&1 && [ -d "$SRC_DIR" ]; then
   # the inventory now, so the size of the job is known before the first prompt
-  INV="$(python3 "$DEST/scripts/formic_check.py" --inventory src 2>/dev/null | tail -1 || true)"
+  INV="$(python3 "$DEST/scripts/formic_check.py" --inventory "$SRC_DIR" 2>/dev/null | tail -1 || true)"
   [ -n "$INV" ] && printf 'Inventory: %s\n\n' "$INV"
 fi
 printf 'Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).\n'
