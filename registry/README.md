@@ -90,10 +90,12 @@ Every component item declares `formic` in its `registryDependencies`, so tokens,
 
 - `styles/` — all eight sheets (`tokens.css`, `themes.css`, `tailwind-theme.css`, `fonts.css`, `brands.css`, `sidebar.css`, `records.css`, `formic.css`)
 - `scripts/` — `set_accent.py`, `apply_config.py`, `palette.py`, `compose_check.py`, `formic_check.py` (the two gates and the config tools install.sh ships)
-- `formic.config.json` (stock choices), `VERSION` (from `package.json`), `AGENTS.md` (project root)
+- `formic.config.json` (stock choices), `VERSION` (from `package.json`), `AGENTS.md` (project root), `.claude/skills/formic-design-system/SKILL.md` (the Claude Code skill install.sh writes, so one source for both paths)
 - the shared modules: `primitives.tsx`, `hooks.ts`, `config.ts`, `brand.tsx`, `theme.ts`, `doodle.ts` — these are also items of their own, and the CLI skips the duplicate because the content is identical
 - `dependencies`: `@phosphor-icons/react`, `@dicebear/core@^9.2.2`, `@dicebear/notionists@^9.2.2`
 
 ## Dry run and diff
 
-`npx shadcn add <item> --dry-run` and `--diff` need a `components.json` in the project (the CLI asks to create one when it is missing); a plain `add` works without one. Phase 2's `formic init` writes a minimal `components.json`, after which both flags work as documented.
+`npx shadcn add <item> --dry-run` and `--diff` need a `components.json` in the project (the CLI asks to create one when it is missing); a plain `add` works without one. `formicai init` (Phase 2, `cli/`) writes a minimal `components.json` with the `@formic` registry, after which both flags work as documented. Two things learnt building the CLI on top of this registry: the `components.json` schema is strict (one unknown top-level key and the CLI refuses the file with "Invalid configuration"), so Formic's own settings live in `package.json` → `formic`; and the CLI asks *overwrite?* for every style sheet `apply_config.py` has touched, so `formicai add` and `update` write the item files themselves (byte-identical, same targets) and use `registry.lock` hashes to tell an upstream change from a local edit.
+
+`registry.json` carries a `version` field (the Formic release it was built from) beside the schema's own keys; the shadcn CLI ignores it, `formicai doctor` compares it with `src/formic/VERSION`.

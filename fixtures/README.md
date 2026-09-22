@@ -16,6 +16,8 @@ copies a fixture to a temp dir and installs there.
 scripts/test_install.sh vite-fresh            # must pass
 scripts/test_install.sh next-app              # baseline in Phase 0: failures are recorded, not fixed
 scripts/test_install.sh old-app --keep        # --keep leaves the temp dir and prints its path
+scripts/test_install.sh next-app --cli        # the same steps, installed with `formicai init` (cli/) from a
+                                              # registry built out of the working tree and served locally
 ```
 
 The script installs from the local checkout (`FORMIC_REPO=<repo>`) on its
@@ -34,6 +36,7 @@ Steps, each printed as `PASS <step>` or `FAIL <step>`:
 - `build`: `vite build` or `next build`, after the script writes a smoke page (`app/formic-smoke/page.tsx` or `src/FormicSmoke.tsx`) that imports AppShell, Panel, Button and Icon, so the build compiles the vendored folder and not only the fixture's own files
 - `gates`: `npm run formic` (or the two gate scripts on `src/`)
 - `hook`: a commit of an unrelated file passes the pre-commit hook; a commit of one legacy palette-class file (old-app) is refused by it
-- `eslint`: old-app only, `eslint src/formic` with the project's own config (baseline data)
+- `eslint`: old-app only, `eslint src/formic` with the project's own config (baseline data); clean or ignored by the config both pass (`--cli` runs `init --eslint-ignore` on old-app)
+- `doctor` (`--cli` only): `formicai doctor` exits 0
 
 Exit status is 1 when any step fails. Needs node 20+, npm, python3, git, network for `npm install`.

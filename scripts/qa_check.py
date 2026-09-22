@@ -345,9 +345,17 @@ except Exception as e:
 
 # ── 4e. every file install.sh writes into a new app parses. The heredocs
 # hold TSX as plain text, so a stray backtick in a test prompt once broke
-# the scaffold's Welcome page with no signal here.
+# the scaffold's Welcome page with no signal here. The same files live in
+# cli/templates/ for `formicai init --new`; the two must stay identical
+# until install.sh becomes a wrapper around the CLI.
 try:
     _inst = (ROOT / "install.sh").read_text()
+    for _m in re.finditer(r'cat > "\$APP/([^"]+)" <<(\'?EOF\'?)\n(.*?)\nEOF\n', _inst, re.S):
+        _tpl = ROOT / "cli" / "templates" / _m.group(1).replace("src/", "").replace("pages/", "")
+        if not _tpl.exists():
+            fails.append(f"cli/templates: install.sh writes {_m.group(1)} but cli/templates/{_tpl.name} is missing")
+        elif _tpl.read_text() != _m.group(3) + "\n":
+            fails.append(f"cli/templates/{_tpl.name} differs from the {_m.group(1)} heredoc in install.sh; keep the two identical")
     for _m in re.finditer(r'cat > "\$APP/(src/[^"]+\.tsx?)" <<\'EOF\'\n(.*?)\nEOF\n', _inst, re.S):
         _name = _m.group(1)
         _tmp = Path("/tmp/ds-qa-scaffold-" + _name.replace("/", "-"))

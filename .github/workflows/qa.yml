@@ -72,8 +72,12 @@ jobs:
   # fixtures/ (via FORMIC_REPO) and reports PASS/FAIL per step. Runs on both
   # runner families because the installer is a bash script that shells out
   # to sed, mktemp and friends, and BSD and GNU disagree.
+  #
+  # Phase 2: every fixture is installed twice, once by install.sh (`installer`)
+  # and once by `npx formicai init` against a registry built from this
+  # checkout (`cli`, the script's --cli flag). 3 fixtures × 2 OSes × 2 modes.
   install-matrix:
-    name: Install ${{ matrix.fixture }} on ${{ matrix.os }}
+    name: Install ${{ matrix.fixture }} on ${{ matrix.os }} (${{ matrix.mode }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     strategy:
@@ -81,16 +85,25 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
         fixture: [vite-fresh, next-app, old-app]
+        mode: [installer, cli]
         # Phase 0 baseline: next-app and old-app are KNOWN to fail the gates /
         # eslint steps today. They run and their failures are recorded in the
         # step summary, but they do not fail the workflow. vite-fresh is
         # strict. Remove `baseline: true` (flip both to strict) when Phase 3
-        # of PLAN-adoption.md closes.
+        # of PLAN-adoption.md closes. An include that names only `fixture`
+        # applies to every os × mode combination of it, so both modes share
+        # the baseline.
         include:
           - fixture: next-app
             baseline: true
           - fixture: old-app
             baseline: true
+          # The script's flag for the mode: '' for the installer, --cli for
+          # the CLI. Set per mode here so the run step needs no branching.
+          - mode: installer
+            flag: ""
+          - mode: cli
+            flag: "--cli"
     # (continue-on-error sits on the install step, not the job: at job level
     # GitHub keeps the workflow green but still paints the check red, which
     # reads as a failure on every PR for months. An unset `baseline`
@@ -131,9 +144,12 @@ jobs:
         id: install
         shell: bash
         continue-on-error: ${{ matrix.baseline == true }}
+        env:
+          FLAG: ${{ matrix.flag }}
         run: |
           set -o pipefail
-          bash scripts/test_install.sh "${{ matrix.fixture }}" 2>&1 | tee install-test.log
+          # $FLAG unquoted on purpose: '' must vanish, not become an empty argument.
+          bash scripts/test_install.sh "${{ matrix.fixture }}" $FLAG 2>&1 | tee install-test.log
 
       - name: Publish the PASS/FAIL lines to the step summary
         if: always()
@@ -141,11 +157,18 @@ jobs:
         env:
           FIXTURE: ${{ matrix.fixture }}
           OS: ${{ matrix.os }}
+          MODE: ${{ matrix.mode }}
           BASELINE: ${{ matrix.baseline == true }}
           OUTCOME: ${{ steps.install.outcome }}
         run: |
           {
-            echo "## Install test: $FIXTURE on $OS"
+            echo "## Install test: $FIXTURE on $OS ($MODE)"
+            echo
+            if [ "$MODE" = "cli" ]; then
+              echo "_Installed with \`formicai init\` from a registry built out of this checkout (\`test_install.sh --cli\`)._"
+            else
+              echo "_Installed with \`install.sh\` cloning this checkout._"
+            fi
             echo
             if [ "$BASELINE" = "true" ]; then
               echo "_Phase 0 baseline: failures below are recorded, not blocking (flips to strict when Phase 3 closes)._"
@@ -163,4 +186,54 @@ jobs:
             cat install-test.log 2>/dev/null || echo "(no output captured)"
             echo '```'
             echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Phase 2 of PLAN-adoption.md: the CLI's own commands (init, add, update,
+  # doctor, gates, inventory) against a registry built from this checkout.
+  # Strict: a broken command blocks the merge. `npm pack --dry-run` proves
+  # the package still assembles (bin, files, engines) so a packaging mistake
+  # fails here and not at publish time.
+  cli-smoke:
+    name: CLI smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Check Python
+        run: python3 --version
+
+      - name: Run the CLI smoke test
+        id: smoke
+        shell: bash
+        run: |
+          set -o pipefail
+          bash cli/test/run.sh 2>&1 | tee cli-smoke.log
+
+      - name: Check the package assembles
+        working-directory: cli
+        run: npm pack --dry-run
+
+      - name: Publish the PASS/FAIL lines to the step summary
+        if: always()
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.smoke.outcome }}
+        run: |
+          {
+            echo "## CLI smoke test (cli/test/run.sh)"
+            echo
+            echo "Result: **$OUTCOME**"
+            echo
+            echo '```'
+            grep -E '^(PASS|FAIL) ' cli-smoke.log || echo "(no PASS/FAIL lines: the script did not reach its steps; see the job log)"
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
