@@ -138,7 +138,7 @@ A rules file alone is not enough: if the components are not in the project, ever
 npx formicai init
 ```
 
-It puts the system into `src/formic/` (every component by default, only the base with `--minimal`; `npx formicai add <name>` adds one component and what it needs), wires the CSS and installs the icon and avatar packages when it can see where, adds a pre-commit hook that runs the two gates, and writes `AGENTS.md`, `.cursor/rules/formic-design-system.mdc`, `.github/copilot-instructions.md`, `.claude/skills/formic-design-system/SKILL.md`, and a Formic section in `CLAUDE.md`. Re-run it to update (`src/formic/VERSION` says which release you have); it never overwrites your own files. Read [`install.sh`](install.sh) first if you like to know what you are piping into bash.
+It puts the system into `src/formic/` (every component by default, only the base with `--minimal`; `npx formicai add <name>` adds one component and what it needs), wires the CSS and installs the icon and avatar packages when it can see where, adds a pre-commit hook that runs the two gates, and writes `AGENTS.md`, `.cursor/rules/formic-design-system.mdc`, `.github/copilot-instructions.md`, `.claude/skills/formic-design-system/SKILL.md`, and a Formic section in `CLAUDE.md`. Re-run it to update (`src/formic/VERSION` says which release you have); it never overwrites your own files. In an app that already has pages it marks the source folder `legacy` in `package.json`, so the gates and the hook leave the old files alone until `npx formicai scope add <folder>` brings a folder in; `npx formicai migrate <file> --write` does the mechanical part of each page (palette classes to tokens, the scales, a plain button, an input under a label, lucide icons) and leaves a `formic-todo` at every spot it could not decide (AGENTS.md → Migrating an existing app). Read [`install.sh`](install.sh) first if you like to know what you are piping into bash.
 
 **2. Wire the CSS** (Tailwind v4, three lines in this order), only if `init` said it could not find your global stylesheet; a scaffolded app already has it. `npx formicai doctor` confirms the setup.
 
@@ -185,7 +185,7 @@ index.html       the landing page
 CONTRIBUTING.md  how to contribute
 CLAUDE.md        the design rules and QA workflow
 AGENTS.md        instructions for AI tools consuming the system
-cli/             the formicai command (npx formicai init | add | update | doctor | gates | inventory)
+cli/             the formicai command (npx formicai init | add | update | doctor | gates | inventory | scope | migrate)
 registry/        one JSON per component, built from the sources, served at formicai.dev/r/
 install.sh       the older one-command install script, kept working (also at formicai.dev/install.sh)
 ```
@@ -375,15 +375,17 @@ A dashboard row, done right:
 
 ## Migrating an existing app
 
-Formic installed into an app that already has pages is a migration, and a migration is finished or it is not started: a page on Formic beside a page on the old UI is worse than either, because the reader sees two products. So:
+Formic installed into an app that already has pages is a migration, and a migration is finished or it is not started: a page on Formic beside a page on the old UI is worse than either, because the reader sees two products. `formicai init` marked the existing source folder `legacy` in `package.json` (`"formic": { "scope": [], "legacy": ["src"] }`), so the gates and the pre-commit hook leave the old files alone until a folder is moved into scope; scope wins over legacy for its subtree. The commands, in order:
 
-1. **Inventory first.** `python3 src/formic/scripts/formic_check.py --inventory src` lists every UI file, worst first, with whether it imports Formic. Show the person the list and the order you will take it in (shell and shared components first, then pages by how often they are seen), and get a yes before rewriting anything.
-2. **Shell before pages.** Wrap the app in one `AppShell` fed by `formic.config.json` and delete the old layout, sidebar and header components; then every page inherits the rail, the header and the theme switch and no page carries its own.
-3. **Convert a file whole.** Rebuild each page or component on Formic's components and tokens in one pass, keeping its routes, state, data calls and behaviour exactly; a file that mixes a Formic `DataTable` with an old `<button>` is not converted. Run `formic_check.py` on that file until it prints clean, then the next file.
-4. **Retire the old kit.** When nothing imports them, delete the old component folder (`components/ui`, the MUI theme, the Chakra provider), its CSS, its icon package and its chart library, and remove them from `package.json`; a second kit left installed is where the next generic screen comes from.
-5. **Finish.** `python3 src/formic/scripts/formic_check.py src` and `compose_check.py src` print clean for the whole app, not for the files you touched. Report what was converted, what was deleted, and anything you left with a `formic-ok` reason.
+1. **Inventory.** `npx formicai inventory` lists every UI file, worst first, with whether it imports Formic and whether it is gated or still legacy. Show the person the list and the order you will take it in (the shell and shared components first, then pages by how often they are seen), and get a yes before rewriting anything.
+2. **Shell before pages.** Wrap the app in one `AppShell` fed by `formic.config.json` and delete the old layout, sidebar and header components; every page then inherits the rail, the header and the theme switch. Until the shell is on `AppShell`, keep the app in light mode (no `data-theme="dark"` on `<html>`): a migrated page reads tokens, so its `text-ink` heading, fields and tables turn dark while the old shell stays light, and the heading becomes unreadable.
+3. **Scope a folder.** `npx formicai scope add src/pages` puts it under the gates and the hook (`formicai scope` shows what is checked). One folder at a time; a folder in scope is one you are finishing now.
+4. **Migrate each file.** `npx formicai migrate src/pages/Billing.tsx` shows the diff; `--write` applies it and runs `formic_check` on the file. The codemods do the mechanical part (palette classes to tokens, the type and radius scales, shadows, a plain `<button>` to `Button`, an `<input>` under a `<label>` to `Field` + `Input`, lucide icons to `Icon`) and leave a `formic-todo` comment at every spot they could not decide.
+5. **Finish by hand.** Grep `formic-todo` in the file and resolve each one: the `<table>` becomes a `DataTable`, the select a `Select`, the toggle a `Switch`, the icon with no twin a name from `IconName`, the button with rich children a `Button` with `icon` / `iconEnd` or an `IconButton`. Keep the routes, state, data calls and behaviour exactly. Run `python3 src/formic/scripts/formic_check.py <file>` until it prints clean, then the next file.
+6. **Gates.** `npx formicai gates` (what `npm run formic` and the hook run) prints clean for everything in scope. Then the next folder, from step 3, until `formicai scope` shows nothing legacy.
+7. **Retire the old kit.** `npx formicai doctor` lists what is still installed beside Formic (an icon package, MUI, Chakra, antd, a chart library, another kit's `components/ui` folder, a `tailwind.config` with its own colours) with the command to remove each; when nothing imports them, delete the folder and its CSS and uninstall the packages. A second kit left installed is where the next generic screen comes from.
 
-When the person asks for one page in an app that is not yet on Formic, build that page on Formic, then tell them how many files the inventory still lists and offer to migrate them; never quietly leave the app mixed, and never build the new page on the old kit to match it.
+Report what was converted, what was deleted, what is still legacy and anything you left with a `formic-ok` reason. When the person asks for one page in an app that is not yet on Formic, build that page on Formic, then tell them how many files the inventory still lists and offer to migrate them; never quietly leave the app mixed, and never build the new page on the old kit to match it.
 
 ## Brand colour: the one procedure
 

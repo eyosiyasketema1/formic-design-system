@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* formicai: the Formic AI Design System command line.
-   npx formicai init | add | update | doctor | gates | inventory */
+   npx formicai init | add | update | doctor | gates | inventory | scope | migrate */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,6 +17,8 @@ const usage = `formicai ${version}: the Formic AI Design System
   npx formicai doctor               check the setup and say what to fix
   npx formicai gates                run both gates on the source folder
   npx formicai inventory            list the files still to migrate, worst first
+  npx formicai scope add <folder>   put a folder of an existing app under the gates
+  npx formicai migrate <file…>      rewrite the mechanical part of a page onto Formic
 
   formicai <command> --help for the options. --dry-run on init, add and
   update shows what would change and writes nothing. FORMIC_REGISTRY
@@ -30,6 +32,8 @@ const commands = {
   doctor: async () => (await import("../lib/doctor.js")),
   gates: async () => { const m = await import("../lib/gates.js"); return { help: m.helpGates, run: m.gates }; },
   inventory: async () => { const m = await import("../lib/gates.js"); return { help: m.helpInventory, run: m.inventory }; },
+  scope: async () => (await import("../lib/scope.js")),
+  migrate: async () => (await import("../lib/migrate.js")),
 };
 
 async function main() {

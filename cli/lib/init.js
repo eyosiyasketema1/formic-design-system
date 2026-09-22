@@ -10,7 +10,7 @@ import path from "node:path";
 import { Plan, say, skip, warn, note, die, bold, grey, detectProject, installArgs, installAllArgs, stringify, capture } from "./util.js";
 import { BASE, BASE_ITEM, ALL_ITEM, LOCK, resolve, depName, lockFrom, lockText, readLock } from "./registry.js";
 import { checkNewDir, writeScaffold, scaffoldPackageJson } from "./scaffold.js";
-import { writeAgentFiles, writeHook, writePackageJson, wireCss, writeComponentsJson, eslintIgnore, seedConfig, migrationPrompt } from "./project.js";
+import { writeAgentFiles, writeHook, writePackageJson, wireCss, writeComponentsJson, eslintIgnore, seedConfig, migrationPrompt, uiFiles } from "./project.js";
 
 export const help = `formicai init [--new <dir>] [options]
 
@@ -119,8 +119,14 @@ export async function run(flags) {
 
   /* ── 4. components.json, the formic script, the instruction files, the hook ── */
   writeComponentsJson(plan, project.components, { cssFile: isNew ? "src/index.css" : project.cssFile, srcDir, registryUrl: BASE });
-  /* re-read: the package manager just rewrote package.json */
-  writePackageJson(plan, dryRun && isNew ? project.pkg : JSON.parse(fs.readFileSync(path.join(plan.cwd, "package.json"), "utf8")), dir, srcDir);
+  /* re-read: the package manager just rewrote package.json. A project that
+     already has pages of its own gets its source folder marked legacy, so the
+     gates and the hook leave the old pages alone until a folder is moved into
+     scope; a project without any is checked whole, as before. */
+  const existingUi = isNew || project.pkg?.formic ? [] : uiFiles(plan.cwd, srcDir, dir, 1);
+  const legacy = existingUi.length ? [srcDir] : [];
+  writePackageJson(plan, dryRun && isNew ? project.pkg : JSON.parse(fs.readFileSync(path.join(plan.cwd, "package.json"), "utf8")), dir, srcDir, { legacy });
+  if (legacy.length && !dryRun) note(`    your existing pages are marked legacy (package.json → formic.legacy: ["${srcDir}"]): the gates and the hook leave them alone until you move a folder into scope with formicai scope add <folder>`);
   writeAgentFiles(plan, dir, srcDir);
   if (!isNew) writeHook(plan, dir);
 
@@ -165,6 +171,7 @@ export async function run(flags) {
   }
   note("Info: your own colours, font and rail come from https://formicai.dev/customize (copy, paste into the same chat).");
   note("      The Formic gates run on every commit; `npm run formic` runs them any time.");
-  note(`      formicai doctor checks the setup; formicai add <name> adds a component; formicai update refreshes Formic.\n`);
+  note(`      formicai doctor checks the setup; formicai add <name> adds a component; formicai update refreshes Formic.`);
+  note(`      Migrating: formicai scope add <folder> puts a folder under the gates, formicai migrate <file> rewrites what is mechanical (AGENTS.md → Migrating an existing app).\n`);
   return 0;
 }

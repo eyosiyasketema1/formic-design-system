@@ -5,6 +5,7 @@ Composition lint — the mechanical half of "nothing on a screen without a reaso
     python3 src/formic/scripts/compose_check.py src/          # an app
     python3 scripts/compose_check.py components/Foo.tsx       # one file
     python3 src/formic/scripts/compose_check.py src --legacy src/old   # folders not yet on Formic are skipped
+    python3 src/formic/scripts/compose_check.py src --config=package.json   # scope and legacy from package.json's formic section
 
 Reads every .tsx / .jsx under the paths given (the vendored src/formic folder
 is skipped) and reports the tells that an element was placed by habit rather
@@ -29,6 +30,7 @@ that is what the Brief comment and the reviewer are for. What it can see:
 
 Exit status is 1 when anything is flagged, so it can gate a commit.
 """
+import json
 import re
 import sys
 from pathlib import Path
@@ -123,26 +125,50 @@ def check(path):
 
 
 def parse_args(argv):
-    """(paths, legacy folders): --legacy <a,b> (repeatable) names folders not yet on Formic, which are skipped"""
-    paths, legacy = [], []
+    """(paths, legacy folders, scope folders): --legacy <a,b> (repeatable) names folders not yet on
+    Formic, which are skipped; --scope <a,b> names folders that are on Formic and wins over legacy
+    for its subtree; --config=package.json reads both from the `formic` section formicai writes"""
+    paths, legacy, scope = [], [], []
     it = iter(argv)
     for a in it:
         if a == "--legacy":
             legacy += [x for x in next(it, "").split(",") if x]
         elif a.startswith("--legacy="):
             legacy += [x for x in a.split("=", 1)[1].split(",") if x]
+        elif a == "--scope":
+            scope += [x for x in next(it, "").split(",") if x]
+        elif a.startswith("--scope="):
+            scope += [x for x in a.split("=", 1)[1].split(",") if x]
+        elif a.startswith("--config="):
+            s, l = read_config(a.split("=", 1)[1])
+            scope += s
+            legacy += l
         elif not a.startswith("--"):
             paths.append(a)
-    return paths, legacy
+    return paths, legacy, scope
 
 
-def in_legacy(path, legacy):
+def read_config(path):
+    p = Path(path)
+    try:
+        formic = json.loads(p.read_text()).get("formic") or {}
+    except (OSError, ValueError):
+        return [], []
+    base = p.parent
+    return [str(base / x) for x in formic.get("scope") or []], [str(base / x) for x in formic.get("legacy") or []]
+
+
+def under(path, folders):
     p = path.resolve()
-    return any(p == l or l in p.parents for l in (Path(x).resolve() for x in legacy))
+    return any(p == f or f in p.parents for f in (Path(x).resolve() for x in folders))
+
+
+def in_legacy(path, legacy, scope=()):
+    return under(path, legacy) and not under(path, scope)
 
 
 def main():
-    paths, legacy = parse_args(sys.argv[1:])
+    paths, legacy, scope = parse_args(sys.argv[1:])
     roots = [Path(p) for p in paths] or [Path("src")]
     files = []
     for r in roots:
@@ -151,8 +177,13 @@ def main():
         else:
             files += [p for p in r.rglob("*.tsx") if "/formic/" not in str(p) and "node_modules" not in str(p)]
             files += [p for p in r.rglob("*.jsx") if "/formic/" not in str(p) and "node_modules" not in str(p)]
+    skipped = []
     if legacy:
-        files = [f for f in files if not in_legacy(f, legacy)]
+        skipped = [f for f in files if in_legacy(f, legacy, scope)]
+        files = [f for f in files if f not in skipped]
+    if not files and skipped:
+        print(f"composition: nothing in scope yet; {len(skipped)} file(s) under the legacy folder(s) {', '.join(legacy)} are not checked until `formicai scope add <folder>` brings them in")
+        return
     if not files:
         raise SystemExit(f"no .tsx/.jsx files under {', '.join(str(r) for r in roots)}")
     total = 0
@@ -166,7 +197,7 @@ def main():
     if total:
         print(f"\n{total} composition issue(s). The brief is the rubric: keep what serves it, remove the rest. See AGENTS.md → Composition intelligence.")
         sys.exit(1)
-    print(f"composition: {len(files)} file(s) clean — every element has a reason on record")
+    print(f"composition: {len(files)} file(s) clean — every element has a reason on record" + (f" ({len(skipped)} file(s) in legacy folders not checked)" if skipped else ""))
 
 
 if __name__ == "__main__":

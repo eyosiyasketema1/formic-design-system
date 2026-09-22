@@ -8,9 +8,12 @@ export const help = `formicai doctor
 
   Checks that the project is ready for Formic and says what to fix:
   Node, the package manager, Tailwind v4, the three CSS imports and their
-  order, the @ alias, the peer packages, components.json, the installed
-  version against the registry, the ESLint ignore, formic.config.json and
-  the pre-commit hook. Exits 1 when anything is wrong.
+  order, the @ alias, the peer packages, a second UI kit still installed
+  (an icon package, MUI, Chakra, antd, a chart library, another kit's
+  components/ui folder, a tailwind.config with its own colours),
+  components.json, the installed version against the registry, the ESLint
+  ignore, formic.config.json and the pre-commit hook. Exits 1 when
+  anything is wrong.
 
   Example
     npx formicai doctor
@@ -18,15 +21,26 @@ export const help = `formicai doctor
 
 const CONFIG_KEYS = ["accent", "palette", "paletteColor", "radius", "cardRadius", "corners", "controls", "size", "type", "theme", "avatar", "sidebar", "sidebarState", "font", "layout", "motion"];
 const PEERS = ["@phosphor-icons/react", "@dicebear/core", "@dicebear/notionists"];
+/* packages that are a second kit beside Formic: an icon set, a component
+   library, a chart library. Formic ships all three, and a mix reads as two
+   products (formic_check flags the imports; this names the package). */
+const KITS = [
+  ["lucide-react", "an icon set"], ["@heroicons/react", "an icon set"], ["react-icons", "an icon set"], ["@tabler/icons-react", "an icon set"],
+  ["@mui/material", "a component library"], ["@mui/icons-material", "an icon set"], ["@mui/joy", "a component library"], ["@chakra-ui/react", "a component library"], ["antd", "a component library"],
+  ["recharts", "a chart library"], ["chart.js", "a chart library"], ["react-chartjs-2", "a chart library"], ["@nivo/core", "a chart library"], ["victory", "a chart library"],
+];
+const KIT_IMPORT = /from\s+["'](?:@radix-ui\/|lucide-react|class-variance-authority|cmdk|vaul|sonner|@headlessui)/;
 
 export async function run() {
   const cwd = process.cwd();
   const p = detectProject(cwd);
   const { dir, srcDir } = p;
-  let bad = 0;
+  let bad = 0, warned = 0;
   const ok = (m) => note(`  ${green("✓")} ${m}`);
   const no = (m, fix) => { bad++; note(`  ${red("✗")} ${m}\n      ${yellow("fix:")} ${fix}`); };
   const na = (m) => note(`  ${grey("–")} ${m}`);
+  /* a warning is something to do, not a broken setup: it never fails the command */
+  const warn = (m, fix) => { warned++; note(`  ${yellow("!")} ${m}\n      ${yellow("next:")} ${fix}`); };
   note("");
 
   const major = Number(process.versions.node.split(".")[0]);
@@ -66,6 +80,22 @@ export async function run() {
   if (missingPeers.length === 0 && notListed.length === 0) ok(`peer packages installed (${PEERS.join(", ")})`);
   else no(`peer packages missing: ${[...new Set([...notListed, ...missingPeers])].join(", ")}`, `${p.pm === "npm" ? "npm install" : p.pm + " add"} ${[...new Set([...notListed, ...missingPeers])].join(" ")}`);
 
+  /* a second kit beside Formic */
+  let secondKit = 0;
+  for (const [n, what] of KITS.filter(([n]) => p.has(n))) { secondKit++; warn(`a second UI kit: ${n} in dependencies (${what})`, `migrate the files that import it (formicai inventory, formicai migrate <file>), then ${p.pm === "npm" ? "npm uninstall" : p.pm + " remove"} ${n}`); }
+  const uiDir = [`${srcDir}/components/ui`, "components/ui", "app/components/ui"].find((d) => d !== `${dir}/components` && fs.existsSync(path.join(cwd, d)));
+  if (uiDir) {
+    const files = fs.readdirSync(path.join(cwd, uiDir)).filter((f) => /\.(tsx|jsx|ts)$/.test(f));
+    const foreign = files.filter((f) => KIT_IMPORT.test(fs.readFileSync(path.join(cwd, uiDir, f), "utf8")));
+    if (foreign.length) { secondKit++; warn(`a second UI kit: ${uiDir} (${foreign.length} of ${files.length} files import radix, lucide or cva: another kit's components)`, `migrate the pages that import them (formicai inventory), then delete ${uiDir}; Formic's components live in ${dir}/components`); }
+  }
+  const twConfig = ["tailwind.config.js", "tailwind.config.ts", "tailwind.config.cjs", "tailwind.config.mjs"].find((f) => fs.existsSync(path.join(cwd, f)));
+  if (twConfig && /extend\s*:\s*\{[\s\S]*?\bcolors\s*:/.test(fs.readFileSync(path.join(cwd, twConfig), "utf8"))) {
+    secondKit++;
+    warn(`${twConfig} defines its own colours (theme.extend.colors, a v3-style theme)`, `Formic's colours are tokens in ${dir}/styles; move what you still need into an @theme block in your CSS, then remove the colours from ${twConfig} (Tailwind v4 reads the file only through @config)`);
+  }
+  if (!secondKit) ok("no second UI kit beside Formic (icon set, component or chart library, components/ui folder, tailwind.config colours)");
+
   if (p.components?.registries?.["@formic"]) ok(`components.json names the @formic registry`);
   else if (p.components) no("components.json has no @formic registry", `formicai init adds it (or put "registries": { "@formic": "${BASE}/{name}.json" } in components.json)`);
   else no("no components.json", "formicai init writes it");
@@ -104,12 +134,12 @@ export async function run() {
     else no("no pre-commit hook with the Formic gates", "formicai init writes it (it only checks the files in each commit)");
   } else na("not a git repository, so no pre-commit hook");
 
-  if (p.pkg.scripts?.formic) ok("npm run formic runs both gates"); else if (p.installed) no("package.json has no formic script", `formicai init adds it: "formic": "python3 ${dir}/scripts/formic_check.py ${srcDir} && python3 ${dir}/scripts/compose_check.py ${srcDir}"`);
+  if (p.pkg.scripts?.formic) ok("npm run formic runs both gates"); else if (p.installed) no("package.json has no formic script", `formicai init adds it: "formic": "python3 ${dir}/scripts/formic_check.py ${srcDir} --config=package.json && python3 ${dir}/scripts/compose_check.py ${srcDir} --config=package.json"`);
 
-  return finish(bad);
+  return finish(bad, warned);
 }
 
-function finish(bad) {
-  note(bad ? `\n${bad} thing(s) to fix.\n` : `\nAll good.\n`);
+function finish(bad, warned = 0) {
+  note(bad ? `\n${bad} thing(s) to fix.${warned ? ` ${warned} note(s) for the migration.` : ""}\n` : warned ? `\nSetup is good. ${warned} note(s) for the migration.\n` : `\nAll good.\n`);
   return bad ? 1 : 0;
 }

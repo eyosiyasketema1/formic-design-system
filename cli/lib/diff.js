@@ -32,9 +32,9 @@ export function diffLines(a, b) {
 }
 
 /* the hunks, with three lines of context, as a terminal string */
-export function render(file, a, b, context = 3) {
+export function render(file, a, b, context = 3, label = "registry") {
   const { head, ops } = diffLines(a, b);
-  const lines = [cyan(`--- ${file}`), cyan(`+++ ${file} (registry)`)];
+  const lines = [cyan(`--- ${file}`), cyan(`+++ ${file} (${label})`)];
   const ctxHead = [], aLines = a.split("\n");
   for (let k = Math.max(0, head - context); k < head; k++) ctxHead.push(grey(" " + aLines[k]));
   let added = 0, removed = 0;
