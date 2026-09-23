@@ -2,6 +2,23 @@
 
 Formic is vendored, so a version is the state of `main` you copied. `src/formic/VERSION` in an app records which one; re-running the installer moves it forward. Versions follow semver: while 0.x, a minor bump can change an API.
 
+## 0.5.0 · 2026-09-23
+
+### Breaking
+
+- **`npx formicai init` installs the base only** (tokens, styles, primitives, the scripts, `AGENTS.md`); components come one at a time with `npx formicai add <name>`, by you or by your AI tool. `--all` restores the everything-at-once install; `--minimal` stays as an alias of the default. A new app (`init --new`) also gets Button and Panel so the welcome page builds.
+
+### Added
+
+- **The skill, in the standard format**: `npx skills add eyosiyasketema1/formic-design-system` installs Formic's skill into any agent that reads skills (`skills/formic-design-system/SKILL.md`, mirrored from `skill/SKILL.md`; the gate checks). It teaches the commands and the rule that makes the base-only install safe: when a component is not in `src/formic/components`, run `npx formicai add <name>`, never write a stand-in. The same rule is in AGENTS.md, the three test prompts and the CLAUDE.md, Cursor and Copilot files `init` writes.
+- **`npx formicai mcp`**: an MCP server (JSON-RPC over stdio, no dependencies) with six tools: list_components, component_docs, add_component, inventory, doctor, gates. `init` registers it in `.mcp.json` and `.cursor/mcp.json` (`--no-mcp` skips; `formicai mcp install` does it later), so Claude Code, Cursor and Codex add a component the moment a screen needs it.
+- **`npx formicai docs [<name>]`**: a component's props parsed from its source (unions resolved, defaults, doc comments), its dependencies and a one-line example; works before the component is installed. Without a name, every component with its description.
+- **Preset codes**: the customizer shows `npx formicai init --preset <code>` beside the copy block, one string carrying every changed choice (base64url of the changed keys, no server); `formicai preset` prints a project's code.
+
+### Changed
+
+- Landing, README, AGENTS.md and llms files describe the base-only default and `--all`.
+
 ## 0.4.0 · 2026-09-22
 
 ### Added
