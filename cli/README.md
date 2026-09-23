@@ -13,8 +13,11 @@ Needs Node 20 or newer and python3 (the gates and the config script are Python).
 
 | Command | What it does | Example |
 | --- | --- | --- |
-| `formicai init [--new <dir>]` | Adds Formic to the project you are in (or scaffolds a Vite + React + Tailwind v4 app with `--new`): writes `src/formic/` from the registry, wires the three CSS imports, installs the peer packages, writes `components.json`, adds `npm run formic`, writes the instruction files for Claude Code, Cursor and Copilot, installs the pre-commit hook. `--minimal` installs the base only; `--eslint-ignore` writes the `src/formic/**` ignore into a flat ESLint config; `--dry-run` prints every file and command and writes nothing. | `npx formicai init --new my-app` |
+| `formicai init [--new <dir>]` | Adds Formic to the project you are in (or scaffolds a Vite + React + Tailwind v4 app with `--new`): writes the base of `src/formic/` from the registry (tokens, styles, the shared modules, the scripts; a new app also gets `button` and `panel` for its welcome page), wires the three CSS imports, installs the peer packages, writes `components.json`, adds `npm run formic`, writes the instruction files for Claude Code, Cursor and Copilot, registers the MCP server, installs the pre-commit hook. Components are added as they are needed with `add`; `--all` installs every one now (`--minimal` is the default and stays as an alias); `--preset <code>` applies a design preset (below); `--eslint-ignore` writes the `src/formic/**` ignore into a flat ESLint config; `--no-mcp` skips the MCP entry; `--dry-run` prints every file and command and writes nothing. | `npx formicai init --new my-app` |
 | `formicai add <name…>` | Adds components with whatever they need and records them in `src/formic/registry.lock`. A misspelt name gets the nearest matches. `--overwrite` replaces files that differ; `--dry-run` lists them; `--list` prints every name. | `npx formicai add data-table` |
+| `formicai docs [<name>]` | A component's reference from the terminal: title, description, file, props (types, defaults, doc comments, read from the `.tsx`), its dependencies and an example import plus the simplest JSX; works before the component is installed. Without a name, every component with its one-line description. `--json` for the same as data. | `npx formicai docs data-table` |
+| `formicai mcp install` | Writes the Formic MCP server into `.mcp.json` (Claude Code) and `.cursor/mcp.json` (Cursor), keeping the servers already there; `init` does this too. The server (`formicai mcp`, stdio, started by the client) offers `list_components`, `component_docs`, `add_component`, `inventory`, `doctor` and `gates`. | `npx formicai mcp install` |
+| `formicai preset` | Prints this project's design choices (the keys of `formic.config.json` that differ from the stock config) as one code for `init --preset`. | `npx formicai preset` |
 | `formicai update` | Refreshes the installed files from the registry. Shows a diff per file; files you edited are kept unless you answer y or pass `--force`; `--yes` applies every change to files you have not edited; `--dry-run` shows the diffs only. Your `formic.config.json` is never touched and is applied again after the styles are refreshed. | `npx formicai update --dry-run` |
 | `formicai doctor` | One line per check (Node, package manager, Tailwind v4, the CSS imports and their order, the `@` alias, peer packages, `components.json`, installed version against the registry, ESLint ignore, `formic.config.json`, the hook) and the exact fix for every ✗; a second UI kit still installed (an icon set, a component or chart library, a `components/ui` folder, colours in `tailwind.config`) is a `!` note with its next step, never a failure. Exits 1 when the setup is wrong. | `npx formicai doctor` |
 | `formicai gates` | Runs both gates (`formic_check.py`, `compose_check.py`) on the source folder, what `npm run formic` runs; `scope` and `legacy` in `package.json` decide what is checked (below). | `npx formicai gates` |
@@ -34,8 +37,27 @@ CLAUDE.md              a Formic section (appended if you have one)
 .cursor/rules/formic-design-system.mdc
 .github/copilot-instructions.md
 .claude/skills/formic-design-system/SKILL.md
+.mcp.json              the Formic MCP server for Claude Code (merged if you have one)
+.cursor/mcp.json       the same for Cursor
 .git/hooks/pre-commit  both gates on the .tsx/.jsx files of each commit
 ```
+
+Only the base goes in by default: `src/formic/components` holds the shared modules (`primitives`, `hooks`, `config`, `brand`, `theme`, `doodle`) and every other component is one `npx formicai add <name>` away, which is what AGENTS.md, the skill and the welcome page's test prompts tell the agent to do. `npx formicai init --all` installs every component up front.
+
+## Presets
+
+A design configuration travels as one code: the base64url of the JSON of the `formic.config.json` keys that differ from the stock config, compact, keys sorted. Nothing is looked up anywhere; the code is the data.
+
+```
+npx formicai preset                       # this project's code
+npx formicai init --preset eyJhY2NlbnQiOiIjMjU2M0VCIiwicmFkaXVzIjoicm91bmRlZCJ9
+```
+
+The customizer at https://formicai.dev/customize shows the code under its copy block. `init --preset` writes the keys into `src/formic/formic.config.json` (a project that already has Formic keeps everything else) and runs `apply_config.py`, so the accent, palette, radius, font, rail and the rest apply at once. To make one by hand: `printf '%s' '{"accent":"#2563EB","radius":"rounded"}' | base64 | tr '+/' '-_' | tr -d '='`.
+
+## The skill
+
+`npx skills add eyosiyasketema1/formic-design-system` installs the Formic skill (`skills/formic-design-system/SKILL.md` in the repo) into any agent that reads skills; `formicai init` writes the same file into `.claude/skills/` for Claude Code. It covers the procedure, the composition rules, the component inventory and this command line.
 
 In an existing project the global CSS gets the three imports around `@import "tailwindcss"` (fonts first, then Tailwind, then `formic.css`), the peer packages (`@phosphor-icons/react`, `@dicebear/core`, `@dicebear/notionists`) are installed with your package manager, and the migration prompt plus an inventory are printed at the end.
 
@@ -79,7 +101,7 @@ python3 scripts/build_registry.py --base-url http://127.0.0.1:8765 --out /tmp/re
 FORMIC_REGISTRY=http://127.0.0.1:8765 npx formicai init --new app
 ```
 
-`bash cli/test/run.sh` (or `npm run test:cli` in the repo) does exactly that and exercises every command, `scope` and `migrate` included.
+`bash cli/test/run.sh` (or `npm run test:cli` in the repo) does exactly that and exercises every command, `scope`, `migrate`, `docs`, `preset` and an MCP round trip included.
 
 ## Licence
 

@@ -17906,6 +17906,20 @@ function czJson(cfg, keys = CZ_KEYS) {
   if (keys.includes("palette") && cfg.palette === "custom") out.paletteColor = cfg.paletteColor.toUpperCase();
   return JSON.stringify(out, null, 2);
 }
+/* the same choices as one code for `npx formicai init --preset <code>`:
+   the base64url of the compact JSON of the changed keys (sorted), nothing
+   looked up anywhere; the CLI decodes it and writes the keys into
+   formic.config.json */
+function czPreset(cfg, all = false, touched = new Set()) {
+  const keys = all ? CZ_KEYS : czChanged(cfg, touched);
+  if (keys.length === 0) return "";
+  const obj = JSON.parse(czJson(cfg, keys));
+  const sorted = Object.fromEntries(Object.entries(obj).sort(([a], [b]) => a.localeCompare(b)));
+  const bytes = new TextEncoder().encode(JSON.stringify(sorted));
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
 /* the block the user pastes: by default only what they changed, so it
    reads as "set these" and never restates a default the agent might take
    for a request (a sidebar line on a sign-in page); `all` for moving every
@@ -18195,6 +18209,15 @@ function CustomizeApp() {
       toast({ tone: "error", title: "Could not copy", description: "Select the block below and copy it by hand." });
     }
   };
+  const presetCode = czPreset(cfg, false, touched);
+  const copyPreset = async () => {
+    try {
+      await navigator.clipboard.writeText(`npx formicai init --preset ${presetCode}`);
+      toast({ tone: "success", title: "Copied", description: "The install command with your preset. Run it in a new project, or hand the code to your AI tool." });
+    } catch {
+      toast({ tone: "error", title: "Could not copy", description: "Select the command and copy it by hand." });
+    }
+  };
   const same = variants.light === variants.dark;
   const fontOptions = CZ_FONTS.map((f) => ({ value: f.id, label: f.id }));
   return (
@@ -18315,7 +18338,14 @@ function CustomizeApp() {
             ) : (
               <pre className="mt-4 overflow-x-auto rounded-md bg-inset p-4 font-mono text-small leading-relaxed whitespace-pre text-ink-2" aria-label="Configuration block">{czBlock(cfg, false, touched)}</pre>
             )}
-            <p className="mt-3 text-small text-ink-3">The block carries only what you changed; the rest is already in the project. Not using an agent? Set the same keys in <code className="font-mono">src/formic/formic.config.json</code> and run the script yourself. This URL holds the same choices, so it can be sent to whoever does.</p>
+            {changed > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-2 rounded-md border border-line px-3 py-2">
+                <span className="text-caption font-medium text-ink">Preset code</span>
+                <code className="min-w-0 flex-1 truncate font-mono text-small text-ink-2" aria-label="Install command with this preset">npx formicai init --preset {presetCode}</code>
+                <Button variant="ghost" size="xs" icon={<Icon name="copy" size={12} />} onClick={copyPreset}>Copy</Button>
+              </div>
+            )}
+            <p className="mt-3 text-small text-ink-3">The block carries only what you changed; the rest is already in the project. The preset code is the same choices as one string: <code className="font-mono">npx formicai init --preset &lt;code&gt;</code> starts a project with them, and <code className="font-mono">npx formicai preset</code> prints a project's own. Not using an agent? Set the same keys in <code className="font-mono">src/formic/formic.config.json</code> and run the script yourself. This URL holds the same choices, so it can be sent to whoever does.</p>
           </section>
         </main>
       </div>

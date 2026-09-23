@@ -130,7 +130,7 @@ A rules file alone is not enough: if the components are not in the project, ever
 npx formicai init
 ```
 
-It puts the system into `src/formic/` (every component by default, only the base with `--minimal`; `npx formicai add <name>` adds one component and what it needs), wires the CSS and installs the icon and avatar packages when it can see where, adds a pre-commit hook that runs the two gates, and writes `AGENTS.md`, `.cursor/rules/formic-design-system.mdc`, `.github/copilot-instructions.md`, `.claude/skills/formic-design-system/SKILL.md`, and a Formic section in `CLAUDE.md`. Re-run it to update (`src/formic/VERSION` says which release you have); it never overwrites your own files. In an app that already has pages it marks the source folder `legacy` in `package.json`, so the gates and the hook leave the old files alone until `npx formicai scope add <folder>` brings a folder in; `npx formicai migrate <file> --write` does the mechanical part of each page (palette classes to tokens, the scales, a plain button, an input under a label, lucide icons) and leaves a `formic-todo` at every spot it could not decide (AGENTS.md → Migrating an existing app). Read [`install.sh`](install.sh) first if you like to know what you are piping into bash.
+It puts the system into `src/formic/` (the base by default: tokens, styles, the shared modules, the scripts; `npx formicai add <name>` adds each component and what it needs as your AI tool asks for it, `npx formicai docs <name>` prints its props, and `--all` installs every component up front), wires the CSS and installs the icon and avatar packages when it can see where, adds a pre-commit hook that runs the two gates, and writes `AGENTS.md`, `.cursor/rules/formic-design-system.mdc`, `.github/copilot-instructions.md`, `.claude/skills/formic-design-system/SKILL.md`, and a Formic section in `CLAUDE.md`. Re-run it to update (`src/formic/VERSION` says which release you have); it never overwrites your own files. In an app that already has pages it marks the source folder `legacy` in `package.json`, so the gates and the hook leave the old files alone until `npx formicai scope add <folder>` brings a folder in; `npx formicai migrate <file> --write` does the mechanical part of each page (palette classes to tokens, the scales, a plain button, an input under a label, lucide icons) and leaves a `formic-todo` at every spot it could not decide (AGENTS.md → Migrating an existing app). Read [`install.sh`](install.sh) first if you like to know what you are piping into bash.
 
 **2. Wire the CSS** (Tailwind v4, three lines in this order), only if `init` said it could not find your global stylesheet; a scaffolded app already has it. `npx formicai doctor` confirms the setup.
 
@@ -146,7 +146,7 @@ It puts the system into `src/formic/` (every component by default, only the base
 
 **4. Check the result.** Formic output imports from `src/formic/components` and uses `text-ink`, `bg-surface`, `text-caption`, `rounded-card`. Generic output has hex colours, `text-sm`, `bg-gray-100`, `shadow-lg`, `font-bold`. If you get the second kind, paste `AGENTS.md` into the chat and ask for a redo.
 
-Per tool: **Claude Code** reads `CLAUDE.md` and the project skill (add the skill globally with `mkdir -p ~/.claude/skills/formic-design-system && curl -o ~/.claude/skills/formic-design-system/SKILL.md https://raw.githubusercontent.com/eyosiyasketema1/formic-design-system/main/skill/SKILL.md`). **Cursor** reads the `.mdc` rule and `AGENTS.md`; use Agent mode. **Copilot** reads `.github/copilot-instructions.md` and `AGENTS.md`. **Codex** and most CLI agents read `AGENTS.md`. **Claude desktop / claude.ai:** download [`skill/formic-design-system.skill`](skill/formic-design-system.skill), drop it into a chat, click **Save skill**.
+Per tool: **Claude Code** reads `CLAUDE.md` and the project skill (`npx skills add eyosiyasketema1/formic-design-system` installs the skill into any agent that reads skills, project-wide or with `-g` globally). `npx formicai init` also writes the Formic MCP server into `.mcp.json` and `.cursor/mcp.json` (`npx formicai mcp install` does it alone), so Claude Code and Cursor get `list_components`, `component_docs`, `add_component`, `inventory`, `doctor` and `gates` as tools. **Cursor** reads the `.mdc` rule and `AGENTS.md`; use Agent mode. **Copilot** reads `.github/copilot-instructions.md` and `AGENTS.md`. **Codex** and most CLI agents read `AGENTS.md`. **Claude desktop / claude.ai:** download [`skill/formic-design-system.skill`](skill/formic-design-system.skill), drop it into a chat, click **Save skill**.
 
 ---
 
@@ -169,7 +169,8 @@ It checks forbidden patterns, WCAG contrast for every mode and palette, token dr
 ```
 styles/          fonts.css, formic.css (imports the rest), tokens.css (source of truth), themes.css, tailwind-theme.css, brands.css, sidebar.css, records.css
 components/      React components + primitives.tsx, hooks.ts, theme.ts
-skill/           SKILL.md and formic-design-system.skill, the installable AI skill
+skill/           SKILL.md (the source) and formic-design-system.skill, the installable AI skill
+skills/          the same SKILL.md in the layout `npx skills add` reads (mirrored by build_registry.py)
 scripts/         qa_check.py (the QA gate), check_sri.py, set_accent.py (brand colour → both modes), apply_config.py (formic.config.json → tokens, html attributes, component defaults)
 .github/         CI workflow, PR template, issue forms
 preview.html     standalone gallery, opens in any browser with no build

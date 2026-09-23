@@ -15,7 +15,7 @@ export function claudeSection(dir, src) {
 
 ## UI: Formic AI Design System
 
-All UI in this project is built with Formic, vendored at \`${dir}/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`${dir}/components\` (never a raw <button>, <input>, <table> or <svg>; when no component fits, build one in \`${dir}/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running ${gatesLine(dir, src)} until both pass.
+All UI in this project is built with Formic, vendored at \`${dir}/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`${dir}/components\` (never a raw <button>, <input>, <table> or <svg>; when a component you need is not in \`${dir}/components\` run \`npx formicai add <name>\` (\`npx formicai add --list\` names them), never a stand-in; only when no Formic component exists at all, build one in \`${dir}/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running ${gatesLine(dir, src)} until both pass.
 `;
 }
 
@@ -27,7 +27,7 @@ alwaysApply: true
 
 All UI in this project is built with the Formic AI Design System, vendored at \`${dir}/\`.
 
-Before writing or changing any UI, read @AGENTS.md and follow its procedure in order: confirm \`${dir}/styles/tokens.css\` exists, read it, list \`${dir}/components/\`, import existing components instead of re-creating them, compose new patterns from \`${dir}/components/primitives.tsx\`, build only from its components (a raw <button>, <input>, <table> or <svg> in a page is a defect; when no component fits, build one in \`${dir}/components\` from primitives and say so), and finish by running ${gatesLine(dir, src)} until both pass.
+Before writing or changing any UI, read @AGENTS.md and follow its procedure in order: confirm \`${dir}/styles/tokens.css\` exists, read it, list \`${dir}/components/\`, import existing components instead of re-creating them, compose new patterns from \`${dir}/components/primitives.tsx\`, build only from its components (a raw <button>, <input>, <table> or <svg> in a page is a defect; when a component you need is not in \`${dir}/components\` run \`npx formicai add <name>\` (\`npx formicai add --list\` names them), never a stand-in; only when no Formic component exists at all, build one in \`${dir}/components\` from primitives and say so), and finish by running ${gatesLine(dir, src)} until both pass.
 `;
 }
 
@@ -36,7 +36,7 @@ export function copilotSection(dir, src) {
 
 ## UI: Formic AI Design System
 
-All UI in this project is built with the Formic AI Design System, vendored at \`${dir}/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`${dir}/components\` (never a raw <button>, <input>, <table> or <svg>; when no component fits, build one in \`${dir}/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running ${gatesLine(dir, src)} until both pass.
+All UI in this project is built with the Formic AI Design System, vendored at \`${dir}/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`${dir}/components\` (never a raw <button>, <input>, <table> or <svg>; when a component you need is not in \`${dir}/components\` run \`npx formicai add <name>\` (\`npx formicai add --list\` names them), never a stand-in; only when no Formic component exists at all, build one in \`${dir}/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running ${gatesLine(dir, src)} until both pass.
 `;
 }
 

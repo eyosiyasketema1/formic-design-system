@@ -239,7 +239,7 @@ import { FormicMark } from "../formic/components/brand";
 import { Icon } from "../formic/components/primitives";
 
 const PREFIX = "Use Formic (src/formic), read AGENTS.md, then";
-const CLOSE = "Everything must work, not look like it works. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev.";
+const CLOSE = "Everything must work, not look like it works. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev. Only the base is installed: every component this prompt names that is not yet in src/formic/components, add with npx formicai add followed by its name (npx formicai add --list shows the names); never write a stand-in.";
 
 /* Three test prompts, three different screens, so the first page is not
    always a dashboard. Each one replaces the welcome page; App.tsx is the
@@ -449,7 +449,7 @@ if [ ! -f CLAUDE.md ] || ! grep -q "Formic" CLAUDE.md; then
 
 ## UI: Formic AI Design System
 
-All UI in this project is built with Formic, vendored at \`$DEST/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`$DEST/components\` (never a raw <button>, <input>, <table> or <svg>; when no component fits, build one in \`$DEST/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running \`python3 $DEST/scripts/formic_check.py $SRC_DIR\` and \`python3 $DEST/scripts/compose_check.py $SRC_DIR\` until both pass.
+All UI in this project is built with Formic, vendored at \`$DEST/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`$DEST/components\` (never a raw <button>, <input>, <table> or <svg>; when a component you need is not in \`$DEST/components\` run \`npx formicai add <name>\` (\`npx formicai add --list\` names them), never a stand-in; only when no Formic component exists at all, build one in \`$DEST/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running \`python3 $DEST/scripts/formic_check.py $SRC_DIR\` and \`python3 $DEST/scripts/compose_check.py $SRC_DIR\` until both pass.
 EOF
   say "CLAUDE.md (Formic section)"
 else
@@ -466,7 +466,7 @@ alwaysApply: true
 
 All UI in this project is built with the Formic AI Design System, vendored at \`$DEST/\`.
 
-Before writing or changing any UI, read @AGENTS.md and follow its procedure in order: confirm \`$DEST/styles/tokens.css\` exists, read it, list \`$DEST/components/\`, import existing components instead of re-creating them, compose new patterns from \`$DEST/components/primitives.tsx\`, build only from its components (a raw <button>, <input>, <table> or <svg> in a page is a defect; when no component fits, build one in \`$DEST/components\` from primitives and say so), and finish by running \`python3 $DEST/scripts/formic_check.py $SRC_DIR\` and \`python3 $DEST/scripts/compose_check.py $SRC_DIR\` until both pass.
+Before writing or changing any UI, read @AGENTS.md and follow its procedure in order: confirm \`$DEST/styles/tokens.css\` exists, read it, list \`$DEST/components/\`, import existing components instead of re-creating them, compose new patterns from \`$DEST/components/primitives.tsx\`, build only from its components (a raw <button>, <input>, <table> or <svg> in a page is a defect; when a component you need is not in \`$DEST/components\` run \`npx formicai add <name>\` (\`npx formicai add --list\` names them), never a stand-in; only when no Formic component exists at all, build one in \`$DEST/components\` from primitives and say so), and finish by running \`python3 $DEST/scripts/formic_check.py $SRC_DIR\` and \`python3 $DEST/scripts/compose_check.py $SRC_DIR\` until both pass.
 EOF
 say ".cursor/rules/formic-design-system.mdc"
 
@@ -477,7 +477,7 @@ if [ ! -f .github/copilot-instructions.md ] || ! grep -q "Formic" .github/copilo
 
 ## UI: Formic AI Design System
 
-All UI in this project is built with the Formic AI Design System, vendored at \`$DEST/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`$DEST/components\` (never a raw <button>, <input>, <table> or <svg>; when no component fits, build one in \`$DEST/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running \`python3 $DEST/scripts/formic_check.py $SRC_DIR\` and \`python3 $DEST/scripts/compose_check.py $SRC_DIR\` until both pass.
+All UI in this project is built with the Formic AI Design System, vendored at \`$DEST/\`. Before writing or changing any UI, read \`AGENTS.md\` at the project root and follow its procedure: import components from \`$DEST/components\` (never a raw <button>, <input>, <table> or <svg>; when a component you need is not in \`$DEST/components\` run \`npx formicai add <name>\` (\`npx formicai add --list\` names them), never a stand-in; only when no Formic component exists at all, build one in \`$DEST/components\` from primitives and say so), use only the token utilities (\`text-ink\`, \`bg-surface\`, \`text-body\`, ...), never hardcode colours, font sizes, radii, shadows, or easings, and finish by running \`python3 $DEST/scripts/formic_check.py $SRC_DIR\` and \`python3 $DEST/scripts/compose_check.py $SRC_DIR\` until both pass.
 EOF
   say ".github/copilot-instructions.md (Formic section)"
 else

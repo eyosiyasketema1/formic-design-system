@@ -13,7 +13,7 @@ import { FormicMark } from "../formic/components/brand";
 import { Icon } from "../formic/components/primitives";
 
 const PREFIX = "Use Formic (src/formic), read AGENTS.md, then";
-const CLOSE = "Everything must work, not look like it works. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev.";
+const CLOSE = "Everything must work, not look like it works. Use the demo data the components ship (Formic Studio, ETB); no empty states, no placeholders. Everything you need is in src/formic and AGENTS.md; do not fetch formicai.dev. Only the base is installed: every component this prompt names that is not yet in src/formic/components, add with npx formicai add followed by its name (npx formicai add --list shows the names); never write a stand-in.";
 
 /* Three test prompts, three different screens, so the first page is not
    always a dashboard. Each one replaces the welcome page; App.tsx is the

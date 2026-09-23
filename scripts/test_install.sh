@@ -112,6 +112,10 @@ cd "$APP" || exit 1
 # ── doctor (--cli): every check green ─────────────────────────
 [ "$CLI" = 1 ] && run doctor "${FORMICAI[@]}" doctor
 
+# ── add (--cli): init installs the base only, so the smoke page's components
+# come through `formicai add`, the way an agent gets them ──────
+[ "$CLI" = 1 ] && run add "${FORMICAI[@]}" add app-shell panel button
+
 # ── deps ────────────────────────────────────────────────────
 if [ -d node_modules/@phosphor-icons/react ] && [ -d node_modules/@dicebear/core ]; then pass deps
 else fail deps "missing: $([ -d node_modules/@phosphor-icons/react ] || printf '@phosphor-icons/react ')$([ -d node_modules/@dicebear/core ] || printf '@dicebear/core')"; fi
