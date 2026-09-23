@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* formicai: the Formic AI Design System command line.
-   npx formicai init | add | update | doctor | gates | inventory | scope | migrate */
+   npx formicai init | add | update | doctor | gates | inventory | scope | migrate | docs | mcp | preset */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,6 +19,9 @@ const usage = `formicai ${version}: the Formic AI Design System
   npx formicai inventory            list the files still to migrate, worst first
   npx formicai scope add <folder>   put a folder of an existing app under the gates
   npx formicai migrate <file…>      rewrite the mechanical part of a page onto Formic
+  npx formicai docs [<name>]        a component's props and an example, or the whole list
+  npx formicai mcp install          register the Formic MCP server for Claude Code and Cursor
+  npx formicai preset               this project's design choices as one code (init --preset)
 
   formicai <command> --help for the options. --dry-run on init, add and
   update shows what would change and writes nothing. FORMIC_REGISTRY
@@ -34,12 +37,15 @@ const commands = {
   inventory: async () => { const m = await import("../lib/gates.js"); return { help: m.helpInventory, run: m.inventory }; },
   scope: async () => (await import("../lib/scope.js")),
   migrate: async () => (await import("../lib/migrate.js")),
+  docs: async () => (await import("../lib/docs.js")),
+  mcp: async () => (await import("../lib/mcp.js")),
+  preset: async () => (await import("../lib/preset.js")),
 };
 
 async function main() {
   const argv = process.argv.slice(2);
   const cmd = argv[0];
-  const flags = parseArgs(argv.slice(1), ["new"]);
+  const flags = parseArgs(argv.slice(1), ["new", "preset"]);
   if (!cmd || cmd === "--help" || cmd === "-h" || cmd === "help") { process.stdout.write(usage); return 0; }
   if (cmd === "--version" || cmd === "-v" || cmd === "version") { console.log(version); return 0; }
   if (!commands[cmd]) { process.stderr.write(`  ${red("✗")} unknown command "${cmd}"\n\n${usage}`); return 2; }

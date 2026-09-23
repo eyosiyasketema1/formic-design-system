@@ -50,20 +50,36 @@ expect help-gates "compose_check" "${CLI[@]}" gates --help
 expect help-inventory "worst first" "${CLI[@]}" inventory --help
 expect help-scope "under the gates" "${CLI[@]}" scope --help
 expect help-migrate "formic-todo" "${CLI[@]}" migrate --help
+expect help-docs "simplest JSX" "${CLI[@]}" docs --help
+expect help-mcp "list_components" "${CLI[@]}" mcp --help
+expect help-preset "base64url" "${CLI[@]}" preset --help
+expect help-init-all "\-\-all" "${CLI[@]}" init --help
 expect_fail unknown-command "${CLI[@]}" frobnicate
 # the word a person never reads: the registry client's name stays internal
-if { "${CLI[@]}" --help; for c in init add update doctor gates inventory scope migrate; do "${CLI[@]}" "$c" --help; done; cat "$REPO/cli/README.md"; } 2>&1 | grep -qi shadcn; then fail no-shadcn-in-user-text; else pass no-shadcn-in-user-text; fi
+if { "${CLI[@]}" --help; for c in init add update doctor gates inventory scope migrate docs mcp preset; do "${CLI[@]}" "$c" --help; done; cat "$REPO/cli/README.md" "$REPO/skill/SKILL.md"; } 2>&1 | grep -qi shadcn; then fail no-shadcn-in-user-text; else pass no-shadcn-in-user-text; fi
+# the skill's two copies are one file (build_registry.py mirrors skill/SKILL.md into the layout `npx skills add` reads)
+cmp -s "$REPO/skill/SKILL.md" "$REPO/skills/formic-design-system/SKILL.md" && pass skill-mirror || fail skill-mirror "skills/formic-design-system/SKILL.md differs from skill/SKILL.md; run python3 scripts/build_registry.py"
+grep -q "^name: formic-design-system" "$REPO/skills/formic-design-system/SKILL.md" && grep -q "^description: " "$REPO/skills/formic-design-system/SKILL.md" && pass skill-frontmatter || fail skill-frontmatter
+grep -q "never write a stand-in" "$REPO/skill/SKILL.md" && grep -q "never write a stand-in" "$REPO/AGENTS.md" && grep -q "never write a stand-in" "$REPO/cli/templates/Welcome.tsx" && pass add-rule-everywhere || fail add-rule-everywhere "the add-not-fake rule is missing from the skill, AGENTS.md or the test prompts"
 
 # ── init --new: dry run writes nothing, the real one scaffolds ──
 cd "$TMP"
-expect init-new-dry-run "would write src/pages/Welcome.tsx" "${CLI[@]}" init --new app --dry-run --minimal
+expect init-new-dry-run "would write src/pages/Welcome.tsx" "${CLI[@]}" init --new app --dry-run
 [ -e "$TMP/app" ] && fail init-new-dry-run-writes-nothing "app/ exists after --dry-run" || pass init-new-dry-run-writes-nothing
-run init-new "${CLI[@]}" init --new app --yes --minimal
+# the base by default: a new app gets the base plus what its welcome page imports (button, panel), nothing else
+expect init-new-dry-run-base "would write src/formic/components/Panel.tsx" "${CLI[@]}" init --new app --dry-run
+if "${CLI[@]}" init --new app --dry-run 2>&1 | grep -q "DataTable.tsx"; then fail init-new-dry-run-minimal "DataTable.tsx in the default install"; else pass init-new-dry-run-minimal; fi
+expect init-new-dry-run-all "would write src/formic/components/DataTable.tsx" "${CLI[@]}" init --new app --dry-run --all
+run init-new "${CLI[@]}" init --new app --yes
 cd "$TMP/app" || { echo "no app dir" >&2; exit 1; }
-for f in src/formic/VERSION src/formic/registry.lock src/formic/styles/tokens.css src/formic/components/primitives.tsx src/formic/scripts/formic_check.py components.json AGENTS.md CLAUDE.md .cursor/rules/formic-design-system.mdc .github/copilot-instructions.md .claude/skills/formic-design-system/SKILL.md .git/hooks/pre-commit; do
+for f in src/formic/VERSION src/formic/registry.lock src/formic/styles/tokens.css src/formic/components/primitives.tsx src/formic/components/Button.tsx src/formic/components/Panel.tsx src/formic/scripts/formic_check.py components.json AGENTS.md CLAUDE.md .cursor/rules/formic-design-system.mdc .github/copilot-instructions.md .claude/skills/formic-design-system/SKILL.md .mcp.json .cursor/mcp.json .git/hooks/pre-commit; do
   [ -f "$f" ] || fail "init-new-file $f" "missing"
 done
-[ -f src/formic/components/Button.tsx ] && fail init-minimal "Button.tsx present after --minimal" || pass init-minimal
+[ -f src/formic/components/DataTable.tsx ] && fail init-minimal-default "DataTable.tsx present after a default init" || pass init-minimal-default
+grep -q "Only the base is installed" "$LOG" && pass init-says-base || fail init-says-base "init did not say only the base is installed"
+node -e 'const c=require("./.mcp.json").mcpServers.formic;process.exit(c.command==="npx"&&c.args.join(" ")==="formicai mcp"?0:1)' && pass mcp-json || fail mcp-json "$(cat .mcp.json)"
+# the scaffold compiles on the base plus button and panel (the welcome page imports Button, Panel, FormicMark, Icon)
+run init-new-typecheck npx tsc --noEmit -p .
 grep -q '"@formic"' components.json && pass components-json || fail components-json "no @formic registry"
 grep -q '"formic": {' package.json && grep -q '"legacy"' package.json && pass package-formic-section || fail package-formic-section
 grep -q "formic_check" .git/hooks/pre-commit && pass hook || fail hook
@@ -92,6 +108,67 @@ for f in Button.tsx DataTable.tsx Pagination.tsx EmptyState.tsx; do [ -f "src/fo
 grep -q '"data-table"' src/formic/registry.lock && grep -q '"pagination"' src/formic/registry.lock && pass add-lock || fail add-lock "lock does not list data-table and its dependency"
 expect add-again "every file was already in place" "${CLI[@]}" add button
 expect add-list "data-table" "${CLI[@]}" add --list
+
+# ── docs: the list, one installed component, one not yet installed, a typo, JSON ──
+expect docs-list "data-table" "${CLI[@]}" docs
+expect docs-list-installed "button.*(installed)" "${CLI[@]}" docs
+expect docs-button-props 'variant?: "primary" | "secondary"' "${CLI[@]}" docs button
+expect docs-button-default '= "primary"' "${CLI[@]}" docs button
+expect docs-button-example 'import Button from "./formic/components/Button"' "${CLI[@]}" docs button
+expect docs-data-table-named 'import { DataTable } from' "${CLI[@]}" docs data-table
+expect docs-data-table-exports "PersonCell" "${CLI[@]}" docs data-table
+expect docs-not-installed "not installed; npx formicai add modal" "${CLI[@]}" docs modal
+expect docs-not-installed-props "open" "${CLI[@]}" docs modal
+expect docs-typo "did you mean data-table" "${CLI[@]}" docs datatabl
+expect_fail docs-typo-exits-1 "${CLI[@]}" docs datatabl
+"${CLI[@]}" docs button --json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const r=JSON.parse(s);process.exit(r.name==="button"&&r.props.some(p=>p.name==="variant")&&r.example.length===2?0:1)})' && pass docs-json || fail docs-json
+
+# ── mcp: a JSON-RPC round trip over stdio (initialize, tools/list, tools/call), then install merges ──
+MCP_OUT="$TMP/mcp.out"
+{
+  printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"formic-test","version":"0"}}}'
+  printf '%s\n' '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+  printf '%s\n' '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+  printf '%s\n' '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"list_components","arguments":{}}}'
+  printf '%s\n' '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"component_docs","arguments":{"name":"panel"}}}'
+  printf '%s\n' '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"add_component","arguments":{"names":["empty-state","toast"]}}}'
+  printf '%s\n' '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"gates","arguments":{}}}'
+  printf '%s\n' '{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"no_such_tool","arguments":{}}}'
+  printf '%s\n' '{"jsonrpc":"2.0","id":8,"method":"ping"}'
+} | "${CLI[@]}" mcp > "$MCP_OUT" 2>> "$LOG"
+node -e '
+const fs = require("fs");
+const lines = fs.readFileSync(process.argv[1], "utf8").split("\n").filter(Boolean);
+const by = {};
+for (const l of lines) { const m = JSON.parse(l); if (m.jsonrpc !== "2.0") process.exit(10); by[m.id] = m; }
+const ok = (c, n) => { if (!c) { console.error("mcp check failed:", n); process.exit(n); } };
+ok(by[1]?.result?.protocolVersion === "2025-06-18" && by[1].result.serverInfo?.name === "formic" && by[1].result.capabilities?.tools, 11);
+ok(["list_components","component_docs","add_component","inventory","doctor","gates"].every((t) => by[2]?.result?.tools?.some((x) => x.name === t && x.inputSchema?.type === "object")), 12);
+ok(by[3]?.result?.content?.[0]?.type === "text" && by[3].result.content[0].text.includes("data-table") && by[3].result.structuredContent.components.some((c) => c.name === "button" && c.installed === true), 13);
+ok(by[4]?.result?.content?.[0]?.text.includes("Panel (panel)") && by[4].result.content[0].text.includes("caption?: ReactNode"), 14);
+ok(by[5]?.result?.isError === false && by[5].result.structuredContent.files.includes("src/formic/components/Toast.tsx"), 15);
+ok(by[6]?.result?.isError === false, 16);
+ok(by[7]?.error?.code === -32602, 17);
+ok(JSON.stringify(by[8]?.result) === "{}", 18);
+ok(!("id" in by) || true, 19);
+' "$MCP_OUT" && pass mcp-round-trip || fail mcp-round-trip "$(tail -1 "$LOG")"
+[ -f src/formic/components/Toast.tsx ] && pass mcp-add-writes || fail mcp-add-writes "Toast.tsx not written by add_component"
+if grep -v '^{' "$MCP_OUT" | grep -q .; then fail mcp-stdout-clean "something on stdout that is not a JSON-RPC message"; else pass mcp-stdout-clean; fi
+expect mcp-install-again "already starts the Formic MCP server" "${CLI[@]}" mcp install
+printf '{ "mcpServers": { "other": { "command": "x" } }, "keep": 1 }\n' > .mcp.json
+run mcp-install-merge "${CLI[@]}" mcp install
+node -e 'const c=require("./.mcp.json");process.exit(c.keep===1&&c.mcpServers.other.command==="x"&&c.mcpServers.formic.args[1]==="mcp"?0:1)' && pass mcp-install-keeps-others || fail mcp-install-keeps-others "$(cat .mcp.json)"
+
+# ── preset: init --preset writes the keys and applies them; preset prints the code back ──
+PRESET_CODE="$(printf '%s' '{"accent":"#2563EB","radius":"rounded","sidebar":"topbar"}' | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(Buffer.from(s).toString("base64url")))')"
+run init-preset "${CLI[@]}" init --yes --preset "$PRESET_CODE"
+grep -q '"accent": "#2563EB"' src/formic/formic.config.json && grep -q '"radius": "rounded"' src/formic/formic.config.json && grep -q '"sidebar": "topbar"' src/formic/formic.config.json && grep -q '"font": "Urbanist"' src/formic/formic.config.json && pass preset-config || fail preset-config "$(cat src/formic/formic.config.json | tr '\n' ' ')"
+grep -q 'data-radius="rounded"' index.html && grep -q '^  --accent: #2060eb' src/formic/styles/tokens.css && pass preset-applied || fail preset-applied "$(grep '<html' index.html) / $(grep -m1 '^  --accent' src/formic/styles/tokens.css)"
+expect preset-print "accent=\"#2563EB\", radius=\"rounded\"" "${CLI[@]}" preset
+expect preset-print-command "npx formicai init --preset " "${CLI[@]}" preset
+"${CLI[@]}" preset | grep -o 'preset [A-Za-z0-9_-]*' | cut -d' ' -f2 | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const o=JSON.parse(Buffer.from(s.trim(),"base64url").toString());process.exit(o.accent==="#2563EB"&&o.radius==="rounded"&&o.sidebar==="topbar"?0:1)})' && pass preset-round-trip || fail preset-round-trip
+expect preset-bad "is not a preset code" "${CLI[@]}" init --yes --preset not-a-code
+expect preset-unknown-key "does not know: colour" "${CLI[@]}" init --yes --preset "$(printf '%s' '{"colour":"red"}' | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(Buffer.from(s).toString("base64url")))')"
 
 # ── gates and inventory on the scaffold ──────────────────────
 run gates "${CLI[@]}" gates
@@ -179,6 +256,10 @@ grep -q "upstream change" src/formic/components/DataTable.tsx && pass update-for
 # ── init in an existing project: dry run writes nothing, real run wires everything ──
 cd "$TMP" && cp -R "$REPO/fixtures/next-app" next && cd next && git init -q && git add -A && git commit -qm seed >> "$LOG" 2>&1
 expect init-existing-dry-run "would change app/globals.css" "${CLI[@]}" init --dry-run
+if "${CLI[@]}" init --dry-run 2>&1 | grep -q "DataTable.tsx"; then fail init-existing-dry-run-base "the default install lists DataTable.tsx"; else pass init-existing-dry-run-base; fi
+expect init-existing-dry-run-all "would write src/formic/components/DataTable.tsx" "${CLI[@]}" init --dry-run --all
+expect init-existing-dry-run-no-mcp "would write .mcp.json" "${CLI[@]}" init --dry-run
+if "${CLI[@]}" init --dry-run --no-mcp 2>&1 | grep -q "mcp.json"; then fail init-no-mcp "--no-mcp still writes an mcp.json"; else pass init-no-mcp; fi
 [ -d src/formic ] && fail init-existing-dry-run-writes-nothing || pass init-existing-dry-run-writes-nothing
 git diff --quiet && pass init-existing-dry-run-clean-tree || fail init-existing-dry-run-clean-tree "the dry run changed tracked files"
 run init-existing "${CLI[@]}" init --yes
@@ -189,7 +270,9 @@ expect init-existing-gates-note "nothing in scope yet" "${CLI[@]}" gates
 grep -n '@import' app/globals.css | grep -o 'fonts\.css\|"tailwindcss"\|formic\.css' | tr '\n' ' ' | grep -q 'fonts.css "tailwindcss" formic.css ' && pass init-existing-css || fail init-existing-css "$(grep '@import' app/globals.css | tr '\n' ' ')"
 grep -q '"@phosphor-icons/react"' package.json && grep -q '"@dicebear/core"' package.json && grep -q '"formic": "python3' package.json && pass init-existing-package || fail init-existing-package
 grep -q "formic_check" .git/hooks/pre-commit && pass init-existing-hook || fail init-existing-hook
-[ -f src/formic/components/DataTable.tsx ] && pass init-existing-all-components || fail init-existing-all-components "formic-all not installed"
+[ -f src/formic/components/DataTable.tsx ] && fail init-existing-base-only "DataTable.tsx installed by a default init" || pass init-existing-base-only
+[ -f src/formic/components/primitives.tsx ] && [ -f src/formic/components/config.ts ] && pass init-existing-base || fail init-existing-base "the shared modules are missing"
+[ -f .mcp.json ] && [ -f .cursor/mcp.json ] && pass init-existing-mcp || fail init-existing-mcp
 expect init-existing-again "already holds Formic" "${CLI[@]}" init --yes
 
 # ── summary ─────────────────────────────────────────────────

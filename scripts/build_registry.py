@@ -19,6 +19,11 @@ qa_check.py runs --check, so a stale registry never reaches main. The output
 is deterministic (sorted keys, sorted items, LF line endings) so the check
 compares bytes. registry/README.md explains the layout and the item type
 decision; read it before changing the shape of an item.
+
+The same run mirrors skill/SKILL.md (the source) to
+skills/formic-design-system/SKILL.md, the layout `npx skills add
+eyosiyasketema1/formic-design-system` installs from; --check fails when the
+two differ, so there is one source of truth.
 """
 from __future__ import annotations
 
@@ -31,6 +36,9 @@ ROOT = Path(__file__).resolve().parent.parent
 COMPONENTS = ROOT / "components"
 STYLES = ROOT / "styles"
 OUT = ROOT / "registry"
+
+SKILL_SRC = ROOT / "skill" / "SKILL.md"
+SKILL_MIRROR = ROOT / "skills" / "formic-design-system" / "SKILL.md"  # the `skills` CLI's layout: skills/<name>/SKILL.md
 
 BASE_URL = "https://formicai.dev/r"
 HOMEPAGE = "https://formicai.dev"
@@ -240,6 +248,8 @@ def main() -> int:
     if check:
         stale = [n for n, body in files.items() if not (out_dir / n).exists() or (out_dir / n).read_text() != body]
         extra = sorted(p.name for p in out_dir.glob("*.json") if p.name not in files) if out_dir.exists() else []
+        if out_dir == OUT and (not SKILL_MIRROR.exists() or SKILL_MIRROR.read_text() != SKILL_SRC.read_text()):
+            stale.append(str(SKILL_MIRROR.relative_to(ROOT)) + " (differs from skill/SKILL.md)")
         if stale or extra:
             what = ", ".join(stale[:6]) + (" …" if len(stale) > 6 else "")
             if extra:
@@ -251,6 +261,9 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     for n, body in files.items():
         (out_dir / n).write_text(body)
+    if out_dir == OUT:
+        SKILL_MIRROR.parent.mkdir(parents=True, exist_ok=True)
+        SKILL_MIRROR.write_text(SKILL_SRC.read_text())
     size = sum((out_dir / n).stat().st_size for n in files)
     print(f"build_registry: wrote {len(files) - 1} items to {out_dir.relative_to(ROOT) if out_dir.is_relative_to(ROOT) else out_dir} ({size // 1024} KB)")
     return 0
