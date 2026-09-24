@@ -1,6 +1,6 @@
 {
   "name": "formic-design-system",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "description": "Formic AI Design System \u2014 token-driven React design system for AI product interfaces",
   "peerDependencies": {

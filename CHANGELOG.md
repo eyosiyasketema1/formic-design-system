@@ -2,6 +2,14 @@
 
 Formic is vendored, so a version is the state of `main` you copied. `src/formic/VERSION` in an app records which one; re-running the installer moves it forward. Versions follow semver: while 0.x, a minor bump can change an API.
 
+## 0.5.1 · 2026-09-24
+
+### Changed
+
+- Welcome page redesigned: the three test prompts are collapsible rows with an inline preview and a Copy button each, on the system's radii.
+- `Button` `onClick` receives the click event (so a button inside a `<summary>` or a link can call `preventDefault`).
+- Pro groundwork (no user-facing change yet): the keyed Pro registry functions, `formicai key`, and Pro-aware `add`, `docs`, `doctor`, `update` and MCP tools; nothing shows until the first Pro component is published.
+
 ## 0.5.0 · 2026-09-23
 
 ### Breaking

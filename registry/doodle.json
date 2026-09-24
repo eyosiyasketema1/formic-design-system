@@ -16,7 +16,7 @@
   "meta": {
     "formic": {
       "file": "components/doodle.ts",
-      "version": "0.5.0"
+      "version": "0.5.1"
     }
   },
   "name": "doodle",
