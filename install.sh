@@ -347,7 +347,7 @@ export default function Welcome() {
         <div className="rounded-card border border-line bg-surface px-5 py-4">
           <p className="text-caption font-medium text-ink">Every prompt after that starts the same way:</p>
           <div className="mt-3 flex items-center gap-3">
-            <p className="min-w-0 flex-1 rounded-md bg-inset px-4 py-2.5 font-mono text-small text-ink">{PREFIX} <span className="text-ink-3">add a clients page with a DataTable…</span></p>
+            <p className="min-w-0 flex-1 rounded-md bg-inset px-4 py-2.5 font-mono text-small text-ink">{PREFIX} <span className="text-ink-3">after this write your prompt.</span></p>
             <Button variant="secondary" size="sm" onClick={() => copyPrefix(PREFIX + " ")} icon={<Icon name={copiedPrefix ? "check" : "copy"} />} aria-live="polite" className="shrink-0">
               {copiedPrefix ? "Copied" : "Copy"}
             </Button>
