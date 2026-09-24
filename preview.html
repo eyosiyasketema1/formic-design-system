@@ -2572,7 +2572,7 @@ function Button({
           event.preventDefault();
           return;
         }
-        onClick?.();
+        onClick?.(event);
       }}
       className={classes.replaceAll("enabled:", "")}
       style={style}
@@ -2591,7 +2591,7 @@ function Button({
         event.preventDefault();
         return;
       }
-      onClick?.();
+      onClick?.(event);
     }}
     className={classes}
     style={style}

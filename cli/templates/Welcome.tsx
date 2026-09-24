@@ -90,7 +90,7 @@ export default function Welcome() {
     <main data-formic-welcome className="flex min-h-dvh flex-col items-center bg-canvas p-6 sm:p-8">
       <div className="flex w-full max-w-3xl flex-col gap-6 pt-4">
         
-        <div className="relative w-full overflow-hidden rounded-xl border border-line shadow-sm">
+        <div className="relative w-full overflow-hidden rounded-card border border-line">
           <div className="absolute inset-0">
             <img src="https://formicai.dev/assets/live-bg-1280.webp" alt="Formic Banner" className="h-full w-full object-cover" />
           </div>
@@ -98,7 +98,7 @@ export default function Welcome() {
             <div className="absolute inset-0 backdrop-blur-xl bg-surface/75" style={{ WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 100px)", maskImage: "linear-gradient(to bottom, transparent 0px, black 100px)" }} />
             <div className="relative px-6 py-5">
               <header className="flex items-center gap-4">
-                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-canvas text-accent shadow-sm ring-1 ring-line/50"><FormicMark size={26} /></span>
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-card bg-canvas text-accent ring-1 ring-line/50"><FormicMark size={26} /></span>
                 <div>
                   <h1 className="text-display font-semibold text-ink">Formic is working</h1>
                   <p className="mt-0.5 text-caption text-ink-2">Components, tokens, the rules for your AI tool and a check before every commit are in place.</p>
