@@ -14,12 +14,13 @@ Needs Node 20 or newer and python3 (the gates and the config script are Python).
 | Command | What it does | Example |
 | --- | --- | --- |
 | `formicai init [--new <dir>]` | Adds Formic to the project you are in (or scaffolds a Vite + React + Tailwind v4 app with `--new`): writes the base of `src/formic/` from the registry (tokens, styles, the shared modules, the scripts; a new app also gets `button` and `panel` for its welcome page), wires the three CSS imports, installs the peer packages, writes `components.json`, adds `npm run formic`, writes the instruction files for Claude Code, Cursor and Copilot, registers the MCP server, installs the pre-commit hook. Components are added as they are needed with `add`; `--all` installs every one now (`--minimal` is the default and stays as an alias); `--preset <code>` applies a design preset (below); `--eslint-ignore` writes the `src/formic/**` ignore into a flat ESLint config; `--no-mcp` skips the MCP entry; `--dry-run` prints every file and command and writes nothing. | `npx formicai init --new my-app` |
-| `formicai add <name…>` | Adds components with whatever they need and records them in `src/formic/registry.lock`. A misspelt name gets the nearest matches. `--overwrite` replaces files that differ; `--dry-run` lists them; `--list` prints every name. | `npx formicai add data-table` |
+| `formicai add <name…>` | Adds components with whatever they need and records them in `src/formic/registry.lock`. A misspelt name gets the nearest matches. `--overwrite` replaces files that differ; `--dry-run` lists them; `--list` prints every name, the Formic Pro ones after the free ones. | `npx formicai add data-table` |
 | `formicai docs [<name>]` | A component's reference from the terminal: title, description, file, props (types, defaults, doc comments, read from the `.tsx`), its dependencies and an example import plus the simplest JSX; works before the component is installed. Without a name, every component with its one-line description. `--json` for the same as data. | `npx formicai docs data-table` |
 | `formicai mcp install` | Writes the Formic MCP server into `.mcp.json` (Claude Code) and `.cursor/mcp.json` (Cursor), keeping the servers already there; `init` does this too. The server (`formicai mcp`, stdio, started by the client) offers `list_components`, `component_docs`, `add_component`, `inventory`, `doctor` and `gates`. | `npx formicai mcp install` |
 | `formicai preset` | Prints this project's design choices (the keys of `formic.config.json` that differ from the stock config) as one code for `init --preset`. | `npx formicai preset` |
+| `formicai key [<key>]` | Adds a Formic Pro key to the project (activated on formicai.dev, written to `.env.local`, which is put in `.gitignore`), or without a key shows its status; `--remove` deletes it. `init --key <key>` does the same after an install. See Formic Pro below. | `npx formicai key FORM-XXXX-XXXX-XXXX` |
 | `formicai update` | Refreshes the installed files from the registry. Shows a diff per file; files you edited are kept unless you answer y or pass `--force`; `--yes` applies every change to files you have not edited; `--dry-run` shows the diffs only. Your `formic.config.json` is never touched and is applied again after the styles are refreshed. | `npx formicai update --dry-run` |
-| `formicai doctor` | One line per check (Node, package manager, Tailwind v4, the CSS imports and their order, the `@` alias, peer packages, `components.json`, installed version against the registry, ESLint ignore, `formic.config.json`, the hook) and the exact fix for every ✗; a second UI kit still installed (an icon set, a component or chart library, a `components/ui` folder, colours in `tailwind.config`) is a `!` note with its next step, never a failure. Exits 1 when the setup is wrong. | `npx formicai doctor` |
+| `formicai doctor` | One line per check (Node, package manager, Tailwind v4, the CSS imports and their order, the `@` alias, peer packages, `components.json`, installed version against the registry, the Formic Pro key when there is one, ESLint ignore, `formic.config.json`, the hook) and the exact fix for every ✗; a second UI kit still installed (an icon set, a component or chart library, a `components/ui` folder, colours in `tailwind.config`) is a `!` note with its next step, never a failure. Exits 1 when the setup is wrong. | `npx formicai doctor` |
 | `formicai gates` | Runs both gates (`formic_check.py`, `compose_check.py`) on the source folder, what `npm run formic` runs; `scope` and `legacy` in `package.json` decide what is checked (below). | `npx formicai gates` |
 | `formicai inventory` | Lists every UI file with its issue count and whether it imports Formic, worst first, so a migration can be planned. Files in legacy folders are listed too, marked `legacy`. | `npx formicai inventory` |
 | `formicai scope [add \| remove <folder…>]` | Lists, or changes, the folders the gates and the hook check: `add` puts a folder under the gates (and drops it from `legacy`), `remove` takes it out. | `npx formicai scope add src/pages` |
@@ -54,6 +55,39 @@ npx formicai init --preset eyJhY2NlbnQiOiIjMjU2M0VCIiwicmFkaXVzIjoicm91bmRlZCJ9
 ```
 
 The customizer at https://formicai.dev/customize shows the code under its copy block. `init --preset` writes the keys into `src/formic/formic.config.json` (a project that already has Formic keeps everything else) and runs `apply_config.py`, so the accent, palette, radius, font, rail and the rest apply at once. To make one by hand: `printf '%s' '{"accent":"#2563EB","radius":"rounded"}' | base64 | tr '+/' '-_' | tr -d '='`.
+
+## Formic Pro
+
+Pro components are the paid tier on the same rails: a second registry at `https://formicai.dev/r/pro` whose catalogue (`/r/pro/registry.json`) is public and whose items need a licence key. `add --list`, `docs` and the MCP server's `list_components` show them after the free components under a **Formic Pro** heading with a `Pro` mark; without a key the list ends with the one line that says how to get one. A Pro name resolves the same way a free one does (`npx formicai add <name>`), lands under `src/formic/pro/`, and is recorded in `registry.lock` with `"pro": true`; its dependencies on free components are installed with it, and `update` refreshes Pro items too.
+
+```
+npx formicai key FORM-XXXX-XXXX-XXXX     # once per project; or npx formicai init --key <key>
+npx formicai key                         # the status: masked key, expiry, whether the site still accepts it
+npx formicai key --remove                # delete it
+```
+
+`key <key>` activates the key on formicai.dev (one seat, labelled `<hostname>:<project folder>`) and writes it to `.env.local`:
+
+```
+# Formic Pro key, added 2026-09-24, valid until 2027-01-01 (npx formicai key shows the status, --remove deletes it)
+FORMIC_KEY=FORM-XXXX-XXXX-XXXX
+FORMIC_KEY_ACTIVATION=<activation id>
+```
+
+Only those lines are written or removed; anything else in the file stays. `.env.local` is appended to `.gitignore` if no pattern there covers it, and the command says so. The variables carry no `VITE_` or `NEXT_PUBLIC_` prefix, so no bundler exposes them to the browser. `FORMIC_KEY` and `FORMIC_KEY_ACTIVATION` set in the environment win over the file, which is how CI carries the key as a secret. The key is never printed or logged in full: every line shows it as `****-` plus its last six characters.
+
+When the site refuses a request, the CLI prints the site's own sentence on one `✗` line and writes nothing: a missing key names the `key` command, an expired key says the date, a key for another product says so. `doctor` shows `✓ Formic Pro key ****-XXXXXX, valid until <date>`, `– no Formic Pro key (optional)`, or a `✗` with the site's message and the fix.
+
+`init` (and `key`) also add a second registry entry to `components.json`, so the standard registry client can install Pro items with the same key:
+
+```json
+"@formic-pro": {
+  "url": "https://formicai.dev/r/pro/{name}.json",
+  "headers": { "Authorization": "Bearer ${FORMIC_KEY}", "X-Formic-Activation": "${FORMIC_KEY_ACTIVATION}" }
+}
+```
+
+`FORMIC_PRO_URL` overrides the site (the tests point it at `cli/test/pro-server.mjs`, a stand-in that speaks the same contract).
 
 ## The skill
 
@@ -101,7 +135,7 @@ python3 scripts/build_registry.py --base-url http://127.0.0.1:8765 --out /tmp/re
 FORMIC_REGISTRY=http://127.0.0.1:8765 npx formicai init --new app
 ```
 
-`bash cli/test/run.sh` (or `npm run test:cli` in the repo) does exactly that and exercises every command, `scope`, `migrate`, `docs`, `preset` and an MCP round trip included.
+`bash cli/test/run.sh` (or `npm run test:cli` in the repo) does exactly that and exercises every command, `scope`, `migrate`, `docs`, `preset`, `key` (against the local Pro stand-in) and an MCP round trip included.
 
 ## Licence
 

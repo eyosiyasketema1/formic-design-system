@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { green, red, grey, yellow, note, detectProject, cssImportOrder, installedVersion, tryJson } from "./util.js";
 import { BASE, catalogue } from "./registry.js";
+import { PRO_PAGE, checkKey, mask, readKey } from "./pro.js";
 
 export const help = `formicai doctor
 
@@ -11,9 +12,10 @@ export const help = `formicai doctor
   order, the @ alias, the peer packages, a second UI kit still installed
   (an icon package, MUI, Chakra, antd, a chart library, another kit's
   components/ui folder, a tailwind.config with its own colours),
-  components.json, the installed version against the registry, the ESLint
-  ignore, formic.config.json and the pre-commit hook. Exits 1 when
-  anything is wrong.
+  components.json, the installed version against the registry, the Formic
+  Pro key (optional; a refused key is a ✗), the ESLint ignore,
+  formic.config.json and the pre-commit hook. Exits 1 when anything is
+  wrong.
 
   Example
     npx formicai doctor
@@ -96,9 +98,20 @@ export async function run() {
   }
   if (!secondKit) ok("no second UI kit beside Formic (icon set, component or chart library, components/ui folder, tailwind.config colours)");
 
-  if (p.components?.registries?.["@formic"]) ok(`components.json names the @formic registry`);
+  if (p.components?.registries?.["@formic"]) ok(`components.json names the @formic registry${p.components.registries["@formic-pro"] ? " and @formic-pro" : ""}`);
   else if (p.components) no("components.json has no @formic registry", `formicai init adds it (or put "registries": { "@formic": "${BASE}/{name}.json" } in components.json)`);
   else no("no components.json", "formicai init writes it");
+
+  /* the Pro key: optional, so none is a – line; a refused one is a ✗ */
+  const creds = readKey(cwd);
+  if (!creds) na(`no Formic Pro key (optional; npx formicai key <key>, ${PRO_PAGE})`);
+  else {
+    const c = await checkKey(creds);
+    const until = creds.expires ? `valid until ${creds.expires}` : "no expiry recorded";
+    if (c.ok === true) ok(`Formic Pro key ${mask(creds.key)}, ${until}`);
+    else if (c.ok === false) no(`Formic Pro key ${mask(creds.key)}: ${c.message}`, `npx formicai key <new key> (${PRO_PAGE})`);
+    else na(`Formic Pro key ${mask(creds.key)}, ${until}; not checked (${c.message.split("(")[0].trim()})`);
+  }
 
   const local = installedVersion(cwd, dir);
   if (local) {

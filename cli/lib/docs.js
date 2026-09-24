@@ -5,19 +5,24 @@
    function's props type in the .tsx), what it depends on, and one example.
    The source is the installed copy in src/formic when there is one, else the
    registry item's file content, so `docs` works before `add`. Without a name
-   it lists every item with its one-line description. `formicai mcp` serves
-   the same text as the component_docs tool. */
+   it lists every item with its one-line description, Formic Pro after the
+   free ones. A Pro item is read with the key; without one the public index
+   still gives the title, description and dependencies, and the props say
+   what to do. `formicai mcp` serves the same text as the component_docs
+   tool. */
 import fs from "node:fs";
 import path from "node:path";
 import { note, bold, grey, cyan, die, detectProject } from "./util.js";
 import { ALL_ITEM, BASE_ITEM, catalogue, fetchItem, nameOf, nearest } from "./registry.js";
+import { KEY_LINE, ProRefused, fetchProItem, proCatalogue, proUnreachableNote, readKey } from "./pro.js";
 
 export const help = `formicai docs [<name>]
 
   Prints a component's reference: title, description, file, props (with
   their types, defaults and doc comments), its dependencies, and an example
   import plus the simplest JSX. Without a name, lists every component with
-  its one-line description.
+  its one-line description, Formic Pro items after the free ones. A Pro
+  item's props need the key (npx formicai key <key>); the rest shows without.
 
   --json            the same as JSON (what the MCP server returns)
 
@@ -165,21 +170,30 @@ export function parseComponent(src, stem) {
 export async function reference(name, cwd = process.cwd()) {
   const project = detectProject(cwd);
   const idx = await catalogue();
-  const known = idx.items.map((i) => i.name);
+  const proIdx = ((await proCatalogue())?.items ?? []).filter((i) => !idx.items.some((f) => f.name === i.name));
+  const known = [...idx.items.map((i) => i.name), ...proIdx.map((i) => i.name)];
   if (!known.includes(name) || name === ALL_ITEM || name === BASE_ITEM) {
     const near = nearest(name, known.filter((n) => n !== ALL_ITEM && n !== BASE_ITEM));
     die(`no component named "${name}" in the registry${near.length ? `; did you mean ${near.join(", ")}?` : ""} (formicai docs lists every name)`);
   }
-  const item = await fetchItem(name);
+  /* a Pro item: the keyed copy when the key is accepted, else the public index
+     entry (title, description, dependencies, target) with no file content */
+  const proEntry = proIdx.find((i) => i.name === name) ?? null;
+  let item = proEntry ? null : await fetchItem(name);
+  let locked = null;
+  if (proEntry) {
+    try { item = await fetchProItem(name, readKey(cwd)); }
+    catch (e) { if (!(e instanceof ProRefused)) throw e; locked = e.message; item = { ...proEntry, files: (proEntry.files ?? []).map((f) => ({ ...f, content: "" })) }; }
+  }
   const file = item.files?.[0];
-  const rel = file ? file.target.replace(/^~\//, "") : `${project.dir}/components/${name}`;
+  const rel = file ? file.target.replace(/^~\//, "") : `${project.dir}/${proEntry ? "pro" : "components"}/${name}`;
   const local = path.join(cwd, rel.replace(/^src\/formic/, project.dir));
   const installed = fs.existsSync(local);
   const src = installed ? fs.readFileSync(local, "utf8") : file?.content ?? "";
   const stem = path.basename(rel).replace(/\.tsx?$/, "");
   const parsed = parseComponent(src, stem);
   const deps = (item.registryDependencies ?? []).map(nameOf).filter((d) => d !== BASE_ITEM);
-  const importPath = `./formic/components/${stem}`;
+  const importPath = "./" + rel.replace(/^src\//, "").replace(/\.tsx?$/, "");
   const required = parsed.props.filter((p) => !p.optional && p.name !== "children");
   const attrs = required.map((p) => {
     if (p.values) return `${p.name}=${p.values.split("|")[0].trim()}`;
@@ -193,7 +207,8 @@ export async function reference(name, cwd = process.cwd()) {
   const hasChildren = parsed.props.some((p) => p.name === "children");
   const tag = `<${parsed.name}${attrs.length ? " " + attrs.join(" ") : ""}${hasChildren ? `>…</${parsed.name}>` : " />"}`;
   return {
-    name, title: item.title, description: item.description, file: rel, installed,
+    name, title: item.title, description: item.description, file: rel, installed, pro: Boolean(proEntry),
+    propsLocked: locked && !installed ? "install with a key to see the props (npx formicai key <key>, https://formicai.dev/pro)" : null,
     component: parsed.name, isDefault: parsed.isDefault, props: parsed.props, exports: parsed.exports,
     dependencies: deps, packages: item.dependencies ?? [],
     example: [parsed.isDefault ? `import ${parsed.name} from "${importPath}";` : `import { ${parsed.name} } from "${importPath}";`, tag],
@@ -202,7 +217,7 @@ export async function reference(name, cwd = process.cwd()) {
 
 export function renderReference(r) {
   const lines = [];
-  lines.push(`${bold(r.title)} ${grey(`(${r.name})`)}`);
+  lines.push(`${bold(r.title)} ${grey(`(${r.name})`)}${r.pro ? `  ${cyan("Pro")}` : ""}`);
   lines.push(`  ${r.description}`);
   lines.push(`  file: ${r.file}${r.installed ? "" : grey("  (not installed; npx formicai add " + r.name + ")")}`);
   if (r.dependencies.length) lines.push(`  needs: ${r.dependencies.join(", ")}`);
@@ -216,24 +231,42 @@ export function renderReference(r) {
       lines.push(`    ${p.name}${p.optional ? "?" : ""}: ${type}${p.default !== undefined ? grey(` = ${p.default}`) : ""}`);
       if (p.doc) lines.push(`      ${grey(p.doc)}`);
     }
-  } else lines.push(`  ${grey("props: see the file; its main export takes no props block this reference can read")}`);
+  } else if (r.propsLocked) lines.push(`  ${grey(`props: ${r.propsLocked}`)}`);
+  else lines.push(`  ${grey("props: see the file; its main export takes no props block this reference can read")}`);
   lines.push("");
   lines.push(`  ${cyan("example")}`);
   for (const l of r.example) lines.push(`    ${l}`);
   return lines.join("\n");
 }
 
-/* every component with its one-line description, installed ones marked */
+/* every component with its one-line description, installed ones marked;
+   the free items first, then Formic Pro's with `pro: true` */
 export async function listing(cwd = process.cwd()) {
   const project = detectProject(cwd);
   const idx = await catalogue();
-  return idx.items
-    .filter((it) => it.name !== ALL_ITEM && it.name !== BASE_ITEM)
-    .map((it) => {
-      const target = it.files?.[0]?.target?.replace(/^~\//, "") ?? "";
-      const installed = Boolean(target) && fs.existsSync(path.join(cwd, target.replace(/^src\/formic/, project.dir)));
-      return { name: it.name, title: it.title, description: it.description, installed };
-    });
+  const pro = ((await proCatalogue())?.items ?? []).filter((i) => !idx.items.some((f) => f.name === i.name));
+  const row = (it, isPro) => {
+    const target = it.files?.[0]?.target?.replace(/^~\//, "") ?? "";
+    const installed = Boolean(target) && fs.existsSync(path.join(cwd, target.replace(/^src\/formic/, project.dir)));
+    return { name: it.name, title: it.title, description: it.description, installed, pro: isPro };
+  };
+  return [
+    ...idx.items.filter((it) => it.name !== ALL_ITEM && it.name !== BASE_ITEM).map((it) => row(it, false)),
+    ...pro.map((it) => row(it, true)),
+  ];
+}
+
+/* the listing as lines: free, then a Formic Pro heading, then the key line when there is no key */
+export function renderListing(items, cwd = process.cwd()) {
+  const lines = [];
+  for (const it of items.filter((i) => !i.pro)) lines.push(`  ${bold(it.name.padEnd(22))} ${grey(it.description)}${it.installed ? grey("  (installed)") : ""}`);
+  const pro = items.filter((i) => i.pro);
+  if (pro.length) {
+    lines.push("", `  ${bold("Formic Pro")}`);
+    for (const it of pro) lines.push(`  ${bold(it.name.padEnd(22))} ${cyan("Pro")}  ${grey(it.description)}${it.installed ? grey("  (installed)") : ""}`);
+    if (!readKey(cwd)) lines.push("", `  ${KEY_LINE}`);
+  } else if (proUnreachableNote()) lines.push("", `  ${grey(proUnreachableNote())}`);
+  return lines;
 }
 
 export async function run(flags) {
@@ -241,7 +274,7 @@ export async function run(flags) {
   if (!name) {
     const items = await listing();
     if (flags.json) { process.stdout.write(JSON.stringify(items, null, 2) + "\n"); return 0; }
-    for (const it of items) note(`  ${bold(it.name.padEnd(22))} ${grey(it.description)}${it.installed ? grey("  (installed)") : ""}`);
+    for (const l of renderListing(items)) note(l);
     note(`\n  npx formicai docs <name> for the props and an example; npx formicai add <name> installs it.`);
     return 0;
   }

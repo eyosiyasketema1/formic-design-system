@@ -1,7 +1,7 @@
 {
   "name": "formicai",
   "version": "0.5.0",
-  "description": "The Formic AI Design System command line: init, add, docs, update, doctor, gates, inventory, migrate, mcp, preset",
+  "description": "The Formic AI Design System command line: init, add, docs, update, doctor, gates, inventory, migrate, mcp, preset, key",
   "type": "module",
   "bin": { "formicai": "bin/formicai.js" },
   "files": ["bin/", "lib/", "templates/", "README.md"],

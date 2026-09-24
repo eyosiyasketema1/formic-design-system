@@ -16,13 +16,15 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { Plan, say, skip, note, stringify, tryJson, detectProject } from "./util.js";
 import { listing, reference, renderReference } from "./docs.js";
+import { KEY_LINE, readKey } from "./pro.js";
 
 export const help = `formicai mcp [install]
 
   Runs the Formic MCP server on stdio (what the entry in .mcp.json starts;
   you never run it by hand). The tools it offers:
 
-    list_components   every component: name, title, description, installed
+    list_components   every component: name, title, description, installed;
+                      Formic Pro items after the free ones
     component_docs    props, dependencies and an example for one component
     add_component     adds components (npx formicai add) and says what it wrote
     inventory         the files still to migrate, worst first
@@ -43,7 +45,7 @@ const BIN = path.join(here, "..", "bin", "formicai.js");
 const version = JSON.parse(fs.readFileSync(path.join(here, "..", "package.json"), "utf8")).version;
 
 const TOOLS = [
-  { name: "list_components", title: "List Formic components", description: "Every component in the Formic registry with its name, title, one-line description and whether it is installed in this project (src/formic/components). Use it to find the component for a piece of UI before writing one.", inputSchema: { type: "object", properties: {}, additionalProperties: false } },
+  { name: "list_components", title: "List Formic components", description: "Every component in the Formic registry with its name, title, one-line description and whether it is installed in this project (src/formic/components), then the Formic Pro components (pro: true; they need a key from npx formicai key <key> and install under src/formic/pro). Use it to find the component for a piece of UI before writing one.", inputSchema: { type: "object", properties: {}, additionalProperties: false } },
   { name: "component_docs", title: "Component reference", description: "The reference for one component: title, description, file, props with types, defaults and doc comments, its dependencies, and an example import plus the simplest JSX. Works before the component is installed.", inputSchema: { type: "object", properties: { name: { type: "string", description: "the registry name, e.g. data-table (list_components has them)" } }, required: ["name"], additionalProperties: false } },
   { name: "add_component", title: "Add components", description: "Installs one or more components into src/formic with whatever they need (npx formicai add) and returns the files written. Run it when a component you need is not in src/formic/components; never write a stand-in.", inputSchema: { type: "object", properties: { names: { type: "array", items: { type: "string" }, minItems: 1, description: "registry names, e.g. [\"data-table\", \"panel\"]" }, overwrite: { type: "boolean", description: "replace files that exist and differ (default false)" } }, required: ["names"], additionalProperties: false } },
   { name: "inventory", title: "Migration inventory", description: "Every UI file with its issue count and whether it imports Formic, worst first (npx formicai inventory); legacy folders are marked.", inputSchema: { type: "object", properties: {}, additionalProperties: false } },
@@ -64,8 +66,14 @@ export async function callTool(name, args = {}, cwd = process.cwd()) {
   switch (name) {
     case "list_components": {
       const items = await listing(cwd);
-      const lines = items.map((it) => `${it.name.padEnd(22)} ${it.installed ? "installed  " : "           "} ${it.title}: ${it.description}`);
-      return { ...text(lines.join("\n")), structuredContent: { components: items } };
+      const line = (it) => `${it.name.padEnd(22)} ${it.installed ? "installed  " : "           "} ${it.pro ? "Pro  " : ""}${it.title}: ${it.description}`;
+      const lines = items.filter((it) => !it.pro).map(line);
+      const pro = items.filter((it) => it.pro);
+      if (pro.length) {
+        lines.push("", "Formic Pro", ...pro.map(line));
+        if (!readKey(cwd)) lines.push("", KEY_LINE);
+      }
+      return { ...text(lines.join("\n")), structuredContent: { components: items, proKey: Boolean(readKey(cwd)) } };
     }
     case "component_docs": {
       if (!args.name || typeof args.name !== "string") return text("component_docs needs a name (list_components has them)", true);

@@ -14,12 +14,15 @@
    missing (installed by hand, or before the lock existed) counts as edited:
    it is shown and asked about, never overwritten silently. Styles and
    config.ts are rewritten by apply_config.py after every install, so they
-   are refreshed whenever upstream changed and the config is applied again. */
+   are refreshed whenever upstream changed and the config is applied again.
+   Pro items in the lock are fetched with the key; when the site refuses the
+   key they are left as they are, with a note. */
 import fs from "node:fs";
 import path from "node:path";
 import { Plan, say, skip, warn, note, die, bold, grey, cyan, detectProject, installArgs, askYesNo, installedVersion } from "./util.js";
 import { LOCK, resolve, sha, depName, lockFrom, lockText, readLock, configDerived } from "./registry.js";
 import { render } from "./diff.js";
+import { mask, readKey, reportRefusal } from "./pro.js";
 
 export const help = `formicai update [options]
 
@@ -47,10 +50,16 @@ export async function run(flags) {
   const lock = readLock(plan.cwd, dir);
   if (!lock || !lock.items) die(`${dir}/${LOCK} is missing, so nothing is known to be installed; run formicai init (it records what is there) and then update`);
   const names = Object.keys(lock.items);
-  const resolved = await resolve(names);
+  const refused = [];
+  const resolved = await resolve(names, { onRefused: (name, e) => { refused.push({ name, e }); return true; } });
   const upstream = resolved.items.get("formic")?.meta?.formic?.version ?? "unknown";
   const local = installedVersion(plan.cwd, dir);
   note(`\n${bold("formicai update")} ${grey(`${local} installed, ${upstream} in the registry, ${names.length} items${dryRun ? ", dry run" : ""}`)}\n`);
+  if (refused.length) {
+    const creds = readKey(plan.cwd);
+    skip(`Formic Pro: ${refused.map((r) => r.name).join(", ")} skipped, ${creds ? `the key ${mask(creds.key)} was refused` : "no key"}`);
+    reportRefusal(refused[0].e);
+  }
 
   const rows = [];
   for (const f of resolved.files) {
@@ -69,7 +78,7 @@ export async function run(flags) {
   }
   const by = (s) => rows.filter((r) => r.state === s);
   if (rows.every((r) => r.state === "current" || r.state === "edited")) {
-    say(`everything is current${by("edited").length ? ` (${by("edited").length} file(s) carry your edits and have no upstream change)` : ""}`);
+    say(`everything is current${by("edited").length ? ` (${by("edited").length} file(s) carry your edits and have no upstream change)` : ""}${refused.length ? ` (${refused.length} Pro item(s) not checked)` : ""}`);
     if (!dryRun) plan.write(`${dir}/${LOCK}`, lockText({ ...lockFrom(lock, resolved, upstream, plan.cwd), files: lock.files }));
     return 0;
   }

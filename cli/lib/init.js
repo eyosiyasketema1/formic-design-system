@@ -1,4 +1,4 @@
-/* formicai init [--new <dir>] [--all] [--preset <code>] [--eslint-ignore] [--no-mcp] [--yes] [--dry-run]
+/* formicai init [--new <dir>] [--all] [--preset <code>] [--key <key>] [--eslint-ignore] [--no-mcp] [--yes] [--dry-run]
 
    Puts Formic into the project you are standing in, or scaffolds a new one
    with --new. Everything install.sh does, in the same order, with --dry-run
@@ -15,6 +15,7 @@ import { checkNewDir, writeScaffold, scaffoldPackageJson } from "./scaffold.js";
 import { writeAgentFiles, writeHook, writePackageJson, wireCss, writeComponentsJson, eslintIgnore, seedConfig, migrationPrompt, uiFiles } from "./project.js";
 import { install as installMcp } from "./mcp.js";
 import { decode as decodePreset, applyPreset } from "./preset.js";
+import { addKey } from "./key.js";
 
 export const help = `formicai init [--new <dir>] [options]
 
@@ -30,6 +31,8 @@ export const help = `formicai init [--new <dir>] [options]
   --preset <code>   apply a design preset (the code under the copy block at
                     https://formicai.dev/customize, or formicai preset in
                     another project): its keys go into formic.config.json
+  --key <key>       a Formic Pro key: activated and written to .env.local
+                    after the install, as formicai key <key> does
   --eslint-ignore   write the src/formic/** ignore into a flat ESLint config
   --no-mcp          do not write the Formic MCP server into .mcp.json and
                     .cursor/mcp.json
@@ -40,13 +43,15 @@ export const help = `formicai init [--new <dir>] [options]
   registry, applies the preset if one was given, wires the three CSS
   imports, installs the peer packages, writes components.json, adds
   "npm run formic", writes the instruction files for Claude Code, Cursor
-  and Copilot, registers the MCP server, and installs the pre-commit hook.
+  and Copilot, registers the MCP server, installs the pre-commit hook, and
+  with --key activates the Formic Pro key and writes it to .env.local.
 
   Examples
     npx formicai init --new my-app
     npx formicai init                 # inside an existing project
     npx formicai init --all           # every component now
     npx formicai init --preset eyJhY2NlbnQiOiIjMjU2M0VCIn0
+    npx formicai init --key FORM-XXXX-XXXX-XXXX
     npx formicai init --dry-run
 `;
 
@@ -54,6 +59,18 @@ export const help = `formicai init [--new <dir>] [options]
 const NEW_APP_ITEMS = ["button", "panel"];
 
 export async function run(flags) {
+  const rc = await init(flags);
+  /* the Pro key last, once the project exists: the same path as formicai key */
+  if (rc === 0 && flags.key !== undefined) {
+    if (flags.key === true) { warn("--key needs the key: formicai init --key <key>"); return 1; }
+    if (flags["dry-run"]) { note(`  ${grey("–")} would activate the Formic Pro key and write it to .env.local`); return 0; }
+    note("");
+    return addKey(flags.key, process.cwd());
+  }
+  return rc;
+}
+
+async function init(flags) {
   const dryRun = Boolean(flags["dry-run"]);
   const plan = new Plan({ dryRun });
   let isNew = false, appDir = null, appName = null;

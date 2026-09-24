@@ -7,6 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { say, skip, warn, note, stringify, relFrom, cssImportOrder, grey, cyan } from "./util.js";
+import { PRO_BASE } from "./pro.js";
 
 const gatesLine = (dir, src) => `\`python3 ${dir}/scripts/formic_check.py ${src} --config=package.json\` and \`python3 ${dir}/scripts/compose_check.py ${src} --config=package.json\` (what \`npm run formic\` runs; the config names the folders in scope and the legacy ones)`;
 
@@ -134,7 +135,7 @@ export function wireCss(plan, cssFiles, dir) {
    and `@formic/<name>` work with it. Its schema is strict (an unknown key
    makes the client refuse the file), so Formic's own section goes in
    package.json instead. */
-export function componentsJson(existing, { cssFile, srcDir, registryUrl }) {
+export function componentsJson(existing, { cssFile, srcDir, registryUrl, proUrl = PRO_BASE }) {
   const base = existing ?? {
     $schema: "https://ui.shadcn.com/schema.json",
     style: "new-york",
@@ -144,15 +145,22 @@ export function componentsJson(existing, { cssFile, srcDir, registryUrl }) {
     aliases: { components: "@/components", utils: "@/lib/utils", ui: "@/components/ui", lib: "@/lib", hooks: "@/hooks" },
   };
   const next = { ...base };
-  next.registries = { ...(base.registries ?? {}), "@formic": `${registryUrl}/{name}.json` };
+  /* the Pro entry reads the key from the environment the way the registry
+     client expands ${VAR}: FORMIC_KEY and FORMIC_KEY_ACTIVATION come from
+     .env.local (formicai key writes them) */
+  next.registries = {
+    ...(base.registries ?? {}),
+    "@formic": `${registryUrl}/{name}.json`,
+    "@formic-pro": { url: `${proUrl}/{name}.json`, headers: { Authorization: "Bearer ${FORMIC_KEY}", "X-Formic-Activation": "${FORMIC_KEY_ACTIVATION}" } },
+  };
   return next;
 }
 
 export function writeComponentsJson(plan, existing, opts) {
   const next = componentsJson(existing, opts);
-  const what = existing ? "components.json (@formic registry added)" : "components.json (@formic registry, aliases, the stylesheet)";
+  const what = opts.pro ? "components.json (@formic-pro registry added, keyed from .env.local)" : existing ? "components.json (@formic and @formic-pro registries added)" : "components.json (@formic and @formic-pro registries, aliases, the stylesheet)";
   const r = plan.write("components.json", stringify(next), what);
-  if (r === "same" && !plan.dryRun) skip("components.json already names the @formic registry");
+  if (r === "same" && !plan.dryRun) skip("components.json already names the @formic and @formic-pro registries");
 }
 
 /* package.json → "formic": where Formic is, where the app's code is, which

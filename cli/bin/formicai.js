@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* formicai: the Formic AI Design System command line.
-   npx formicai init | add | update | doctor | gates | inventory | scope | migrate | docs | mcp | preset */
+   npx formicai init | add | update | doctor | gates | inventory | scope | migrate | docs | mcp | preset | key */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,6 +22,7 @@ const usage = `formicai ${version}: the Formic AI Design System
   npx formicai docs [<name>]        a component's props and an example, or the whole list
   npx formicai mcp install          register the Formic MCP server for Claude Code and Cursor
   npx formicai preset               this project's design choices as one code (init --preset)
+  npx formicai key [<key>]          add a Formic Pro key (or show its status; --remove deletes it)
 
   formicai <command> --help for the options. --dry-run on init, add and
   update shows what would change and writes nothing. FORMIC_REGISTRY
@@ -40,12 +41,13 @@ const commands = {
   docs: async () => (await import("../lib/docs.js")),
   mcp: async () => (await import("../lib/mcp.js")),
   preset: async () => (await import("../lib/preset.js")),
+  key: async () => (await import("../lib/key.js")),
 };
 
 async function main() {
   const argv = process.argv.slice(2);
   const cmd = argv[0];
-  const flags = parseArgs(argv.slice(1), ["new", "preset"]);
+  const flags = parseArgs(argv.slice(1), ["new", "preset", "key"]);
   if (!cmd || cmd === "--help" || cmd === "-h" || cmd === "help") { process.stdout.write(usage); return 0; }
   if (cmd === "--version" || cmd === "-v" || cmd === "version") { console.log(version); return 0; }
   if (!commands[cmd]) { process.stderr.write(`  ${red("✗")} unknown command "${cmd}"\n\n${usage}`); return 2; }

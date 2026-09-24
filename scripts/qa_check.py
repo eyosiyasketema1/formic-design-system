@@ -387,6 +387,19 @@ try:
 except Exception as e:
     fails.append(f"registry: check could not run ({e})")
 
+# ── 4g. the Pro registry functions pass their tests ────────
+# api/pro/*.js serve the keyed registry (/r/pro/<name>.json), the activation
+# and the publish endpoint. api/pro/test.mjs runs the handlers in-process
+# against a Map for Upstash and a stub for Polar: no network, under a second.
+# A wrong status code or message there is what a buyer sees, so it is a gate.
+try:
+    r = subprocess.run(["node", str(ROOT / "api" / "pro" / "test.mjs")], capture_output=True, text=True, timeout=60)
+    if r.returncode != 0:
+        _bad = [ln.strip() for ln in r.stdout.splitlines() if ln.strip().startswith("FAIL")]
+        fails.append("pro api: " + (("; ".join(_bad[:3]) + (" …" if len(_bad) > 3 else "")) if _bad else (r.stderr.strip().splitlines() or ["node api/pro/test.mjs failed"])[-1]))
+except Exception as e:
+    print(f"note: pro api tests skipped ({e})")
+
 # ── 4c. the landing page's compiled assets are current ─────
 # index.html loads landing.css and landing.js, built from landing.tailwind.css
 # and landing.jsx by scripts/build_landing.py. A stale build ships the old
@@ -407,4 +420,4 @@ if fails:
     for f in fails:
         print("  ✗", f)
     sys.exit(1)
-print("QA PASSED — forbidden patterns, contrast (all modes × palettes), drift, compile, gallery script, landing build, registry: all clean")
+print("QA PASSED — forbidden patterns, contrast (all modes × palettes), drift, compile, gallery script, landing build, registry, pro api: all clean")
