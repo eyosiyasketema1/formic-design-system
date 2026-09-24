@@ -6,7 +6,7 @@
     "@phosphor-icons/react"
   ],
   "description": "The Formic AI Design System base: tokens, palettes, the Tailwind v4 bridge, fonts, component sheets, the shared modules every component imports, the config scripts, the gates and AGENTS.md.",
-  "docs": "Formic 0.5.0 is in src/formic/. Wire the stylesheet stack in your CSS entry, in this order:\n  @import \"./formic/styles/fonts.css\";\n  @import \"tailwindcss\";\n  @import \"./formic/styles/formic.css\";\nThen run python3 src/formic/scripts/apply_config.py once (it applies src/formic/formic.config.json: accent, html attributes, component defaults). Add components with npx formicai add <name> (or add https://formicai.dev/r/<name>.json with the registry client) — the list is at https://formicai.dev/r/registry.json; https://formicai.dev/r/formic-all.json installs all of them. Read AGENTS.md before building UI.",
+  "docs": "Formic 0.5.1 is in src/formic/. Wire the stylesheet stack in your CSS entry, in this order:\n  @import \"./formic/styles/fonts.css\";\n  @import \"tailwindcss\";\n  @import \"./formic/styles/formic.css\";\nThen run python3 src/formic/scripts/apply_config.py once (it applies src/formic/formic.config.json: accent, html attributes, component defaults). Add components with npx formicai add <name> (or add https://formicai.dev/r/<name>.json with the registry client) — the list is at https://formicai.dev/r/registry.json; https://formicai.dev/r/formic-all.json installs all of them. Read AGENTS.md before building UI.",
   "files": [
     {
       "content": "/* ─────────────────────────────────────────────────────────\n * BRAND COLOURS — one canonical colour per mark, for\n * <BrandIcon color=\"brand\" />. Marks whose identity is black\n * (GitHub, Apple, X, Notion, Vercel, OpenAI…) resolve to --ink,\n * so they stay visible in dark mode; every other value is the\n * brand's published primary. These are logos, not UI colour:\n * they are exempt from the contrast rule and must never be\n * used for anything but the mark itself.\n * ───────────────────────────────────────────────────────── */\n:root {\n  --brand-github: var(--ink);\n  --brand-google: #4285f4;\n  --brand-apple: var(--ink);\n  --brand-windows: #0078d4;\n  --brand-slack: #4a154b;\n  --brand-notion: var(--ink);\n  --brand-figma: #f24e1e;\n  --brand-linkedin: #0a66c2;\n  --brand-x: var(--ink);\n  --brand-twitter: #1d9bf0;\n  --brand-instagram: #e4405f;\n  --brand-facebook: #0866ff;\n  --brand-messenger: #0084ff;\n  --brand-youtube: #ff0000;\n  --brand-tiktok: var(--ink);\n  --brand-telegram: #26a5e4;\n  --brand-whatsapp: #25d366;\n  --brand-wechat: #07c160;\n  --brand-skype: #00aff0;\n  --brand-discord: #5865f2;\n  --brand-stripe: #635bff;\n  --brand-paypal: #003087;\n  --brand-spotify: #1db954;\n  --brand-soundcloud: #ff5500;\n  --brand-android: #34a853;\n  --brand-linux: var(--ink);\n  --brand-chrome: #4285f4;\n  --brand-openai: var(--ink);\n  --brand-google-drive: #4285f4;\n  --brand-google-play: #414141;\n  --brand-app-store: #0d84ff;\n  --brand-amazon: #ff9900;\n  --brand-meta: #0467df;\n  --brand-pinterest: #bd081c;\n  --brand-reddit: #ff4500;\n  --brand-threads: var(--ink);\n  --brand-snapchat: #fffc00;\n  --brand-twitch: #9146ff;\n  --brand-mastodon: #6364ff;\n  --brand-medium: var(--ink);\n  --brand-tumblr: #36465d;\n  --brand-behance: #1769ff;\n  --brand-dribbble: #ea4c89;\n  --brand-framer: #0055ff;\n  --brand-sketch: #f7b500;\n  --brand-gitlab: #fc6d26;\n  --brand-codepen: var(--ink);\n  --brand-codesandbox: var(--ink);\n  --brand-replit: #f26207;\n  --brand-stack-overflow: #f58025;\n  --brand-dev-to: var(--ink);\n  --brand-dropbox: #0061ff;\n  --brand-teams: #6264a7;\n  --brand-outlook: #0078d4;\n  --brand-excel: #217346;\n  --brand-word: #2b579a;\n  --brand-powerpoint: #b7472a;\n  --brand-steam: var(--ink);\n  --brand-patreon: #ff424d;\n  --brand-angular: #dd0031;\n  --brand-markdown: var(--ink);\n  --brand-coda: #f46a54;\n  --brand-linktree: #43e55e;\n}\n\n/* BrandLogo dark variants: the component renders both where the brand\n   publishes one; CSS picks, so components never branch on theme. */\n.brand-logo-dark { display: none; }\n[data-theme=\"dark\"] .brand-logo-dark { display: inline; }\n[data-theme=\"dark\"] .brand-logo-light.brand-logo-has-dark { display: none; }\n",
@@ -105,7 +105,7 @@
       "type": "registry:file"
     },
     {
-      "content": "formic-design-system 0.5.0 (registry)\nhttps://github.com/eyosiyasketema1/formic-design-system\nnpx formicai update to refresh\n",
+      "content": "formic-design-system 0.5.1 (registry)\nhttps://github.com/eyosiyasketema1/formic-design-system\nnpx formicai update to refresh\n",
       "path": "VERSION",
       "target": "~/src/formic/VERSION",
       "type": "registry:file"
@@ -150,7 +150,7 @@
   "meta": {
     "formic": {
       "install": "src/formic",
-      "version": "0.5.0"
+      "version": "0.5.1"
     }
   },
   "name": "formic",
