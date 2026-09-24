@@ -286,22 +286,25 @@ function PromptPanel({ label, title, caption, text }: (typeof PROMPTS)[number]) 
   const [copied, copy] = useCopy();
   const num = label.replace(/\D/g, "");
   return (
-    <details className="group rounded-card border border-line bg-surface">
-      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-tint text-small font-semibold text-accent">{num}</span>
+    <details className="group rounded-card border border-line bg-surface overflow-hidden">
+      <summary className="flex cursor-pointer list-none items-start gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+        <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-tint text-small font-semibold text-accent">{num}</span>
         <div className="min-w-0 flex-1">
-          <span className="text-body font-semibold text-ink">{title}</span>
-          <span className="ml-2 text-caption text-ink-3">{caption}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-body font-semibold text-ink whitespace-nowrap shrink-0">{title}</span>
+            <span className="text-caption text-ink-3 hidden sm:inline truncate">{caption}</span>
+          </div>
+          <p className="mt-1 text-caption text-ink-2 line-clamp-1 group-open:hidden">{text}</p>
         </div>
-        <Icon name="chevron" className="shrink-0 text-ink-3 transition-transform duration-150 group-open:rotate-180" />
-      </summary>
-      <div className="flex flex-col gap-3 border-t border-line px-4 py-4">
-        <p className="rounded-md bg-inset p-4 text-caption leading-relaxed text-ink">{text}</p>
-        <div className="flex justify-end">
-          <Button variant="accent" size="md" onClick={() => copy(text)} icon={<Icon name={copied ? "check" : "copy"} />} aria-live="polite">
+        <div className="mt-0.5 flex items-center gap-3 shrink-0 ml-2">
+          <Button variant="secondary" size="sm" onClick={(e) => { e.preventDefault(); copy(text); }} icon={<Icon name={copied ? "check" : "copy"} />} aria-live="polite">
             {copied ? "Copied" : "Copy prompt"}
           </Button>
+          <Icon name="chevron" className="text-ink-3 transition-transform duration-150 group-open:rotate-180" />
         </div>
+      </summary>
+      <div className="border-t border-line bg-inset p-4">
+        <p className="text-caption leading-relaxed text-ink">{text}</p>
       </div>
     </details>
   );
@@ -310,15 +313,26 @@ function PromptPanel({ label, title, caption, text }: (typeof PROMPTS)[number]) 
 export default function Welcome() {
   const [copiedPrefix, copyPrefix] = useCopy();
   return (
-    <main data-formic-welcome className="flex min-h-dvh items-center justify-center bg-canvas p-6 sm:p-8">
-      <div className="flex w-full max-w-2xl flex-col gap-6">
-        <header className="flex items-center gap-4">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-md bg-accent-tint text-accent"><FormicMark size={26} /></span>
-          <div>
-            <h1 className="text-display font-semibold text-ink">Formic is working</h1>
-            <p className="mt-0.5 text-caption text-ink-2">Components, tokens, the rules for your AI tool and a check before every commit are in place.</p>
+    <main data-formic-welcome className="flex min-h-dvh flex-col items-center bg-canvas p-6 sm:p-8">
+      <div className="flex w-full max-w-3xl flex-col gap-6 pt-4">
+        
+        <div className="relative w-full overflow-hidden rounded-card border border-line">
+          <div className="absolute inset-0">
+            <img src="https://formicai.dev/assets/live-bg-1280.webp" alt="Formic Banner" className="h-full w-full object-cover" />
           </div>
-        </header>
+          <div className="relative mt-28 border-t border-line/10">
+            <div className="absolute inset-0 backdrop-blur-xl bg-surface/75" style={{ WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 100px)", maskImage: "linear-gradient(to bottom, transparent 0px, black 100px)" }} />
+            <div className="relative px-6 py-5">
+              <header className="flex items-center gap-4">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-card bg-canvas text-accent ring-1 ring-line/50"><FormicMark size={26} /></span>
+                <div>
+                  <h1 className="text-display font-semibold text-ink">Formic is working</h1>
+                  <p className="mt-0.5 text-caption text-ink-2">Components, tokens, the rules for your AI tool and a check before every commit are in place.</p>
+                </div>
+              </header>
+            </div>
+          </div>
+        </div>
 
         <div className="rounded-card border border-line bg-surface px-5 py-4">
           <p className="text-body font-medium text-ink">Next: let your AI tool build the first page.</p>
@@ -333,7 +347,7 @@ export default function Welcome() {
         <div className="rounded-card border border-line bg-surface px-5 py-4">
           <p className="text-caption font-medium text-ink">Every prompt after that starts the same way:</p>
           <div className="mt-3 flex items-center gap-3">
-            <p className="min-w-0 flex-1 rounded-md bg-inset px-4 py-2.5 font-mono text-small text-ink">{PREFIX} <span className="text-ink-3">add a clients page with a DataTable…</span></p>
+            <p className="min-w-0 flex-1 rounded-md bg-inset px-4 py-2.5 font-mono text-small text-ink">{PREFIX} <span className="text-ink-3">after this write your prompt.</span></p>
             <Button variant="secondary" size="sm" onClick={() => copyPrefix(PREFIX + " ")} icon={<Icon name={copiedPrefix ? "check" : "copy"} />} aria-live="polite" className="shrink-0">
               {copiedPrefix ? "Copied" : "Copy"}
             </Button>

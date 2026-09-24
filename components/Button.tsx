@@ -105,7 +105,8 @@ export default function Button({
   type?: "button" | "submit";
   className?: string;
   style?: CSSProperties;
-  onClick?: () => void;
+  /** receives the click event, so a button inside a <summary> or a link can call preventDefault */
+  onClick?: (event: MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => void;
 } & Record<string, unknown>) {
   /* .corner-smooth squircles the radius where supported; the label span
      below carries .optical-text (text-box needs a block container —
@@ -147,7 +148,7 @@ export default function Button({
             event.preventDefault();
             return;
           }
-          onClick?.();
+          onClick?.(event);
         }}
         /* :enabled never matches anchors — drop the guards (links can't be disabled) */
         className={classes.replaceAll("enabled:", "")}
@@ -171,7 +172,7 @@ export default function Button({
           event.preventDefault();
           return;
         }
-        onClick?.();
+        onClick?.(event);
       }}
       className={classes}
       style={style}
