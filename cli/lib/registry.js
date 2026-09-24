@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { die } from "./util.js";
+import { ProRefused, fetchProItem, proNames } from "./pro.js";
 
 export const BASE = (process.env.FORMIC_REGISTRY || "https://formicai.dev/r").replace(/\/+$/, "");
 export const BASE_ITEM = "formic";
@@ -46,15 +47,35 @@ export async function fetchItem(name) {
   return fetchJson(itemUrl(name));
 }
 
+/* the free index and, after it, the Pro one: a name is looked up in the free
+   catalogue first and in the Pro catalogue only when the free one has no
+   such item. Pro items are fetched with the key from .env.local; a refusal
+   is a ProRefused with the site's message. */
+export async function isPro(name) {
+  const it = await fetchItem(name);
+  if (it) return false;
+  return (await proNames()).includes(name);
+}
+
 /* an item and everything it depends on, flattened: files (first writer wins,
-   which is the item that was asked for) and npm dependencies */
-export async function resolve(names) {
+   which is the item that was asked for) and npm dependencies. Pro items
+   carry `pro: true`. `onRefused(name, err)` decides what a refused Pro item
+   does: return true to leave it out (update does), otherwise it throws. */
+export async function resolve(names, { onRefused } = {}) {
   const items = new Map();
   const order = [];
+  const skipped = [];
   const visit = async (name) => {
-    if (items.has(name)) return;
-    const it = await fetchItem(name);
-    if (!it) die(`no item named "${name}" in the registry`);
+    if (items.has(name) || skipped.some((s) => s.name === name)) return;
+    let it = await fetchItem(name);
+    if (!it) {
+      if (!(await proNames()).includes(name)) die(`no item named "${name}" in the registry`);
+      try { it = await fetchProItem(name); }
+      catch (e) {
+        if (e instanceof ProRefused && onRefused && onRefused(name, e)) { skipped.push({ name, error: e }); return; }
+        throw e;
+      }
+    }
     items.set(name, it);
     for (const dep of it.registryDependencies ?? []) await visit(nameOf(dep));
     order.push(name);
@@ -64,13 +85,14 @@ export async function resolve(names) {
   const dependencies = new Set();
   for (const name of [...names, ...order]) {
     const it = items.get(name);
+    if (!it) continue;
     for (const f of it.files ?? []) {
       const target = targetPath(f.target);
-      if (!files.has(target)) files.set(target, { target, content: f.content, item: name });
+      if (!files.has(target)) files.set(target, { target, content: f.content, item: name, pro: Boolean(it.pro) });
     }
     for (const d of it.dependencies ?? []) dependencies.add(d);
   }
-  return { items, files: [...files.values()], dependencies: [...dependencies].sort() };
+  return { items, files: [...files.values()], dependencies: [...dependencies].sort(), skipped };
 }
 
 /* "name@range" → name */
@@ -104,7 +126,7 @@ export function readLock(cwd, dir) {
    from the registry were kept by the person, so their hash is left out */
 export function lockFrom(previous, resolved, version, cwd) {
   const lock = { version, registry: BASE, items: { ...(previous?.items ?? {}) }, files: { ...(previous?.files ?? {}) } };
-  for (const [name, it] of resolved.items) if (name !== ALL_ITEM) lock.items[name] = it.meta?.formic?.version ?? version;
+  for (const [name, it] of resolved.items) if (name !== ALL_ITEM) lock.items[name] = it.pro ? { version: it.meta?.formic?.version ?? version, pro: true } : it.meta?.formic?.version ?? version;
   for (const f of resolved.files) {
     const abs = path.join(cwd, f.target);
     if (fs.existsSync(abs) && (configDerived(f.target) || fs.readFileSync(abs, "utf8") === f.content)) lock.files[f.target] = sha(f.content);

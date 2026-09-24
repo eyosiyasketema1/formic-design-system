@@ -284,17 +284,26 @@ function useCopy(): [boolean, (text: string) => Promise<void>] {
 
 function PromptPanel({ label, title, caption, text }: (typeof PROMPTS)[number]) {
   const [copied, copy] = useCopy();
+  const num = label.replace(/\D/g, "");
   return (
-    <Panel title={`${label}: ${title}`} caption={caption}>
-      <div className="flex flex-col gap-3">
-        <p className="rounded-md bg-inset p-4 text-body leading-relaxed text-ink">{text}</p>
+    <details className="group rounded-xl border border-line bg-canvas">
+      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-tint text-small font-semibold text-accent">{num}</span>
+        <div className="min-w-0 flex-1">
+          <span className="text-body font-semibold text-ink">{title}</span>
+          <span className="ml-2 text-caption text-ink-3">{caption}</span>
+        </div>
+        <Icon name="caret-down" className="shrink-0 text-ink-3 transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="flex flex-col gap-3 border-t border-line px-4 py-4">
+        <p className="rounded-lg bg-inset p-4 text-small leading-relaxed text-ink">{text}</p>
         <div className="flex justify-end">
           <Button variant="accent" size="md" onClick={() => copy(text)} icon={<Icon name={copied ? "check" : "copy"} />} aria-live="polite">
             {copied ? "Copied" : "Copy prompt"}
           </Button>
         </div>
       </div>
-    </Panel>
+    </details>
   );
 }
 
@@ -303,29 +312,33 @@ export default function Welcome() {
   return (
     <main data-formic-welcome className="flex min-h-dvh items-center justify-center bg-canvas p-6 sm:p-8">
       <div className="flex w-full max-w-2xl flex-col gap-6">
-        <header className="flex flex-col items-center gap-3 text-center">
-          <span className="flex size-12 items-center justify-center rounded-md bg-accent-tint text-accent"><FormicMark size={26} /></span>
+        <header className="flex items-center gap-4">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-accent-tint text-accent"><FormicMark size={26} /></span>
           <div>
             <h1 className="text-display font-semibold text-ink">Formic is working</h1>
-            <p className="mt-1 text-body text-ink-2">Components, tokens, the rules for your AI tool and a check before every commit are in place.</p>
+            <p className="mt-0.5 text-caption text-ink-2">Components, tokens, the rules for your AI tool and a check before every commit are in place.</p>
           </div>
         </header>
 
-        <div className="rounded-md bg-inset px-4 py-3 text-caption text-ink-2">
-          <p className="font-medium text-ink">Next: let your AI tool build the first page.</p>
-          <p className="mt-0.5">Open your AI tool (Claude Code, Cursor, Antigravity, Copilot, Codex, any of them) in this folder and paste one of the three test prompts. Each builds a different screen; pick the one closest to your product. If the result looks generic, say "That is not Formic, read AGENTS.md and redo it".</p>
+        <div className="rounded-xl border border-line bg-surface px-5 py-4">
+          <p className="text-body font-medium text-ink">Next: let your AI tool build the first page.</p>
+          <p className="mt-1 text-caption text-ink-2">Open your AI tool in this folder and paste one of the prompts below. Each builds a different screen; pick the one closest to your product.</p>
         </div>
 
-        {PROMPTS.map((p) => <PromptPanel key={p.label} {...p} />)}
+        <div className="flex flex-col gap-3">
+          <p className="text-small font-medium uppercase tracking-wide text-ink-3">Test prompts</p>
+          {PROMPTS.map((p) => <PromptPanel key={p.label} {...p} />)}
+        </div>
 
-        <Panel title="Every prompt after that" caption="Start it the same way, then say what you want">
-          <div className="flex items-center justify-between gap-3">
-            <p className="min-w-0 flex-1 rounded-md bg-inset px-4 py-3 font-mono text-caption text-ink">{PREFIX} <span className="text-ink-3">add a clients page with a DataTable…</span></p>
-            <Button variant="secondary" size="md" onClick={() => copyPrefix(PREFIX + " ")} icon={<Icon name={copiedPrefix ? "check" : "copy"} />} aria-live="polite" className="shrink-0">
+        <div className="rounded-xl border border-line bg-surface px-5 py-4">
+          <p className="text-caption font-medium text-ink">Every prompt after that starts the same way:</p>
+          <div className="mt-3 flex items-center gap-3">
+            <p className="min-w-0 flex-1 rounded-lg bg-inset px-4 py-2.5 font-mono text-small text-ink">{PREFIX} <span className="text-ink-3">add a clients page with a DataTable…</span></p>
+            <Button variant="secondary" size="sm" onClick={() => copyPrefix(PREFIX + " ")} icon={<Icon name={copiedPrefix ? "check" : "copy"} />} aria-live="polite" className="shrink-0">
               {copiedPrefix ? "Copied" : "Copy"}
             </Button>
           </div>
-        </Panel>
+        </div>
       </div>
     </main>
   );

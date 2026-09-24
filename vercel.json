@@ -16,9 +16,16 @@
       ]
     },
     {
-      "source": "/(registry|r)/(.*).json",
+      "source": "/(registry|r)/:name.json",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=86400" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    },
+    {
+      "source": "/r/pro/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "private, no-store" },
         { "key": "Access-Control-Allow-Origin", "value": "*" }
       ]
     },
@@ -35,6 +42,8 @@
   ],
   "rewrites": [
     { "source": "/customize", "destination": "/preview.html" },
+    { "source": "/r/pro/registry.json", "destination": "/api/pro/item?name=registry" },
+    { "source": "/r/pro/:name.json", "destination": "/api/pro/item?name=:name" },
     { "source": "/r/registry.json", "destination": "/registry/registry.json" },
     { "source": "/r/:name.json", "destination": "/registry/:name.json" }
   ],

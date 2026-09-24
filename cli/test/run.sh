@@ -16,8 +16,8 @@ CLI=(node "$REPO/cli/bin/formicai.js")
 KEEP=0; [ "${1:-}" = "--keep" ] && KEEP=1
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/formicai-test.XXXXXX")"
 LOG="$TMP/test.log"
-SERVER=""
-cleanup() { [ -n "$SERVER" ] && kill "$SERVER" 2>/dev/null; [ "$KEEP" = 1 ] && printf 'kept: %s (log: %s)\n' "$TMP" "$LOG" || rm -rf "$TMP"; }
+SERVER=""; PRO_SERVER=""
+cleanup() { [ -n "$SERVER" ] && kill "$SERVER" 2>/dev/null; [ -n "$PRO_SERVER" ] && kill "$PRO_SERVER" 2>/dev/null; [ "$KEEP" = 1 ] && printf 'kept: %s (log: %s)\n' "$TMP" "$LOG" || rm -rf "$TMP"; }
 trap cleanup EXIT
 FAILED=0
 pass() { printf 'PASS %s\n' "$1"; }
@@ -36,6 +36,12 @@ python3 "$REPO/scripts/build_registry.py" --base-url "http://127.0.0.1:$PORT" --
 SERVER=$!
 for _ in 1 2 3 4 5 6 7 8 9 10; do curl -fs "http://127.0.0.1:$PORT/registry.json" >/dev/null 2>&1 && break; sleep 0.5; done
 export FORMIC_REGISTRY="http://127.0.0.1:$PORT"
+# the Formic Pro stand-in (cli/test/pro-server.mjs): the catalogue, two keyed items, the activate endpoint
+PRO_PORT="$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1])')"
+node "$REPO/cli/test/pro-server.mjs" "$PRO_PORT" "$FORMIC_REGISTRY" >> "$LOG" 2>&1 &
+PRO_SERVER=$!
+for _ in 1 2 3 4 5 6 7 8 9 10; do curl -fs "http://127.0.0.1:$PRO_PORT/r/pro/registry.json" >/dev/null 2>&1 && break; sleep 0.5; done
+export FORMIC_PRO_URL="http://127.0.0.1:$PRO_PORT"
 export GIT_AUTHOR_NAME=formic-test GIT_AUTHOR_EMAIL=test@formicai.dev GIT_COMMITTER_NAME=formic-test GIT_COMMITTER_EMAIL=test@formicai.dev
 printf 'formicai smoke test in %s (registry at %s)\n' "$TMP" "$FORMIC_REGISTRY"
 
@@ -53,10 +59,12 @@ expect help-migrate "formic-todo" "${CLI[@]}" migrate --help
 expect help-docs "simplest JSX" "${CLI[@]}" docs --help
 expect help-mcp "list_components" "${CLI[@]}" mcp --help
 expect help-preset "base64url" "${CLI[@]}" preset --help
+expect help-key "never printed in full" "${CLI[@]}" key --help
+expect help-init-key "\-\-key <key>" "${CLI[@]}" init --help
 expect help-init-all "\-\-all" "${CLI[@]}" init --help
 expect_fail unknown-command "${CLI[@]}" frobnicate
 # the word a person never reads: the registry client's name stays internal
-if { "${CLI[@]}" --help; for c in init add update doctor gates inventory scope migrate docs mcp preset; do "${CLI[@]}" "$c" --help; done; cat "$REPO/cli/README.md" "$REPO/skill/SKILL.md"; } 2>&1 | grep -qi shadcn; then fail no-shadcn-in-user-text; else pass no-shadcn-in-user-text; fi
+if { "${CLI[@]}" --help; for c in init add update doctor gates inventory scope migrate docs mcp preset key; do "${CLI[@]}" "$c" --help; done; cat "$REPO/cli/README.md" "$REPO/skill/SKILL.md"; } 2>&1 | grep -qi shadcn; then fail no-shadcn-in-user-text; else pass no-shadcn-in-user-text; fi
 # the skill's two copies are one file (build_registry.py mirrors skill/SKILL.md into the layout `npx skills add` reads)
 cmp -s "$REPO/skill/SKILL.md" "$REPO/skills/formic-design-system/SKILL.md" && pass skill-mirror || fail skill-mirror "skills/formic-design-system/SKILL.md differs from skill/SKILL.md; run python3 scripts/build_registry.py"
 grep -q "^name: formic-design-system" "$REPO/skills/formic-design-system/SKILL.md" && grep -q "^description: " "$REPO/skills/formic-design-system/SKILL.md" && pass skill-frontmatter || fail skill-frontmatter
@@ -81,6 +89,7 @@ node -e 'const c=require("./.mcp.json").mcpServers.formic;process.exit(c.command
 # the scaffold compiles on the base plus button and panel (the welcome page imports Button, Panel, FormicMark, Icon)
 run init-new-typecheck npx tsc --noEmit -p .
 grep -q '"@formic"' components.json && pass components-json || fail components-json "no @formic registry"
+node -e 'const r=require("./components.json").registries["@formic-pro"];process.exit(r&&r.url.endsWith("/r/pro/{name}.json")&&r.headers.Authorization==="Bearer ${FORMIC_KEY}"&&r.headers["X-Formic-Activation"]==="${FORMIC_KEY_ACTIVATION}"?0:1)' && pass components-json-pro || fail components-json-pro "no keyed @formic-pro registry entry"
 grep -q '"formic": {' package.json && grep -q '"legacy"' package.json && pass package-formic-section || fail package-formic-section
 grep -q "formic_check" .git/hooks/pre-commit && pass hook || fail hook
 grep -q "^  --accent: #" src/formic/styles/tokens.css && pass apply-config || fail apply-config "accent not applied"
@@ -108,6 +117,66 @@ for f in Button.tsx DataTable.tsx Pagination.tsx EmptyState.tsx; do [ -f "src/fo
 grep -q '"data-table"' src/formic/registry.lock && grep -q '"pagination"' src/formic/registry.lock && pass add-lock || fail add-lock "lock does not list data-table and its dependency"
 expect add-again "every file was already in place" "${CLI[@]}" add button
 expect add-list "data-table" "${CLI[@]}" add --list
+
+# ── Formic Pro: the catalogue shows without a key, items need one; key, add, lock, doctor, docs, mcp, remove ──
+expect pro-list-heading "Formic Pro" "${CLI[@]}" add --list
+expect pro-list-mark "pro-sample.*Pro" "${CLI[@]}" add --list
+expect pro-list-needs-key "Pro components need a key: npx formicai key <key>" "${CLI[@]}" add --list
+expect pro-add-no-key "This component is in Formic Pro. Add your key with: npx formicai key <key>" "${CLI[@]}" add pro-sample
+expect pro-add-no-key-fix "fix: npx formicai key <key>" "${CLI[@]}" add pro-sample
+expect_fail pro-add-no-key-exits-1 "${CLI[@]}" add pro-sample
+[ -e src/formic/pro ] && fail pro-add-no-key-writes-nothing "src/formic/pro exists" || pass pro-add-no-key-writes-nothing
+grep -q "pro-sample" src/formic/registry.lock && fail pro-add-no-key-no-lock "pro-sample in the lock without a key" || pass pro-add-no-key-no-lock
+expect pro-docs-no-key "install with a key to see the props" "${CLI[@]}" docs pro-sample
+expect pro-docs-no-key-deps "needs: button" "${CLI[@]}" docs pro-sample
+expect pro-key-none "no Formic Pro key" "${CLI[@]}" key
+expect pro-doctor-none "no Formic Pro key (optional" "${CLI[@]}" doctor
+expect pro-key-expired "expired on 2026-01-31" "${CLI[@]}" key TEST-EXPIRED
+expect_fail pro-key-expired-exits-1 "${CLI[@]}" key TEST-EXPIRED
+[ -f .env.local ] && fail pro-key-expired-writes-nothing ".env.local written for a refused key" || pass pro-key-expired-writes-nothing
+expect pro-key-invalid "That key is not valid" "${CLI[@]}" key NOT-A-KEY
+KEY_OUT="$("${CLI[@]}" key TEST-GRANTED 2>&1)"; printf '\n### pro-key-granted\n%s\n' "$KEY_OUT" >> "$LOG"
+printf '%s' "$KEY_OUT" | grep -q "Formic Pro key \*\*\*\*-RANTED written to .env.local, valid until 2027-01-01" && pass pro-key-granted || fail pro-key-granted "$(printf '%s' "$KEY_OUT" | tail -1)"
+printf '%s' "$KEY_OUT" | grep -q "TEST-GRANTED" && fail pro-key-masked "the full key was printed" || pass pro-key-masked
+printf '%s' "$KEY_OUT" | grep -q "Pro components: npx formicai add --list" && pass pro-key-says-list || fail pro-key-says-list
+grep -q "^FORMIC_KEY=TEST-GRANTED$" .env.local && grep -q "^FORMIC_KEY_ACTIVATION=act-1$" .env.local && pass pro-env-local || fail pro-env-local "$(cat .env.local)"
+grep -q "^.env.local$" .gitignore && pass pro-gitignore || fail pro-gitignore "$(cat .gitignore | tr '\n' ' ')"
+printf '%s' "$KEY_OUT" | grep -q ".gitignore: .env.local added" && pass pro-gitignore-said || fail pro-gitignore-said
+expect pro-key-status "\*\*\*\*-RANTED from .env.local, valid until 2027-01-01; the site accepts it" "${CLI[@]}" key
+printf 'OTHER=1\n' > .env.local.keep && cat .env.local >> .env.local.keep && mv .env.local.keep .env.local
+run pro-key-again "${CLI[@]}" key TEST-GRANTED
+grep -q "^OTHER=1$" .env.local && [ "$(grep -c "^FORMIC_KEY=" .env.local)" = 1 ] && pass pro-env-local-keeps-others || fail pro-env-local-keeps-others "$(cat .env.local | tr '\n' ' ')"
+rm -f src/formic/components/Button.tsx
+run pro-add "${CLI[@]}" add pro-sample
+[ -f src/formic/pro/ProSample.tsx ] && pass pro-add-file || fail pro-add-file "src/formic/pro/ProSample.tsx missing"
+[ -f src/formic/components/Button.tsx ] && pass pro-add-free-dep || fail pro-add-free-dep "Button.tsx (a free dependency of pro-sample) not written"
+node -e 'const l=JSON.parse(require("fs").readFileSync("src/formic/registry.lock","utf8"));process.exit(l.items["pro-sample"]&&l.items["pro-sample"].pro===true&&typeof l.items.button==="string"?0:1)' && pass pro-lock || fail pro-lock "$(grep -A2 pro-sample src/formic/registry.lock | tr '\n' ' ')"
+grep -q '"pro": true' src/formic/registry.lock && pass pro-lock-flag || fail pro-lock-flag
+run pro-add-pro-dep "${CLI[@]}" add pro-other
+[ -f src/formic/pro/ProOther.tsx ] && pass pro-add-pro-dep-file || fail pro-add-pro-dep-file
+expect pro-add-again "every file was already in place" "${CLI[@]}" add pro-sample
+expect pro-docs-list "Formic Pro" "${CLI[@]}" docs
+expect pro-docs-list-installed "pro-sample.*Pro.*(installed)" "${CLI[@]}" docs
+expect pro-docs-props "label?: string" "${CLI[@]}" docs pro-sample
+expect pro-docs-example 'import ProSample from "./formic/pro/ProSample"' "${CLI[@]}" docs pro-sample
+expect pro-doctor-key "Formic Pro key \*\*\*\*-RANTED, valid until 2027-01-01" "${CLI[@]}" doctor
+expect pro-update-current "everything is current" "${CLI[@]}" update --dry-run
+printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"formic-test","version":"0"}}}' '{"jsonrpc":"2.0","method":"notifications/initialized"}' '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_components","arguments":{}}}' | "${CLI[@]}" mcp 2>> "$LOG" | node -e '
+let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const by={};for(const l of s.split("\n").filter(Boolean)){const m=JSON.parse(l);by[m.id]=m;}
+const r=by[2]&&by[2].result;const t=r&&r.content[0].text;const c=r&&r.structuredContent.components;
+process.exit(t&&t.includes("Formic Pro")&&t.includes("pro-other")&&c.some(x=>x.name==="pro-sample"&&x.pro===true&&x.installed===true)&&c.findIndex(x=>x.pro)>c.findIndex(x=>x.name==="button")&&r.structuredContent.proKey===true?0:1)})' && pass pro-mcp-list || fail pro-mcp-list "list_components does not show the Pro items after the free ones"
+sed -i.bak 's/^FORMIC_KEY=TEST-GRANTED$/FORMIC_KEY=TEST-EXPIRED/' .env.local && rm -f .env.local.bak
+expect pro-doctor-refused "Formic Pro key \*\*\*\*-XPIRED: Your Formic Pro key expired on 2026-01-31" "${CLI[@]}" doctor
+expect pro-doctor-refused-fix "npx formicai key <new key>" "${CLI[@]}" doctor
+expect_fail pro-doctor-refused-exits-1 "${CLI[@]}" doctor
+expect pro-update-refused "Formic Pro: pro-other, pro-sample skipped, the key \*\*\*\*-XPIRED was refused" "${CLI[@]}" update --dry-run
+expect pro-key-remove "Formic Pro key \*\*\*\*-XPIRED removed from .env.local" "${CLI[@]}" key --remove
+grep -q "FORMIC_KEY" .env.local && fail pro-key-removed "FORMIC_KEY still in .env.local" || pass pro-key-removed
+grep -q "^OTHER=1$" .env.local && pass pro-key-remove-keeps-others || fail pro-key-remove-keeps-others "$(cat .env.local)"
+expect pro-key-remove-again "no Formic Pro key in .env.local" "${CLI[@]}" key --remove
+expect pro-list-needs-key-again "Pro components need a key" "${CLI[@]}" docs
+expect pro-update-no-key "Formic Pro: pro-other, pro-sample skipped, no key" "${CLI[@]}" update --dry-run
+rm -f .env.local
 
 # ── docs: the list, one installed component, one not yet installed, a typo, JSON ──
 expect docs-list "data-table" "${CLI[@]}" docs
@@ -262,7 +331,10 @@ expect init-existing-dry-run-no-mcp "would write .mcp.json" "${CLI[@]}" init --d
 if "${CLI[@]}" init --dry-run --no-mcp 2>&1 | grep -q "mcp.json"; then fail init-no-mcp "--no-mcp still writes an mcp.json"; else pass init-no-mcp; fi
 [ -d src/formic ] && fail init-existing-dry-run-writes-nothing || pass init-existing-dry-run-writes-nothing
 git diff --quiet && pass init-existing-dry-run-clean-tree || fail init-existing-dry-run-clean-tree "the dry run changed tracked files"
-run init-existing "${CLI[@]}" init --yes
+run init-existing "${CLI[@]}" init --yes --key TEST-GRANTED
+grep -q "^FORMIC_KEY=TEST-GRANTED$" .env.local && grep -q "^FORMIC_KEY_ACTIVATION=act-1$" .env.local && pass init-existing-key || fail init-existing-key "init --key did not write .env.local"
+grep -q "^.env.local$" .gitignore && pass init-existing-key-gitignore || fail init-existing-key-gitignore "$(cat .gitignore | tr '\n' ' ')"
+grep -q "TEST-GRANTED" "$LOG" && grep -B3 -A3 "init-existing (exit" "$LOG" | grep -q "TEST-GRANTED" && fail init-existing-key-masked "the full key was printed by init --key" || pass init-existing-key-masked
 grep -q "marked legacy" "$LOG" && pass init-existing-says-legacy || fail init-existing-says-legacy "init did not say the existing pages are marked legacy"
 node -e 'const p=require("./package.json").formic;process.exit(p.legacy.length===1&&p.legacy[0]==="app"&&p.scope.length===0?0:1)' && pass init-existing-legacy || fail init-existing-legacy "$(node -p 'JSON.stringify(require("./package.json").formic)')"
 run init-existing-gates-clean "${CLI[@]}" gates

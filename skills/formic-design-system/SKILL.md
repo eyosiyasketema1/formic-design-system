@@ -58,9 +58,12 @@ Generic Tailwind is the failure mode: it happens when the agent invents styles i
 | `npx formicai scope add <folder>` | When a folder of an existing app is ready to be held to the gates (drops it from `legacy`). |
 | `npx formicai migrate <file…> [--write]` | On each legacy page: the codemods do the mechanical part and leave `formic-todo` comments for the rest. |
 | `npx formicai preset` | To hand this project's design choices to another project as one code. |
+| `npx formicai key [<key>]` | Once, when the user has a Formic Pro key: activates it and writes it to `.env.local` (git-ignored); without a key, the status; `--remove` deletes it. `init --key <key>` does the same after an install. |
 | `npx formicai mcp install` | If `.mcp.json` / `.cursor/mcp.json` lack the Formic server: registers it. The server offers `list_components`, `component_docs`, `add_component`, `inventory`, `doctor`, `gates`, the same commands as tools. |
 
 **The rule: when a component you need is not in `src/formic/components`, run `npx formicai add <name>` (names: `npx formicai add --list`); never write a stand-in.** A page that hand-rolls a table because `DataTable` was not installed yet is the defect this section exists to prevent; adding it takes one command.
+
+**Formic Pro.** `npx formicai add --list` shows the Pro components after the free ones under a "Formic Pro" heading; they install with the same `add` and live in `src/formic/pro/`, but they need a key. If `add` answers that the component is in Formic Pro and no key is set, do not copy, rebuild or fake it: tell the user the exact command, `npx formicai key <key>` (keys come from https://formicai.dev/pro), and build the rest of the screen on the free components until they have one.
 
 ## Composition intelligence (before any markup)
 
