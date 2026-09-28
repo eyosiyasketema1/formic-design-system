@@ -686,6 +686,8 @@ header.site.header-blur .hero-gh-btn:hover { filter: brightness(1.1); }
 
 /* Inverted states when scrolled down over the white page */
 header.site[data-scrolled="true"] .hero-invert { filter: none; }
+[data-theme="dark"] header.site[data-scrolled="true"] .hero-invert,
+header.site.nav-on-dark .hero-invert { filter: brightness(0) invert(1); }
 header.site[data-scrolled="true"] .hero-text-white { color: var(--ink); }
 header.site[data-scrolled="true"] .brand-rest.hero-text-white { color: var(--ink-2); }
 header.site[data-scrolled="true"] .site-nav a.hero-link { color: var(--ink-2); }
