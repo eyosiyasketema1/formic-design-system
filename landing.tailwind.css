@@ -759,8 +759,10 @@ header.site.header-over-cards .header-blur { opacity: 0 !important; }
 header.site.header-over-cards .hero-invert { filter: brightness(0) invert(1) !important; }
 header.site.header-over-cards .hero-text-white { color: #fff !important; }
 header.site.header-over-cards .brand-rest.hero-text-white { color: #fff !important; }
-header.site.header-over-cards .site-nav a.hero-link { color: #fff !important; }
-header.site.header-over-cards .site-nav a.hero-link:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
+header.site.header-over-cards .site-nav a.hero-link,
+header.site.nav-on-dark .site-nav a.hero-link { color: #fff !important; }
+header.site.header-over-cards .site-nav a.hero-link:hover,
+header.site.nav-on-dark .site-nav a.hero-link:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
 header.site.header-over-cards .hero-icon-btn { color: #fff !important; }
 header.site.header-over-cards .hero-icon-btn:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
 header.site.header-over-cards .hero-gh-btn { background: var(--accent) !important; color: var(--canvas) !important; border-color: transparent !important; }
