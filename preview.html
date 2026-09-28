@@ -16789,17 +16789,17 @@ function GalleryCard({ label, wide, full, children }) {
   };
   const hovered = hover && picked ? picked.tree[hover.idx] : null;
   const chip = copiedName ? `Copied ${copiedName}` : hovered ? `${hovered.name}${pickSummary(hovered.props) ? ` · ${pickSummary(hovered.props)}` : ""}` : "";
-  const buttons = (page ? 2 : 0) + (canPick ? 1 : 0) + (moves ? 1 : 0);
-  const labelPad = ["", "pr-8", "pr-18", "pr-26", "pr-34"][buttons];
+  const buttons = (page ? 1 : 0) + (canPick ? 1 : 0) + (moves ? 1 : 0);
+  const labelPad = ["", "pr-8", "pr-16", "pr-24"][buttons];
   return (
     <div ref={cardRef} id={`card-${slugOf(label)}`} className={`relative scroll-mt-6 rounded-card bg-surface p-5 shadow-card ${full ? "w-full" : wide ? "w-full max-w-105" : ""}`}>
       <p className={`mb-3 font-mono text-micro tracking-wide text-ink-3 uppercase ${labelPad}`}>{label}</p>
       {pick && <p className="-mt-2 mb-3 text-small text-ink-3" aria-live="polite">Hover a piece, click to copy its prompt. Esc to stop.</p>}
       {/* always there, quiet: the gallery is a tool, and an agent's prompt
-          is the thing a card is for. Copy prompt, copy link, Pick, then Play. */}
+          is the thing a card is for. Copy prompt, Pick, then Play (the deep link
+          lives at the end of the prompt and in search results). */}
       <div className="absolute top-3 right-3 flex items-center gap-1">
         {page && <CopyIconButton icon="copy" label="Copy prompt for this variant" text={() => variantPrompt(page, label)} />}
-        {page && <CopyIconButton icon="link" label="Copy link to this variant" text={() => cardLink(page, label)} />}
         {canPick && (
           <Tooltip label={pick ? "Stop picking" : "Pick an element"}>
             <IconButton label="Pick an element" aria-pressed={pick} onClick={() => setPick((on) => !on)} className={`size-7 ${pick ? "bg-hover-2 text-ink" : "text-ink-3 hover:bg-hover hover:text-ink"}`}>
