@@ -1,6 +1,6 @@
 # Formic AI Design System — Working Rules
 
-**Start with `HANDOFF.md`.** It holds where the project came from, where it is going, and where it stands right now. After every unit of work, update its **Where we are** and **Log** sections in the same commit; a hand-off that does not update it is not finished.
+**Start with `HANDOFF.md`** (local only, git-ignored, never published). It holds where the project came from, where it is going, and where it stands right now. After every unit of work, update its **Where we are** and **Log** sections; a hand-off that does not update it is not finished. If the file is missing on a fresh clone, ask the maintainer for his copy.
 
 Rules for any AI agent (or human) working in this repo. These exist because past mistakes were caught late by audits; following them prevents the mistakes instead.
 
@@ -69,7 +69,7 @@ After every piece of work, look for extractable pieces and extract them:
 - `preview.html` — standalone browser gallery (CDN React + Tailwind; duplicates styles inline)
 - `index.html`, `landing.jsx`, `landing.tailwind.css` — the landing page and its two sources; `scripts/build_landing.py` compiles them to `landing.css` and `landing.js` (committed, what the page loads). Run it after touching either source; the gate checks the build is current. The page ships no Babel and no Tailwind browser build, so it paints styled on first load; keep it that way
 - `CHANGELOG.md` — one entry per release; a breaking change (a peer dependency, a removed prop, a renamed name) bumps the minor while 0.x and goes under **Breaking**. `version` in `package.json` and `FORMIC_VERSION` in `preview.html` must agree; the gate checks
-- `HANDOFF.md` — the living hand-off: history, roadmap, current state, log; updated every unit of work
+- `HANDOFF.md` — the living hand-off (local only, git-ignored): history, roadmap, current state, log; updated every unit of work
 - `AUDIT.md`, `QA-REPORT.md` — audit history; update when resolving findings
 - `PLAN-adoption.md` — the phased plan (with sub-agent roles) for the two categories the external review scored below 6: installer hygiene and existing-project compatibility; read it before touching the installer, the gates or the hook
 - `scripts/qa_check.py` — the QA gate

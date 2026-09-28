@@ -25,3 +25,6 @@ __pycache__/
 .env
 .env.*
 /test-app*/
+
+# local hand-off notes, never published
+/HANDOFF.md
