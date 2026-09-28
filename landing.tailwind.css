@@ -1673,7 +1673,7 @@ footer.site a:hover { color: var(--ink); }
 .fat-col a:hover {
   color: var(--ink);
 }
-.fat-legal { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin-top: 40px; }
+.fat-legal { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px 20px; margin-top: 48px; }
 .fat-ai { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-caption); color: var(--ink-3); text-decoration: none; transition: color 150ms; }
 .fat-ai:hover { color: var(--ink); }
 .fat-copy {
