@@ -603,9 +603,24 @@ spline-viewer::part(logo) {
             </div>
           </li>
         </ol>
-        <div class="ai-info">
-          <p><strong>Your own look.</strong> <a href="./customize">Customize</a> accent, palette, font, radius and rail, press <strong>Copy for your AI tool</strong>, paste it into the same chat; the stock look ships without this.</p>
-          <p><strong>The check.</strong> Two gates refuse generic UI and screens without a reason; they run before every commit, and <code>npm run formic</code> runs them any time. If they fail, paste the output to your AI tool and say "fix every line".</p>
+        <div class="ai-after">
+          <div class="ai-after-card">
+            <div class="ai-after-icon"><svg width="22" height="22" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M232,32a8,8,0,0,0-8-8c-44.08,0-89.31,49.71-114.43,82.63A60,60,0,0,0,32,164c0,30.88-19.54,44.73-20.47,45.37A8,8,0,0,0,16,224H92a60,60,0,0,0,57.37-77.57C182.3,121.31,232,76.08,232,32ZM124.42,113.55q5.14-6.66,10.09-12.55A76.23,76.23,0,0,1,155,121.49q-5.9,4.94-12.55,10.09A60.54,60.54,0,0,0,124.42,113.55Zm42.7-2.68a92.57,92.57,0,0,0-22-22c31.78-34.53,55.75-45,69.9-47.91C212.17,55.12,201.65,79.09,167.12,110.87Z"/></svg></div>
+            <p class="ai-after-eyebrow">After the first page</p>
+            <h4>Your own look</h4>
+            <p>Pick the accent, palette, font, radius and rail in the customizer, press <strong>Copy for your AI tool</strong>, paste it into the same chat. Every page follows. Skip it and the stock look ships.</p>
+            <a class="lbtn lbtn-md lbtn-accent" href="./customize">Open the customizer</a>
+          </div>
+          <div class="ai-after-card">
+            <div class="ai-after-icon"><svg width="22" height="22" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.26,47,25.53a8,8,0,0,0,4.2,0c1-.27,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm-34.32,69.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"/></svg></div>
+            <p class="ai-after-eyebrow">Before every commit</p>
+            <h4>The check</h4>
+            <p>Two gates refuse generic UI and screens without a reason. They run on every commit, or any time you ask. If they fail, paste the output to your AI tool and say <strong>fix every line</strong>.</p>
+            <div class="lcode">
+              <div class="lcode-head">Terminal</div>
+              <pre>npm run formic</pre>
+            </div>
+          </div>
         </div>
         <div class="ai-ways">
           <div class="ai-way">
