@@ -1312,7 +1312,8 @@ header.site { animation: heroLift 1.2s var(--ease-out-quint) 0s backwards; }
 .live-container {
   position: relative;
   border-radius: 24px;
-  background-image: url('./assets/live-bg.webp');
+  /* a wash of the accent over the photo, so the section carries the brand colour */
+  background-image: linear-gradient(color-mix(in srgb, var(--accent) 14%, transparent), color-mix(in srgb, var(--accent) 14%, transparent)), url('./assets/live-bg.webp');
   background-size: cover;
   background-position: center;
   padding: 40px 100px 50px 100px;
