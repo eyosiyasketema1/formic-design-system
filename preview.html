@@ -898,8 +898,15 @@ tfoot .records-sticky-cell { z-index: 5; }
 .sidebar-glide-highlight { left: 8px; width: 208px; }
 [data-sidebar-collapsed="true"] .sidebar-glide-highlight { width: 36px; }
 
+/* Gallery chrome: a card reached by deep link (#/page?card=slug) shows its
+   outline once and lets it go. Under reduced motion it holds still for the
+   same moment instead of fading (the class is removed by script). */
+@keyframes card-flash { from { outline-color: var(--accent); } to { outline-color: transparent; } }
+.card-flash { outline: 2px solid transparent; outline-offset: 2px; animation: card-flash 1.2s var(--ease-out-quint) both; }
+
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  .card-flash { animation: none; outline-color: var(--accent); }
 }
 </style>
 <style>
@@ -15862,25 +15869,52 @@ function useRadius() { return useRootAttr("radius", "ds-radius", "default"); }
 function useSize() { return useRootAttr("size", "ds-size", "default"); }
 
 /* ═══════════ Routing: #/button — legacy #button anchors still resolve ═══════════ */
+/* #/button?card=<slug> is a deep link to one card: the page renders, then
+   the card scrolls into view and flashes its outline once (revealCard). */
 const ROUTE_ALIASES = { appsidebar: "sidebar", projectsidebar: "sidebar", sidebarnav: "sidebar" };
 function readRoute() {
-  let raw = (location.hash || "").replace(/^#\/?/, "");
+  let raw = (location.hash || "").replace(/^#\/?/, "").split("?")[0];
   raw = ROUTE_ALIASES[raw] ?? raw;
   return PAGE_INDEX[raw] !== undefined ? raw : PAGES[0].id;
 }
+/* the card id a deep link asks for, or null */
+function readCard() {
+  const q = (location.hash || "").split("?")[1];
+  const slug = q && new URLSearchParams(q).get("card");
+  return slug ? `card-${slugOf(slug)}` : null;
+}
+let PENDING_CARD = null;
+function revealCard(id) {
+  const el = document.getElementById(id);
+  if (!el) return false;
+  el.scrollIntoView({ block: "start" });
+  el.classList.remove("card-flash");
+  void el.offsetWidth;   // restart the animation when the same card is asked for twice
+  el.classList.add("card-flash");
+  setTimeout(() => el.classList.remove("card-flash"), 1300);
+  return true;
+}
 function useRoute() {
   const [route, setRoute] = useState(readRoute);
+  const routeRef = useRef(null);   // null on mount, so the first hash is never "the same page"
   useEffect(() => {
     const onHash = () => {
       /* the customizer is a different app in this file: reload into it */
       if (/^#\/?customize$/.test(location.hash)) { location.reload(); return; }
       const next = readRoute();
       // normalise old-style #button to #/button so the address bar is canonical
-      if (location.hash && !location.hash.startsWith("#/") && PAGE_INDEX[location.hash.slice(1)] !== undefined) {
+      if (location.hash && !location.hash.startsWith("#/") && PAGE_INDEX[location.hash.slice(1).split("?")[0]] !== undefined) {
         history.replaceState(null, "", `#/${location.hash.slice(1)}`);
       }
+      const same = next === routeRef.current;
+      routeRef.current = next;
       setRoute(next);
-      window.scrollTo({ top: 0 });
+      /* a deep link to a card: reveal it now when the run of pages stays as
+         it is, otherwise once the new route has rendered (App resolves
+         PENDING_CARD after the page is on screen) */
+      const card = readCard();
+      if (card && same && revealCard(card)) PENDING_CARD = null;
+      else { PENDING_CARD = card; if (!card) window.scrollTo({ top: 0 }); }
       const title = PAGES[PAGE_INDEX[next]]?.title;
       if (title) document.title = `${title} · Formic AI Design System`;
       /* Focus follows the navigation, so keyboard and screen-reader users
@@ -16334,6 +16368,125 @@ function Section({ id, title, note, children }) {
 /* Not Card: Card is overflow-hidden, and demo surfaces need floating UI
    (toolbars, popovers, tooltips) to escape the box rather than be clipped. */
 const slugOf = (s) => String(s).toLowerCase().replace(/&quot;/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+
+/* ═══════════ Per-variant prompts ═══════════ */
+/* Every card can hand an agent the exact demo it shows. The JSX is read
+   from this very script (the same text the search index reads): each
+   card's children, dedented, keyed by the Page_ function it sits in and
+   its label. A wrapper demo (<ButtonShapesDemo />) hides its props, so
+   that function's source rides along. Parsed once, on first use. */
+const GC_OPEN = "<Gallery" + "Card";     // split so the search index does not read these as a label
+const GC_CLOSE = "</Gallery" + "Card>";
+function dedentSource(text) {
+  const lines = text.replace(/^\n+|\s+$/g, "").split("\n");
+  const indents = lines.filter((l) => l.trim()).map((l) => l.match(/^\s*/)[0].length);
+  const min = indents.length ? Math.min(...indents) : 0;
+  return lines.map((l) => l.slice(min)).join("\n");
+}
+/* `function Name(` up to the brace that closes it */
+function functionSource(src, name) {
+  const m = src.match(new RegExp("\\nfunction " + name + "\\s*\\("));
+  if (!m) return null;
+  let depth = 0, started = false;
+  for (let i = m.index + 1; i < src.length; i++) {
+    const c = src[i];
+    if (c === "{") { depth++; started = true; }
+    else if (c === "}") { depth--; if (started && depth === 0) return src.slice(m.index + 1, i + 1); }
+  }
+  return null;
+}
+let GALLERY_SNIPPETS = null;
+function gallerySnippets() {
+  if (GALLERY_SNIPPETS) return GALLERY_SNIPPETS;
+  const map = new Map();
+  const src = document.querySelector('script[type="text/babel"]')?.textContent || "";
+  const parts = src.split(/\nfunction (Page_\w+)\(/);
+  for (let p = 1; p < parts.length; p += 2) {
+    const fn = parts[p], part = parts[p + 1];
+    let from = 0;
+    for (;;) {
+      const at = part.indexOf(GC_OPEN + " label=\"", from);
+      if (at < 0) break;
+      const labelAt = at + GC_OPEN.length + 8;
+      const label = part.slice(labelAt, part.indexOf("\"", labelAt)).replace(/&quot;/g, "\"");
+      /* the end of the opening tag: the first > outside a {…} expression */
+      let i = at + GC_OPEN.length, depth = 0;
+      for (; i < part.length; i++) {
+        const c = part[i];
+        if (c === "{") depth++; else if (c === "}") depth--;
+        else if (c === ">" && depth === 0) break;
+      }
+      const bodyStart = i + 1;
+      if (part[i - 1] === "/") { from = bodyStart; continue; }
+      /* the matching close, counting nested cards */
+      let nest = 1, j = bodyStart;
+      while (nest > 0) {
+        const o = part.indexOf(GC_OPEN, j), c = part.indexOf(GC_CLOSE, j);
+        if (c < 0) { j = -1; break; }
+        if (o >= 0 && o < c) { nest++; j = o + GC_OPEN.length; } else { nest--; j = c + (nest === 0 ? 0 : GC_CLOSE.length); }
+      }
+      if (j < 0) break;
+      let jsx = dedentSource(part.slice(bodyStart, j));
+      const wrap = jsx.match(/^<(\w+)(\s[^>]*)?\/>$/);
+      if (wrap && /Demo$/.test(wrap[1])) {
+        const fnSrc = functionSource(part, wrap[1]) || functionSource(src, wrap[1]);
+        if (fnSrc) jsx += "\n\n" + fnSrc.trim();
+      }
+      const lines = jsx.split("\n");
+      if (lines.length > 60) jsx = lines.slice(0, 60).join("\n") + "\n/* … */";
+      map.set(fn + "\n" + label, jsx);
+      from = j + GC_CLOSE.length;
+    }
+  }
+  return (GALLERY_SNIPPETS = map);
+}
+/* Which registry item installs a page's files: the kebab-case of the file
+   stem (StatCard.tsx → stat-card, charts.tsx → charts). The shared modules
+   and everything outside components/ come with the base install. */
+const BASE_ITEMS = ["primitives", "hooks", "config", "brand", "theme", "doodle"];
+function installHint(page) {
+  const items = page.file.split(" ").map((file) => {
+    const item = file.replace(/^.*\//, "").replace(/\.tsx?$/, "").replace(/([A-Z]+)([A-Z][a-z])/g, "$1-$2").replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+    return { file: `src/formic/${file}`, item, base: !/^components\//.test(file) || BASE_ITEMS.includes(item) };
+  });
+  return { first: items[0], others: items.slice(1).filter((x) => !x.base) };
+}
+const GALLERY_URL = /^https?:$/.test(location.protocol) ? location.origin + location.pathname : "https://formicai.dev/preview.html";
+const cardLink = (page, label) => `${GALLERY_URL}#/${page.id}?card=${slugOf(label)}`;
+/* the page's opening: who to use and how to install it, shared by the
+   page prompt and every variant prompt */
+function installClause(page) {
+  const { first, others } = installHint(page);
+  const also = others.length ? ` This page also uses ${others.map((o) => o.item).join(", ")}.` : "";
+  return first.base
+    ? { inline: `${first.file}, part of the base install`, sentence: `${first.file} is part of the base install.${also}` }
+    : { inline: `npx formicai add ${first.item} if ${first.file} is missing${others.length ? `; this page also uses ${others.map((o) => o.item).join(", ")}` : ""}`, sentence: `If ${first.file} is missing, run: npx formicai add ${first.item}.${also}` };
+}
+function variantPrompt(page, label) {
+  const jsx = gallerySnippets().get(`${page.Component.name}\n${label}`);
+  const head = `Use Formic (src/formic), read AGENTS.md, then use ${page.title} the way the gallery's "${label}" variant does. ${installClause(page).sentence}`;
+  const body = jsx
+    ? `Build it exactly like this demo, keeping the props and the data shape, and replace the demo values with mine:\n${jsx}`
+    : `Open the gallery link for the demo and build it the same way, keeping the props and the data shape, and replace the demo values with mine.`;
+  return `${head}\n${body}\nGallery: ${cardLink(page, label)}`;
+}
+/* a quiet icon button that copies text and shows a check for a moment;
+   the outcome is announced to screen readers */
+function CopyIconButton({ text, label, icon, className = "" }) {
+  const [done, setDone] = useState(false);
+  const copy = () => {
+    try { navigator.clipboard.writeText(typeof text === "function" ? text() : text).then(() => { setDone(true); setTimeout(() => setDone(false), 1400); }).catch(() => {}); } catch {}
+  };
+  return (
+    <Tooltip label={label}>
+      <IconButton label={label} onClick={copy} className={`size-7 text-ink-3 hover:bg-hover hover:text-ink ${className}`}>
+        <Icon name={done ? "check" : icon} size={13} strokeWidth={2} />
+        <span className="sr-only" aria-live="polite">{done ? "Copied" : ""}</span>
+      </IconButton>
+    </Tooltip>
+  );
+}
+const GalleryPageCtx = createContext(null);
 /* A card whose demo moves on its own (a chart entrance, a stream, a stagger)
    gets a replay control in its corner: the demo is remounted so the motion
    plays again. Detected, not declared: after mount the subtree is asked for
@@ -16353,16 +16506,25 @@ function GalleryCard({ label, wide, full, children }) {
     const t1 = setTimeout(probe, 120), t2 = setTimeout(probe, 700);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [take, reduced]);
+  /* the page this card is on, for its prompt and its deep link; a card
+     rendered outside a page (none today) simply has no copy controls */
+  const page = useContext(GalleryPageCtx);
   return (
     <div id={`card-${slugOf(label)}`} className={`relative scroll-mt-6 rounded-card bg-surface p-5 shadow-card ${full ? "w-full" : wide ? "w-full max-w-105" : ""}`}>
-      <p className={`mb-3 font-mono text-micro tracking-wide text-ink-3 uppercase ${moves ? "pr-8" : ""}`}>{label}</p>
-      {moves && (
-        <Tooltip label="Play again">
-          <IconButton label={`Play ${label} again`} onClick={() => setTake((n) => n + 1)} className="absolute top-3 right-3 size-7 text-ink-3 hover:bg-hover hover:text-ink">
-            <Icon name="play" size={13} strokeWidth={2} />
-          </IconButton>
-        </Tooltip>
-      )}
+      <p className={`mb-3 font-mono text-micro tracking-wide text-ink-3 uppercase ${page ? (moves ? "pr-26" : "pr-18") : moves ? "pr-8" : ""}`}>{label}</p>
+      {/* always there, quiet: the gallery is a tool, and an agent's prompt
+          is the thing a card is for. Copy prompt, copy link, then Play. */}
+      <div className="absolute top-3 right-3 flex items-center gap-1">
+        {page && <CopyIconButton icon="copy" label="Copy prompt for this variant" text={() => variantPrompt(page, label)} />}
+        {page && <CopyIconButton icon="link" label="Copy link to this variant" text={() => cardLink(page, label)} />}
+        {moves && (
+          <Tooltip label="Play again">
+            <IconButton label={`Play ${label} again`} onClick={() => setTake((n) => n + 1)} className="size-7 text-ink-3 hover:bg-hover hover:text-ink">
+              <Icon name="play" size={13} strokeWidth={2} />
+            </IconButton>
+          </Tooltip>
+        )}
+      </div>
       {/* a one-column grid, not display: contents: a demo with h-full (Panel, a shell) sizes to its content in an auto row instead of to the card */}
       <div ref={bodyRef} key={take} className="grid min-w-0 [&>*]:min-w-0">{children}</div>
     </div>
@@ -16376,13 +16538,12 @@ function DocsPage({ page, index, pg, state: givenState, set: givenSet, first = t
   const state = givenState ?? ownState, set = givenSet ?? ownSet;
   /* the one thing to copy: a prompt that names the component and its file, for
      whichever AI tool is open on a Formic project */
-  const files = page.file.split(" ");
-  const names = files.map((f) => f.replace(/^components\//, "").replace(/\.tsx?$/, ""));
-  const prompt = `Use Formic (src/formic), read AGENTS.md, then use the ${page.title} component (src/formic/${files[0]}${files.length > 1 ? ` and ${files.slice(1).map((f) => `src/formic/${f}`).join(", ")}` : ""}) to `;
+  const prompt = `Use Formic (src/formic), read AGENTS.md, then use ${page.title} (${installClause(page).inline}) to `;
   const [copied, setCopied] = useState(false);
   const copy = () => { try { navigator.clipboard.writeText(prompt); setCopied(true); setTimeout(() => setCopied(false), 1400); } catch {} };
   const PageBody = page.Component;
   return (
+    <GalleryPageCtx.Provider value={page}>
     <div className="flex min-w-0 gap-8" data-page={page.id}>
       <div className="min-w-0 flex-1">
         <header className="mb-8 flex items-start justify-between gap-4">
@@ -16398,7 +16559,7 @@ function DocsPage({ page, index, pg, state: givenState, set: givenSet, first = t
             <code className="min-w-0 flex-1 truncate font-mono text-small text-ink" title={prompt}>{prompt}<span className="text-ink-3">…what you want it to show</span></code>
             <Button variant="accent-soft" size="sm" icon={<Icon name={copied ? "check" : "copy"} size={14} />} onClick={copy} className="shrink-0" aria-live="polite">{copied ? "Copied" : "Copy prompt"}</Button>
           </div>
-          <p className="mt-2 text-caption text-ink-3">Paste it into Claude Code, Cursor or any agent open on a Formic project and finish the sentence. No project yet? <a href="./#start" className="text-ink underline decoration-line underline-offset-2 hover:decoration-ink">One command sets one up</a>.</p>
+          <p className="mt-2 text-caption text-ink-3">Paste it into Claude Code, Cursor or any agent open on a Formic project and finish the sentence. Every variant below has its own Copy prompt in its corner, with the exact props of that demo. No project yet? <a href="./#start" className="text-ink underline decoration-line underline-offset-2 hover:decoration-ink">One command sets one up</a>.</p>
         </section>
 
         {pg && (
@@ -16417,6 +16578,7 @@ function DocsPage({ page, index, pg, state: givenState, set: givenSet, first = t
         </div>
       </div>
     </div>
+    </GalleryPageCtx.Provider>
   );
 }
 
@@ -18393,12 +18555,10 @@ function searchGallery(q) {
   };
   return entries.map((e) => [score(e), e]).filter(([s]) => s >= 0).sort((a, b) => b[0] - a[0]).slice(0, 14).map(([, e]) => e);
 }
-let PENDING_CARD = null;
+/* a variant hit becomes its deep link (#/page?card=slug), so the router
+   reveals the card the same way a pasted link does */
 function goTo(entry) {
-  const target = `#/${entry.id}`;
-  const card = entry.card ? document.getElementById(entry.card) : null;
-  if (card) { card.scrollIntoView({ block: "start" }); return; }   // already on the page
-  PENDING_CARD = entry.card || null;
+  const target = `#/${entry.id}${entry.card ? `?card=${entry.card.replace(/^card-/, "")}` : ""}`;
   if (location.hash === target) window.dispatchEvent(new HashChangeEvent("hashchange"));
   else location.hash = target;
 }
@@ -18476,11 +18636,12 @@ function App() {
     onScroll();
     return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("wheel", onWheel); window.removeEventListener("keydown", onKey); cancelAnimationFrame(raf); };
   }, [start, current, before]);
-  /* a search hit on a variant lands on its card once the page has rendered */
+  /* a deep link or a search hit on a variant lands on its card once the
+     page has rendered (revealCard scrolls and flashes the outline) */
   useEffect(() => {
     if (!PENDING_CARD) return;
     const id = PENDING_CARD; PENDING_CARD = null;
-    requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: "start" }));
+    requestAnimationFrame(() => revealCard(id));
   }, [route]);
   const [searchOpen, setSearchOpen] = useState(false);
   useEffect(() => {
