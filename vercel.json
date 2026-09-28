@@ -42,6 +42,7 @@
   ],
   "rewrites": [
     { "source": "/customize", "destination": "/preview.html" },
+    { "source": "/llm-info", "destination": "/ai-guide.html" },
     { "source": "/r/pro/registry.json", "destination": "/api/pro/item?name=registry" },
     { "source": "/r/pro/:name.json", "destination": "/api/pro/item?name=:name" },
     { "source": "/r/registry.json", "destination": "/registry/registry.json" },

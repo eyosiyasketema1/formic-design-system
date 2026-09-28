@@ -6,7 +6,7 @@ import {
   ArrowsClockwise, ArrowsDownUp, ArrowsIn, ArrowsOut, BatteryMedium, Bell, BookmarkSimple, Bug,
   Buildings, CalendarBlank, CaretDown, CaretLeft, CaretRight, ChartBar, ChartLine, ChartPie,
   ChatCircleText, Check, CheckCircle, Checks, Clipboard, Clock, ClockCounterClockwise, Cloud,
-  Code, Copy, CreditCard, Database, DotsSixVertical, DotsThree, DotsThreeVertical, DownloadSimple,
+  Code, Copy, CreditCard, CursorClick, Database, DotsSixVertical, DotsThree, DotsThreeVertical, DownloadSimple,
   EnvelopeSimple, Eye, EyeSlash, FileText, Flag, Folder, Funnel, FunnelX,
   Gear, Gift, Globe, House, Image, Info, Key, Lightning,
   Link, List, Lock, MagnifyingGlass, MagnifyingGlassMinus, MagnifyingGlassPlus, MapPin, Microphone,
@@ -90,7 +90,7 @@ export type IconName =
    | "code" | "terminal" | "bug" | "rocket" | "bolt" | "target" | "trophy" | "gift" | "logout" | "login"
    | "language" | "filter-off" | "adjustments" | "table" | "list" | "layout" | "dashboard" | "inbox" | "send"
    | "reply" | "forward" | "attachment" | "pin" | "qr" | "wifi" | "battery" | "sun-high" | "check-all" | "ban"
-   | "circle-x" | "refresh-alert";
+   | "circle-x" | "refresh-alert" | "cursor-click";
 const ICONS: Record<IconName, PhosphorIcon> = {
   chevron: CaretDown,
   bell: Bell,
@@ -214,6 +214,7 @@ const ICONS: Record<IconName, PhosphorIcon> = {
   ban: Prohibit,
   "circle-x": XCircle,
   "refresh-alert": ArrowsClockwise,
+  "cursor-click": CursorClick,
 };
 /* ── iconFor — the glyph a label is asking for ────────── */
 /* Agents kept pairing "Refresh" with an upload arrow. This resolves a
