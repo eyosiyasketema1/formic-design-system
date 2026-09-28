@@ -14,6 +14,7 @@ __pycache__/
 /*.html
 !/index.html
 !/preview.html
+!/ai-guide.html
 /landing page/
 !/landing.js
 !/robots.txt
