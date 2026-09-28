@@ -1731,6 +1731,7 @@ spline-viewer::part(logo) {
 
 
 .qs-example-btn {
+  display: inline-flex; align-items: center; gap: 6px;
   background: transparent;
   border: none;
   color: var(--ink-2);
