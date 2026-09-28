@@ -686,6 +686,8 @@ header.site.header-blur .hero-gh-btn:hover { filter: brightness(1.1); }
 
 /* Inverted states when scrolled down over the white page */
 header.site[data-scrolled="true"] .hero-invert { filter: none; }
+[data-theme="dark"] header.site[data-scrolled="true"] .hero-invert,
+header.site.nav-on-dark .hero-invert { filter: brightness(0) invert(1); }
 header.site[data-scrolled="true"] .hero-text-white { color: var(--ink); }
 header.site[data-scrolled="true"] .brand-rest.hero-text-white { color: var(--ink-2); }
 header.site[data-scrolled="true"] .site-nav a.hero-link { color: var(--ink-2); }
@@ -695,55 +697,14 @@ header.site[data-scrolled="true"] .hero-icon-btn:hover { color: var(--ink); back
 header.site[data-scrolled="true"] .hero-gh-btn { background: var(--accent); color: var(--canvas); border-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
 header.site[data-scrolled="true"] .hero-gh-btn:hover { filter: brightness(1.1); }
 
-/* Progressive blur: three stacked backdrop layers, each blurrier than the
-   last and masked to reach less far down. Where they overlap at the top the
-   blur compounds, so it ramps from heavy at the bar to nothing below it —
-   a gradient of blur, not one flat sheet with a hard edge. */
-.header-blur {
-  position: absolute; left: 0; right: 0; top: 0; height: 190%;
-  pointer-events: none; z-index: -1; opacity: 0;
-  transition: opacity 300ms var(--ease-out-quint);
-}
-header.site[data-scrolled="true"] .header-blur,
-header.site[data-nav-open="true"] .header-blur { opacity: 1; }
-.header-blur > span { position: absolute; inset: 0; display: block; }
-.header-blur > span:nth-child(1) {
-  backdrop-filter: blur(1px); -webkit-backdrop-filter: blur(1px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 72%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 72%);
-}
-.header-blur > span:nth-child(2) {
-  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 24%, transparent 52%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 24%, transparent 52%);
-}
-.header-blur > span:nth-child(3) {
-  backdrop-filter: blur(12px) url(#glass-distortion) saturate(1.5); -webkit-backdrop-filter: blur(12px) url(#glass-distortion) saturate(1.5);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 34%);
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 34%);
-}
-/* the tint rides the same fade, so copy stays legible without a hard rule */
-.header-blur::after {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(to bottom,
-    color-mix(in srgb, var(--canvas) 76%, transparent) 0%,
-    color-mix(in srgb, var(--canvas) 46%, transparent) 38%,
-    transparent 78%);
-}
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  header.site[data-scrolled="true"], header.site[data-nav-open="true"] {
-    background: color-mix(in srgb, var(--canvas) 96%, transparent);
-  }
-}
-
-/* Hide the progressive blur when overlapping the full-bleed colored cards */
-header.site.header-over-cards .header-blur { opacity: 0 !important; }
 /* Force text/icons back to white when over the cards */
 header.site.header-over-cards .hero-invert { filter: brightness(0) invert(1) !important; }
 header.site.header-over-cards .hero-text-white { color: #fff !important; }
 header.site.header-over-cards .brand-rest.hero-text-white { color: #fff !important; }
-header.site.header-over-cards .site-nav a.hero-link { color: #fff !important; }
-header.site.header-over-cards .site-nav a.hero-link:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
+header.site.header-over-cards .site-nav a.hero-link,
+header.site.nav-on-dark .site-nav a.hero-link { color: #fff !important; }
+header.site.header-over-cards .site-nav a.hero-link:hover,
+header.site.nav-on-dark .site-nav a.hero-link:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
 header.site.header-over-cards .hero-icon-btn { color: #fff !important; }
 header.site.header-over-cards .hero-icon-btn:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
 header.site.header-over-cards .hero-gh-btn { background: var(--accent) !important; color: var(--canvas) !important; border-color: transparent !important; }
@@ -1502,7 +1463,7 @@ body:has(dialog[open]) { overflow: hidden; }
 .ai-steps .lcode { margin-top: 10px; background: var(--surface); }
 /* the two things that come after the first page: one card each, icon, eyebrow, title, one paragraph, one action */
 .ai-after { display: grid; gap: 14px; margin-top: 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.ai-after-card { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); corner-shape: squircle; }
+.ai-after-card { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 24px; border: 0; border-radius: 16px; background: var(--surface); corner-shape: squircle; }
 .ai-after-icon { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--radius-control); background: var(--accent-tint); color: var(--accent); margin-bottom: 4px; corner-shape: squircle; }
 .ai-after-eyebrow { margin: 0; font-size: var(--text-small); font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; color: var(--ink-3); }
 .ai-after-card h4 { margin: 0; font-size: var(--text-title); font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
