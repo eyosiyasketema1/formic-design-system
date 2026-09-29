@@ -991,7 +991,7 @@ const { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, useI
 /* mirror of components/config.ts — the defaults an app chooses at
    formicai.dev/customize (apply_config.py writes the real one) */
 const FORMIC_CONFIG = { avatar: "initials", sidebar: "full", sidebarState: "expanded", motion: true };
-const FORMIC_VERSION = "0.5.1"; /* mirrors package.json; the gate checks they agree */
+const FORMIC_VERSION = "0.5.2"; /* mirrors package.json; the gate checks they agree */
 
 /* ═══════════ Primitives ═══════════ */
 /* Icons: real projects use @phosphor-icons/react through the Icon wrapper in
@@ -3180,6 +3180,12 @@ function PromptBar({
   const [autoStep, setAutoStep] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [sweep, setSweep] = useState(0);
+  const [viewport, setViewport] = useState(0);
+  useEffect(() => {
+    const onResize = () => setViewport(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   const wide = expanded || tall;
   const [rowBox, setRowBox] = useState(null);
   const [engaged, setEngaged] = useState(false);
@@ -3268,7 +3274,9 @@ function PromptBar({
     const fixedControlsWidth = 28 * 3 + modelButton.offsetWidth;
     const inlineGaps = 4 * 4;
     const inlineInputWidth = controls.clientWidth - fixedControlsWidth - inlineGaps;
-    const needsFullWidth = draft.includes("\n") || measure.offsetWidth + 8 > inlineInputWidth;
+    /* a narrow container (a phone, a side panel) cannot hold a usable inline
+       input next to the model button, so the input takes its own row */
+    const needsFullWidth = draft.includes("\n") || inlineInputWidth < 120 || measure.offsetWidth + 8 > inlineInputWidth;
     if (needsFullWidth !== expanded) {
       setExpanded(needsFullWidth);
     }
@@ -3278,7 +3286,7 @@ function PromptBar({
     const contentHeight = input.scrollHeight;
     input.style.height = `${Math.min(Math.max(contentHeight, minHeight), maxHeight)}px`;
     input.style.overflowY = contentHeight > maxHeight ? "auto" : "hidden";
-  }, [draft, expanded]);
+  }, [draft, expanded, viewport]);
   useEffect(() => {
     if (!modelOpen && !plusOpen) return;
     const close = (event) => {
@@ -7201,8 +7209,12 @@ function SelectionActions({
         y: Math.round(lastLine.bottom - hostBounds.top + 8)
       };
       const barHalf = (barRef.current?.getBoundingClientRect().width ?? 0) / 2;
-      const minX = 24 + barHalf - hostBounds.left;
-      const maxX = window.innerWidth - 24 - barHalf - hostBounds.left;
+      /* stay inside the host when it is narrower than the viewport (a phone,
+         a side panel); on a wide page the viewport is the only limit */
+      const left = Math.max(24, hostBounds.left);
+      const right = Math.min(window.innerWidth - 24, hostBounds.right);
+      const minX = left + barHalf - hostBounds.left;
+      const maxX = right - barHalf - hostBounds.left;
       next.x = Math.round(minX > maxX ? (minX + maxX) / 2 : Math.min(Math.max(next.x, minX), maxX));
       setAnchor(
         (current) => current.x === next.x && current.y === next.y ? current : next
@@ -7312,7 +7324,7 @@ function SelectionActions({
   }
           <div
     ref={barRef}
-    className="flex h-9 w-fit max-w-[calc(100vw-48px)] items-center gap-0.5 overflow-x-auto overflow-y-hidden rounded-full bg-surface p-1 text-ink shadow-overlay [scrollbar-width:none]"
+    className="flex h-9 w-fit max-w-[min(100vw-48px,100%)] items-center gap-0.5 overflow-x-auto overflow-y-hidden rounded-full bg-surface p-1 text-ink shadow-overlay [scrollbar-width:none]"
     style={{
       width: mode === "idle" && hasPrompt && typingWidth ? typingWidth : void 0,
       ...visible ? { animation: "pop-in 220ms var(--ease-out-quint) both" } : {}
@@ -18082,8 +18094,23 @@ function AppShell({
   const isTopBar = rail === "topbar";
   const isBare = rail === "none";
   const isChat = rail === "chat";
-  const header = (title || actions) && !isTopBar && !isBare && !isChat && (
-    <header className="flex flex-wrap items-center justify-between gap-3">
+  const hasHeader = Boolean(title || actions) && !isTopBar && !isBare && !isChat;
+  /* The compact bar: the page title and its actions stay in reach once the
+     full header has scrolled away, the way every app keeps an anchor at
+     the top (Linear, Notion, Stripe). The tall header itself scrolls, so
+     the screen keeps its height; only a 48px strip stays. TopBar, the
+     header strip and the chat rail already are that anchor. */
+  const headerRef = useRef(null);
+  const [stuck, setStuck] = useState(false);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el || !hasHeader || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setStuck(!entry.isIntersecting), { threshold: 0 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasHeader]);
+  const header = hasHeader && (
+    <header ref={headerRef} className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
         <div className="min-w-0">
           {title && <h1 className="truncate text-display font-semibold tracking-tight text-ink">{title}</h1>}
@@ -18093,8 +18120,22 @@ function AppShell({
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </header>
   );
+  /* zero-height sticky wrapper, so the bar takes no room in the flow; the
+     negative margins undo the content padding and the column gap */
+  const stickyBar = hasHeader && (
+    <div className={`sticky top-0 z-20 h-0 ${padding ? "-mx-6 -mt-6 -mb-6 sm:-mx-8 sm:-mt-8" : "-mb-6"}`} aria-hidden={!stuck}>
+      <div
+        className={`absolute inset-x-0 top-0 flex h-12 items-center justify-between gap-3 border-b border-line bg-surface px-6 transition-[opacity,transform] duration-150 sm:px-8 ${stuck ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"}`}
+        style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
+      >
+        <div className="min-w-0 truncate text-lead font-semibold tracking-tight text-ink">{title}</div>
+        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      </div>
+    </div>
+  );
   const content = (
     <div className={`page-content flex min-w-0 flex-col gap-6 ${padding ? "p-6 sm:p-8" : ""}`}>
+      {stickyBar}
       {header}
       {isTopBar && caption && <p className="-mt-3 text-caption text-ink-2">{caption}</p>}
       {children}

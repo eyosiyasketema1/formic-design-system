@@ -177,6 +177,12 @@ export default function PromptBar({
   const [autoStep, setAutoStep] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [sweep, setSweep] = useState(0);
+  const [viewport, setViewport] = useState(0);
+  useEffect(() => {
+    const onResize = () => setViewport(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   const wide = expanded || tall;
   const [rowBox, setRowBox] = useState<{ top: number; height: number } | null>(null);
   const [engaged, setEngaged] = useState(false);
@@ -283,7 +289,9 @@ export default function PromptBar({
     const fixedControlsWidth = 28 * 3 + modelButton.offsetWidth;
     const inlineGaps = 4 * 4;
     const inlineInputWidth = controls.clientWidth - fixedControlsWidth - inlineGaps;
-    const needsFullWidth = draft.includes("\n") || measure.offsetWidth + 8 > inlineInputWidth;
+    /* a narrow container (a phone, a side panel) cannot hold a usable inline
+       input next to the model button, so the input takes its own row */
+    const needsFullWidth = draft.includes("\n") || inlineInputWidth < 120 || measure.offsetWidth + 8 > inlineInputWidth;
     if (needsFullWidth !== expanded) {
       setExpanded(needsFullWidth);
     }
@@ -293,7 +301,7 @@ export default function PromptBar({
     const contentHeight = input.scrollHeight;
     input.style.height = `${Math.min(Math.max(contentHeight, minHeight), maxHeight)}px`;
     input.style.overflowY = contentHeight > maxHeight ? "auto" : "hidden";
-  }, [draft, expanded]);
+  }, [draft, expanded, viewport]);
   /* clicking anywhere outside the composer closes the open menus */
   useEffect(() => {
     if (!modelOpen && !plusOpen) return;

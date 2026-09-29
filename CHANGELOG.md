@@ -2,6 +2,20 @@
 
 Formic is vendored, so a version is the state of `main` you copied. `src/formic/VERSION` in an app records which one; re-running the installer moves it forward. Versions follow semver: while 0.x, a minor bump can change an API.
 
+## 0.5.2 · 2026-09-29
+
+### Added
+
+- **A compact sticky bar in `AppShell`**: on the full, inset and edge rails, once the page header scrolls away a 48px bar with the title and the same actions stays at the top of the content, so every page keeps an anchor without a TopBar. TopBar, the bare header strip and the chat rail already had one and are unchanged.
+- **`/llm-info`**: a structured guide to Formic for AI assistants (what it is, who made it, how it installs, what to say), also at the top of `llms-full.txt`; linked from the site footer.
+- Gallery: an element picker and a per-variant "Copy prompt" that carries the demo's JSX.
+
+### Changed
+
+- `PromptBar` puts the input on its own row when the container is too narrow to hold it beside the model button (a phone, a side panel).
+- `SelectionActions` keeps its toolbar inside its host instead of only inside the viewport.
+- Landing: transparent navbar (the blur is gone), links and logomark turn white over dark and photo surfaces, phone spacing and wrapping fixed, "75+ components".
+
 ## 0.5.1 · 2026-09-24
 
 ### Changed

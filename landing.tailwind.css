@@ -1801,3 +1801,22 @@ spline-viewer::part(logo) {
   transform: scale(1.1);
 }
 
+
+/* ── Phone fixes (≤640px): a bar that covers content gets a surface, the
+   coffee button shrinks to its icon, the quick-start rows wrap instead of
+   squeezing, terminal lines wrap instead of scrolling, and the card
+   paddings drop a step so copy gets the width back. ── */
+@media (max-width: 640px) {
+  header.site[data-scrolled="true"]:not(.nav-on-dark):not(.header-over-cards) { background: var(--canvas); border-bottom: 1px solid var(--line); }
+  header.site .gh-label { display: none; }
+  header.site .lbtn-md { padding: 0 10px; }
+  .qs-tabs-row { flex-wrap: wrap; gap: 8px; }
+  .qs-tab { white-space: nowrap; padding: 0 12px; }
+  .qs-example-btn { white-space: nowrap; padding-left: 0; }
+  .lcode pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 12px 14px; }
+  .ai-note { padding: 14px; }
+  .ai-steps li { padding-left: 34px; }
+  .ai-steps li::before { left: 6px; }
+  .landing-section { padding: 48px 0; }
+  .ai-after-card { padding: 18px; }
+}

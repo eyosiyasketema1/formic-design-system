@@ -1,5 +1,5 @@
 "use client";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import AppSidebar, { DEFAULT_SECTIONS, type AppSidebarSection, type AppSidebarUser, type AppSidebarWorkspace } from "./AppSidebar";
 import ProjectSidebar, { ProjectInset, ProjectSidebarTrigger, useProjectSidebar, type ProjectGroup } from "./ProjectSidebar";
 import SidebarNav, { type SidebarNavItem, type SidebarRecent } from "./SidebarNav";
@@ -123,8 +123,23 @@ export default function AppShell({
   const isTopBar = rail === "topbar";
   const isBare = rail === "none";
   const isChat = rail === "chat";
-  const header = (title || actions) && !isTopBar && !isBare && !isChat && (
-    <header className="flex flex-wrap items-center justify-between gap-3">
+  const hasHeader = Boolean(title || actions) && !isTopBar && !isBare && !isChat;
+  /* The compact bar: the page title and its actions stay in reach once the
+     full header has scrolled away, the way every app keeps an anchor at
+     the top (Linear, Notion, Stripe). The tall header itself scrolls, so
+     the screen keeps its height; only a 48px strip stays. TopBar, the
+     header strip and the chat rail already are that anchor. */
+  const headerRef = useRef<HTMLElement>(null);
+  const [stuck, setStuck] = useState(false);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el || !hasHeader || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setStuck(!entry.isIntersecting), { threshold: 0 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasHeader]);
+  const header = hasHeader && (
+    <header ref={headerRef} className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
         <div className="min-w-0">
           {title && <h1 className="truncate text-display font-semibold tracking-tight text-ink">{title}</h1>}
@@ -134,8 +149,22 @@ export default function AppShell({
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </header>
   );
+  /* zero-height sticky wrapper, so the bar takes no room in the flow; the
+     negative margins undo the content padding and the column gap */
+  const stickyBar = hasHeader && (
+    <div className={`sticky top-0 z-20 h-0 ${padding ? "-mx-6 -mt-6 -mb-6 sm:-mx-8 sm:-mt-8" : "-mb-6"}`} aria-hidden={!stuck}>
+      <div
+        className={`absolute inset-x-0 top-0 flex h-12 items-center justify-between gap-3 border-b border-line bg-surface px-6 transition-[opacity,transform] duration-150 sm:px-8 ${stuck ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"}`}
+        style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
+      >
+        <div className="min-w-0 truncate text-lead font-semibold tracking-tight text-ink">{title}</div>
+        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      </div>
+    </div>
+  );
   const content = (
     <div className={`page-content flex min-w-0 flex-col gap-6 ${padding ? "p-6 sm:p-8" : ""}`}>
+      {stickyBar}
       {header}
       {isTopBar && caption && <p className="-mt-3 text-caption text-ink-2">{caption}</p>}
       {children}
