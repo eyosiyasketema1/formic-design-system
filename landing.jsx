@@ -821,6 +821,12 @@ function PromptBar({
   const [autoStep, setAutoStep] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [sweep, setSweep] = useState(0);
+  const [viewport, setViewport] = useState(0);
+  useEffect(() => {
+    const onResize = () => setViewport(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   const wide = expanded || tall;
   const [rowBox, setRowBox] = useState(null);
   const [engaged, setEngaged] = useState(false);
@@ -909,7 +915,9 @@ function PromptBar({
     const fixedControlsWidth = 28 * 3 + modelButton.offsetWidth;
     const inlineGaps = 4 * 4;
     const inlineInputWidth = controls.clientWidth - fixedControlsWidth - inlineGaps;
-    const needsFullWidth = draft.includes("\n") || measure.offsetWidth + 8 > inlineInputWidth;
+    /* a narrow container (a phone, a side panel) cannot hold a usable inline
+       input next to the model button, so the input takes its own row */
+    const needsFullWidth = draft.includes("\n") || inlineInputWidth < 120 || measure.offsetWidth + 8 > inlineInputWidth;
     if (needsFullWidth !== expanded) {
       setExpanded(needsFullWidth);
     }
@@ -919,7 +927,7 @@ function PromptBar({
     const contentHeight = input.scrollHeight;
     input.style.height = `${Math.min(Math.max(contentHeight, minHeight), maxHeight)}px`;
     input.style.overflowY = contentHeight > maxHeight ? "auto" : "hidden";
-  }, [draft, expanded]);
+  }, [draft, expanded, viewport]);
   useEffect(() => {
     if (!modelOpen && !plusOpen) return;
     const close = (event) => {
@@ -1288,8 +1296,12 @@ function SelectionActions({
         y: Math.round(lastLine.bottom - hostBounds.top + 8)
       };
       const barHalf = (barRef.current?.getBoundingClientRect().width ?? 0) / 2;
-      const minX = 24 + barHalf - hostBounds.left;
-      const maxX = window.innerWidth - 24 - barHalf - hostBounds.left;
+      /* stay inside the host when it is narrower than the viewport (a phone,
+         a side panel); on a wide page the viewport is the only limit */
+      const left = Math.max(24, hostBounds.left);
+      const right = Math.min(window.innerWidth - 24, hostBounds.right);
+      const minX = left + barHalf - hostBounds.left;
+      const maxX = right - barHalf - hostBounds.left;
       next.x = Math.round(minX > maxX ? (minX + maxX) / 2 : Math.min(Math.max(next.x, minX), maxX));
       setAnchor(
         (current) => current.x === next.x && current.y === next.y ? current : next
@@ -1400,7 +1412,7 @@ function SelectionActions({
   }
           <div
     ref={barRef}
-    className="flex h-9 w-fit max-w-[calc(100vw-48px)] items-center gap-0.5 overflow-x-auto overflow-y-hidden rounded-full bg-surface p-1 text-ink shadow-overlay [scrollbar-width:none]"
+    className="flex h-9 w-fit max-w-[min(100vw-48px,100%)] items-center gap-0.5 overflow-x-auto overflow-y-hidden rounded-full bg-surface p-1 text-ink shadow-overlay [scrollbar-width:none]"
     style={{
       width: mode === "idle" && hasPrompt && typingWidth ? typingWidth : void 0,
       ...visible ? { animation: "pop-in 220ms var(--ease-out-quint) both" } : {}

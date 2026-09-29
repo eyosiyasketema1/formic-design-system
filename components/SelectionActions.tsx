@@ -105,8 +105,12 @@ export default function SelectionActions({
       /* clamp the centered bar inside the viewport (24px gutters) —
        * a short selection near an edge must not push it off-screen */
       const barHalf = (barRef.current?.getBoundingClientRect().width ?? 0) / 2;
-      const minX = 24 + barHalf - hostBounds.left;
-      const maxX = window.innerWidth - 24 - barHalf - hostBounds.left;
+      /* stay inside the host when it is narrower than the viewport (a phone,
+         a side panel); on a wide page the viewport is the only limit */
+      const left = Math.max(24, hostBounds.left);
+      const right = Math.min(window.innerWidth - 24, hostBounds.right);
+      const minX = left + barHalf - hostBounds.left;
+      const maxX = right - barHalf - hostBounds.left;
       next.x = Math.round(minX > maxX ? (minX + maxX) / 2 : Math.min(Math.max(next.x, minX), maxX));
       setAnchor((current) =>
         current.x === next.x && current.y === next.y ? current : next,
@@ -238,7 +242,7 @@ export default function SelectionActions({
             /* on viewports narrower than the content, the pill becomes its own
                scroll container (rule 12) — keyboard focus scrolls controls into
                view instead of landing on clipped, invisible buttons */
-            className="flex h-9 w-fit max-w-[calc(100vw-48px)] items-center gap-0.5 overflow-x-auto overflow-y-hidden rounded-full bg-surface p-1 text-ink shadow-overlay [scrollbar-width:none]"
+            className="flex h-9 w-fit max-w-[min(100vw-48px,100%)] items-center gap-0.5 overflow-x-auto overflow-y-hidden rounded-full bg-surface p-1 text-ink shadow-overlay [scrollbar-width:none]"
             style={{
               width:
                 mode === "idle" && hasPrompt && typingWidth
