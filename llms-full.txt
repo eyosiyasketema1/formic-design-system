@@ -30,6 +30,7 @@ Formic is an **open-source React + Tailwind v4 design system built for AI coding
 - **Repository:** https://github.com/eyosiyasketema1/formic-design-system
 - **Registry:** https://formicai.dev/r/registry.json
 - **Agent instructions:** https://formicai.dev/AGENTS.md and https://formicai.dev/skill/SKILL.md
+- **Community:** https://t.me/FormicStudio (Telegram)
 - **Support:** GitHub issues on the repository; https://buymeacoffee.com/eyosiyaskei to support the work
 
 ## Created by
