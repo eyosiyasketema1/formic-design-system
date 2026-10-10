@@ -2,6 +2,8 @@
 
 A token-driven React + Tailwind v4 design system for AI product interfaces: chat threads, prompt bars, streaming text, tool calls, terminals, file trees, sources and citations, approval cards, and the whole app shell around them.
 
+Formic AI Design System is an independent open-source project by Eyosiyas Ketema. It is not affiliated with, endorsed by or connected to Formic AI Ltd. (Toronto), Formic Technologies, Inc. or any other company using the name Formic. The name comes from the ant.
+
 **[Live site](https://formicai.dev/)** · **[Component gallery](https://formicai.dev/preview.html)** · **[Changelog](CHANGELOG.md)**
 
 - 75+ components, 10 palettes x light/dark, plus a custom palette from any colour

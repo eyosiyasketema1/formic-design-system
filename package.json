@@ -2,7 +2,7 @@
   "name": "formic-design-system",
   "version": "0.5.2",
   "private": true,
-  "description": "Formic AI Design System \u2014 token-driven React design system for AI product interfaces",
+  "description": "Formic AI Design System: token-driven React UI component library for AI product interfaces. Independent open-source project, not affiliated with Formic AI Ltd. or Formic Technologies",
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18",
