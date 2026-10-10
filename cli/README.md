@@ -140,3 +140,7 @@ FORMIC_REGISTRY=http://127.0.0.1:8765 npx formicai init --new app
 ## Licence
 
 MIT. Source: https://github.com/eyosiyasketema1/formic-design-system
+
+## Trademarks
+
+Formic AI Design System is an independent open-source project by Eyosiyas Ketema. It is not affiliated with, endorsed by or connected to Formic AI Ltd. (Toronto), Formic Technologies, Inc. or any other company using the name Formic. The name comes from the ant.
